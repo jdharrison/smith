@@ -97,26 +97,21 @@ fn load_config() -> Result<SmithConfig, String> {
     if !file.exists() {
         return Ok(SmithConfig::default());
     }
-    let content = fs::read_to_string(&file)
-        .map_err(|e| format!("Failed to read config: {}", e))?;
-    toml::from_str(&content)
-        .map_err(|e| format!("Failed to parse config: {}", e))
+    let content = fs::read_to_string(&file).map_err(|e| format!("Failed to read config: {}", e))?;
+    toml::from_str(&content).map_err(|e| format!("Failed to parse config: {}", e))
 }
 
 fn save_config(config: &SmithConfig) -> Result<(), String> {
     let dir = config_dir()?;
-    fs::create_dir_all(&dir)
-        .map_err(|e| format!("Failed to create config directory: {}", e))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("Failed to create config directory: {}", e))?;
     let file = config_file_path()?;
-    let content = toml::to_string_pretty(config)
-        .map_err(|e| format!("Failed to serialize config: {}", e))?;
-    
+    let content =
+        toml::to_string_pretty(config).map_err(|e| format!("Failed to serialize config: {}", e))?;
+
     // Atomic write: write to temp file then rename
     let temp_file = file.with_extension("toml.tmp");
-    fs::write(&temp_file, content)
-        .map_err(|e| format!("Failed to write config: {}", e))?;
-    fs::rename(&temp_file, &file)
-        .map_err(|e| format!("Failed to finalize config: {}", e))?;
+    fs::write(&temp_file, content).map_err(|e| format!("Failed to write config: {}", e))?;
+    fs::rename(&temp_file, &file).map_err(|e| format!("Failed to finalize config: {}", e))?;
     Ok(())
 }
 
@@ -220,12 +215,18 @@ fn main() {
             println!("  [ ] Dagger pipeline (not yet implemented)");
             println!("  [ ] OpenCode agent (not yet implemented)");
         }
-        Some(Commands::Review { project, keep_alive }) => {
+        Some(Commands::Review {
+            project,
+            keep_alive,
+        }) => {
             let resolved_repo = resolve_repo(None, project).unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             });
-            println!("Review: Starting review session for repo: {}", resolved_repo);
+            println!(
+                "Review: Starting review session for repo: {}",
+                resolved_repo
+            );
             println!("  [ ] Start Docker container (not yet implemented)");
             println!("  [ ] Run analysis/QA (not yet implemented)");
             if keep_alive {
@@ -268,4 +269,3 @@ mod tests {
         assert_eq!(deserialized.projects[0].name, "test");
     }
 }
-
