@@ -1,3 +1,6 @@
+mod repo;
+mod docker;
+
 use clap::{CommandFactory, Parser, Subcommand};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
@@ -34,6 +37,9 @@ enum Commands {
         /// Project name from config
         #[arg(long)]
         project: Option<String>,
+        /// SSH key path for private repositories (optional)
+        #[arg(long)]
+        ssh_key: Option<PathBuf>,
     },
     /// Review workflow (placeholder): model a long-running session (e.g., keep Docker container alive)
     Review {
@@ -204,16 +210,48 @@ fn main() {
                 println!("Project removed successfully");
             }
         },
-        Some(Commands::Run { repo, project }) => {
+        Some(Commands::Run { repo, project, ssh_key }) => {
             let resolved_repo = resolve_repo(repo, project).unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             });
+            
+            // Check for SSH key in environment if not provided
+            let ssh_key_path = ssh_key.or_else(|| {
+                std::env::var("SSH_KEY_PATH")
+                    .ok()
+                    .map(PathBuf::from)
+            });
+            
             println!("Run: Orchestrating for repo: {}", resolved_repo);
-            println!("  [ ] Clone repo (not yet implemented)");
-            println!("  [ ] Docker container (not yet implemented)");
-            println!("  [ ] Dagger pipeline (not yet implemented)");
-            println!("  [ ] OpenCode agent (not yet implemented)");
+            
+            // Create workspace directory
+            let workspace = std::env::temp_dir().join("smith-workspace");
+            std::fs::create_dir_all(&workspace).unwrap_or_else(|e| {
+                eprintln!("Error: Failed to create workspace: {}", e);
+                std::process::exit(1);
+            });
+            
+            // Clone repository using Docker
+            match docker::run_container(
+                "alpine/git:latest",
+                &resolved_repo,
+                &workspace,
+                ssh_key_path.as_ref(),
+                false,
+            ) {
+                Ok(output) => {
+                    println!("  ✓ Repository cloned successfully");
+                    println!("  Workspace: {}", workspace.display());
+                    if !output.trim().is_empty() {
+                        print!("{}", output);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            }
         }
         Some(Commands::Review {
             project,
@@ -223,17 +261,47 @@ fn main() {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             });
+            
+            // Check for SSH key in environment
+            let ssh_key_path = std::env::var("SSH_KEY_PATH")
+                .ok()
+                .map(PathBuf::from);
+            
             println!(
                 "Review: Starting review session for repo: {}",
                 resolved_repo
             );
-            println!("  [ ] Start Docker container (not yet implemented)");
-            println!("  [ ] Run analysis/QA (not yet implemented)");
-            if keep_alive {
-                println!("  [ ] Keep container alive for review (not yet implemented)");
-                println!("  [ ] Waiting for user input to cleanup...");
-            } else {
-                println!("  [ ] Cleanup container (not yet implemented)");
+            
+            // Create workspace directory
+            let workspace = std::env::temp_dir().join("smith-review");
+            std::fs::create_dir_all(&workspace).unwrap_or_else(|e| {
+                eprintln!("Error: Failed to create workspace: {}", e);
+                std::process::exit(1);
+            });
+            
+            // Clone repository using Docker
+            match docker::run_container(
+                "alpine/git:latest",
+                &resolved_repo,
+                &workspace,
+                ssh_key_path.as_ref(),
+                keep_alive,
+            ) {
+                Ok(output) => {
+                    println!("  ✓ Repository cloned successfully");
+                    println!("  Workspace: {}", workspace.display());
+                    if keep_alive {
+                        println!("  Container is running. Press Ctrl+C to stop...");
+                        // In a real implementation, we'd wait for user input
+                    }
+                    if !output.trim().is_empty() {
+                        print!("{}", output);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
             }
         }
     }
