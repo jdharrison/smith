@@ -45,8 +45,7 @@ cargo clippy --all-targets -- -D warnings
 
 ## Roadmap
 
-- [ ] Docker container execution
-- [ ] Dagger integration for orchestration
+- [x] Docker container execution
 - [ ] OpenCode integration for agentic coding
 - [ ] Review workflow with keep-alive sessions
 

@@ -1,5 +1,8 @@
 mod repo;
 mod docker;
+mod agent;
+
+use agent::Agent;
 
 use clap::{CommandFactory, Parser, Subcommand};
 use directories::ProjectDirs;
@@ -17,7 +20,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Validate the local environment (placeholder for future Docker/Dagger checks)
+    /// Validate the local environment
     Doctor,
     /// Manage configuration
     Config {
@@ -29,8 +32,22 @@ enum Commands {
         #[command(subcommand)]
         cmd: ProjectCommands,
     },
-    /// Run an orchestration action (placeholder for future Docker/OpenCode/Dagger)
+    /// Run an orchestration action with an agent
     Run {
+        /// Repository path or URL (overrides project config if provided)
+        #[arg(long)]
+        repo: Option<String>,
+        /// Project name from config
+        #[arg(long)]
+        project: Option<String>,
+        /// SSH key path for private repositories (optional)
+        #[arg(long)]
+        ssh_key: Option<PathBuf>,
+    },
+    /// Ask a question to an agent about a project
+    Ask {
+        /// The question to ask the agent
+        question: String,
         /// Repository path or URL (overrides project config if provided)
         #[arg(long)]
         repo: Option<String>,
@@ -137,6 +154,34 @@ fn resolve_repo(repo: Option<String>, project: Option<String>) -> Result<String,
     Err("Either --repo or --project must be provided".to_string())
 }
 
+/// Clone a repository and set up a workspace, returning the workspace path
+fn setup_workspace(
+    repo_url: &str,
+    ssh_key_path: Option<&PathBuf>,
+) -> Result<PathBuf, String> {
+    // Create workspace directory (clean if it exists)
+    let workspace = std::env::temp_dir().join("smith-workspace");
+    if workspace.exists() {
+        std::fs::remove_dir_all(&workspace).map_err(|e| {
+            format!("Failed to clean workspace: {}", e)
+        })?;
+    }
+    std::fs::create_dir_all(&workspace).map_err(|e| {
+        format!("Failed to create workspace: {}", e)
+    })?;
+    
+    // Clone repository using Docker
+    docker::run_container(
+        "alpine/git:latest",
+        repo_url,
+        &workspace,
+        ssh_key_path,
+        false,
+    )?;
+    
+    Ok(workspace)
+}
+
 fn main() {
     let cli = Cli::parse();
 
@@ -151,7 +196,6 @@ fn main() {
             println!("Doctor: Validating environment...");
             println!("  ✓ Config directory accessible");
             println!("  [ ] Docker (not yet implemented)");
-            println!("  [ ] Dagger (not yet implemented)");
         }
         Some(Commands::Config { cmd }) => match cmd {
             ConfigCommands::Path => {
@@ -225,8 +269,13 @@ fn main() {
             
             println!("Run: Orchestrating for repo: {}", resolved_repo);
             
-            // Create workspace directory
+            // Create workspace directory (clean if it exists)
             let workspace = std::env::temp_dir().join("smith-workspace");
+            if workspace.exists() {
+                std::fs::remove_dir_all(&workspace).unwrap_or_else(|e| {
+                    eprintln!("Warning: Failed to clean workspace: {}", e);
+                });
+            }
             std::fs::create_dir_all(&workspace).unwrap_or_else(|e| {
                 eprintln!("Error: Failed to create workspace: {}", e);
                 std::process::exit(1);
@@ -246,9 +295,84 @@ fn main() {
                     if !output.trim().is_empty() {
                         print!("{}", output);
                     }
+                    
+                    // Initialize and run OpenCode agent
+                    let agent = agent::OpenCodeAgent;
+                    match agent.initialize(&workspace) {
+                        Ok(_) => {
+                            println!("  ✓ Agent initialized");
+                            match agent.ask(&workspace, "what language is this project in") {
+                                Ok(answer) => {
+                                    println!("  ✓ Answer: {}", answer);
+                                }
+                                Err(e) => {
+                                    eprintln!("  Error asking question: {}", e);
+                                    std::process::exit(1);
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("  Error initializing agent: {}", e);
+                            std::process::exit(1);
+                        }
+                    }
                 }
                 Err(e) => {
                     eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some(Commands::Ask {
+            question,
+            repo,
+            project,
+            ssh_key,
+        }) => {
+            let resolved_repo = resolve_repo(repo, project).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+            
+            // Check for SSH key in environment if not provided
+            let ssh_key_path = ssh_key.or_else(|| {
+                std::env::var("SSH_KEY_PATH")
+                    .ok()
+                    .map(PathBuf::from)
+            });
+            
+            println!("Ask: {}", question);
+            println!("  Repository: {}", resolved_repo);
+            
+            // Set up workspace and clone repository
+            let workspace = match setup_workspace(&resolved_repo, ssh_key_path.as_ref()) {
+                Ok(ws) => {
+                    println!("  ✓ Repository cloned successfully");
+                    ws
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+            
+            // Initialize and ask the agent
+            let agent = agent::OpenCodeAgent;
+            match agent.initialize(&workspace) {
+                Ok(_) => {
+                    println!("  ✓ Agent initialized");
+                    match agent.ask(&workspace, &question) {
+                        Ok(answer) => {
+                            println!("\nAnswer: {}", answer);
+                        }
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error initializing agent: {}", e);
                     std::process::exit(1);
                 }
             }
