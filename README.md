@@ -27,8 +27,10 @@ smith --help
 - `smith project add <name> --repo <path-or-url>` - Register a project
 - `smith project list` - List registered projects
 - `smith project remove <name>` - Remove a project
-- `smith run --project <name>` - Run orchestration (placeholder)
-- `smith review --project <name> --keep-alive` - Review workflow (placeholder)
+- `smith ask <question> --project <name>` - Ask a question to an agent about a project
+- `smith container list` - List all smith containers
+- `smith container stop <name>` - Stop a container
+- `smith container remove <name>` - Remove a container
 
 ## Development
 

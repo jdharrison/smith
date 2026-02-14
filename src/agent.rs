@@ -1,118 +1,147 @@
-use std::path::PathBuf;
-use std::process::Command;
+use crate::docker;
 
 /// Trait for agents that can execute in containers
 pub trait Agent {
-    /// Initialize the agent with a workspace
-    fn initialize(&self, workspace: &PathBuf) -> Result<(), String>;
-    
+    /// Initialize the agent with a container
+    fn initialize(&self, container_name: &str) -> Result<(), String>;
+
     /// Ask a question and get a response
-    fn ask(&self, workspace: &PathBuf, question: &str) -> Result<String, String>;
+    fn ask(&self, container_name: &str, question: &str) -> Result<String, String>;
 }
 
 /// OpenCode agent implementation
 pub struct OpenCodeAgent;
 
 impl Agent for OpenCodeAgent {
-    fn initialize(&self, workspace: &PathBuf) -> Result<(), String> {
-        // OpenCode agent initialization - ensure workspace is ready
-        if !workspace.exists() {
-            return Err("Workspace does not exist".to_string());
+    fn initialize(&self, container_name: &str) -> Result<(), String> {
+        // Verify container exists and is running
+        if !docker::container_exists(container_name) {
+            return Err(format!("Container '{}' does not exist", container_name));
         }
-        Ok(())
-    }
-    
-    fn ask(&self, workspace: &PathBuf, question: &str) -> Result<String, String> {
-        // Normalize question for comparison (lowercase, trim)
-        let lower = question.to_lowercase();
-        let normalized = lower.trim();
-        
-        // Check for language-related questions
-        if normalized.contains("language") || normalized.contains("what language") {
-            detect_project_language(workspace)
+
+        // Check if workspace exists inside container
+        let check_cmd = "test -d /workspace && echo 'ok' || echo 'missing'";
+        let result = docker::exec_in_container(container_name, check_cmd)?;
+
+        if result.trim() == "ok" {
+            Ok(())
         } else {
-            Err(format!("Unknown question: {}. Currently supported: questions about project language", question))
+            Err("Workspace not found in container".to_string())
         }
+    }
+
+    fn ask(&self, container_name: &str, question: &str) -> Result<String, String> {
+        // Pass question directly to agent - no parsing, just input -> output
+        ask_agent(container_name, question)
     }
 }
 
-/// Detect the programming language of a project by checking for common files
-/// Uses a container to check for files in the workspace
-fn detect_project_language(workspace: &PathBuf) -> Result<String, String> {
-    // Check for common project files to determine language
-    let language_checks = vec![
-        ("Rust", "Cargo.toml"),
-        ("JavaScript/TypeScript", "package.json"),
-        ("Python", "requirements.txt"),
-        ("Python", "pyproject.toml"),
-        ("Go", "go.mod"),
-        ("Java", "pom.xml"),
-        ("Ruby", "Gemfile"),
-        ("PHP", "composer.json"),
-        ("Swift", "Package.swift"),
-    ];
-    
-    // Use a container to check for files
-    let container_name = format!("smith-detect-{}", std::process::id());
-    
-    // Build command to check for files sequentially, stopping at first match
-    let check_commands: Vec<String> = language_checks
-        .iter()
-        .map(|(lang, file)| {
-            format!("test -f /workspace/{} && echo '{}' && exit 0", file, lang)
-        })
-        .collect();
-    
-    let full_cmd = format!(
-        "cd /workspace && ({}) || echo 'Unknown'",
-        check_commands.join(" || ")
+/// Ask the agent a question - direct pass-through, no parsing
+/// OpenCode runs inside the container and analyzes the codebase directly
+fn ask_agent(container_name: &str, question: &str) -> Result<String, String> {
+    // Call OpenCode agent with question
+    // OpenCode has direct access to /workspace and analyzes it directly
+    call_opencode_agent(container_name, question)
+}
+
+/// Call OpenCode agent to answer the question
+/// OpenCode runs inside the container and analyzes the codebase directly
+fn call_opencode_agent(container_name: &str, question: &str) -> Result<String, String> {
+    // Bootstrap OpenCode in the container if needed
+    bootstrap_opencode(container_name)?;
+
+    // Call OpenCode with the question
+    // OpenCode has access to the full workspace at /workspace
+    let answer = execute_opencode(container_name, question)?;
+
+    Ok(answer)
+}
+
+/// Bootstrap OpenCode in the container
+/// Installs/ensures OpenCode is available in the container
+fn bootstrap_opencode(container_name: &str) -> Result<(), String> {
+    // Check if OpenCode is already available
+    let check_cmd = "which opencode || command -v opencode || echo 'not found'";
+    let result = docker::exec_in_container(container_name, check_cmd)?;
+
+    if !result.contains("not found") {
+        // OpenCode is already available
+        return Ok(());
+    }
+
+    // Check if npm is available (should be in node container)
+    let npm_check = "which npm || command -v npm || echo 'not found'";
+    let npm_available = docker::exec_in_container(container_name, npm_check)?;
+
+    if npm_available.contains("not found") {
+        return Err(
+            "npm not found in container. Please use a node-based Docker image.".to_string(),
+        );
+    }
+
+    // Install OpenCode via npm
+    let install_cmd = "npm install -g opencode-ai 2>&1";
+    let install_output = docker::exec_in_container(container_name, install_cmd)
+        .map_err(|e| format!("npm install command failed: {}", e))?;
+
+    // Check if installation shows errors (but allow warnings)
+    if install_output.contains("npm ERR!") {
+        return Err(format!(
+            "npm install failed with errors:\n{}",
+            install_output
+        ));
+    }
+
+    // npm installs global packages to /usr/local/bin (in node containers)
+    // Check if opencode is now available
+    let check = docker::exec_in_container(
+        container_name,
+        "which opencode || test -f /usr/local/bin/opencode && echo 'found' || echo 'not found'",
+    )?;
+    if !check.contains("not found")
+        && (check.contains("/usr/local/bin/opencode") || check.contains("found"))
+    {
+        return Ok(());
+    }
+
+    // Final check - try to run it directly
+    let test_run = docker::exec_in_container(
+        container_name,
+        "/usr/local/bin/opencode --version 2>&1 || opencode --version 2>&1 || echo 'not found'",
+    )
+    .unwrap_or_default();
+    if !test_run.contains("not found") && !test_run.trim().is_empty() {
+        return Ok(());
+    }
+
+    // If installation failed, provide helpful error
+    Err("Failed to bootstrap OpenCode in container.\n\
+        npm install completed but opencode command not found.\n\
+        \n\
+        You may need to:\n\
+        1. Ensure npm is available in the container\n\
+        2. Check network connectivity from within the container\n\
+        3. Verify the package name 'opencode-ai' is correct\n\
+        4. Try running 'npx opencode-ai' directly"
+        .to_string())
+}
+
+/// Execute OpenCode with a question
+/// OpenCode analyzes the workspace at /workspace directly
+fn execute_opencode(container_name: &str, question: &str) -> Result<String, String> {
+    // OpenCode is installed at /usr/local/bin/opencode in node containers
+    // OpenCode can analyze the codebase directly from /workspace
+    // Use 'opencode run' command to execute with a message
+    let cmd = format!(
+        "cd /workspace && opencode run '{}'",
+        question.replace("'", "'\"'\"'")
     );
-    
-    let mut cmd = Command::new("docker");
-    cmd.arg("run");
-    cmd.arg("--rm");
-    cmd.arg("--name").arg(&container_name);
-    cmd.arg("-v").arg(format!("{}:/workspace:ro", workspace.display()));
-    cmd.arg("-w").arg("/workspace");
-    cmd.arg("--entrypoint").arg("/bin/sh");
-    cmd.arg("alpine:latest");
-    cmd.arg("-c").arg(&full_cmd);
-    
-    let output = cmd.output()
-        .map_err(|e| format!("Failed to execute language detection: {}", e))?;
-    
-    if output.status.success() {
-        let result = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        if result.is_empty() || result == "Unknown" {
-            Ok("Unknown".to_string())
-        } else {
-            Ok(result)
-        }
+
+    let result = docker::exec_in_container(container_name, &cmd)?;
+
+    if result.trim().is_empty() {
+        Err("OpenCode returned empty response".to_string())
     } else {
-        // Fallback: try checking files directly from host
-        detect_language_simple(workspace)
+        Ok(result)
     }
 }
-
-/// Simple language detection by checking for files directly from host
-fn detect_language_simple(workspace: &PathBuf) -> Result<String, String> {
-    let checks = vec![
-        ("Rust", "Cargo.toml"),
-        ("JavaScript/TypeScript", "package.json"),
-        ("Python", "requirements.txt"),
-        ("Python", "pyproject.toml"),
-        ("Go", "go.mod"),
-        ("Java", "pom.xml"),
-        ("Ruby", "Gemfile"),
-        ("PHP", "composer.json"),
-    ];
-    
-    for (lang, file) in checks {
-        if workspace.join(file).exists() {
-            return Ok(lang.to_string());
-        }
-    }
-    
-    Ok("Unknown".to_string())
-}
-

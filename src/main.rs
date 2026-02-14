@@ -1,6 +1,6 @@
-mod repo;
-mod docker;
 mod agent;
+mod docker;
+mod repo;
 
 use agent::Agent;
 
@@ -32,18 +32,6 @@ enum Commands {
         #[command(subcommand)]
         cmd: ProjectCommands,
     },
-    /// Run an orchestration action with an agent
-    Run {
-        /// Repository path or URL (overrides project config if provided)
-        #[arg(long)]
-        repo: Option<String>,
-        /// Project name from config
-        #[arg(long)]
-        project: Option<String>,
-        /// SSH key path for private repositories (optional)
-        #[arg(long)]
-        ssh_key: Option<PathBuf>,
-    },
     /// Ask a question to an agent about a project
     Ask {
         /// The question to ask the agent
@@ -57,15 +45,14 @@ enum Commands {
         /// SSH key path for private repositories (optional)
         #[arg(long)]
         ssh_key: Option<PathBuf>,
-    },
-    /// Review workflow (placeholder): model a long-running session (e.g., keep Docker container alive)
-    Review {
-        /// Project name from config
-        #[arg(long)]
-        project: Option<String>,
-        /// Keep container/session alive for interactive review
+        /// Keep container alive after answering (for debugging/inspection)
         #[arg(long)]
         keep_alive: bool,
+    },
+    /// Manage containers
+    Container {
+        #[command(subcommand)]
+        cmd: ContainerCommands,
     },
 }
 
@@ -90,6 +77,22 @@ enum ProjectCommands {
     /// Remove a project
     Remove {
         /// Project name
+        name: String,
+    },
+}
+
+#[derive(Subcommand)]
+enum ContainerCommands {
+    /// List all smith containers
+    List,
+    /// Stop a container
+    Stop {
+        /// Container name
+        name: String,
+    },
+    /// Remove a container
+    Remove {
+        /// Container name
         name: String,
     },
 }
@@ -154,32 +157,18 @@ fn resolve_repo(repo: Option<String>, project: Option<String>) -> Result<String,
     Err("Either --repo or --project must be provided".to_string())
 }
 
-/// Clone a repository and set up a workspace, returning the workspace path
-fn setup_workspace(
+/// Set up a containerized workspace and return the container name
+fn setup_containerized_workspace(
     repo_url: &str,
+    project_name: Option<&str>,
     ssh_key_path: Option<&PathBuf>,
-) -> Result<PathBuf, String> {
-    // Create workspace directory (clean if it exists)
-    let workspace = std::env::temp_dir().join("smith-workspace");
-    if workspace.exists() {
-        std::fs::remove_dir_all(&workspace).map_err(|e| {
-            format!("Failed to clean workspace: {}", e)
-        })?;
-    }
-    std::fs::create_dir_all(&workspace).map_err(|e| {
-        format!("Failed to create workspace: {}", e)
-    })?;
-    
-    // Clone repository using Docker
-    docker::run_container(
-        "alpine/git:latest",
-        repo_url,
-        &workspace,
-        ssh_key_path,
-        false,
-    )?;
-    
-    Ok(workspace)
+    image: Option<&str>,
+) -> Result<String, String> {
+    let container_name = docker::generate_container_name(project_name);
+
+    docker::setup_containerized_workspace(&container_name, repo_url, ssh_key_path, image)?;
+
+    Ok(container_name)
 }
 
 fn main() {
@@ -254,180 +243,119 @@ fn main() {
                 println!("Project removed successfully");
             }
         },
-        Some(Commands::Run { repo, project, ssh_key }) => {
-            let resolved_repo = resolve_repo(repo, project).unwrap_or_else(|e| {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            });
-            
-            // Check for SSH key in environment if not provided
-            let ssh_key_path = ssh_key.or_else(|| {
-                std::env::var("SSH_KEY_PATH")
-                    .ok()
-                    .map(PathBuf::from)
-            });
-            
-            println!("Run: Orchestrating for repo: {}", resolved_repo);
-            
-            // Create workspace directory (clean if it exists)
-            let workspace = std::env::temp_dir().join("smith-workspace");
-            if workspace.exists() {
-                std::fs::remove_dir_all(&workspace).unwrap_or_else(|e| {
-                    eprintln!("Warning: Failed to clean workspace: {}", e);
-                });
-            }
-            std::fs::create_dir_all(&workspace).unwrap_or_else(|e| {
-                eprintln!("Error: Failed to create workspace: {}", e);
-                std::process::exit(1);
-            });
-            
-            // Clone repository using Docker
-            match docker::run_container(
-                "alpine/git:latest",
-                &resolved_repo,
-                &workspace,
-                ssh_key_path.as_ref(),
-                false,
-            ) {
-                Ok(output) => {
-                    println!("  ✓ Repository cloned successfully");
-                    println!("  Workspace: {}", workspace.display());
-                    if !output.trim().is_empty() {
-                        print!("{}", output);
-                    }
-                    
-                    // Initialize and run OpenCode agent
-                    let agent = agent::OpenCodeAgent;
-                    match agent.initialize(&workspace) {
-                        Ok(_) => {
-                            println!("  ✓ Agent initialized");
-                            match agent.ask(&workspace, "what language is this project in") {
-                                Ok(answer) => {
-                                    println!("  ✓ Answer: {}", answer);
-                                }
-                                Err(e) => {
-                                    eprintln!("  Error asking question: {}", e);
-                                    std::process::exit(1);
-                                }
-                            }
-                        }
-                        Err(e) => {
-                            eprintln!("  Error initializing agent: {}", e);
-                            std::process::exit(1);
-                        }
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                }
-            }
-        }
         Some(Commands::Ask {
             question,
             repo,
             project,
             ssh_key,
+            keep_alive,
         }) => {
-            let resolved_repo = resolve_repo(repo, project).unwrap_or_else(|e| {
+            let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             });
-            
+
             // Check for SSH key in environment if not provided
-            let ssh_key_path = ssh_key.or_else(|| {
-                std::env::var("SSH_KEY_PATH")
-                    .ok()
-                    .map(PathBuf::from)
-            });
-            
+            let ssh_key_path =
+                ssh_key.or_else(|| std::env::var("SSH_KEY_PATH").ok().map(PathBuf::from));
+
             println!("Ask: {}", question);
             println!("  Repository: {}", resolved_repo);
-            
-            // Set up workspace and clone repository
-            let workspace = match setup_workspace(&resolved_repo, ssh_key_path.as_ref()) {
-                Ok(ws) => {
-                    println!("  ✓ Repository cloned successfully");
-                    ws
+
+            // Set up containerized workspace (uses node image by default)
+            let container_name = match setup_containerized_workspace(
+                &resolved_repo,
+                project.as_deref(),
+                ssh_key_path.as_ref(),
+                None, // Use default node:20-alpine image
+            ) {
+                Ok(name) => {
+                    println!("  ✓ Container created and repository cloned");
+                    println!("  Container: {}", name);
+                    name
                 }
                 Err(e) => {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
                 }
             };
-            
+
             // Initialize and ask the agent
             let agent = agent::OpenCodeAgent;
-            match agent.initialize(&workspace) {
+            match agent.initialize(&container_name) {
                 Ok(_) => {
                     println!("  ✓ Agent initialized");
-                    match agent.ask(&workspace, &question) {
+                    match agent.ask(&container_name, &question) {
                         Ok(answer) => {
                             println!("\nAnswer: {}", answer);
                         }
                         Err(e) => {
                             eprintln!("Error: {}", e);
+                            // Clean up container on error
+                            let _ = docker::remove_container(&container_name);
                             std::process::exit(1);
                         }
                     }
                 }
                 Err(e) => {
                     eprintln!("Error initializing agent: {}", e);
+                    // Clean up container on error
+                    let _ = docker::remove_container(&container_name);
                     std::process::exit(1);
                 }
             }
+
+            // Clean up container when done (unless keep_alive is set)
+            if keep_alive {
+                println!("  Container kept alive: {}", container_name);
+                println!(
+                    "  Use 'docker exec -it {} sh' to access the container interactively",
+                    container_name
+                );
+                println!("  Use 'smith container stop {}' to stop it", container_name);
+                println!(
+                    "  Use 'smith container remove {}' to remove it",
+                    container_name
+                );
+            } else {
+                match docker::remove_container(&container_name) {
+                    Ok(_) => println!("  ✓ Container removed"),
+                    Err(e) => eprintln!("  Warning: Failed to remove container: {}", e),
+                }
+            }
         }
-        Some(Commands::Review {
-            project,
-            keep_alive,
-        }) => {
-            let resolved_repo = resolve_repo(None, project).unwrap_or_else(|e| {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            });
-            
-            // Check for SSH key in environment
-            let ssh_key_path = std::env::var("SSH_KEY_PATH")
-                .ok()
-                .map(PathBuf::from);
-            
-            println!(
-                "Review: Starting review session for repo: {}",
-                resolved_repo
-            );
-            
-            // Create workspace directory
-            let workspace = std::env::temp_dir().join("smith-review");
-            std::fs::create_dir_all(&workspace).unwrap_or_else(|e| {
-                eprintln!("Error: Failed to create workspace: {}", e);
-                std::process::exit(1);
-            });
-            
-            // Clone repository using Docker
-            match docker::run_container(
-                "alpine/git:latest",
-                &resolved_repo,
-                &workspace,
-                ssh_key_path.as_ref(),
-                keep_alive,
-            ) {
-                Ok(output) => {
-                    println!("  ✓ Repository cloned successfully");
-                    println!("  Workspace: {}", workspace.display());
-                    if keep_alive {
-                        println!("  Container is running. Press Ctrl+C to stop...");
-                        // In a real implementation, we'd wait for user input
-                    }
-                    if !output.trim().is_empty() {
-                        print!("{}", output);
+        Some(Commands::Container { cmd }) => match cmd {
+            ContainerCommands::List => match docker::list_containers() {
+                Ok(containers) => {
+                    if containers.is_empty() {
+                        println!("No smith containers found");
+                    } else {
+                        println!("Smith containers:");
+                        for container in containers {
+                            println!("  {}", container);
+                        }
                     }
                 }
                 Err(e) => {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
                 }
-            }
-        }
+            },
+            ContainerCommands::Stop { name } => match docker::stop_container(&name) {
+                Ok(_) => println!("Container '{}' stopped", name),
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            },
+            ContainerCommands::Remove { name } => match docker::remove_container(&name) {
+                Ok(_) => println!("Container '{}' removed", name),
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            },
+        },
     }
 }
 
