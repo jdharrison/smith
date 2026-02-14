@@ -27,7 +27,8 @@ smith --help
 - `smith project add <name> --repo <path-or-url>` - Register a project
 - `smith project list` - List registered projects
 - `smith project remove <name>` - Remove a project
-- `smith ask <question> --project <name>` - Ask a question to an agent about a project
+- `smith ask <question> --project <name>` - Ask a question to an agent about a project (read-only)
+- `smith dev <task> --project <name>` - Execute a development task with validation and commit (read/write)
 - `smith container list` - List all smith containers
 - `smith container stop <name>` - Stop a container
 - `smith container remove <name>` - Remove a container

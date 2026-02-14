@@ -36,6 +36,9 @@ enum Commands {
     Ask {
         /// The question to ask the agent
         question: String,
+        /// Base branch to checkout before asking (optional, uses default if not provided)
+        #[arg(long, required = false)]
+        base: Option<String>,
         /// Repository path or URL (overrides project config if provided)
         #[arg(long)]
         repo: Option<String>,
@@ -46,6 +49,29 @@ enum Commands {
         #[arg(long)]
         ssh_key: Option<PathBuf>,
         /// Keep container alive after answering (for debugging/inspection)
+        #[arg(long)]
+        keep_alive: bool,
+    },
+    /// Execute a development action (read/write) with validation and commit
+    Dev {
+        /// The development task/instruction to execute
+        task: String,
+        /// Target branch to create/use and push to (required)
+        #[arg(long)]
+        branch: String,
+        /// Base branch to checkout before starting (optional, uses default if not provided)
+        #[arg(long, required = false)]
+        base: Option<String>,
+        /// Repository path or URL (overrides project config if provided)
+        #[arg(long)]
+        repo: Option<String>,
+        /// Project name from config
+        #[arg(long)]
+        project: Option<String>,
+        /// SSH key path for private repositories (optional)
+        #[arg(long)]
+        ssh_key: Option<PathBuf>,
+        /// Keep container alive after completion (for debugging/inspection)
         #[arg(long)]
         keep_alive: bool,
     },
@@ -245,6 +271,7 @@ fn main() {
         },
         Some(Commands::Ask {
             question,
+            base,
             repo,
             project,
             ssh_key,
@@ -285,9 +312,108 @@ fn main() {
             match agent.initialize(&container_name) {
                 Ok(_) => {
                     println!("  ✓ Agent initialized");
+
+                    // Checkout base branch if provided
+                    if let Some(base_branch) = &base {
+                        println!("  Checking out base branch: {}", base_branch);
+                        match agent.checkout_branch(&container_name, base_branch) {
+                            Ok(_) => println!("  ✓ Checked out branch: {}", base_branch),
+                            Err(e) => {
+                                eprintln!("Error checking out branch '{}': {}", base_branch, e);
+                                let _ = docker::remove_container(&container_name);
+                                std::process::exit(1);
+                            }
+                        }
+                    }
+
                     match agent.ask(&container_name, &question) {
                         Ok(answer) => {
                             println!("\nAnswer: {}", answer);
+                        }
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            // Clean up container on error
+                            let _ = docker::remove_container(&container_name);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error initializing agent: {}", e);
+                    // Clean up container on error
+                    let _ = docker::remove_container(&container_name);
+                    std::process::exit(1);
+                }
+            }
+
+            // Clean up container when done (unless keep_alive is set)
+            if keep_alive {
+                println!("  Container kept alive: {}", container_name);
+                println!(
+                    "  Use 'docker exec -it {} sh' to access the container interactively",
+                    container_name
+                );
+                println!("  Use 'smith container stop {}' to stop it", container_name);
+                println!(
+                    "  Use 'smith container remove {}' to remove it",
+                    container_name
+                );
+            } else {
+                match docker::remove_container(&container_name) {
+                    Ok(_) => println!("  ✓ Container removed"),
+                    Err(e) => eprintln!("  Warning: Failed to remove container: {}", e),
+                }
+            }
+        }
+        Some(Commands::Dev {
+            task,
+            branch,
+            base,
+            repo,
+            project,
+            ssh_key,
+            keep_alive,
+        }) => {
+            let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+
+            // Check for SSH key in environment if not provided
+            let ssh_key_path =
+                ssh_key.or_else(|| std::env::var("SSH_KEY_PATH").ok().map(PathBuf::from));
+
+            println!("Dev: {}", task);
+            println!("  Repository: {}", resolved_repo);
+
+            // Set up containerized workspace (uses node image by default)
+            let container_name = match setup_containerized_workspace(
+                &resolved_repo,
+                project.as_deref(),
+                ssh_key_path.as_ref(),
+                None, // Use default node:20-alpine image
+            ) {
+                Ok(name) => {
+                    println!("  ✓ Container created and repository cloned");
+                    println!("  Container: {}", name);
+                    name
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+
+            // Initialize and execute dev action
+            let agent = agent::OpenCodeAgent;
+            match agent.initialize(&container_name) {
+                Ok(_) => {
+                    println!("  ✓ Agent initialized");
+                    match agent.dev(&container_name, &task, &branch, base.as_deref()) {
+                        Ok(commit) => {
+                            println!("\n✓ Development action completed and committed");
+                            println!("  Commit: {}", commit);
+                            println!("  Branch: {}", branch);
                         }
                         Err(e) => {
                             eprintln!("Error: {}", e);
