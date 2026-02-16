@@ -680,6 +680,7 @@ mod tests {
         cfg.projects.push(ProjectConfig {
             name: "test".to_string(),
             repo: "https://example.com/repo".to_string(),
+            image: None,
         });
         let serialized = toml::to_string(&cfg).unwrap();
         let deserialized: SmithConfig = toml::from_str(&serialized).unwrap();
