@@ -88,24 +88,13 @@ pub fn start_container(container_name: &str) -> Result<(), String> {
 pub fn clone_in_container(
     container_name: &str,
     repo_url: &str,
-    ssh_key_path: Option<&PathBuf>,
+    _ssh_key_path: Option<&PathBuf>,
 ) -> Result<String, String> {
-    // Setup SSH key permissions if needed, then clone
-    let clone_cmd = if ssh_key_path.is_some() {
-        format!(
-            "mkdir -p /workspace && cd /workspace && \
-             chmod 600 /root/.ssh/id_ed25519 2>/dev/null; \
-             chmod 644 /root/.ssh/id_ed25519.pub 2>/dev/null; \
-             git clone {} .",
-            repo_url
-        )
-    } else {
-        format!(
-            "mkdir -p /workspace && cd /workspace && \
-             git clone {} .",
-            repo_url
-        )
-    };
+    // Clone repository (SSH setup is already done in setup_containerized_workspace)
+    let clone_cmd = format!(
+        "mkdir -p /workspace && cd /workspace && git clone {} .",
+        repo_url
+    );
 
     exec_in_container(container_name, &clone_cmd)
 }
@@ -227,6 +216,9 @@ pub fn setup_containerized_workspace(
     // Use node image by default (has npm and git)
     let base_image = image.unwrap_or("node:20-alpine");
 
+    // Check if repo URL uses SSH
+    let uses_ssh = repo_url.starts_with("git@") || repo_url.starts_with("ssh://");
+
     // Create container
     create_container(container_name, base_image, ssh_key_path)?;
 
@@ -238,6 +230,65 @@ pub fn setup_containerized_workspace(
         container_name,
         "which git || apk add --no-cache git 2>/dev/null",
     );
+
+    // Install SSH client if needed (for SSH-based git clones)
+    if uses_ssh || ssh_key_path.is_some() {
+        let _ = exec_in_container(
+            container_name,
+            "which ssh || apk add --no-cache openssh-client 2>/dev/null",
+        );
+
+        // Set up SSH config and known_hosts if SSH key is provided
+        if let Some(_) = ssh_key_path {
+            // Create .ssh directory (must exist before mounting, but we create it here for the copied files)
+            exec_in_container(
+                container_name,
+                "mkdir -p /root/.ssh && chmod 700 /root/.ssh",
+            )?;
+
+            // Verify the mounted key exists, then copy it to a new file with proper permissions
+            // (mounted files may have wrong permissions, so we copy them)
+            // First verify the mounted file exists
+            let key_check = exec_in_container(
+                container_name,
+                "test -f /root/.ssh/id_ed25519 && echo 'exists' || echo 'missing'",
+            ).unwrap_or_else(|_| "missing".to_string());
+            
+            if !key_check.contains("exists") {
+                return Err("SSH key was not mounted properly. Expected /root/.ssh/id_ed25519 to exist.".to_string());
+            }
+
+            // Copy the mounted key to a new file with proper permissions
+            exec_in_container(
+                container_name,
+                "cp /root/.ssh/id_ed25519 /root/.ssh/id_ed25519.key",
+            )?;
+            exec_in_container(
+                container_name,
+                "chmod 600 /root/.ssh/id_ed25519.key",
+            )?;
+            
+            // Copy public key if it exists
+            let _ = exec_in_container(
+                container_name,
+                "test -f /root/.ssh/id_ed25519.pub && cp /root/.ssh/id_ed25519.pub /root/.ssh/id_ed25519.key.pub && chmod 644 /root/.ssh/id_ed25519.key.pub || true",
+            ).ok();
+
+            // Set up SSH config to use the copied key with proper permissions
+            let ssh_config = "Host github.com\n  StrictHostKeyChecking accept-new\n  UserKnownHostsFile /root/.ssh/known_hosts\n  IdentityFile /root/.ssh/id_ed25519.key\n";
+            exec_in_container(
+                container_name,
+                &format!("echo '{}' > /root/.ssh/config && chmod 600 /root/.ssh/config", 
+                    ssh_config.replace("'", "'\"'\"'")),
+            )?;
+
+            // Add GitHub to known_hosts
+            let _ = exec_in_container(
+                container_name,
+                "ssh-keyscan github.com >> /root/.ssh/known_hosts 2>/dev/null || true",
+            );
+        }
+    }
 
     // Clone repository inside container
     clone_in_container(container_name, repo_url, ssh_key_path)?;
