@@ -16,12 +16,11 @@ Install directly from the GitHub repository using Cargo:
 
 ```bash
 
-# Install cargo if needed (unix); for Windows, https://win.rustup.rs
+# Install cargo/Rust if needed (unix); for all others: https://rustup.rs
 curl https://sh.rustup.rs -sSf | sh
 
-
 # Install latest release
-cargo install --git https://github.com/jdharrison/smith.git --tag release/latest
+cargo install --git https://github.com/jdharrison/smith.git
 ```
 
 **Prerequisites:** Rust 1.75+ and Cargo installed. If you don't have Rust, install it from [rustup.rs](https://rustup.rs/).
