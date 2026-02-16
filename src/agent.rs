@@ -19,6 +19,7 @@ pub trait Agent {
         task: &str,
         branch: &str,
         base: Option<&str>,
+        _pr: bool,
     ) -> Result<String, String>;
 
     /// Review changes in a feature branch
@@ -69,8 +70,10 @@ impl Agent for OpenCodeAgent {
         task: &str,
         branch: &str,
         base: Option<&str>,
+        _pr: bool,
     ) -> Result<String, String> {
         // Execute development action with validation and commit
+        // Note: PR creation is handled in main.rs after this returns
         dev_agent(container_name, task, branch, base)
     }
 

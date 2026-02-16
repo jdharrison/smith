@@ -1,5 +1,6 @@
 mod agent;
 mod docker;
+mod github;
 mod repo;
 
 use agent::Agent;
@@ -80,6 +81,9 @@ enum Commands {
         /// Keep container alive after completion (for debugging/inspection)
         #[arg(long)]
         keep_alive: bool,
+        /// Create or update a pull request after pushing (requires GitHub token configured)
+        #[arg(long)]
+        pr: bool,
     },
     /// Manage containers
     Container {
@@ -115,6 +119,11 @@ enum Commands {
 enum ConfigCommands {
     /// Show config file path
     Path,
+    /// Set GitHub API token
+    SetGitHubToken {
+        /// GitHub personal access token
+        token: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -158,6 +167,13 @@ enum ContainerCommands {
 #[derive(Serialize, Deserialize, Default)]
 struct SmithConfig {
     projects: Vec<ProjectConfig>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    github: Option<GitHubConfig>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct GitHubConfig {
+    token: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -253,7 +269,8 @@ fn setup_containerized_workspace(
     Ok(container_name)
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
     match cli.command {
@@ -275,6 +292,18 @@ fn main() {
                     std::process::exit(1);
                 });
                 println!("{}", file.display());
+            }
+            ConfigCommands::SetGitHubToken { token } => {
+                let mut cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                cfg.github = Some(GitHubConfig { token });
+                save_config(&cfg).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                println!("GitHub token configured successfully");
             }
         },
         Some(Commands::Project { cmd }) => match cmd {
@@ -444,6 +473,7 @@ fn main() {
             image,
             ssh_key,
             keep_alive,
+            pr,
         }) => {
             let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
@@ -489,11 +519,51 @@ fn main() {
             match agent.initialize(&container_name) {
                 Ok(_) => {
                     println!("  ✓ Agent initialized");
-                    match agent.dev(&container_name, &task, &branch, base.as_deref()) {
+                    match agent.dev(&container_name, &task, &branch, base.as_deref(), pr) {
                         Ok(commit) => {
                             println!("\n✓ Development action completed and committed");
                             println!("  Commit: {}", commit);
                             println!("  Branch: {}", branch);
+
+                            // Create or update PR if requested
+                            if pr {
+                                let cfg = load_config().unwrap_or_else(|e| {
+                                    eprintln!("Error loading config: {}", e);
+                                    std::process::exit(1);
+                                });
+
+                                if let Some(github_config) = cfg.github {
+                                    // Extract repo owner and name from URL
+                                    if let Ok(repo_info) = github::extract_repo_info(&resolved_repo)
+                                    {
+                                        let base_branch = base.as_deref().unwrap_or("main");
+                                        match github::create_or_update_pr(
+                                            &github_config.token,
+                                            &repo_info.owner,
+                                            &repo_info.name,
+                                            &branch,
+                                            base_branch,
+                                            &task,
+                                        )
+                                        .await
+                                        {
+                                            Ok(pr_url) => {
+                                                println!("  ✓ Pull request: {}", pr_url);
+                                            }
+                                            Err(e) => {
+                                                eprintln!("  ⚠ Failed to create/update PR: {}", e);
+                                            }
+                                        }
+                                    } else {
+                                        eprintln!(
+                                            "  ⚠ Could not extract repository info from URL: {}",
+                                            resolved_repo
+                                        );
+                                    }
+                                } else {
+                                    eprintln!("  ⚠ GitHub token not configured. Use 'smith config set-github-token <token>' to enable PR creation");
+                                }
+                            }
                         }
                         Err(e) => {
                             eprintln!("Error: {}", e);

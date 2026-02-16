@@ -31,17 +31,42 @@ smith --help
 
 ### Commands
 
+- `smith ask <question> --project <name>` - Ask a question to an agent about a project (read-only)
+- `smith dev <task> --branch <branch> --project <name> [--pr]` - Execute a development task with validation and commit (read/write). Use `--pr` to create or update a pull request.
+- `smith review <branch> --project <name>` - Review changes on a branch of the project (read-only)
+
 - `smith doctor` - Validate the local environment
-- `smith config path` - Show config file location
+
 - `smith project add <name> --repo <path-or-url>` - Register a project
 - `smith project list` - List registered projects
 - `smith project remove <name>` - Remove a project
-- `smith ask <question> --project <name>` - Ask a question to an agent about a project (read-only)
-- `smith dev <task> --project <name>` - Execute a development task with validation and commit (read/write)
-- `smith opencode <task> --project <name>` - Execute a task using OpenCode (agentic coding)
+
 - `smith container list` - List all smith containers
 - `smith container stop <name>` - Stop a container
 - `smith container remove <name>` - Remove a container
+
+- `smith config path` - Show config file location
+- `smith config set-github-token <token>` - Set GitHub API token for PR creation
+
+## GitHub Pull Requests
+
+Agent Smith supports creating and updating pull requests on GitHub:
+
+1. **Configure GitHub token:**
+   ```bash
+   smith config set-github-token <your-github-token>
+   ```
+
+2. **Use `--pr` flag with `dev` command:**
+   ```bash
+   smith dev "Add new feature" --branch feature/new-feature --project myproject --pr
+   ```
+
+The `--pr` flag will:
+- Create a new pull request if one doesn't exist for the branch
+- Update an existing pull request if one already exists (only one PR per branch)
+- Use the task description as the PR title
+- Default to `main` as the base branch (or use `--base` to specify)
 
 ## Development
 
@@ -55,10 +80,4 @@ cargo fmt
 # Lint
 cargo clippy --all-targets -- -D warnings
 ```
-
-## Roadmap
-
-- [x] Docker container execution
-- [x] OpenCode integration for agentic coding
-- [ ] Review workflow with keep-alive sessions
 
