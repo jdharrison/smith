@@ -45,6 +45,9 @@ enum Commands {
         /// Project name from config
         #[arg(long)]
         project: Option<String>,
+        /// Docker image to use (overrides project config if provided)
+        #[arg(long)]
+        image: Option<String>,
         /// SSH key path for private repositories (optional)
         #[arg(long)]
         ssh_key: Option<PathBuf>,
@@ -68,6 +71,9 @@ enum Commands {
         /// Project name from config
         #[arg(long)]
         project: Option<String>,
+        /// Docker image to use (overrides project config if provided)
+        #[arg(long)]
+        image: Option<String>,
         /// SSH key path for private repositories (optional)
         #[arg(long)]
         ssh_key: Option<PathBuf>,
@@ -93,6 +99,9 @@ enum Commands {
         /// Project name from config
         #[arg(long)]
         project: Option<String>,
+        /// Docker image to use (overrides project config if provided)
+        #[arg(long)]
+        image: Option<String>,
         /// SSH key path for private repositories (optional)
         #[arg(long)]
         ssh_key: Option<PathBuf>,
@@ -117,6 +126,9 @@ enum ProjectCommands {
         /// Repository path or URL
         #[arg(long)]
         repo: String,
+        /// Docker image to use for this project (optional)
+        #[arg(long)]
+        image: Option<String>,
     },
     /// List all registered projects
     List,
@@ -152,6 +164,8 @@ struct SmithConfig {
 struct ProjectConfig {
     name: String,
     repo: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    image: Option<String>,
 }
 
 fn config_dir() -> Result<PathBuf, String> {
@@ -203,6 +217,28 @@ fn resolve_repo(repo: Option<String>, project: Option<String>) -> Result<String,
     Err("Either --repo or --project must be provided".to_string())
 }
 
+fn resolve_project_config(project: Option<String>) -> Result<Option<ProjectConfig>, String> {
+    if let Some(p) = project {
+        let cfg = load_config()?;
+        let proj = cfg
+            .projects
+            .iter()
+            .find(|pr| pr.name == p)
+            .ok_or_else(|| format!("Project '{}' not found", p))?;
+        return Ok(Some(proj.clone()));
+    }
+    Ok(None)
+}
+
+/// Resolve Docker image to use
+/// Priority: explicit flag > project config > default
+fn resolve_image(explicit_image: Option<&str>, project_config: Option<&ProjectConfig>) -> String {
+    explicit_image
+        .map(|s| s.to_string())
+        .or_else(|| project_config.and_then(|p| p.image.clone()))
+        .unwrap_or_else(|| "node:20-alpine".to_string())
+}
+
 /// Set up a containerized workspace and return the container name
 fn setup_containerized_workspace(
     repo_url: &str,
@@ -242,7 +278,7 @@ fn main() {
             }
         },
         Some(Commands::Project { cmd }) => match cmd {
-            ProjectCommands::Add { name, repo } => {
+            ProjectCommands::Add { name, repo, image } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -251,7 +287,11 @@ fn main() {
                     eprintln!("Error: Project '{}' already exists", name);
                     std::process::exit(1);
                 }
-                cfg.projects.push(ProjectConfig { name, repo });
+                cfg.projects.push(ProjectConfig {
+                    name,
+                    repo,
+                    image,
+                });
                 save_config(&cfg).unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -267,7 +307,11 @@ fn main() {
                     println!("No projects registered");
                 } else {
                     for proj in &cfg.projects {
-                        println!("  {} -> {}", proj.name, proj.repo);
+                        if let Some(ref image) = proj.image {
+                            println!("  {} -> {} (image: {})", proj.name, proj.repo, image);
+                        } else {
+                            println!("  {} -> {}", proj.name, proj.repo);
+                        }
                     }
                 }
             }
@@ -294,6 +338,7 @@ fn main() {
             base,
             repo,
             project,
+            image,
             ssh_key,
             keep_alive,
         }) => {
@@ -302,19 +347,28 @@ fn main() {
                 std::process::exit(1);
             });
 
+            let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+
+            // Resolve image: flag > project config > default
+            let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
+
             // Check for SSH key in environment if not provided
             let ssh_key_path =
                 ssh_key.or_else(|| std::env::var("SSH_KEY_PATH").ok().map(PathBuf::from));
 
             println!("Ask: {}", question);
             println!("  Repository: {}", resolved_repo);
+            println!("  Image: {}", resolved_image);
 
-            // Set up containerized workspace (uses node image by default)
+            // Set up containerized workspace
             let container_name = match setup_containerized_workspace(
                 &resolved_repo,
                 project.as_deref(),
                 ssh_key_path.as_ref(),
-                None, // Use default node:20-alpine image
+                Some(&resolved_image),
             ) {
                 Ok(name) => {
                     println!("  ✓ Container created and repository cloned");
@@ -391,6 +445,7 @@ fn main() {
             base,
             repo,
             project,
+            image,
             ssh_key,
             keep_alive,
         }) => {
@@ -399,19 +454,28 @@ fn main() {
                 std::process::exit(1);
             });
 
+            let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+
+            // Resolve image: flag > project config > default
+            let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
+
             // Check for SSH key in environment if not provided
             let ssh_key_path =
                 ssh_key.or_else(|| std::env::var("SSH_KEY_PATH").ok().map(PathBuf::from));
 
             println!("Dev: {}", task);
             println!("  Repository: {}", resolved_repo);
+            println!("  Image: {}", resolved_image);
 
-            // Set up containerized workspace (uses node image by default)
+            // Set up containerized workspace
             let container_name = match setup_containerized_workspace(
                 &resolved_repo,
                 project.as_deref(),
                 ssh_key_path.as_ref(),
-                None, // Use default node:20-alpine image
+                Some(&resolved_image),
             ) {
                 Ok(name) => {
                     println!("  ✓ Container created and repository cloned");
@@ -507,6 +571,7 @@ fn main() {
             base,
             repo,
             project,
+            image,
             ssh_key,
             keep_alive,
         }) => {
@@ -515,19 +580,28 @@ fn main() {
                 std::process::exit(1);
             });
 
+            let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+
+            // Resolve image: flag > project config > default
+            let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
+
             // Check for SSH key in environment if not provided
             let ssh_key_path =
                 ssh_key.or_else(|| std::env::var("SSH_KEY_PATH").ok().map(PathBuf::from));
 
             println!("Review: {}", branch);
             println!("  Repository: {}", resolved_repo);
+            println!("  Image: {}", resolved_image);
 
-            // Set up containerized workspace (uses node image by default)
+            // Set up containerized workspace
             let container_name = match setup_containerized_workspace(
                 &resolved_repo,
                 project.as_deref(),
                 ssh_key_path.as_ref(),
-                None, // Use default node:20-alpine image
+                Some(&resolved_image),
             ) {
                 Ok(name) => {
                     println!("  ✓ Container created and repository cloned");

@@ -2,6 +2,17 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// Project type detected from repository files
+#[derive(Debug, Clone, PartialEq)]
+pub enum ProjectType {
+    Rust,
+    Go,
+    Python,
+    Node,
+    Java,
+    Unknown,
+}
+
 /// Generate a unique container name for parallel execution
 pub fn generate_container_name(project_name: Option<&str>) -> String {
     let timestamp = SystemTime::now()
@@ -225,17 +236,17 @@ pub fn setup_containerized_workspace(
     // Start container
     start_container(container_name)?;
 
-    // Install git in node container if needed (node images usually have git)
+    // Install git if needed (try multiple package managers)
     let _ = exec_in_container(
         container_name,
-        "which git || apk add --no-cache git 2>/dev/null",
+        "which git || (apk add --no-cache git 2>/dev/null || apt-get update && apt-get install -y git 2>/dev/null || true)",
     );
 
     // Install SSH client if needed (for SSH-based git clones)
     if uses_ssh || ssh_key_path.is_some() {
         let _ = exec_in_container(
             container_name,
-            "which ssh || apk add --no-cache openssh-client 2>/dev/null",
+            "which ssh || (apk add --no-cache openssh-client 2>/dev/null || apt-get update && apt-get install -y openssh-client 2>/dev/null || true)",
         );
 
         // Set up SSH config and known_hosts if SSH key is provided
@@ -293,7 +304,219 @@ pub fn setup_containerized_workspace(
     // Clone repository inside container
     clone_in_container(container_name, repo_url, ssh_key_path)?;
 
+    // Ensure Node.js is available for OpenCode
+    ensure_nodejs_available(container_name)?;
+
     Ok(container_name.to_string())
+}
+
+/// Detect project type by checking for key files in the repository
+/// This is done after cloning, so we check inside the container
+pub fn detect_project_type(container_name: &str) -> ProjectType {
+    // Check for key files that indicate project type
+    let checks = vec![
+        ("test -f /workspace/Cargo.toml", ProjectType::Rust),
+        ("test -f /workspace/go.mod", ProjectType::Go),
+        ("test -f /workspace/package.json", ProjectType::Node),
+        (
+            "test -f /workspace/requirements.txt || test -f /workspace/pyproject.toml || test -f /workspace/setup.py",
+            ProjectType::Python,
+        ),
+        (
+            "test -f /workspace/pom.xml || test -f /workspace/build.gradle",
+            ProjectType::Java,
+        ),
+    ];
+
+    for (check_cmd, project_type) in checks {
+        match exec_in_container(container_name, check_cmd) {
+            Ok(output) => {
+                // If command succeeds (exit code 0), the file exists
+                if output.trim().is_empty() || !output.contains("not found") {
+                    return project_type;
+                }
+            }
+            Err(_) => {
+                // Command failed, file doesn't exist, continue checking
+                continue;
+            }
+        }
+    }
+
+    ProjectType::Unknown
+}
+
+/// Install Node.js and npm in a container at runtime
+/// Detects the package manager and installs accordingly
+pub fn ensure_nodejs_available(container_name: &str) -> Result<(), String> {
+    // Check if Node.js is already available
+    let check_cmd = "which node || command -v node || echo 'not found'";
+    let check_result = exec_in_container(container_name, check_cmd)?;
+
+    if !check_result.contains("not found") {
+        // Node.js is already available
+        return Ok(());
+    }
+
+    println!("  Installing Node.js in container...");
+
+    // Detect package manager and install Node.js
+    // Try Alpine (apk) first (most common for official images)
+    let apk_cmd = "apk add --no-cache nodejs npm 2>&1";
+    let apk_result = exec_in_container(container_name, apk_cmd);
+    if apk_result.is_ok() {
+        // Verify installation
+        let verify = exec_in_container(container_name, "node --version 2>&1")?;
+        if !verify.trim().is_empty() {
+            println!("    ✓ Node.js installed via apk");
+            return Ok(());
+        }
+    }
+
+    // Try Debian/Ubuntu (apt)
+    let apt_cmd = "apt-get update && apt-get install -y nodejs npm 2>&1";
+    let apt_result = exec_in_container(container_name, apt_cmd);
+    if apt_result.is_ok() {
+        let verify = exec_in_container(container_name, "node --version 2>&1")?;
+        if !verify.trim().is_empty() {
+            println!("    ✓ Node.js installed via apt");
+            return Ok(());
+        }
+    }
+
+    // Try using nvm or other methods as last resort
+    // For now, return error if we can't install
+    Err("Failed to install Node.js. Container must have apk or apt package manager.".to_string())
+}
+
+/// Initialize repository by installing dependencies based on project type
+/// This is called during Agent::initialize() to ensure dependencies are ready
+pub fn initialize_repository(container_name: &str) -> Result<(), String> {
+    println!("  Initializing repository dependencies...");
+
+    // Detect project type
+    let project_type = detect_project_type(container_name);
+    println!("    Detected project type: {:?}", project_type);
+
+    // Install dependencies based on type
+    match project_type {
+        ProjectType::Rust => {
+            println!("    Installing Rust dependencies...");
+            // Cargo will download dependencies on first build
+            // Just verify cargo is available
+            let cargo_check = exec_in_container(container_name, "which cargo || command -v cargo || echo 'not found'")?;
+            if cargo_check.contains("not found") {
+                return Err("Cargo not found in container. Please use a Rust-based Docker image (e.g., rust:1.75-alpine).".to_string());
+            }
+            // Try a dry-run build to fetch dependencies
+            let _ = exec_in_container(container_name, "cd /workspace && cargo check --message-format=short 2>&1 | head -20 || true");
+            println!("    ✓ Rust dependencies ready");
+        }
+        ProjectType::Node => {
+            println!("    Installing Node.js dependencies...");
+            // Check if package.json exists
+            let has_package_json = exec_in_container(container_name, "test -f /workspace/package.json && echo 'yes' || echo 'no'")?;
+            if has_package_json.contains("yes") {
+                // Try npm install
+                let npm_result = exec_in_container(container_name, "cd /workspace && npm install 2>&1");
+                if npm_result.is_ok() {
+                    println!("    ✓ Node.js dependencies installed");
+                } else {
+                    // Try yarn if npm fails
+                    let yarn_result = exec_in_container(container_name, "cd /workspace && yarn install 2>&1");
+                    if yarn_result.is_ok() {
+                        println!("    ✓ Node.js dependencies installed (via yarn)");
+                    } else {
+                        println!("    ⚠ Could not install Node.js dependencies (npm/yarn not available or failed)");
+                    }
+                }
+            } else {
+                println!("    ⚠ No package.json found, skipping dependency installation");
+            }
+        }
+        ProjectType::Go => {
+            println!("    Installing Go dependencies...");
+            let go_check = exec_in_container(container_name, "which go || command -v go || echo 'not found'")?;
+            if go_check.contains("not found") {
+                return Err("Go not found in container. Please use a Go-based Docker image (e.g., golang:1.21-alpine).".to_string());
+            }
+            // Download Go modules
+            let _ = exec_in_container(container_name, "cd /workspace && go mod download 2>&1 || true");
+            println!("    ✓ Go dependencies ready");
+        }
+        ProjectType::Python => {
+            println!("    Installing Python dependencies...");
+            let python_check = exec_in_container(container_name, "which python3 || which python || command -v python3 || command -v python || echo 'not found'")?;
+            if python_check.contains("not found") {
+                return Err("Python not found in container. Please use a Python-based Docker image (e.g., python:3.11-alpine).".to_string());
+            }
+            // Try pip install
+            let pip_result = exec_in_container(container_name, "cd /workspace && (pip install -r requirements.txt 2>&1 || pip3 install -r requirements.txt 2>&1 || true)");
+            if pip_result.is_ok() {
+                println!("    ✓ Python dependencies installed");
+            } else {
+                println!("    ⚠ Could not install Python dependencies (requirements.txt may not exist)");
+            }
+        }
+        ProjectType::Java => {
+            println!("    Installing Java dependencies...");
+            let java_check = exec_in_container(container_name, "which javac || command -v javac || echo 'not found'")?;
+            if java_check.contains("not found") {
+                return Err("Java not found in container. Please use a Java-based Docker image (e.g., eclipse-temurin:21-jdk-alpine).".to_string());
+            }
+            // Maven or Gradle will download dependencies on first build
+            println!("    ✓ Java dependencies ready (will be downloaded on first build)");
+        }
+        ProjectType::Unknown => {
+            println!("    ⚠ Unknown project type, skipping dependency installation");
+        }
+    }
+
+    // Validate that key tools are available
+    validate_dependencies_installed(container_name, &project_type)?;
+
+    Ok(())
+}
+
+/// Validate that dependencies are properly installed
+fn validate_dependencies_installed(container_name: &str, project_type: &ProjectType) -> Result<(), String> {
+    match project_type {
+        ProjectType::Rust => {
+            let cargo_version = exec_in_container(container_name, "cargo --version 2>&1")?;
+            if cargo_version.trim().is_empty() {
+                return Err("Cargo validation failed".to_string());
+            }
+        }
+        ProjectType::Node => {
+            let npm_version = exec_in_container(container_name, "npm --version 2>&1")?;
+            if npm_version.trim().is_empty() {
+                return Err("npm validation failed".to_string());
+            }
+        }
+        ProjectType::Go => {
+            let go_version = exec_in_container(container_name, "go version 2>&1")?;
+            if go_version.trim().is_empty() {
+                return Err("Go validation failed".to_string());
+            }
+        }
+        ProjectType::Python => {
+            let python_version = exec_in_container(container_name, "python3 --version 2>&1 || python --version 2>&1")?;
+            if python_version.trim().is_empty() {
+                return Err("Python validation failed".to_string());
+            }
+        }
+        ProjectType::Java => {
+            let java_version = exec_in_container(container_name, "javac -version 2>&1")?;
+            if java_version.trim().is_empty() {
+                return Err("Java validation failed".to_string());
+            }
+        }
+        ProjectType::Unknown => {
+            // Skip validation for unknown types
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

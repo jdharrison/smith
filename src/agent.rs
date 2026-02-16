@@ -44,11 +44,14 @@ impl Agent for OpenCodeAgent {
         let check_cmd = "test -d /workspace && echo 'ok' || echo 'missing'";
         let result = docker::exec_in_container(container_name, check_cmd)?;
 
-        if result.trim() == "ok" {
-            Ok(())
-        } else {
-            Err("Workspace not found in container".to_string())
+        if result.trim() != "ok" {
+            return Err("Workspace not found in container".to_string());
         }
+
+        // Initialize repository: install dependencies and validate
+        docker::initialize_repository(container_name)?;
+
+        Ok(())
     }
 
     fn ask(&self, container_name: &str, question: &str) -> Result<String, String> {
@@ -105,6 +108,9 @@ fn call_opencode_agent(container_name: &str, question: &str) -> Result<String, S
 /// Bootstrap OpenCode in the container
 /// Installs/ensures OpenCode is available in the container
 fn bootstrap_opencode(container_name: &str) -> Result<(), String> {
+    // Ensure Node.js is available first (installs if missing)
+    docker::ensure_nodejs_available(container_name)?;
+
     // Check if OpenCode is already available
     let check_cmd = "which opencode || command -v opencode || echo 'not found'";
     let result = docker::exec_in_container(container_name, check_cmd)?;
@@ -114,13 +120,13 @@ fn bootstrap_opencode(container_name: &str) -> Result<(), String> {
         return Ok(());
     }
 
-    // Check if npm is available (should be in node container)
+    // Check if npm is available (should be available after ensure_nodejs_available)
     let npm_check = "which npm || command -v npm || echo 'not found'";
     let npm_available = docker::exec_in_container(container_name, npm_check)?;
 
     if npm_available.contains("not found") {
         return Err(
-            "npm not found in container. Please use a node-based Docker image.".to_string(),
+            "npm not found in container after Node.js installation. This should not happen.".to_string(),
         );
     }
 
