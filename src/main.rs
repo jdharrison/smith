@@ -282,7 +282,7 @@ async fn main() {
         }
         Some(Commands::Doctor) => {
             println!("Doctor: Validating environment...");
-            
+
             // Check config directory
             match config_dir() {
                 Ok(dir) => {
