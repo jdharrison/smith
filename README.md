@@ -50,24 +50,29 @@ cargo install --path .
 smith --help
 ```
 
-### Commands
+### Core Commands
 
 - `smith ask <question> --project <name>` - Ask a question to an agent about a project (read-only)
 - `smith dev <task> --branch <branch> --project <name> [--pr]` - Execute an idempotent development task with validation and commit (read/write). Use `--pr` to create or update a pull request.
 - `smith review <branch> --project <name>` - Review changes on a branch of the project (read-only)
-
 - `smith doctor` - Validate the local environment
+
+### Project Commands
 
 - `smith project add <name> --repo <path-or-url>` - Register a project
 - `smith project list` - List registered projects
 - `smith project remove <name>` - Remove a project
 
-- `smith container list` - List all smith containers
-- `smith container stop <name>` - Stop a container
-- `smith container remove <name>` - Remove a container
+### Config Commands
 
 - `smith config path` - Show config file location
 - `smith config set-github-token <token>` - Set GitHub API token for PR creation
+
+### Container Commands
+
+- `smith container list` - List all smith containers
+- `smith container stop <name>` - Stop a container
+- `smith container remove <name>` - Remove a container
 
 ## GitHub Pull Requests
 
