@@ -13,6 +13,7 @@ use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "smith")]
+#[command(version)]
 #[command(about = "Agent Smith — open-source control plane for coding orchestration and configuration", long_about = None)]
 struct Cli {
     #[command(subcommand)]
