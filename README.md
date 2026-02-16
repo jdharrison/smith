@@ -8,6 +8,40 @@ Agent Smith — open-source control plane for coding orchestration and configura
 
 > **Note:** This project is complete but not yet stable. Use in production at your own risk.
 
+## Installation
+
+### Option 1: Install from GitHub (Recommended)
+
+Install directly from the GitHub repository using Cargo:
+
+```bash
+# Install latest release
+cargo install --git https://github.com/jdharrison/smith.git --tag release/v0.1.0
+
+# Or install from main branch (latest development)
+cargo install --git https://github.com/jdharrison/smith.git
+```
+
+**Prerequisites:** Rust 1.75+ and Cargo installed. If you don't have Rust, install it from [rustup.rs](https://rustup.rs/).
+
+### Option 2: Build from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/jdharrison/smith.git
+cd smith
+
+# Checkout the release tag
+git checkout release/v0.1.0
+
+# Build and install
+cargo install --path .
+```
+
+### Option 3: Download Pre-built Binaries (Coming Soon)
+
+Pre-built binaries for Windows, macOS, and Linux will be available in [GitHub Releases](https://github.com/jdharrison/smith/releases) once CI/CD is configured.
+
 ## Quick Start
 
 ### Prerequisites
