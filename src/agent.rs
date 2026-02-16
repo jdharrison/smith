@@ -1,5 +1,4 @@
 use crate::docker;
-use serde::{Deserialize, Serialize};
 
 /// Trait for agents that can execute in containers
 pub trait Agent {
@@ -20,6 +19,7 @@ pub trait Agent {
         branch: &str,
         base: Option<&str>,
         _pr: bool,
+        verbose: bool,
     ) -> Result<String, String>;
 
     /// Review changes in a feature branch
@@ -70,11 +70,12 @@ impl Agent for OpenCodeAgent {
         task: &str,
         branch: &str,
         base: Option<&str>,
-        _pr: bool,
+        pr: bool,
+        verbose: bool,
     ) -> Result<String, String> {
         // Execute development action with validation and commit
         // Note: PR creation is handled in main.rs after this returns
-        dev_agent(container_name, task, branch, base)
+        dev_agent(container_name, task, branch, base, pr, verbose)
     }
 
     fn review(
@@ -103,7 +104,7 @@ fn call_opencode_agent(container_name: &str, question: &str) -> Result<String, S
 
     // Call OpenCode with the question
     // OpenCode has access to the full workspace at /workspace
-    let answer = execute_opencode(container_name, question)?;
+    let answer = execute_opencode(container_name, question, false)?;
 
     Ok(answer)
 }
@@ -190,7 +191,7 @@ fn bootstrap_opencode(container_name: &str) -> Result<(), String> {
 
 /// Execute OpenCode with a question
 /// OpenCode analyzes the workspace at /workspace directly
-fn execute_opencode(container_name: &str, question: &str) -> Result<String, String> {
+fn execute_opencode(container_name: &str, question: &str, verbose: bool) -> Result<String, String> {
     // Try multiple ways to run OpenCode:
     // 1. Try npx opencode-ai (most reliable)
     // 2. Try opencode command if available
@@ -209,6 +210,9 @@ fn execute_opencode(container_name: &str, question: &str) -> Result<String, Stri
         Ok(result) => {
             let trimmed = result.trim();
             if !trimmed.is_empty() {
+                if verbose {
+                    println!("  OpenCode output:\n{}", result);
+                }
                 return Ok(result);
             }
             // Empty result from npx - log it but continue to try other methods
@@ -227,6 +231,10 @@ fn execute_opencode(container_name: &str, question: &str) -> Result<String, Stri
     );
 
     let result = docker::exec_in_container(container_name, &opencode_cmd)?;
+
+    if verbose {
+        println!("  OpenCode output:\n{}", result);
+    }
 
     let trimmed_result = result.trim();
     if trimmed_result.is_empty() {
@@ -261,20 +269,16 @@ fn execute_opencode(container_name: &str, question: &str) -> Result<String, Stri
     }
 }
 
-/// JSON response structure for validation
-#[derive(Debug, Serialize, Deserialize)]
-struct ValidationResponse {
-    success: bool,
-    message: String,
-}
 
-/// Execute a development action with validation and commit
-/// This performs read/write operations, validates them, and commits
+/// Execute a development action and commit
+/// This performs read/write operations and commits them
 fn dev_agent(
     container_name: &str,
     task: &str,
     branch: &str,
     base: Option<&str>,
+    pr: bool,
+    verbose: bool,
 ) -> Result<String, String> {
     // Bootstrap OpenCode if needed
     bootstrap_opencode(container_name)?;
@@ -284,42 +288,7 @@ fn dev_agent(
 
     // Execute the development task (OpenCode will make changes)
     println!("  Executing development task...");
-    execute_opencode(container_name, task)?;
-
-    // Validate the changes using OpenCode with JSON response
-    println!("  Validating changes...");
-    let max_attempts = 3;
-    let mut attempt = 0;
-
-    loop {
-        attempt += 1;
-        if attempt > max_attempts {
-            return Err(format!(
-                "Validation failed after {} attempts. Last error: {}",
-                max_attempts, "Could not fix validation issues"
-            ));
-        }
-
-        let validation_result = validate_with_opencode(container_name)?;
-
-        if validation_result.success {
-            println!("    ✓ Validation passed: {}", validation_result.message);
-            break;
-        } else {
-            println!(
-                "    ⚠ Validation failed (attempt {}/{}): {}",
-                attempt, max_attempts, validation_result.message
-            );
-
-            if attempt < max_attempts {
-                println!("    Attempting to fix issues...");
-                let fix_task = format!("Fix the following issues: {}", validation_result.message);
-                execute_opencode(container_name, &fix_task)?;
-            } else {
-                return Err(format!("Validation failed: {}", validation_result.message));
-            }
-        }
-    }
+    execute_opencode(container_name, task, verbose)?;
 
     // Check if there are any changes to commit
     let status_cmd = "cd /workspace && git status --porcelain";
@@ -327,6 +296,16 @@ fn dev_agent(
 
     if status.trim().is_empty() {
         println!("  ⚠ No changes detected (git status --porcelain is clean)");
+        
+        // If PR is requested, still ensure branch exists and is pushed
+        if pr {
+            println!("  PR requested: ensuring branch exists on remote...");
+            // Try to push anyway (will be a no-op if already up to date, but ensures branch exists)
+            let _ = push_to_branch(container_name, branch);
+            // Return a special success code to indicate no changes but PR should still be created
+            return Ok("no-changes-pr-requested".to_string());
+        }
+        
         println!("  Skipping commit and push");
         return Err("No changes were made by the development task".to_string());
     }
@@ -441,84 +420,6 @@ fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resul
     Ok(())
 }
 
-/// Validate changes using OpenCode with JSON response
-fn validate_with_opencode(container_name: &str) -> Result<ValidationResponse, String> {
-    let validation_prompt = "Check if the code compiles. Run 'cargo check' (or equivalent for the project type) to verify compilation only. Do NOT run full builds or tests. Return ONLY a JSON object with this exact structure: {\"success\": true/false, \"message\": \"description\"}. Do not include any other text, only the JSON.";
-
-    let response = execute_opencode(container_name, validation_prompt)?;
-
-    // Try to parse JSON from the response
-    // OpenCode might return JSON wrapped in markdown or other text, so we need to extract it
-    let json_str = extract_json_from_response(&response);
-
-    serde_json::from_str::<ValidationResponse>(&json_str).map_err(|e| {
-        format!(
-            "Failed to parse validation response as JSON: {}. Response was: {}",
-            e, response
-        )
-    })
-}
-
-/// Extract JSON from OpenCode response (might be wrapped in markdown code blocks or other text)
-fn extract_json_from_response(response: &str) -> String {
-    let trimmed = response.trim();
-
-    // First, try to extract JSON from markdown code blocks (```json ... ``` or ``` ... ```)
-    if let Some(json_start) = trimmed.find("```json") {
-        let after_marker = &trimmed[json_start + 7..];
-        if let Some(code_end) = after_marker.find("```") {
-            let json_candidate = after_marker[..code_end].trim();
-            // Validate it looks like JSON (starts with {)
-            if json_candidate.starts_with('{') {
-                return json_candidate.to_string();
-            }
-        }
-    }
-    
-    // Try generic code blocks (``` ... ```)
-    if let Some(code_start) = trimmed.find("```") {
-        let after_marker = &trimmed[code_start + 3..];
-        if let Some(code_end) = after_marker.find("```") {
-            let json_candidate = after_marker[..code_end].trim();
-            // Validate it looks like JSON (starts with {)
-            if json_candidate.starts_with('{') {
-                return json_candidate.to_string();
-            }
-        }
-    }
-
-    // Try to find JSON object in the response
-    // Look for { ... } pattern, but be more careful about nested braces
-    if let Some(start) = trimmed.find('{') {
-        // Find the matching closing brace by counting nested braces
-        let mut brace_count = 0;
-        let mut end = None;
-        for (i, ch) in trimmed[start..].char_indices() {
-            match ch {
-                '{' => brace_count += 1,
-                '}' => {
-                    brace_count -= 1;
-                    if brace_count == 0 {
-                        end = Some(start + i);
-                        break;
-                    }
-                }
-                _ => {}
-            }
-        }
-        
-        if let Some(end_pos) = end {
-            let json_candidate = trimmed[start..=end_pos].trim();
-            // Basic validation: should start with { and end with }
-            if json_candidate.starts_with('{') && json_candidate.ends_with('}') {
-                return json_candidate.to_string();
-            }
-        }
-    }
-
-    // If no JSON found, return the whole response (will fail parsing but that's ok)
-    trimmed.to_string()
-}
 
 /// Push changes to the specified branch
 fn push_to_branch(container_name: &str, branch: &str) -> Result<(), String> {
@@ -576,12 +477,21 @@ fn push_to_branch(container_name: &str, branch: &str) -> Result<(), String> {
         }
     }
 
-    // Configure git for HTTPS pushes (use credential helper to avoid prompts)
-    // For public repos, we might still need authentication for push
-    let _ = docker::exec_in_container(
+    // Verify SSH credentials are available (check for any SSH key)
+    let has_ssh_creds = docker::exec_in_container(
         container_name,
-        "cd /workspace && git config credential.helper 'store' 2>/dev/null || true",
-    );
+        "ls /root/.ssh/id_* 2>/dev/null | head -1 | grep -q . && echo 'yes' || echo 'no'",
+    )
+    .unwrap_or_else(|_| "no".to_string())
+    .trim()
+    == "yes";
+
+    if !has_ssh_creds {
+        println!("    ⚠ Skipping push: SSH credentials not found");
+        println!("    SSH credentials should be available from host's ~/.ssh directory");
+        println!("    Or provide --ssh-key to override, or push manually: git push origin {}", branch);
+        return Ok(());
+    }
 
     // Push to branch
     let push_cmd = format!(
@@ -948,7 +858,7 @@ fn review_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resu
         diff
     );
 
-    let analysis = execute_opencode(container_name, &analysis_prompt)?;
+    let analysis = execute_opencode(container_name, &analysis_prompt, false)?;
 
     // Format the output
     let output = format!(

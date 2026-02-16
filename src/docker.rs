@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
+use dirs::home_dir;
 
 /// Project type detected from repository files
 #[derive(Debug, Clone, PartialEq)]
@@ -13,19 +14,47 @@ pub enum ProjectType {
     Unknown,
 }
 
+/// Sanitize a string for use in container names
+/// Replaces invalid characters with underscores and limits length
+fn sanitize_for_container_name(s: &str) -> String {
+    s.chars()
+        .map(|c| {
+            if c.is_alphanumeric() || c == '-' || c == '_' {
+                c
+            } else if c == '/' {
+                '_'
+            } else {
+                '_'
+            }
+        })
+        .collect::<String>()
+        .chars()
+        .take(50) // Limit length
+        .collect()
+}
+
 /// Generate a unique container name for parallel execution
-pub fn generate_container_name(project_name: Option<&str>) -> String {
+/// Format: smith_{command}_{sanitized_branch}_{timestamp}
+pub fn generate_container_name(
+    command: &str,
+    branch_or_question: Option<&str>,
+) -> String {
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
-        .as_nanos();
-    let pid = std::process::id();
+        .as_nanos()
+        % 1_000_000_000; // Use last 9 digits for shorter names
 
-    if let Some(project) = project_name {
-        format!("smith-{}-{}-{}", project, pid, timestamp)
-    } else {
-        format!("smith-{}-{}", pid, timestamp)
-    }
+    let sanitized_branch = branch_or_question
+        .map(|s| sanitize_for_container_name(s))
+        .unwrap_or_else(|| "default".to_string());
+
+    format!("smith_{}_{}_{}", command, sanitized_branch, timestamp)
+}
+
+/// Get the host's SSH directory path
+fn get_host_ssh_dir() -> Option<PathBuf> {
+    home_dir().map(|home| home.join(".ssh"))
 }
 
 /// Create a long-lived container with workspace inside
@@ -41,9 +70,9 @@ pub fn create_container(
     cmd.arg("create");
     cmd.arg("--name").arg(container_name);
 
-    // Mount SSH key if provided
+    // Mount SSH credentials: prefer explicit --ssh-key, otherwise use host's .ssh directory
     if let Some(key_path) = ssh_key_path {
-        // Mount private key
+        // Mount specific SSH key if provided (override)
         cmd.arg("-v")
             .arg(format!("{}:/root/.ssh/id_ed25519:ro", key_path.display()));
 
@@ -54,6 +83,12 @@ pub fn create_container(
                 "{}:/root/.ssh/id_ed25519.pub:ro",
                 pub_key.display()
             ));
+        }
+    } else if let Some(ssh_dir) = get_host_ssh_dir() {
+        // Mount host's entire .ssh directory if it exists
+        if ssh_dir.exists() && ssh_dir.is_dir() {
+            cmd.arg("-v")
+                .arg(format!("{}:/root/.ssh_host:ro", ssh_dir.display()));
         }
     }
 
@@ -227,7 +262,7 @@ pub fn list_containers() -> Result<Vec<String>, String> {
         .arg("ps")
         .arg("-a")
         .arg("--filter")
-        .arg("name=smith-")
+        .arg("name=smith_")
         .arg("--format")
         .arg("{{.Names}}")
         .output()
@@ -279,45 +314,111 @@ pub fn setup_containerized_workspace(
             "which ssh || (apk add --no-cache openssh-client 2>/dev/null || apt-get update && apt-get install -y openssh-client 2>/dev/null || true)",
         );
 
-        // Set up SSH config and known_hosts if SSH key is provided
-        if ssh_key_path.is_some() {
-            // Create .ssh directory (must exist before mounting, but we create it here for the copied files)
+        // Set up SSH credentials from host or explicit key
+        // Check if we have host SSH directory mounted or explicit key
+        let has_explicit_key = ssh_key_path.is_some();
+        let has_host_ssh = exec_in_container(
+            container_name,
+            "test -d /root/.ssh_host && echo 'yes' || echo 'no'",
+        )
+        .unwrap_or_else(|_| "no".to_string())
+        .trim()
+        == "yes";
+
+        if has_explicit_key || has_host_ssh {
+            // Create .ssh directory
             exec_in_container(
                 container_name,
                 "mkdir -p /root/.ssh && chmod 700 /root/.ssh",
             )?;
 
-            // Verify the mounted key exists, then copy it to a new file with proper permissions
-            // (mounted files may have wrong permissions, so we copy them)
-            // First verify the mounted file exists
-            let key_check = exec_in_container(
-                container_name,
-                "test -f /root/.ssh/id_ed25519 && echo 'exists' || echo 'missing'",
-            )
-            .unwrap_or_else(|_| "missing".to_string());
+            if has_explicit_key {
+                // Use explicit SSH key (mounted as id_ed25519)
+                let key_check = exec_in_container(
+                    container_name,
+                    "test -f /root/.ssh/id_ed25519 && echo 'exists' || echo 'missing'",
+                )
+                .unwrap_or_else(|_| "missing".to_string());
 
-            if !key_check.contains("exists") {
-                return Err(
-                    "SSH key was not mounted properly. Expected /root/.ssh/id_ed25519 to exist."
-                        .to_string(),
-                );
+                if !key_check.contains("exists") {
+                    return Err(
+                        "SSH key was not mounted properly. Expected /root/.ssh/id_ed25519 to exist."
+                            .to_string(),
+                    );
+                }
+
+                // Copy the mounted key to a new file with proper permissions
+                exec_in_container(
+                    container_name,
+                    "cp /root/.ssh/id_ed25519 /root/.ssh/id_ed25519.key",
+                )?;
+                exec_in_container(container_name, "chmod 600 /root/.ssh/id_ed25519.key")?;
+
+                // Copy public key if it exists
+                let _ = exec_in_container(
+                    container_name,
+                    "test -f /root/.ssh/id_ed25519.pub && cp /root/.ssh/id_ed25519.pub /root/.ssh/id_ed25519.key.pub && chmod 644 /root/.ssh/id_ed25519.key.pub || true",
+                ).ok();
+
+                // Update SSH config to include the identity file
+                let ssh_config = "Host github.com\n  StrictHostKeyChecking accept-new\n  UserKnownHostsFile /root/.ssh/known_hosts\n  IdentityFile /root/.ssh/id_ed25519.key\n";
+                exec_in_container(
+                    container_name,
+                    &format!(
+                        "echo '{}' > /root/.ssh/config && chmod 600 /root/.ssh/config",
+                        ssh_config.replace("'", "'\"'\"'")
+                    ),
+                )?;
+            } else if has_host_ssh {
+                // Copy host SSH directory contents to container .ssh
+                // Find and copy SSH keys from host directory
+                exec_in_container(
+                    container_name,
+                    "cp -r /root/.ssh_host/* /root/.ssh/ 2>/dev/null || true",
+                )?;
+                
+                // Fix permissions on copied files
+                exec_in_container(
+                    container_name,
+                    "chmod 700 /root/.ssh && chmod 600 /root/.ssh/* 2>/dev/null || true",
+                )?;
+                exec_in_container(
+                    container_name,
+                    "chmod 644 /root/.ssh/*.pub /root/.ssh/known_hosts /root/.ssh/config 2>/dev/null || true",
+                )?;
+
+                // Ensure SSH config exists with proper settings
+                let ssh_config_check = exec_in_container(
+                    container_name,
+                    "test -f /root/.ssh/config && echo 'exists' || echo 'missing'",
+                )
+                .unwrap_or_else(|_| "missing".to_string());
+
+                if !ssh_config_check.contains("exists") {
+                    // Create basic SSH config if host doesn't have one
+                    let ssh_config = "Host github.com\n  StrictHostKeyChecking accept-new\n";
+                    exec_in_container(
+                        container_name,
+                        &format!(
+                            "echo '{}' > /root/.ssh/config && chmod 600 /root/.ssh/config",
+                            ssh_config.replace("'", "'\"'\"'")
+                        ),
+                    )?;
+                }
             }
 
-            // Copy the mounted key to a new file with proper permissions
-            exec_in_container(
-                container_name,
-                "cp /root/.ssh/id_ed25519 /root/.ssh/id_ed25519.key",
-            )?;
-            exec_in_container(container_name, "chmod 600 /root/.ssh/id_ed25519.key")?;
-
-            // Copy public key if it exists
+            // Add GitHub to known_hosts if not already present
             let _ = exec_in_container(
                 container_name,
-                "test -f /root/.ssh/id_ed25519.pub && cp /root/.ssh/id_ed25519.pub /root/.ssh/id_ed25519.key.pub && chmod 644 /root/.ssh/id_ed25519.key.pub || true",
-            ).ok();
-
-            // Set up SSH config to use the copied key with proper permissions
-            let ssh_config = "Host github.com\n  StrictHostKeyChecking accept-new\n  UserKnownHostsFile /root/.ssh/known_hosts\n  IdentityFile /root/.ssh/id_ed25519.key\n";
+                "ssh-keyscan github.com >> /root/.ssh/known_hosts 2>/dev/null || true",
+            );
+        } else if uses_ssh {
+            // SSH URL but no credentials - create basic setup (will fail on clone, but setup is clean)
+            exec_in_container(
+                container_name,
+                "mkdir -p /root/.ssh && chmod 700 /root/.ssh",
+            )?;
+            let ssh_config = "Host github.com\n  StrictHostKeyChecking accept-new\n  UserKnownHostsFile /root/.ssh/known_hosts\n";
             exec_in_container(
                 container_name,
                 &format!(
@@ -325,16 +426,11 @@ pub fn setup_containerized_workspace(
                     ssh_config.replace("'", "'\"'\"'")
                 ),
             )?;
-
-            // Add GitHub to known_hosts
-            let _ = exec_in_container(
-                container_name,
-                "ssh-keyscan github.com >> /root/.ssh/known_hosts 2>/dev/null || true",
-            );
         }
     }
 
     // Clone repository inside container
+    // SSH key is required (validated in main.rs)
     clone_in_container(container_name, repo_url, ssh_key_path)?;
 
     // Ensure Node.js is available for OpenCode

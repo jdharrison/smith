@@ -85,6 +85,9 @@ enum Commands {
         /// Create or update a pull request after pushing (requires GitHub token configured)
         #[arg(long)]
         pr: bool,
+        /// Show verbose output from OpenCode agent
+        #[arg(long)]
+        verbose: bool,
     },
     /// Manage containers
     Container {
@@ -142,6 +145,17 @@ enum ProjectCommands {
     },
     /// List all registered projects
     List,
+    /// Update an existing project's repository URL or image
+    Update {
+        /// Project name
+        name: String,
+        /// New repository path or URL
+        #[arg(long)]
+        repo: Option<String>,
+        /// New Docker image to use for this project
+        #[arg(long)]
+        image: Option<String>,
+    },
     /// Remove a project
     Remove {
         /// Project name
@@ -259,11 +273,21 @@ fn resolve_image(explicit_image: Option<&str>, project_config: Option<&ProjectCo
 /// Set up a containerized workspace and return the container name
 fn setup_containerized_workspace(
     repo_url: &str,
-    project_name: Option<&str>,
+    command: &str,
+    branch_or_question: Option<&str>,
     ssh_key_path: Option<&PathBuf>,
     image: Option<&str>,
 ) -> Result<String, String> {
-    let container_name = docker::generate_container_name(project_name);
+    // Validate URL format - require SSH URLs
+    if repo_url.starts_with("https://") {
+        return Err(
+            "HTTPS URLs are not supported. Please use SSH URLs (git@github.com:user/repo.git).".to_string()
+        );
+    }
+    
+    // SSH URLs are required, but SSH key is optional (we'll use host's .ssh directory if available)
+    
+    let container_name = docker::generate_container_name(command, branch_or_question);
 
     docker::setup_containerized_workspace(&container_name, repo_url, ssh_key_path, image)?;
 
@@ -323,6 +347,7 @@ async fn main() {
                     std::process::exit(1);
                 });
                 println!("GitHub token configured successfully");
+                println!("  Note: Token must have 'repo' scope (classic tokens) or 'pull-requests:write' permission (fine-grained tokens) to create PRs");
             }
         },
         Some(Commands::Project { cmd }) => match cmd {
@@ -356,6 +381,35 @@ async fn main() {
                         } else {
                             println!("  {} -> {}", proj.name, proj.repo);
                         }
+                    }
+                }
+            }
+            ProjectCommands::Update { name, repo, image } => {
+                let mut cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                let project = cfg.projects.iter_mut().find(|p| p.name == name);
+                match project {
+                    Some(proj) => {
+                        if let Some(new_repo) = repo {
+                            proj.repo = new_repo;
+                        }
+                        if let Some(new_image) = image {
+                            proj.image = Some(new_image);
+                        } else if image.is_some() {
+                            // Explicitly set to None if --image flag was provided with empty value
+                            // (This is a bit tricky - we'll only update if explicitly provided)
+                        }
+                        save_config(&cfg).unwrap_or_else(|e| {
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        });
+                        println!("Project '{}' updated successfully", name);
+                    }
+                    None => {
+                        eprintln!("Error: Project '{}' not found", name);
+                        std::process::exit(1);
                     }
                 }
             }
@@ -408,9 +462,16 @@ async fn main() {
             println!("  Image: {}", resolved_image);
 
             // Set up containerized workspace
+            // For Ask, use a sanitized version of the question as the identifier
+            let ask_identifier = question
+                .split_whitespace()
+                .take(5)
+                .collect::<Vec<_>>()
+                .join("_");
             let container_name = match setup_containerized_workspace(
                 &resolved_repo,
-                project.as_deref(),
+                "ask",
+                Some(&ask_identifier),
                 ssh_key_path.as_ref(),
                 Some(&resolved_image),
             ) {
@@ -493,6 +554,7 @@ async fn main() {
             ssh_key,
             keep_alive,
             pr,
+            verbose,
         }) => {
             let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
@@ -513,12 +575,17 @@ async fn main() {
 
             println!("Dev: {}", task);
             println!("  Repository: {}", resolved_repo);
+            if resolved_repo.starts_with("https://") {
+                eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git) with --ssh-key.");
+                std::process::exit(1);
+            }
             println!("  Image: {}", resolved_image);
 
             // Set up containerized workspace
             let container_name = match setup_containerized_workspace(
                 &resolved_repo,
-                project.as_deref(),
+                "dev",
+                Some(&branch),
                 ssh_key_path.as_ref(),
                 Some(&resolved_image),
             ) {
@@ -538,58 +605,83 @@ async fn main() {
             match agent.initialize(&container_name) {
                 Ok(_) => {
                     println!("  ✓ Agent initialized");
-                    match agent.dev(&container_name, &task, &branch, base.as_deref(), pr) {
+                    let dev_result = agent.dev(&container_name, &task, &branch, base.as_deref(), pr, verbose);
+                    
+                    match &dev_result {
                         Ok(commit) => {
-                            println!("\n✓ Development action completed and committed");
-                            println!("  Commit: {}", commit);
-                            println!("  Branch: {}", branch);
-
-                            // Create or update PR if requested
-                            if pr {
-                                let cfg = load_config().unwrap_or_else(|e| {
-                                    eprintln!("Error loading config: {}", e);
-                                    std::process::exit(1);
-                                });
-
-                                if let Some(github_config) = cfg.github {
-                                    // Extract repo owner and name from URL
-                                    if let Ok(repo_info) = github::extract_repo_info(&resolved_repo)
-                                    {
-                                        let base_branch = base.as_deref().unwrap_or("main");
-                                        match github::create_or_update_pr(
-                                            &github_config.token,
-                                            &repo_info.owner,
-                                            &repo_info.name,
-                                            &branch,
-                                            base_branch,
-                                            &task,
-                                        )
-                                        .await
-                                        {
-                                            Ok(pr_url) => {
-                                                println!("  ✓ Pull request: {}", pr_url);
-                                            }
-                                            Err(e) => {
-                                                eprintln!("  ⚠ Failed to create/update PR: {}", e);
-                                            }
-                                        }
-                                    } else {
-                                        eprintln!(
-                                            "  ⚠ Could not extract repository info from URL: {}",
-                                            resolved_repo
-                                        );
-                                    }
-                                } else {
-                                    eprintln!("  ⚠ GitHub token not configured. Use 'smith config set-github-token <token>' to enable PR creation");
-                                }
+                            if commit == "no-changes-pr-requested" {
+                                println!("\n⚠ No changes detected, but PR creation will be attempted");
+                            } else {
+                                println!("\n✓ Development action completed and committed");
+                                println!("  Commit: {}", commit);
                             }
+                            println!("  Branch: {}", branch);
                         }
                         Err(e) => {
-                            eprintln!("Error: {}", e);
-                            // Clean up container on error
-                            let _ = docker::remove_container(&container_name);
-                            std::process::exit(1);
+                            // If PR is requested, still try to create it even if dev failed
+                            if pr && !e.contains("No changes were made") {
+                                eprintln!("Error: {}", e);
+                            } else if pr {
+                                // No changes but PR requested - continue to PR creation
+                                println!("\n⚠ {}", e);
+                                println!("  Branch: {}", branch);
+                            } else {
+                                eprintln!("Error: {}", e);
+                            }
                         }
+                    }
+
+                    // Create or update PR if requested (even if no changes or dev failed)
+                    if pr {
+                        let cfg = load_config().unwrap_or_else(|e| {
+                            eprintln!("Error loading config: {}", e);
+                            std::process::exit(1);
+                        });
+
+                        if let Some(github_config) = cfg.github {
+                            // Extract repo owner and name from URL
+                            if let Ok(repo_info) = github::extract_repo_info(&resolved_repo)
+                            {
+                                let base_branch = base.as_deref().unwrap_or("main");
+                                match github::create_or_update_pr(
+                                    &github_config.token,
+                                    &repo_info.owner,
+                                    &repo_info.name,
+                                    &branch,
+                                    base_branch,
+                                    &task,
+                                )
+                                .await
+                                {
+                                    Ok(pr_url) => {
+                                        println!("  ✓ Pull request: {}", pr_url);
+                                    }
+                                    Err(e) => {
+                                        eprintln!("  ⚠ Failed to create/update PR: {}", e);
+                                        if e.contains("403") || e.contains("Resource not accessible") {
+                                            eprintln!("     Your token may be missing required permissions.");
+                                            eprintln!("     Required: 'repo' scope (classic tokens) or 'pull-requests:write' permission (fine-grained tokens)");
+                                            eprintln!("     Create a new token at: https://github.com/settings/tokens");
+                                        }
+                                    }
+                                }
+                            } else {
+                                eprintln!(
+                                    "  ⚠ Could not extract repository info from URL: {}",
+                                    resolved_repo
+                                );
+                            }
+                        } else {
+                            eprintln!("  ⚠ GitHub token not configured. Use 'smith config set-github-token <token>' to enable PR creation");
+                        }
+                    }
+                    
+                    // If dev failed and PR wasn't requested, exit with error
+                    if dev_result.is_err() && !pr {
+                        eprintln!("Error: {}", dev_result.as_ref().unwrap_err());
+                        // Clean up container on error
+                        let _ = docker::remove_container(&container_name);
+                        std::process::exit(1);
                     }
                 }
                 Err(e) => {
@@ -679,12 +771,17 @@ async fn main() {
 
             println!("Review: {}", branch);
             println!("  Repository: {}", resolved_repo);
+            if resolved_repo.starts_with("https://") {
+                eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git) with --ssh-key.");
+                std::process::exit(1);
+            }
             println!("  Image: {}", resolved_image);
 
             // Set up containerized workspace
             let container_name = match setup_containerized_workspace(
                 &resolved_repo,
-                project.as_deref(),
+                "review",
+                Some(&branch),
                 ssh_key_path.as_ref(),
                 Some(&resolved_image),
             ) {
