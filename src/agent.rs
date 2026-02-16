@@ -126,22 +126,24 @@ fn bootstrap_opencode(container_name: &str) -> Result<(), String> {
 
     if npm_available.contains("not found") {
         return Err(
-            "npm not found in container after Node.js installation. This should not happen.".to_string(),
+            "npm not found in container after Node.js installation. This should not happen."
+                .to_string(),
         );
     }
 
     // Check if npx is available (npx doesn't require global install)
     let npx_check = "which npx || command -v npx || echo 'not found'";
     let npx_available = docker::exec_in_container(container_name, npx_check)?;
-    
+
     if !npx_available.contains("not found") {
         // npx is available, we can use it directly without installing
         // Test that npx can access opencode-ai
         let test_npx = docker::exec_in_container(
             container_name,
             "npx -y opencode-ai --version 2>&1 | head -1 || echo 'test failed'",
-        ).unwrap_or_else(|_| "test failed".to_string());
-        
+        )
+        .unwrap_or_else(|_| "test failed".to_string());
+
         if !test_npx.contains("test failed") && !test_npx.trim().is_empty() {
             return Ok(());
         }
@@ -149,8 +151,7 @@ fn bootstrap_opencode(container_name: &str) -> Result<(), String> {
 
     // Fallback: Try installing OpenCode via npm (optional, npx should work)
     let install_cmd = "npm install -g opencode-ai 2>&1";
-    let install_output = docker::exec_in_container(container_name, install_cmd)
-        .unwrap_or_default();
+    let install_output = docker::exec_in_container(container_name, install_cmd).unwrap_or_default();
 
     // Check if installation shows errors (but allow warnings)
     if install_output.contains("npm ERR!") {
@@ -191,15 +192,15 @@ fn execute_opencode(container_name: &str, question: &str) -> Result<String, Stri
     // 1. Try npx opencode-ai (most reliable)
     // 2. Try opencode command if available
     // 3. Try /usr/local/bin/opencode
-    
+
     let escaped_question = question.replace("'", "'\"'\"'");
-    
+
     // Try npx first (most reliable, doesn't require global install)
     let npx_cmd = format!(
         "cd /workspace && timeout 300 npx -y opencode-ai run '{}' 2>&1",
         escaped_question
     );
-    
+
     let npx_result = docker::exec_in_container(container_name, &npx_cmd);
     match npx_result {
         Ok(result) => {
@@ -215,13 +216,13 @@ fn execute_opencode(container_name: &str, question: &str) -> Result<String, Stri
             println!("    ⚠ npx opencode-ai failed: {}", e);
         }
     }
-    
+
     // Try opencode command if available
     let opencode_cmd = format!(
         "cd /workspace && timeout 300 (opencode run '{}' 2>&1 || /usr/local/bin/opencode run '{}' 2>&1)",
         escaped_question, escaped_question
     );
-    
+
     let result = docker::exec_in_container(container_name, &opencode_cmd)?;
 
     let trimmed_result = result.trim();
@@ -229,19 +230,25 @@ fn execute_opencode(container_name: &str, question: &str) -> Result<String, Stri
         // Get detailed debug info
         let debug_commands = vec![
             ("npx check", "which npx || echo 'npx not found'"),
-            ("opencode check", "which opencode || echo 'opencode not found'"),
+            (
+                "opencode check",
+                "which opencode || echo 'opencode not found'",
+            ),
             ("npm check", "which npm || echo 'npm not found'"),
             ("workspace check", "ls -la /workspace | head -5"),
-            ("opencode test", "npx -y opencode-ai --version 2>&1 || echo 'opencode test failed'"),
+            (
+                "opencode test",
+                "npx -y opencode-ai --version 2>&1 || echo 'opencode test failed'",
+            ),
         ];
-        
+
         let mut debug_info = Vec::new();
         for (name, cmd) in debug_commands {
             let output = docker::exec_in_container(container_name, cmd)
                 .unwrap_or_else(|_| format!("{}: command failed", name));
             debug_info.push(format!("{}: {}", name, output.trim()));
         }
-        
+
         Err(format!(
             "OpenCode returned empty response.\nDebug info:\n{}",
             debug_info.join("\n")
@@ -529,18 +536,21 @@ fn push_to_branch(container_name: &str, branch: &str) -> Result<(), String> {
         container_name,
         "cd /workspace && git config credential.helper 'store' 2>/dev/null || true",
     );
-    
+
     // Push to branch
-    let push_cmd = format!("cd /workspace && git push -u {} {} 2>&1", remote_name, branch);
+    let push_cmd = format!(
+        "cd /workspace && git push -u {} {} 2>&1",
+        remote_name, branch
+    );
 
     match docker::exec_in_container(container_name, &push_cmd) {
         Ok(output) => {
             // Check if push actually succeeded (git push can return 0 even on some errors)
-            if output.contains("error") || output.contains("fatal") || output.contains("Permission denied") {
-                Err(format!(
-                    "Push appeared to fail. Output: {}",
-                    output
-                ))
+            if output.contains("error")
+                || output.contains("fatal")
+                || output.contains("Permission denied")
+            {
+                Err(format!("Push appeared to fail. Output: {}", output))
             } else {
                 println!("    ✓ Pushed to {}/{}", remote_name, branch);
                 Ok(())
@@ -850,11 +860,7 @@ fn check_tests(container_name: &str) -> Result<(), String> {
 
 /// Review changes in a feature branch
 /// Returns formatted output with header, high-level analysis, and git diff
-fn review_branch(
-    container_name: &str,
-    branch: &str,
-    base: Option<&str>,
-) -> Result<String, String> {
+fn review_branch(container_name: &str, branch: &str, base: Option<&str>) -> Result<String, String> {
     // Bootstrap OpenCode if needed
     bootstrap_opencode(container_name)?;
 
@@ -924,7 +930,7 @@ fn review_branch(
 fn find_base_branch(container_name: &str, branch: &str) -> Result<String, String> {
     // Try to find merge-base with common base branches
     let common_bases = vec!["main", "master", "develop"];
-    
+
     for base in &common_bases {
         // Check if base branch exists
         let check_cmd = format!(
@@ -941,8 +947,8 @@ fn find_base_branch(container_name: &str, branch: &str) -> Result<String, String
                 "cd /workspace && git merge-base {} {} 2>/dev/null | head -1",
                 base, branch
             );
-            let merge_base = docker::exec_in_container(container_name, &merge_base_cmd)
-                .unwrap_or_default();
+            let merge_base =
+                docker::exec_in_container(container_name, &merge_base_cmd).unwrap_or_default();
 
             if !merge_base.trim().is_empty() {
                 println!("  Found base branch: {} (merge-base found)", base);
@@ -979,13 +985,10 @@ fn get_git_diff(container_name: &str, base: &str, branch: &str) -> Result<String
     );
 
     // Try to get diff, handling both local and remote branches
-    let diff_cmd = format!(
-        "cd /workspace && git diff {}...{} 2>&1",
-        base, branch
-    );
-    
+    let diff_cmd = format!("cd /workspace && git diff {}...{} 2>&1", base, branch);
+
     let diff = docker::exec_in_container(container_name, &diff_cmd)?;
-    
+
     // If diff is empty, try with origin/ prefix
     if diff.trim().is_empty() {
         let remote_diff_cmd = format!(

@@ -250,7 +250,7 @@ pub fn setup_containerized_workspace(
         );
 
         // Set up SSH config and known_hosts if SSH key is provided
-        if let Some(_) = ssh_key_path {
+        if ssh_key_path.is_some() {
             // Create .ssh directory (must exist before mounting, but we create it here for the copied files)
             exec_in_container(
                 container_name,
@@ -263,10 +263,14 @@ pub fn setup_containerized_workspace(
             let key_check = exec_in_container(
                 container_name,
                 "test -f /root/.ssh/id_ed25519 && echo 'exists' || echo 'missing'",
-            ).unwrap_or_else(|_| "missing".to_string());
-            
+            )
+            .unwrap_or_else(|_| "missing".to_string());
+
             if !key_check.contains("exists") {
-                return Err("SSH key was not mounted properly. Expected /root/.ssh/id_ed25519 to exist.".to_string());
+                return Err(
+                    "SSH key was not mounted properly. Expected /root/.ssh/id_ed25519 to exist."
+                        .to_string(),
+                );
             }
 
             // Copy the mounted key to a new file with proper permissions
@@ -274,11 +278,8 @@ pub fn setup_containerized_workspace(
                 container_name,
                 "cp /root/.ssh/id_ed25519 /root/.ssh/id_ed25519.key",
             )?;
-            exec_in_container(
-                container_name,
-                "chmod 600 /root/.ssh/id_ed25519.key",
-            )?;
-            
+            exec_in_container(container_name, "chmod 600 /root/.ssh/id_ed25519.key")?;
+
             // Copy public key if it exists
             let _ = exec_in_container(
                 container_name,
@@ -289,8 +290,10 @@ pub fn setup_containerized_workspace(
             let ssh_config = "Host github.com\n  StrictHostKeyChecking accept-new\n  UserKnownHostsFile /root/.ssh/known_hosts\n  IdentityFile /root/.ssh/id_ed25519.key\n";
             exec_in_container(
                 container_name,
-                &format!("echo '{}' > /root/.ssh/config && chmod 600 /root/.ssh/config", 
-                    ssh_config.replace("'", "'\"'\"'")),
+                &format!(
+                    "echo '{}' > /root/.ssh/config && chmod 600 /root/.ssh/config",
+                    ssh_config.replace("'", "'\"'\"'")
+                ),
             )?;
 
             // Add GitHub to known_hosts
@@ -404,26 +407,37 @@ pub fn initialize_repository(container_name: &str) -> Result<(), String> {
             println!("    Installing Rust dependencies...");
             // Cargo will download dependencies on first build
             // Just verify cargo is available
-            let cargo_check = exec_in_container(container_name, "which cargo || command -v cargo || echo 'not found'")?;
+            let cargo_check = exec_in_container(
+                container_name,
+                "which cargo || command -v cargo || echo 'not found'",
+            )?;
             if cargo_check.contains("not found") {
                 return Err("Cargo not found in container. Please use a Rust-based Docker image (e.g., rust:1.75-alpine).".to_string());
             }
             // Try a dry-run build to fetch dependencies
-            let _ = exec_in_container(container_name, "cd /workspace && cargo check --message-format=short 2>&1 | head -20 || true");
+            let _ = exec_in_container(
+                container_name,
+                "cd /workspace && cargo check --message-format=short 2>&1 | head -20 || true",
+            );
             println!("    ✓ Rust dependencies ready");
         }
         ProjectType::Node => {
             println!("    Installing Node.js dependencies...");
             // Check if package.json exists
-            let has_package_json = exec_in_container(container_name, "test -f /workspace/package.json && echo 'yes' || echo 'no'")?;
+            let has_package_json = exec_in_container(
+                container_name,
+                "test -f /workspace/package.json && echo 'yes' || echo 'no'",
+            )?;
             if has_package_json.contains("yes") {
                 // Try npm install
-                let npm_result = exec_in_container(container_name, "cd /workspace && npm install 2>&1");
+                let npm_result =
+                    exec_in_container(container_name, "cd /workspace && npm install 2>&1");
                 if npm_result.is_ok() {
                     println!("    ✓ Node.js dependencies installed");
                 } else {
                     // Try yarn if npm fails
-                    let yarn_result = exec_in_container(container_name, "cd /workspace && yarn install 2>&1");
+                    let yarn_result =
+                        exec_in_container(container_name, "cd /workspace && yarn install 2>&1");
                     if yarn_result.is_ok() {
                         println!("    ✓ Node.js dependencies installed (via yarn)");
                     } else {
@@ -436,12 +450,18 @@ pub fn initialize_repository(container_name: &str) -> Result<(), String> {
         }
         ProjectType::Go => {
             println!("    Installing Go dependencies...");
-            let go_check = exec_in_container(container_name, "which go || command -v go || echo 'not found'")?;
+            let go_check = exec_in_container(
+                container_name,
+                "which go || command -v go || echo 'not found'",
+            )?;
             if go_check.contains("not found") {
                 return Err("Go not found in container. Please use a Go-based Docker image (e.g., golang:1.21-alpine).".to_string());
             }
             // Download Go modules
-            let _ = exec_in_container(container_name, "cd /workspace && go mod download 2>&1 || true");
+            let _ = exec_in_container(
+                container_name,
+                "cd /workspace && go mod download 2>&1 || true",
+            );
             println!("    ✓ Go dependencies ready");
         }
         ProjectType::Python => {
@@ -455,12 +475,17 @@ pub fn initialize_repository(container_name: &str) -> Result<(), String> {
             if pip_result.is_ok() {
                 println!("    ✓ Python dependencies installed");
             } else {
-                println!("    ⚠ Could not install Python dependencies (requirements.txt may not exist)");
+                println!(
+                    "    ⚠ Could not install Python dependencies (requirements.txt may not exist)"
+                );
             }
         }
         ProjectType::Java => {
             println!("    Installing Java dependencies...");
-            let java_check = exec_in_container(container_name, "which javac || command -v javac || echo 'not found'")?;
+            let java_check = exec_in_container(
+                container_name,
+                "which javac || command -v javac || echo 'not found'",
+            )?;
             if java_check.contains("not found") {
                 return Err("Java not found in container. Please use a Java-based Docker image (e.g., eclipse-temurin:21-jdk-alpine).".to_string());
             }
@@ -479,7 +504,10 @@ pub fn initialize_repository(container_name: &str) -> Result<(), String> {
 }
 
 /// Validate that dependencies are properly installed
-fn validate_dependencies_installed(container_name: &str, project_type: &ProjectType) -> Result<(), String> {
+fn validate_dependencies_installed(
+    container_name: &str,
+    project_type: &ProjectType,
+) -> Result<(), String> {
     match project_type {
         ProjectType::Rust => {
             let cargo_version = exec_in_container(container_name, "cargo --version 2>&1")?;
@@ -500,7 +528,10 @@ fn validate_dependencies_installed(container_name: &str, project_type: &ProjectT
             }
         }
         ProjectType::Python => {
-            let python_version = exec_in_container(container_name, "python3 --version 2>&1 || python --version 2>&1")?;
+            let python_version = exec_in_container(
+                container_name,
+                "python3 --version 2>&1 || python --version 2>&1",
+            )?;
             if python_version.trim().is_empty() {
                 return Err("Python validation failed".to_string());
             }

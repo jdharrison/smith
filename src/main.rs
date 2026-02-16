@@ -287,11 +287,7 @@ fn main() {
                     eprintln!("Error: Project '{}' already exists", name);
                     std::process::exit(1);
                 }
-                cfg.projects.push(ProjectConfig {
-                    name,
-                    repo,
-                    image,
-                });
+                cfg.projects.push(ProjectConfig { name, repo, image });
                 save_config(&cfg).unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
