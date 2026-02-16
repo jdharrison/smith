@@ -39,18 +39,23 @@ jobs:
             ${{ runner.os }}-cargo-
       - name: Build release binary
         run: cargo build --release --locked
-      - name: Create release archive
+      - name: Create release archive (Unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            mkdir -p ${{ matrix.artifact_name }}
-            cp target/release/${{ matrix.binary_name }} ${{ matrix.artifact_name }}/
-            tar czf ${{ matrix.artifact_name }}.tar.gz ${{ matrix.artifact_name }}
-          else
-            mkdir -p ${{ matrix.artifact_name }}
-            cp target/release/${{ matrix.binary_name }} ${{ matrix.artifact_name }}/
-            tar czf ${{ matrix.artifact_name }}.tar.gz ${{ matrix.artifact_name }}
-          fi
+          mkdir -p ${{ matrix.artifact_name }}
+          cp target/release/${{ matrix.binary_name }} ${{ matrix.artifact_name }}/
+          tar czf ${{ matrix.artifact_name }}.tar.gz ${{ matrix.artifact_name }}
+      - name: Create release archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $artifactName = "${{ matrix.artifact_name }}"
+          $binaryName = "${{ matrix.binary_name }}"
+          New-Item -ItemType Directory -Force -Path $artifactName
+          Copy-Item "target/release/$binaryName" "$artifactName/"
+          # Windows 10+ has tar built-in
+          tar -czf "$artifactName.tar.gz" $artifactName
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
