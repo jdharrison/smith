@@ -4,7 +4,16 @@ Agent Smith — open-source control plane for coding orchestration and configura
 
 ![46a22884bfb0164c9d70b69a5db74027](https://github.com/user-attachments/assets/b4eacebe-6161-4718-bbf2-42797d3f1ecc)
 
+## Status
+
+> **Note:** This project is complete but not yet stable. Use in production at your own risk.
+
 ## Quick Start
+
+### Prerequisites
+
+- Rust 1.75+
+- Docker
 
 ### Build and Run
 
@@ -29,6 +38,7 @@ smith --help
 - `smith project remove <name>` - Remove a project
 - `smith ask <question> --project <name>` - Ask a question to an agent about a project (read-only)
 - `smith dev <task> --project <name>` - Execute a development task with validation and commit (read/write)
+- `smith opencode <task> --project <name>` - Execute a task using OpenCode (agentic coding)
 - `smith container list` - List all smith containers
 - `smith container stop <name>` - Stop a container
 - `smith container remove <name>` - Remove a container
@@ -49,6 +59,6 @@ cargo clippy --all-targets -- -D warnings
 ## Roadmap
 
 - [x] Docker container execution
-- [ ] OpenCode integration for agentic coding
+- [x] OpenCode integration for agentic coding
 - [ ] Review workflow with keep-alive sessions
 
