@@ -1,7 +1,6 @@
 mod agent;
 mod docker;
 mod github;
-mod repo;
 
 use agent::Agent;
 
