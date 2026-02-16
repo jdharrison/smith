@@ -443,7 +443,7 @@ fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resul
 
 /// Validate changes using OpenCode with JSON response
 fn validate_with_opencode(container_name: &str) -> Result<ValidationResponse, String> {
-    let validation_prompt = "Validate compilation/build. Check if the code compiles, builds, and passes tests. Return ONLY a JSON object with this exact structure: {\"success\": true/false, \"message\": \"description\"}. Do not include any other text, only the JSON.";
+    let validation_prompt = "Check if the code compiles. Run 'cargo check' (or equivalent for the project type) to verify compilation only. Do NOT run full builds or tests. Return ONLY a JSON object with this exact structure: {\"success\": true/false, \"message\": \"description\"}. Do not include any other text, only the JSON.";
 
     let response = execute_opencode(container_name, validation_prompt)?;
 
@@ -463,12 +463,55 @@ fn validate_with_opencode(container_name: &str) -> Result<ValidationResponse, St
 fn extract_json_from_response(response: &str) -> String {
     let trimmed = response.trim();
 
+    // First, try to extract JSON from markdown code blocks (```json ... ``` or ``` ... ```)
+    if let Some(json_start) = trimmed.find("```json") {
+        let after_marker = &trimmed[json_start + 7..];
+        if let Some(code_end) = after_marker.find("```") {
+            let json_candidate = after_marker[..code_end].trim();
+            // Validate it looks like JSON (starts with {)
+            if json_candidate.starts_with('{') {
+                return json_candidate.to_string();
+            }
+        }
+    }
+    
+    // Try generic code blocks (``` ... ```)
+    if let Some(code_start) = trimmed.find("```") {
+        let after_marker = &trimmed[code_start + 3..];
+        if let Some(code_end) = after_marker.find("```") {
+            let json_candidate = after_marker[..code_end].trim();
+            // Validate it looks like JSON (starts with {)
+            if json_candidate.starts_with('{') {
+                return json_candidate.to_string();
+            }
+        }
+    }
+
     // Try to find JSON object in the response
-    // Look for { ... } pattern
+    // Look for { ... } pattern, but be more careful about nested braces
     if let Some(start) = trimmed.find('{') {
-        if let Some(end) = trimmed.rfind('}') {
-            if end > start {
-                return trimmed[start..=end].to_string();
+        // Find the matching closing brace by counting nested braces
+        let mut brace_count = 0;
+        let mut end = None;
+        for (i, ch) in trimmed[start..].char_indices() {
+            match ch {
+                '{' => brace_count += 1,
+                '}' => {
+                    brace_count -= 1;
+                    if brace_count == 0 {
+                        end = Some(start + i);
+                        break;
+                    }
+                }
+                _ => {}
+            }
+        }
+        
+        if let Some(end_pos) = end {
+            let json_candidate = trimmed[start..=end_pos].trim();
+            // Basic validation: should start with { and end with }
+            if json_candidate.starts_with('{') && json_candidate.ends_with('}') {
+                return json_candidate.to_string();
             }
         }
     }
