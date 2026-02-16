@@ -10,37 +10,25 @@ Agent Smith — open-source control plane for coding orchestration and configura
 
 ## Installation
 
-### Option 1: Install from GitHub (Recommended)
+### Option 1: Install from Cargo (Recommended)
 
 Install directly from the GitHub repository using Cargo:
 
 ```bash
-# Install latest release
-cargo install --git https://github.com/jdharrison/smith.git --tag release/v0.1.0
 
-# Or install from main branch (latest development)
-cargo install --git https://github.com/jdharrison/smith.git
+# Install cargo if needed (unix); for Windows, https://win.rustup.rs
+curl https://sh.rustup.rs -sSf | sh
+
+
+# Install latest release
+cargo install --git https://github.com/jdharrison/smith.git --tag release/latest
 ```
 
 **Prerequisites:** Rust 1.75+ and Cargo installed. If you don't have Rust, install it from [rustup.rs](https://rustup.rs/).
 
-### Option 2: Build from Source
+### Option 2: Download Pre-built Binaries
 
-```bash
-# Clone the repository
-git clone https://github.com/jdharrison/smith.git
-cd smith
-
-# Checkout the release tag
-git checkout release/v0.1.0
-
-# Build and install
-cargo install --path .
-```
-
-### Option 3: Download Pre-built Binaries (Coming Soon)
-
-Pre-built binaries for Windows, macOS, and Linux will be available in [GitHub Releases](https://github.com/jdharrison/smith/releases) once CI/CD is configured.
+Pre-built binaries for Windows, macOS, and Linux are available in [GitHub Releases](https://github.com/jdharrison/smith/releases).
 
 ## Quick Start
 
@@ -66,7 +54,7 @@ smith --help
 ### Commands
 
 - `smith ask <question> --project <name>` - Ask a question to an agent about a project (read-only)
-- `smith dev <task> --branch <branch> --project <name> [--pr]` - Execute a development task with validation and commit (read/write). Use `--pr` to create or update a pull request.
+- `smith dev <task> --branch <branch> --project <name> [--pr]` - Execute an idempotent development task with validation and commit (read/write). Use `--pr` to create or update a pull request.
 - `smith review <branch> --project <name>` - Review changes on a branch of the project (read-only)
 
 - `smith doctor` - Validate the local environment
