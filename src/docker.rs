@@ -173,6 +173,36 @@ pub fn remove_container(container_name: &str) -> Result<(), String> {
     }
 }
 
+/// Check if Docker is available and running
+/// Returns Ok(()) if Docker is available and the daemon is running
+pub fn check_docker_available() -> Result<(), String> {
+    // First, check if docker command exists
+    let version_output = Command::new("docker")
+        .arg("--version")
+        .output()
+        .map_err(|e| format!("Docker command not found: {}", e))?;
+
+    if !version_output.status.success() {
+        return Err("Docker command failed to execute".to_string());
+    }
+
+    // Check if Docker daemon is running by trying to get Docker info
+    let info_output = Command::new("docker")
+        .arg("info")
+        .output()
+        .map_err(|e| format!("Failed to check Docker daemon: {}", e))?;
+
+    if !info_output.status.success() {
+        let error = String::from_utf8_lossy(&info_output.stderr);
+        if error.contains("Cannot connect") || error.contains("Is the docker daemon running") {
+            return Err("Docker daemon is not running".to_string());
+        }
+        return Err(format!("Docker daemon check failed: {}", error));
+    }
+
+    Ok(())
+}
+
 /// Check if a container exists
 pub fn container_exists(container_name: &str) -> bool {
     Command::new("docker")

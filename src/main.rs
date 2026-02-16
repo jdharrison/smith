@@ -282,8 +282,26 @@ async fn main() {
         }
         Some(Commands::Doctor) => {
             println!("Doctor: Validating environment...");
-            println!("  ✓ Config directory accessible");
-            println!("  [ ] Docker (not yet implemented)");
+            
+            // Check config directory
+            match config_dir() {
+                Ok(dir) => {
+                    println!("  ✓ Config directory accessible: {}", dir.display());
+                }
+                Err(e) => {
+                    println!("  ✗ Config directory error: {}", e);
+                }
+            }
+
+            // Check Docker
+            match docker::check_docker_available() {
+                Ok(_) => {
+                    println!("  ✓ Docker is available and running");
+                }
+                Err(e) => {
+                    println!("  ✗ Docker: {}", e);
+                }
+            }
         }
         Some(Commands::Config { cmd }) => match cmd {
             ConfigCommands::Path => {
