@@ -1,7 +1,7 @@
+use dirs::home_dir;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
-use dirs::home_dir;
 
 /// Project type detected from repository files
 #[derive(Debug, Clone, PartialEq)]
@@ -16,7 +16,7 @@ pub enum ProjectType {
 
 /// Sanitize a string for use in container names
 /// Replaces invalid characters with underscores and limits length
-fn sanitize_for_container_name(s: &str) -> String {
+pub fn sanitize_for_container_name(s: &str) -> String {
     s.chars()
         .map(|c| {
             if c.is_alphanumeric() || c == '-' || c == '_' {
@@ -35,10 +35,7 @@ fn sanitize_for_container_name(s: &str) -> String {
 
 /// Generate a unique container name for parallel execution
 /// Format: smith_{command}_{sanitized_branch}_{timestamp}
-pub fn generate_container_name(
-    command: &str,
-    branch_or_question: Option<&str>,
-) -> String {
+pub fn generate_container_name(command: &str, branch_or_question: Option<&str>) -> String {
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
@@ -323,7 +320,7 @@ pub fn setup_containerized_workspace(
         )
         .unwrap_or_else(|_| "no".to_string())
         .trim()
-        == "yes";
+            == "yes";
 
         if has_explicit_key || has_host_ssh {
             // Create .ssh directory
@@ -376,7 +373,7 @@ pub fn setup_containerized_workspace(
                     container_name,
                     "cp -r /root/.ssh_host/* /root/.ssh/ 2>/dev/null || true",
                 )?;
-                
+
                 // Fix permissions on copied files
                 exec_in_container(
                     container_name,

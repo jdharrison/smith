@@ -116,6 +116,11 @@ enum Commands {
         #[arg(long)]
         keep_alive: bool,
     },
+    /// Start a pair programming session with persistent container
+    Pair {
+        #[command(subcommand)]
+        cmd: PairCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -178,6 +183,57 @@ enum ContainerCommands {
     },
 }
 
+#[derive(Subcommand)]
+enum PairCommands {
+    /// Start a new pair programming session
+    Start {
+        /// Repository path or URL (overrides project config if provided)
+        #[arg(long)]
+        repo: Option<String>,
+        /// Project name from config
+        #[arg(long)]
+        project: Option<String>,
+        /// Docker image to use (overrides project config if provided)
+        #[arg(long)]
+        image: Option<String>,
+        /// SSH key path for private repositories (optional)
+        #[arg(long)]
+        ssh_key: Option<PathBuf>,
+        /// Session name (optional, defaults to timestamp-based)
+        #[arg(long)]
+        name: Option<String>,
+    },
+    /// Ask a question in the current session
+    Ask {
+        /// The question to ask the agent
+        question: String,
+        /// Base branch to checkout before asking (optional)
+        #[arg(long, required = false)]
+        base: Option<String>,
+    },
+    /// Execute a development task in the current session
+    Dev {
+        /// The development task/instruction to execute
+        task: String,
+        /// Target branch to create/use and push to (required)
+        #[arg(long)]
+        branch: String,
+        /// Base branch to checkout before starting (optional)
+        #[arg(long, required = false)]
+        base: Option<String>,
+        /// Create or update a pull request after pushing
+        #[arg(long)]
+        pr: bool,
+        /// Show verbose output from OpenCode agent
+        #[arg(long)]
+        verbose: bool,
+    },
+    /// Stop the current pair session and cleanup
+    Stop,
+    /// Show current session status
+    Status,
+}
+
 #[derive(Serialize, Deserialize, Default)]
 struct SmithConfig {
     projects: Vec<ProjectConfig>,
@@ -228,6 +284,46 @@ fn save_config(config: &SmithConfig) -> Result<(), String> {
     let temp_file = file.with_extension("toml.tmp");
     fs::write(&temp_file, content).map_err(|e| format!("Failed to write config: {}", e))?;
     fs::rename(&temp_file, &file).map_err(|e| format!("Failed to finalize config: {}", e))?;
+    Ok(())
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct PairSession {
+    name: String,
+    container_name: String,
+    repo: String,
+    image: String,
+    created_at: u64,
+}
+
+fn session_file_path() -> Result<PathBuf, String> {
+    config_dir().map(|dir| dir.join("session.toml"))
+}
+
+fn load_session() -> Result<Option<PairSession>, String> {
+    let file = session_file_path()?;
+    if !file.exists() {
+        return Ok(None);
+    }
+    let content = fs::read_to_string(&file).map_err(|e| format!("Failed to read session: {}", e))?;
+    let session: PairSession = toml::from_str(&content).map_err(|e| format!("Failed to parse session: {}", e))?;
+    Ok(Some(session))
+}
+
+fn save_session(session: &PairSession) -> Result<(), String> {
+    let dir = config_dir()?;
+    fs::create_dir_all(&dir).map_err(|e| format!("Failed to create config directory: {}", e))?;
+    let file = session_file_path()?;
+    let content = toml::to_string_pretty(session).map_err(|e| format!("Failed to serialize session: {}", e))?;
+    fs::write(&file, content).map_err(|e| format!("Failed to write session: {}", e))?;
+    Ok(())
+}
+
+fn clear_session() -> Result<(), String> {
+    let file = session_file_path()?;
+    if file.exists() {
+        fs::remove_file(&file).map_err(|e| format!("Failed to remove session: {}", e))?;
+    }
     Ok(())
 }
 
@@ -839,6 +935,311 @@ async fn main() {
                 }
             }
         }
+        Some(Commands::Pair { cmd }) => match cmd {
+            PairCommands::Start {
+                repo,
+                project,
+                image,
+                ssh_key,
+                name,
+            } => {
+                let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+
+                let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+
+                let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
+
+                let ssh_key_path =
+                    ssh_key.or_else(|| std::env::var("SSH_KEY_PATH").ok().map(PathBuf::from));
+
+                let session_name = name.unwrap_or_else(|| {
+                    format!(
+                        "session_{}",
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs()
+                    )
+                });
+
+                let container_name = format!("smith_pair_{}", docker::sanitize_for_container_name(&session_name));
+
+                println!("Starting pair session: {}", session_name);
+                println!("  Repository: {}", resolved_repo);
+                println!("  Image: {}", resolved_image);
+
+                match docker::setup_containerized_workspace(
+                    &container_name,
+                    &resolved_repo,
+                    ssh_key_path.as_ref(),
+                    Some(&resolved_image),
+                ) {
+                    Ok(_) => {
+                        println!("  ✓ Container created and repository cloned");
+                        println!("  Container: {}", container_name);
+                    }
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+
+                let timestamp = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs();
+
+                let session = PairSession {
+                    name: session_name.clone(),
+                    container_name: container_name.clone(),
+                    repo: resolved_repo,
+                    image: resolved_image,
+                    created_at: timestamp,
+                };
+
+                save_session(&session).unwrap_or_else(|e| {
+                    eprintln!("Warning: Failed to save session: {}", e);
+                });
+
+                println!("\n✓ Pair session '{}' started!", session_name);
+                println!("  Use 'smith pair ask \"question\"' to ask questions");
+                println!("  Use 'smith pair dev \"task\" --branch <branch>' to execute dev tasks");
+                println!("  Use 'smith pair status' to see session info");
+                println!("  Use 'smith pair stop' to stop the session");
+            }
+            PairCommands::Ask { question, base } => {
+                let session = match load_session() {
+                    Ok(Some(s)) => s,
+                    Ok(None) => {
+                        eprintln!("Error: No active pair session. Start one with 'smith pair start --repo <repo>'");
+                        std::process::exit(1);
+                    }
+                    Err(e) => {
+                        eprintln!("Error loading session: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+
+                let container_name = &session.container_name;
+
+                if !docker::container_exists(container_name) {
+                    eprintln!("Error: Container '{}' no longer exists. Start a new session.", container_name);
+                    let _ = clear_session();
+                    std::process::exit(1);
+                }
+
+                println!("Pair Ask: {}", question);
+                println!("  Session: {}", session.name);
+                println!("  Container: {}", container_name);
+
+                let agent = agent::OpenCodeAgent;
+                match agent.initialize(container_name) {
+                    Ok(_) => {
+                        println!("  ✓ Agent initialized");
+
+                        if let Some(base_branch) = &base {
+                            println!("  Checking out base branch: {}", base_branch);
+                            match agent.checkout_branch(container_name, base_branch) {
+                                Ok(_) => println!("  ✓ Checked out branch: {}", base_branch),
+                                Err(e) => {
+                                    eprintln!("Error checking out branch '{}': {}", base_branch, e);
+                                    std::process::exit(1);
+                                }
+                            }
+                        }
+
+                        match agent.ask(container_name, &question) {
+                            Ok(answer) => {
+                                println!("\nAnswer: {}", answer);
+                            }
+                            Err(e) => {
+                                eprintln!("Error: {}", e);
+                                std::process::exit(1);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Error initializing agent: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            }
+            PairCommands::Dev {
+                task,
+                branch,
+                base,
+                pr,
+                verbose,
+            } => {
+                let session = match load_session() {
+                    Ok(Some(s)) => s,
+                    Ok(None) => {
+                        eprintln!("Error: No active pair session. Start one with 'smith pair start --repo <repo>'");
+                        std::process::exit(1);
+                    }
+                    Err(e) => {
+                        eprintln!("Error loading session: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+
+                let container_name = &session.container_name;
+
+                if !docker::container_exists(container_name) {
+                    eprintln!("Error: Container '{}' no longer exists. Start a new session.", container_name);
+                    let _ = clear_session();
+                    std::process::exit(1);
+                }
+
+                if session.repo.starts_with("https://") {
+                    eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs with --ssh-key.");
+                    std::process::exit(1);
+                }
+
+                println!("Pair Dev: {}", task);
+                println!("  Session: {}", session.name);
+                println!("  Container: {}", container_name);
+
+                let agent = agent::OpenCodeAgent;
+                match agent.initialize(container_name) {
+                    Ok(_) => {
+                        println!("  ✓ Agent initialized");
+                        let dev_result = agent.dev(container_name, &task, &branch, base.as_deref(), pr, verbose);
+
+                        match &dev_result {
+                            Ok(commit) => {
+                                if commit == "no-changes-pr-requested" {
+                                    println!("\n⚠ No changes detected, but PR creation will be attempted");
+                                } else {
+                                    println!("\n✓ Development action completed and committed");
+                                    println!("  Commit: {}", commit);
+                                }
+                                println!("  Branch: {}", branch);
+                            }
+                            Err(e) => {
+                                if pr && !e.contains("No changes were made") {
+                                    eprintln!("Error: {}", e);
+                                } else if pr {
+                                    println!("\n⚠ {}", e);
+                                    println!("  Branch: {}", branch);
+                                } else {
+                                    eprintln!("Error: {}", e);
+                                }
+                            }
+                        }
+
+                        if pr {
+                            let cfg = load_config().unwrap_or_else(|e| {
+                                eprintln!("Error loading config: {}", e);
+                                std::process::exit(1);
+                            });
+
+                            if let Some(github_config) = cfg.github {
+                                if let Ok(repo_info) = github::extract_repo_info(&session.repo) {
+                                    let base_branch = base.as_deref().unwrap_or("main");
+                                    match github::create_or_update_pr(
+                                        &github_config.token,
+                                        &repo_info.owner,
+                                        &repo_info.name,
+                                        &branch,
+                                        base_branch,
+                                        &task,
+                                    )
+                                    .await
+                                    {
+                                        Ok(pr_url) => {
+                                            println!("  ✓ Pull request: {}", pr_url);
+                                        }
+                                        Err(e) => {
+                                            eprintln!("  ⚠ Failed to create/update PR: {}", e);
+                                        }
+                                    }
+                                } else {
+                                    eprintln!("  ⚠ Could not extract repository info from URL: {}", session.repo);
+                                }
+                            } else {
+                                eprintln!("  ⚠ GitHub token not configured. Use 'smith config set-github-token <token>' to enable PR creation");
+                            }
+                        }
+
+                        if dev_result.is_err() && !pr {
+                            std::process::exit(1);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Error initializing agent: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            }
+            PairCommands::Stop => {
+                let session = match load_session() {
+                    Ok(Some(s)) => s,
+                    Ok(None) => {
+                        eprintln!("Error: No active pair session to stop.");
+                        std::process::exit(1);
+                    }
+                    Err(e) => {
+                        eprintln!("Error loading session: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+
+                let container_name = session.container_name;
+
+                println!("Stopping pair session: {}", session.name);
+
+                match docker::stop_container(&container_name) {
+                    Ok(_) => {
+                        println!("  ✓ Container stopped");
+                    }
+                    Err(e) => {
+                        eprintln!("  Warning: Failed to stop container: {}", e);
+                    }
+                }
+
+                match docker::remove_container(&container_name) {
+                    Ok(_) => {
+                        println!("  ✓ Container removed");
+                    }
+                    Err(e) => {
+                        eprintln!("  Warning: Failed to remove container: {}", e);
+                    }
+                }
+
+                clear_session().unwrap_or_else(|e| {
+                    eprintln!("Warning: Failed to clear session: {}", e);
+                });
+
+                println!("\n✓ Pair session '{}' stopped", session.name);
+            }
+            PairCommands::Status => {
+                match load_session() {
+                    Ok(Some(session)) => {
+                        let container_exists = docker::container_exists(&session.container_name);
+                        println!("Pair Session: {}", session.name);
+                        println!("  Container: {}", session.container_name);
+                        println!("  Repository: {}", session.repo);
+                        println!("  Image: {}", session.image);
+                        println!("  Status: {}", if container_exists { "running" } else { "stopped" });
+                    }
+                    Ok(None) => {
+                        println!("No active pair session.");
+                        println!("  Use 'smith pair start --repo <repo>' to start a new session");
+                    }
+                    Err(e) => {
+                        eprintln!("Error loading session: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            }
+        },
     }
 }
 
