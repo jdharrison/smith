@@ -280,12 +280,13 @@ fn setup_containerized_workspace(
     // Validate URL format - require SSH URLs
     if repo_url.starts_with("https://") {
         return Err(
-            "HTTPS URLs are not supported. Please use SSH URLs (git@github.com:user/repo.git).".to_string()
+            "HTTPS URLs are not supported. Please use SSH URLs (git@github.com:user/repo.git)."
+                .to_string(),
         );
     }
-    
+
     // SSH URLs are required, but SSH key is optional (we'll use host's .ssh directory if available)
-    
+
     let container_name = docker::generate_container_name(command, branch_or_question);
 
     docker::setup_containerized_workspace(&container_name, repo_url, ssh_key_path, image)?;
@@ -604,12 +605,21 @@ async fn main() {
             match agent.initialize(&container_name) {
                 Ok(_) => {
                     println!("  ✓ Agent initialized");
-                    let dev_result = agent.dev(&container_name, &task, &branch, base.as_deref(), pr, verbose);
-                    
+                    let dev_result = agent.dev(
+                        &container_name,
+                        &task,
+                        &branch,
+                        base.as_deref(),
+                        pr,
+                        verbose,
+                    );
+
                     match &dev_result {
                         Ok(commit) => {
                             if commit == "no-changes-pr-requested" {
-                                println!("\n⚠ No changes detected, but PR creation will be attempted");
+                                println!(
+                                    "\n⚠ No changes detected, but PR creation will be attempted"
+                                );
                             } else {
                                 println!("\n✓ Development action completed and committed");
                                 println!("  Commit: {}", commit);
@@ -639,8 +649,7 @@ async fn main() {
 
                         if let Some(github_config) = cfg.github {
                             // Extract repo owner and name from URL
-                            if let Ok(repo_info) = github::extract_repo_info(&resolved_repo)
-                            {
+                            if let Ok(repo_info) = github::extract_repo_info(&resolved_repo) {
                                 let base_branch = base.as_deref().unwrap_or("main");
                                 match github::create_or_update_pr(
                                     &github_config.token,
@@ -657,7 +666,9 @@ async fn main() {
                                     }
                                     Err(e) => {
                                         eprintln!("  ⚠ Failed to create/update PR: {}", e);
-                                        if e.contains("403") || e.contains("Resource not accessible") {
+                                        if e.contains("403")
+                                            || e.contains("Resource not accessible")
+                                        {
                                             eprintln!("     Your token may be missing required permissions.");
                                             eprintln!("     Required: 'repo' scope (classic tokens) or 'pull-requests:write' permission (fine-grained tokens)");
                                             eprintln!("     Create a new token at: https://github.com/settings/tokens");
@@ -674,7 +685,7 @@ async fn main() {
                             eprintln!("  ⚠ GitHub token not configured. Use 'smith config set-github-token <token>' to enable PR creation");
                         }
                     }
-                    
+
                     // If dev failed and PR wasn't requested, exit with error
                     if dev_result.is_err() && !pr {
                         eprintln!("Error: {}", dev_result.as_ref().unwrap_err());
