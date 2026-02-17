@@ -116,6 +116,36 @@ enum Commands {
         #[arg(long)]
         keep_alive: bool,
     },
+    /// Run continuous hardening: ask stability/security issues and commit fixes at intervals
+    Harden {
+        /// Target branch to create/use and push to (required)
+        #[arg(long)]
+        branch: String,
+        /// Base branch to checkout before starting (optional, uses default if not provided)
+        #[arg(long, required = false)]
+        base: Option<String>,
+        /// Repository path or URL (overrides project config if provided)
+        #[arg(long)]
+        repo: Option<String>,
+        /// Project name from config
+        #[arg(long)]
+        project: Option<String>,
+        /// Docker image to use (overrides project config if provided)
+        #[arg(long)]
+        image: Option<String>,
+        /// SSH key path for private repositories (optional)
+        #[arg(long)]
+        ssh_key: Option<PathBuf>,
+        /// Interval in seconds between hardening cycles (default: 300)
+        #[arg(long, default_value = "300")]
+        interval: u64,
+        /// Maximum number of cycles to run (0 = unlimited, default: 0)
+        #[arg(long, default_value = "0")]
+        max_cycles: u32,
+        /// Show verbose output from OpenCode agent
+        #[arg(long)]
+        verbose: bool,
+    },
 }
 
 #[derive(Subcommand)]
