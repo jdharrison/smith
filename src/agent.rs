@@ -269,7 +269,6 @@ fn execute_opencode(container_name: &str, question: &str, verbose: bool) -> Resu
     }
 }
 
-
 /// Execute a development action and commit
 /// This performs read/write operations and commits them
 fn dev_agent(
@@ -296,7 +295,7 @@ fn dev_agent(
 
     if status.trim().is_empty() {
         println!("  ⚠ No changes detected (git status --porcelain is clean)");
-        
+
         // If PR is requested, still ensure branch exists and is pushed
         if pr {
             println!("  PR requested: ensuring branch exists on remote...");
@@ -305,7 +304,7 @@ fn dev_agent(
             // Return a special success code to indicate no changes but PR should still be created
             return Ok("no-changes-pr-requested".to_string());
         }
-        
+
         println!("  Skipping commit and push");
         return Err("No changes were made by the development task".to_string());
     }
@@ -420,7 +419,6 @@ fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resul
     Ok(())
 }
 
-
 /// Push changes to the specified branch
 fn push_to_branch(container_name: &str, branch: &str) -> Result<(), String> {
     // Check if remote exists
@@ -484,12 +482,15 @@ fn push_to_branch(container_name: &str, branch: &str) -> Result<(), String> {
     )
     .unwrap_or_else(|_| "no".to_string())
     .trim()
-    == "yes";
+        == "yes";
 
     if !has_ssh_creds {
         println!("    ⚠ Skipping push: SSH credentials not found");
         println!("    SSH credentials should be available from host's ~/.ssh directory");
-        println!("    Or provide --ssh-key to override, or push manually: git push origin {}", branch);
+        println!(
+            "    Or provide --ssh-key to override, or push manually: git push origin {}",
+            branch
+        );
         return Ok(());
     }
 
