@@ -869,6 +869,86 @@ async fn main() {
                 }
             }
         }
+        Some(Commands::Harden {
+            branch,
+            base,
+            repo,
+            project,
+            image,
+            ssh_key,
+            interval,
+            max_cycles,
+            verbose,
+        }) => {
+            let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+
+            let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+
+            let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
+
+            let ssh_key_path =
+                ssh_key.or_else(|| std::env::var("SSH_KEY_PATH").ok().map(PathBuf::from));
+
+            println!("Harden: continuous stability/security hardening");
+            println!("  Repository: {}", resolved_repo);
+            if resolved_repo.starts_with("https://") {
+                eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git) with --ssh-key.");
+                std::process::exit(1);
+            }
+            println!("  Image: {}", resolved_image);
+            println!("  Branch: {}", branch);
+
+            let container_name = match setup_containerized_workspace(
+                &resolved_repo,
+                "harden",
+                Some(&branch),
+                ssh_key_path.as_ref(),
+                Some(&resolved_image),
+            ) {
+                Ok(name) => {
+                    println!("  ✓ Container created and repository cloned");
+                    println!("  Container: {}", name);
+                    name
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+
+            let agent = agent::OpenCodeAgent;
+            match agent.initialize(&container_name) {
+                Ok(_) => {
+                    println!("  ✓ Agent initialized");
+                    match agent.harden(&container_name, &branch, base.as_deref(), interval, max_cycles, verbose) {
+                        Ok(_) => {
+                            println!("\n✓ Hardening completed");
+                        }
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            let _ = docker::remove_container(&container_name);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error initializing agent: {}", e);
+                    let _ = docker::remove_container(&container_name);
+                    std::process::exit(1);
+                }
+            }
+
+            match docker::remove_container(&container_name) {
+                Ok(_) => println!("  ✓ Container removed"),
+                Err(e) => eprintln!("  Warning: Failed to remove container: {}", e),
+            }
+        }
     }
 }
 

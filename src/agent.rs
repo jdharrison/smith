@@ -1,4 +1,9 @@
 use crate::docker;
+use ctrlc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
 
 /// Trait for agents that can execute in containers
 pub trait Agent {
@@ -29,6 +34,17 @@ pub trait Agent {
         branch: &str,
         base: Option<&str>,
     ) -> Result<String, String>;
+
+    /// Run continuous hardening: ask stability/security issues and commit fixes at intervals
+    fn harden(
+        &self,
+        container_name: &str,
+        branch: &str,
+        base: Option<&str>,
+        interval: u64,
+        max_cycles: u32,
+        verbose: bool,
+    ) -> Result<(), String>;
 }
 
 /// OpenCode agent implementation
@@ -85,6 +101,18 @@ impl Agent for OpenCodeAgent {
         base: Option<&str>,
     ) -> Result<String, String> {
         review_branch(container_name, branch, base)
+    }
+
+    fn harden(
+        &self,
+        container_name: &str,
+        branch: &str,
+        base: Option<&str>,
+        interval: u64,
+        max_cycles: u32,
+        verbose: bool,
+    ) -> Result<(), String> {
+        run_hardening_loop(container_name, branch, base, interval, max_cycles, verbose)
     }
 }
 
@@ -269,7 +297,6 @@ fn execute_opencode(container_name: &str, question: &str, verbose: bool) -> Resu
     }
 }
 
-
 /// Execute a development action and commit
 /// This performs read/write operations and commits them
 fn dev_agent(
@@ -296,7 +323,7 @@ fn dev_agent(
 
     if status.trim().is_empty() {
         println!("  ⚠ No changes detected (git status --porcelain is clean)");
-        
+
         // If PR is requested, still ensure branch exists and is pushed
         if pr {
             println!("  PR requested: ensuring branch exists on remote...");
@@ -305,7 +332,7 @@ fn dev_agent(
             // Return a special success code to indicate no changes but PR should still be created
             return Ok("no-changes-pr-requested".to_string());
         }
-        
+
         println!("  Skipping commit and push");
         return Err("No changes were made by the development task".to_string());
     }
@@ -420,7 +447,6 @@ fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resul
     Ok(())
 }
 
-
 /// Push changes to the specified branch
 fn push_to_branch(container_name: &str, branch: &str) -> Result<(), String> {
     // Check if remote exists
@@ -484,12 +510,15 @@ fn push_to_branch(container_name: &str, branch: &str) -> Result<(), String> {
     )
     .unwrap_or_else(|_| "no".to_string())
     .trim()
-    == "yes";
+        == "yes";
 
     if !has_ssh_creds {
         println!("    ⚠ Skipping push: SSH credentials not found");
         println!("    SSH credentials should be available from host's ~/.ssh directory");
-        println!("    Or provide --ssh-key to override, or push manually: git push origin {}", branch);
+        println!(
+            "    Or provide --ssh-key to override, or push manually: git push origin {}",
+            branch
+        );
         return Ok(());
     }
 
@@ -879,6 +908,141 @@ fn review_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resu
     );
 
     Ok(output)
+}
+
+/// Run continuous hardening loop: ask stability/security issues and commit fixes at intervals
+fn run_hardening_loop(
+    container_name: &str,
+    branch: &str,
+    base: Option<&str>,
+    interval: u64,
+    max_cycles: u32,
+    verbose: bool,
+) -> Result<(), String> {
+    println!("Starting continuous hardening loop...");
+    println!("  Branch: {}", branch);
+    println!("  Interval: {} seconds", interval);
+    if max_cycles > 0 {
+        println!("  Max cycles: {}", max_cycles);
+    } else {
+        println!("  Max cycles: unlimited");
+    }
+
+    let stop_flag = Arc::new(AtomicBool::new(false));
+    let stop_flag_clone = stop_flag.clone();
+
+    println!("\n  Press Ctrl+C to stop the hardening loop\n");
+
+    let interrupt_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let _ = ctrlc::set_handler(move || {
+            println!("\n  Received interrupt signal, stopping after current cycle...");
+            stop_flag_clone.store(true, Ordering::SeqCst);
+        });
+    }));
+
+    if interrupt_result.is_err() {
+        println!("  Warning: Could not set up interrupt handler");
+    }
+
+    bootstrap_opencode(container_name)?;
+    setup_branch(container_name, branch, base)?;
+
+    let mut cycle_count = 0;
+    let mut total_changes = 0;
+
+    loop {
+        if stop_flag.load(Ordering::SeqCst) {
+            println!("\n  Stopping hardening loop (interrupt received)");
+            break;
+        }
+
+        cycle_count += 1;
+        println!("\n═══════════════════════════════════════════════════════════════");
+        println!(
+            "  Cycle {}{}",
+            cycle_count,
+            if max_cycles > 0 {
+                format!(" of {}", max_cycles)
+            } else {
+                String::new()
+            }
+        );
+        println!("═══════════════════════════════════════════════════════════════");
+
+        if max_cycles > 0 && cycle_count > max_cycles {
+            println!("\n  Reached maximum cycles ({})", max_cycles);
+            break;
+        }
+
+        let hardening_question = "Analyze the codebase for stability and security issues. \
+Look for: \
+1. Bug potential (null checks, error handling, race conditions) \
+2. Security vulnerabilities (input validation, injection risks, exposed secrets) \
+3. Code quality issues (memory leaks, resource handling, performance) \
+4. Best practices violations \
+\
+Provide a specific, actionable list of issues to fix. For each issue, include the file path, line number if applicable, and what needs to be fixed.";
+
+        println!("  Asking agent about stability/security issues...");
+        match execute_opencode(container_name, hardening_question, verbose) {
+            Ok(response) => {
+                println!("  Agent response received");
+
+                let status_cmd = "cd /workspace && git status --porcelain";
+                let status = docker::exec_in_container(container_name, status_cmd)?;
+
+                if status.trim().is_empty() {
+                    println!("  ✓ No changes made in this cycle");
+                } else {
+                    total_changes += 1;
+                    println!("  ✓ Changes detected, committing...");
+
+                    let commit_msg = format!(
+                        "Hardening cycle {}: Address stability/security issues",
+                        cycle_count
+                    );
+
+                    let commit_result = commit_changes(container_name, &commit_msg);
+                    match commit_result {
+                        Ok(commit_hash) => {
+                            println!("    Commit: {}", commit_hash);
+
+                            println!("  Pushing to remote...");
+                            if let Err(e) = push_to_branch(container_name, branch) {
+                                println!("    Warning: Push failed: {}", e);
+                            }
+                        }
+                        Err(e) => {
+                            println!("    Warning: Commit failed: {}", e);
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                println!("  Warning: Agent error: {}", e);
+            }
+        }
+
+        if stop_flag.load(Ordering::SeqCst) {
+            println!("\n  Stopping hardening loop (interrupt received)");
+            break;
+        }
+
+        if max_cycles > 0 && cycle_count >= max_cycles {
+            break;
+        }
+
+        println!("\n  Waiting {} seconds before next cycle...", interval);
+        let _ = thread::sleep(Duration::from_secs(interval));
+    }
+
+    println!("\n═══════════════════════════════════════════════════════════════");
+    println!("  Hardening complete");
+    println!("  Total cycles: {}", cycle_count);
+    println!("  Cycles with changes: {}", total_changes);
+    println!("═══════════════════════════════════════════════════════════════");
+
+    Ok(())
 }
 
 /// Find the base branch for a feature branch
