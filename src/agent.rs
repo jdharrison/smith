@@ -6,7 +6,7 @@ pub trait Agent {
     fn initialize(&self, container_name: &str) -> Result<(), String>;
 
     /// Ask a question and get a response
-    fn ask(&self, container_name: &str, question: &str) -> Result<String, String>;
+    fn ask(&self, container_name: &str, question: &str, verbose: bool) -> Result<String, String>;
 
     /// Checkout a branch
     fn checkout_branch(&self, container_name: &str, branch: &str) -> Result<(), String>;
@@ -28,6 +28,7 @@ pub trait Agent {
         container_name: &str,
         branch: &str,
         base: Option<&str>,
+        verbose: bool,
     ) -> Result<String, String>;
 }
 
@@ -55,9 +56,9 @@ impl Agent for OpenCodeAgent {
         Ok(())
     }
 
-    fn ask(&self, container_name: &str, question: &str) -> Result<String, String> {
+    fn ask(&self, container_name: &str, question: &str, verbose: bool) -> Result<String, String> {
         // Pass question directly to agent - no parsing, just input -> output
-        ask_agent(container_name, question)
+        ask_agent(container_name, question, verbose)
     }
 
     fn checkout_branch(&self, container_name: &str, branch: &str) -> Result<(), String> {
@@ -83,28 +84,33 @@ impl Agent for OpenCodeAgent {
         container_name: &str,
         branch: &str,
         base: Option<&str>,
+        verbose: bool,
     ) -> Result<String, String> {
-        review_branch(container_name, branch, base)
+        review_branch(container_name, branch, base, verbose)
     }
 }
 
 /// Ask the agent a question - direct pass-through, no parsing
 /// OpenCode runs inside the container and analyzes the codebase directly
-fn ask_agent(container_name: &str, question: &str) -> Result<String, String> {
+fn ask_agent(container_name: &str, question: &str, verbose: bool) -> Result<String, String> {
     // Call OpenCode agent with question
     // OpenCode has direct access to /workspace and analyzes it directly
-    call_opencode_agent(container_name, question)
+    call_opencode_agent(container_name, question, verbose)
 }
 
 /// Call OpenCode agent to answer the question
 /// OpenCode runs inside the container and analyzes the codebase directly
-fn call_opencode_agent(container_name: &str, question: &str) -> Result<String, String> {
+fn call_opencode_agent(
+    container_name: &str,
+    question: &str,
+    verbose: bool,
+) -> Result<String, String> {
     // Bootstrap OpenCode in the container if needed
     bootstrap_opencode(container_name)?;
 
     // Call OpenCode with the question
     // OpenCode has access to the full workspace at /workspace
-    let answer = execute_opencode(container_name, question, false)?;
+    let answer = execute_opencode(container_name, question, verbose)?;
 
     Ok(answer)
 }
@@ -817,7 +823,12 @@ fn check_tests(container_name: &str) -> Result<(), String> {
 
 /// Review changes in a feature branch
 /// Returns formatted output with header, high-level analysis, and git diff
-fn review_branch(container_name: &str, branch: &str, base: Option<&str>) -> Result<String, String> {
+fn review_branch(
+    container_name: &str,
+    branch: &str,
+    base: Option<&str>,
+    verbose: bool,
+) -> Result<String, String> {
     // Bootstrap OpenCode if needed
     bootstrap_opencode(container_name)?;
 
@@ -859,7 +870,7 @@ fn review_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resu
         diff
     );
 
-    let analysis = execute_opencode(container_name, &analysis_prompt, false)?;
+    let analysis = execute_opencode(container_name, &analysis_prompt, verbose)?;
 
     // Format the output
     let output = format!(

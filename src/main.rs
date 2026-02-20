@@ -56,6 +56,9 @@ enum Commands {
         /// Keep container alive after answering (for debugging/inspection)
         #[arg(long)]
         keep_alive: bool,
+        /// Show verbose output from OpenCode agent
+        #[arg(long)]
+        verbose: bool,
     },
     /// Execute a development action (read/write) with validation and commit
     Dev {
@@ -116,6 +119,9 @@ enum Commands {
         /// Keep container alive after review (for debugging/inspection)
         #[arg(long)]
         keep_alive: bool,
+        /// Show verbose output from OpenCode agent
+        #[arg(long)]
+        verbose: bool,
     },
     /// Start a pair programming session with persistent container
     Pair {
@@ -211,6 +217,9 @@ enum PairCommands {
         /// Base branch to checkout before asking (optional)
         #[arg(long, required = false)]
         base: Option<String>,
+        /// Show verbose output from OpenCode agent
+        #[arg(long)]
+        verbose: bool,
     },
     /// Execute a development task in the current session
     Dev {
@@ -539,6 +548,7 @@ async fn main() {
             image,
             ssh_key,
             keep_alive,
+            verbose,
         }) => {
             let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
@@ -605,7 +615,7 @@ async fn main() {
                         }
                     }
 
-                    match agent.ask(&container_name, &question) {
+                    match agent.ask(&container_name, &question, verbose) {
                         Ok(answer) => {
                             println!("\nAnswer: {}", answer);
                         }
@@ -861,6 +871,7 @@ async fn main() {
             image,
             ssh_key,
             keep_alive,
+            verbose,
         }) => {
             let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
@@ -911,7 +922,7 @@ async fn main() {
             match agent.initialize(&container_name) {
                 Ok(_) => {
                     println!("  ✓ Agent initialized");
-                    match agent.review(&container_name, &branch, base.as_deref()) {
+                    match agent.review(&container_name, &branch, base.as_deref(), verbose) {
                         Ok(review_output) => {
                             println!("\n{}", review_output);
                         }
@@ -1032,7 +1043,11 @@ async fn main() {
                 println!("  Use 'smith pair status' to see session info");
                 println!("  Use 'smith pair stop' to stop the session");
             }
-            PairCommands::Ask { question, base } => {
+            PairCommands::Ask {
+                question,
+                base,
+                verbose,
+            } => {
                 let session = match load_session() {
                     Ok(Some(s)) => s,
                     Ok(None) => {
@@ -1076,7 +1091,7 @@ async fn main() {
                             }
                         }
 
-                        match agent.ask(container_name, &question) {
+                        match agent.ask(container_name, &question, verbose) {
                             Ok(answer) => {
                                 println!("\nAnswer: {}", answer);
                             }
