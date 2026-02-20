@@ -8,6 +8,8 @@ Agent Smith — open-source control plane for coding orchestration and configura
 
 > **Note:** This project is complete but not yet stable. Use in production at your own risk.
 
+**Supported platforms:** Linux and macOS. Windows is not supported (the Dagger SDK uses Unix-only APIs). On Windows, use [WSL](https://docs.microsoft.com/en-us/windows/wsl/) to run smith.
+
 ## Installation
 
 ### Option 1: Install from Cargo (Recommended)
@@ -26,7 +28,7 @@ cargo install --git https://github.com/jdharrison/smith.git
 
 ### Option 2: Download Pre-built Binaries
 
-Pre-built binaries for Windows, macOS, and Linux are available in [GitHub Releases](https://github.com/jdharrison/smith/releases).
+Pre-built binaries for Linux and macOS are available in [GitHub Releases](https://github.com/jdharrison/smith/releases). (Windows is not supported; use WSL.)
 
 ## Quick Start
 
