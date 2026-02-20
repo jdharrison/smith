@@ -34,7 +34,8 @@ Pre-built binaries for Windows, macOS, and Linux are available in [GitHub Releas
 ### Prerequisites
 
 - Rust 1.83+ (use [rustup](https://rustup.rs/) for stable toolchain)
-- Docker
+- **Docker** — used as the container runtime by Dagger
+- **Dagger CLI** — required for `ask`, `dev`, and `review`. Install from [docs.dagger.io](https://docs.dagger.io/install) or `curl -L https://dl.dagger.io/dagger/install.sh | sh`
 
 ### Build and Run
 
@@ -50,12 +51,31 @@ cargo install --path .
 smith --help
 ```
 
+### Running ask / dev / review (Dagger)
+
+The **ask**, **dev**, and **review** commands run a phased pipeline (setup → setup check → execute → execute check → assurance) inside the Dagger engine. You must run them via **`dagger run`** so the engine is available:
+
+```bash
+# Ask a question (read-only)
+dagger run smith ask "How does auth work?" --project myproject
+
+# Run a development task and optionally open a PR
+dagger run smith dev "Add login endpoint" --branch feature/login --project myproject --pr
+
+# Review a branch
+dagger run smith review feature/login --project myproject
+```
+
+Use **SSH repository URLs** (e.g. `git@github.com:user/repo.git`). By default the pipeline mounts your host `~/.ssh` and forwards `SSH_AUTH_SOCK` if set, so whatever works on the host (e.g. `ssh-add` for passphrase-protected keys) works in the pipeline. Alternatively use `--ssh-key <path>` to supply a specific key (e.g. a dedicated or deploy key with no passphrase for automation). The pipeline uses your project's `--image` (or default `node:20-alpine`) as the base container. A future release may support a custom Dagger module in your repo to override the default pipeline.
+
+- `smith doctor` — validates Docker and Dagger (run as `smith doctor`, no `dagger run` needed)
+
 ### Core Commands
 
-- `smith ask <question> --project <name>` - Ask a question to an agent about a project (read-only)
-- `smith dev <task> --branch <branch> --project <name> [--pr]` - Execute an idempotent development task with validation and commit (read/write). Use `--pr` to create or update a pull request.
-- `smith review <branch> --project <name>` - Review changes on a branch of the project (read-only)
-- `smith doctor` - Validate the local environment
+- `dagger run smith ask <question> --project <name>` — Ask a question to an agent about a project (read-only)
+- `dagger run smith dev <task> --branch <branch> --project <name> [--pr]` — Execute a development task with validation and commit (read/write). Use `--pr` to create or update a pull request.
+- `dagger run smith review <branch> --project <name>` — Review changes on a branch (read-only)
+- `smith doctor` — Validate the local environment (Docker + Dagger)
 
 ### Project Commands
 

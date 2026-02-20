@@ -1,8 +1,6 @@
-mod agent;
+mod dagger_pipeline;
 mod docker;
 mod github;
-
-use agent::Agent;
 
 use clap::{CommandFactory, Parser, Subcommand};
 use directories::ProjectDirs;
@@ -141,10 +139,13 @@ enum ProjectCommands {
         /// Docker image to use for this project (optional)
         #[arg(long)]
         image: Option<String>,
+        /// SSH key path for this project (optional)
+        #[arg(long)]
+        ssh_key: Option<String>,
     },
     /// List all registered projects
     List,
-    /// Update an existing project's repository URL or image
+    /// Update an existing project's repository URL, image, or SSH key
     Update {
         /// Project name
         name: String,
@@ -154,6 +155,9 @@ enum ProjectCommands {
         /// New Docker image to use for this project
         #[arg(long)]
         image: Option<String>,
+        /// SSH key path for this project (pass empty to clear)
+        #[arg(long)]
+        ssh_key: Option<String>,
     },
     /// Remove a project
     Remove {
@@ -196,6 +200,8 @@ struct ProjectConfig {
     repo: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     image: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ssh_key: Option<String>,
 }
 
 fn config_dir() -> Result<PathBuf, String> {
@@ -260,7 +266,7 @@ fn resolve_project_config(project: Option<String>) -> Result<Option<ProjectConfi
     Ok(None)
 }
 
-/// Resolve Docker image to use
+/// Resolve Docker image to use (for Dagger pipeline base image)
 /// Priority: explicit flag > project config > default
 fn resolve_image(explicit_image: Option<&str>, project_config: Option<&ProjectConfig>) -> String {
     explicit_image
@@ -269,29 +275,19 @@ fn resolve_image(explicit_image: Option<&str>, project_config: Option<&ProjectCo
         .unwrap_or_else(|| "node:20-alpine".to_string())
 }
 
-/// Set up a containerized workspace and return the container name
-fn setup_containerized_workspace(
-    repo_url: &str,
-    command: &str,
-    branch_or_question: Option<&str>,
-    ssh_key_path: Option<&PathBuf>,
-    image: Option<&str>,
-) -> Result<String, String> {
-    // Validate URL format - require SSH URLs
-    if repo_url.starts_with("https://") {
-        return Err(
-            "HTTPS URLs are not supported. Please use SSH URLs (git@github.com:user/repo.git)."
-                .to_string(),
-        );
-    }
-
-    // SSH URLs are required, but SSH key is optional (we'll use host's .ssh directory if available)
-
-    let container_name = docker::generate_container_name(command, branch_or_question);
-
-    docker::setup_containerized_workspace(&container_name, repo_url, ssh_key_path, image)?;
-
-    Ok(container_name)
+/// Resolve SSH key path: explicit --ssh-key > project ssh_key > SSH_KEY_PATH env
+fn resolve_ssh_key(
+    explicit: Option<&PathBuf>,
+    project_config: Option<&ProjectConfig>,
+) -> Option<PathBuf> {
+    explicit
+        .cloned()
+        .or_else(|| {
+            project_config
+                .and_then(|p| p.ssh_key.as_ref())
+                .map(PathBuf::from)
+        })
+        .or_else(|| std::env::var("SSH_KEY_PATH").ok().map(PathBuf::from))
 }
 
 #[tokio::main]
@@ -318,13 +314,29 @@ async fn main() {
                 }
             }
 
-            // Check Docker
+            // Check Docker (Dagger uses it as container runtime)
             match docker::check_docker_available() {
                 Ok(_) => {
                     println!("  ✓ Docker is available and running");
                 }
                 Err(e) => {
                     println!("  ✗ Docker: {}", e);
+                }
+            }
+
+            // Check Dagger (run smith with: dagger run smith ... for ask/dev/review)
+            match dagger_pipeline::with_connection(|conn| {
+                let conn = conn;
+                async move { dagger_pipeline::run_doctor(&conn).await }
+            })
+            .await
+            {
+                Ok(_) => {
+                    println!("  ✓ Dagger engine is available");
+                }
+                Err(e) => {
+                    println!("  ✗ Dagger: {}", e);
+                    println!("    Run ask/dev/review with: dagger run smith <command> ...");
                 }
             }
         }
@@ -351,7 +363,12 @@ async fn main() {
             }
         },
         Some(Commands::Project { cmd }) => match cmd {
-            ProjectCommands::Add { name, repo, image } => {
+            ProjectCommands::Add {
+                name,
+                repo,
+                image,
+                ssh_key,
+            } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -360,7 +377,13 @@ async fn main() {
                     eprintln!("Error: Project '{}' already exists", name);
                     std::process::exit(1);
                 }
-                cfg.projects.push(ProjectConfig { name, repo, image });
+                let ssh_key = ssh_key.filter(|s| !s.is_empty());
+                cfg.projects.push(ProjectConfig {
+                    name,
+                    repo,
+                    image,
+                    ssh_key,
+                });
                 save_config(&cfg).unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -376,15 +399,23 @@ async fn main() {
                     println!("No projects registered");
                 } else {
                     for proj in &cfg.projects {
+                        let mut parts = format!("  {} -> {}", proj.name, proj.repo);
                         if let Some(ref image) = proj.image {
-                            println!("  {} -> {} (image: {})", proj.name, proj.repo, image);
-                        } else {
-                            println!("  {} -> {}", proj.name, proj.repo);
+                            parts.push_str(&format!(" (image: {})", image));
                         }
+                        if let Some(ref sk) = proj.ssh_key {
+                            parts.push_str(&format!(" (ssh_key: {})", sk));
+                        }
+                        println!("{}", parts);
                     }
                 }
             }
-            ProjectCommands::Update { name, repo, image } => {
+            ProjectCommands::Update {
+                name,
+                repo,
+                image,
+                ssh_key,
+            } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -399,7 +430,13 @@ async fn main() {
                             proj.image = Some(new_image);
                         } else if image.is_some() {
                             // Explicitly set to None if --image flag was provided with empty value
-                            // (This is a bit tricky - we'll only update if explicitly provided)
+                        }
+                        if let Some(new_ssh) = ssh_key {
+                            proj.ssh_key = if new_ssh.is_empty() {
+                                None
+                            } else {
+                                Some(new_ssh)
+                            };
                         }
                         save_config(&cfg).unwrap_or_else(|e| {
                             eprintln!("Error: {}", e);
@@ -438,109 +475,55 @@ async fn main() {
             project,
             image,
             ssh_key,
-            keep_alive,
+            keep_alive: _,
         }) => {
             let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             });
 
+            if resolved_repo.starts_with("https://") {
+                eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git).");
+                std::process::exit(1);
+            }
+
             let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             });
-
-            // Resolve image: flag > project config > default
             let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
-
-            // Check for SSH key in environment if not provided
-            let ssh_key_path =
-                ssh_key.or_else(|| std::env::var("SSH_KEY_PATH").ok().map(PathBuf::from));
+            let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
 
             println!("Ask: {}", question);
             println!("  Repository: {}", resolved_repo);
             println!("  Image: {}", resolved_image);
 
-            // Set up containerized workspace
-            // For Ask, use a sanitized version of the question as the identifier
-            let ask_identifier = question
-                .split_whitespace()
-                .take(5)
-                .collect::<Vec<_>>()
-                .join("_");
-            let container_name = match setup_containerized_workspace(
-                &resolved_repo,
-                "ask",
-                Some(&ask_identifier),
-                ssh_key_path.as_ref(),
-                Some(&resolved_image),
-            ) {
-                Ok(name) => {
-                    println!("  ✓ Container created and repository cloned");
-                    println!("  Container: {}", name);
-                    name
+            let branch = base.as_deref().unwrap_or("main").to_string();
+            match dagger_pipeline::with_connection(move |conn| {
+                let repo = resolved_repo.clone();
+                let q = question.clone();
+                let img = resolved_image.clone();
+                let ssh = ssh_key_path.clone();
+                let br = branch.clone();
+                async move {
+                    dagger_pipeline::run_ask(
+                        &conn,
+                        &repo,
+                        Some(br.as_str()),
+                        &q,
+                        &img,
+                        ssh.as_deref(),
+                    )
+                    .await
+                    .map_err(|e| eyre::eyre!("{}", e))
                 }
+            })
+            .await
+            {
+                Ok(answer) => println!("\nAnswer: {}", answer),
                 Err(e) => {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
-                }
-            };
-
-            // Initialize and ask the agent
-            let agent = agent::OpenCodeAgent;
-            match agent.initialize(&container_name) {
-                Ok(_) => {
-                    println!("  ✓ Agent initialized");
-
-                    // Checkout base branch if provided
-                    if let Some(base_branch) = &base {
-                        println!("  Checking out base branch: {}", base_branch);
-                        match agent.checkout_branch(&container_name, base_branch) {
-                            Ok(_) => println!("  ✓ Checked out branch: {}", base_branch),
-                            Err(e) => {
-                                eprintln!("Error checking out branch '{}': {}", base_branch, e);
-                                let _ = docker::remove_container(&container_name);
-                                std::process::exit(1);
-                            }
-                        }
-                    }
-
-                    match agent.ask(&container_name, &question) {
-                        Ok(answer) => {
-                            println!("\nAnswer: {}", answer);
-                        }
-                        Err(e) => {
-                            eprintln!("Error: {}", e);
-                            // Clean up container on error
-                            let _ = docker::remove_container(&container_name);
-                            std::process::exit(1);
-                        }
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Error initializing agent: {}", e);
-                    // Clean up container on error
-                    let _ = docker::remove_container(&container_name);
-                    std::process::exit(1);
-                }
-            }
-
-            // Clean up container when done (unless keep_alive is set)
-            if keep_alive {
-                println!("  Container kept alive: {}", container_name);
-                println!(
-                    "  Use 'docker exec -it {} sh' to access the container interactively",
-                    container_name
-                );
-                println!("  Use 'smith container stop {}' to stop it", container_name);
-                println!(
-                    "  Use 'smith container remove {}' to remove it",
-                    container_name
-                );
-            } else {
-                match docker::remove_container(&container_name) {
-                    Ok(_) => println!("  ✓ Container removed"),
-                    Err(e) => eprintln!("  Warning: Failed to remove container: {}", e),
                 }
             }
         }
@@ -552,7 +535,7 @@ async fn main() {
             project,
             image,
             ssh_key,
-            keep_alive,
+            keep_alive: _,
             pr,
             verbose,
         }) => {
@@ -561,166 +544,107 @@ async fn main() {
                 std::process::exit(1);
             });
 
-            let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            });
-
-            // Resolve image: flag > project config > default
-            let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
-
-            // Check for SSH key in environment if not provided
-            let ssh_key_path =
-                ssh_key.or_else(|| std::env::var("SSH_KEY_PATH").ok().map(PathBuf::from));
-
-            println!("Dev: {}", task);
-            println!("  Repository: {}", resolved_repo);
             if resolved_repo.starts_with("https://") {
                 eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git) with --ssh-key.");
                 std::process::exit(1);
             }
+
+            let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+            let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
+            let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
+
+            println!("Dev: {}", task);
+            println!("  Repository: {}", resolved_repo);
             println!("  Image: {}", resolved_image);
 
-            // Set up containerized workspace
-            let container_name = match setup_containerized_workspace(
-                &resolved_repo,
-                "dev",
-                Some(&branch),
-                ssh_key_path.as_ref(),
-                Some(&resolved_image),
-            ) {
-                Ok(name) => {
-                    println!("  ✓ Container created and repository cloned");
-                    println!("  Container: {}", name);
-                    name
-                }
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                }
-            };
-
-            // Initialize and execute dev action
-            let agent = agent::OpenCodeAgent;
-            match agent.initialize(&container_name) {
-                Ok(_) => {
-                    println!("  ✓ Agent initialized");
-                    let dev_result = agent.dev(
-                        &container_name,
-                        &task,
-                        &branch,
-                        base.as_deref(),
-                        pr,
+            let branch_out = branch.clone();
+            let resolved_repo_pr = resolved_repo.clone();
+            let base_pr = base.clone();
+            let task_pr = task.clone();
+            let dev_result = dagger_pipeline::with_connection(move |conn| {
+                let repo = resolved_repo.clone();
+                let t = task.clone();
+                let br = branch.clone();
+                let img = resolved_image.clone();
+                let ssh = ssh_key_path.clone();
+                let base_br = base.clone();
+                async move {
+                    dagger_pipeline::run_dev(
+                        &conn,
+                        &repo,
+                        &br,
+                        base_br.as_deref(),
+                        &t,
+                        &img,
+                        ssh.as_deref(),
                         verbose,
-                    );
+                    )
+                    .await
+                    .map_err(|e| eyre::eyre!("{}", e))
+                }
+            })
+            .await;
 
-                    match &dev_result {
-                        Ok(commit) => {
-                            if commit == "no-changes-pr-requested" {
-                                println!(
-                                    "\n⚠ No changes detected, but PR creation will be attempted"
-                                );
-                            } else {
-                                println!("\n✓ Development action completed and committed");
-                                println!("  Commit: {}", commit);
-                            }
-                            println!("  Branch: {}", branch);
-                        }
-                        Err(e) => {
-                            // If PR is requested, still try to create it even if dev failed
-                            if pr && !e.contains("No changes were made") {
-                                eprintln!("Error: {}", e);
-                            } else if pr {
-                                // No changes but PR requested - continue to PR creation
-                                println!("\n⚠ {}", e);
-                                println!("  Branch: {}", branch);
-                            } else {
-                                eprintln!("Error: {}", e);
-                            }
-                        }
-                    }
-
-                    // Create or update PR if requested (even if no changes or dev failed)
-                    if pr {
-                        let cfg = load_config().unwrap_or_else(|e| {
-                            eprintln!("Error loading config: {}", e);
-                            std::process::exit(1);
-                        });
-
-                        if let Some(github_config) = cfg.github {
-                            // Extract repo owner and name from URL
-                            if let Ok(repo_info) = github::extract_repo_info(&resolved_repo) {
-                                let base_branch = base.as_deref().unwrap_or("main");
-                                match github::create_or_update_pr(
-                                    &github_config.token,
-                                    &repo_info.owner,
-                                    &repo_info.name,
-                                    &branch,
-                                    base_branch,
-                                    &task,
-                                )
-                                .await
-                                {
-                                    Ok(pr_url) => {
-                                        println!("  ✓ Pull request: {}", pr_url);
-                                    }
-                                    Err(e) => {
-                                        eprintln!("  ⚠ Failed to create/update PR: {}", e);
-                                        if e.contains("403")
-                                            || e.contains("Resource not accessible")
-                                        {
-                                            eprintln!("     Your token may be missing required permissions.");
-                                            eprintln!("     Required: 'repo' scope (classic tokens) or 'pull-requests:write' permission (fine-grained tokens)");
-                                            eprintln!("     Create a new token at: https://github.com/settings/tokens");
-                                        }
-                                    }
-                                }
-                            } else {
-                                eprintln!(
-                                    "  ⚠ Could not extract repository info from URL: {}",
-                                    resolved_repo
-                                );
-                            }
-                        } else {
-                            eprintln!("  ⚠ GitHub token not configured. Use 'smith config set-github-token <token>' to enable PR creation");
-                        }
-                    }
-
-                    // If dev failed and PR wasn't requested, exit with error
-                    if let Err(e) = &dev_result {
-                        if !pr {
-                            eprintln!("Error: {}", e);
-                            // Clean up container on error
-                            let _ = docker::remove_container(&container_name);
-                            std::process::exit(1);
-                        }
-                    }
+            match &dev_result {
+                Ok(commit) => {
+                    println!("\n✓ Development action completed and committed");
+                    println!("  Commit: {}", commit);
+                    println!("  Branch: {}", branch_out);
                 }
                 Err(e) => {
-                    eprintln!("Error initializing agent: {}", e);
-                    // Clean up container on error
-                    let _ = docker::remove_container(&container_name);
-                    std::process::exit(1);
+                    if e.contains("No changes to commit") {
+                        println!("\n⚠ No changes were made by the development task");
+                    } else {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
                 }
             }
 
-            // Clean up container when done (unless keep_alive is set)
-            if keep_alive {
-                println!("  Container kept alive: {}", container_name);
-                println!(
-                    "  Use 'docker exec -it {} sh' to access the container interactively",
-                    container_name
-                );
-                println!("  Use 'smith container stop {}' to stop it", container_name);
-                println!(
-                    "  Use 'smith container remove {}' to remove it",
-                    container_name
-                );
-            } else {
-                match docker::remove_container(&container_name) {
-                    Ok(_) => println!("  ✓ Container removed"),
-                    Err(e) => eprintln!("  Warning: Failed to remove container: {}", e),
+            if pr {
+                let cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error loading config: {}", e);
+                    std::process::exit(1);
+                });
+                if let Some(github_config) = cfg.github {
+                    if let Ok(repo_info) = github::extract_repo_info(&resolved_repo_pr) {
+                        let base_branch = base_pr.as_deref().unwrap_or("main");
+                        match github::create_or_update_pr(
+                            &github_config.token,
+                            &repo_info.owner,
+                            &repo_info.name,
+                            &branch_out,
+                            base_branch,
+                            &task_pr,
+                        )
+                        .await
+                        {
+                            Ok(pr_url) => println!("  ✓ Pull request: {}", pr_url),
+                            Err(e) => {
+                                eprintln!("  ⚠ Failed to create/update PR: {}", e);
+                                if e.contains("403") || e.contains("Resource not accessible") {
+                                    eprintln!(
+                                        "     Your token may be missing required permissions."
+                                    );
+                                }
+                            }
+                        }
+                    } else {
+                        eprintln!(
+                            "  ⚠ Could not extract repository info from URL: {}",
+                            resolved_repo_pr
+                        );
+                    }
+                } else {
+                    eprintln!("  ⚠ GitHub token not configured. Use 'smith config set-github-token <token>'");
                 }
+            }
+
+            if dev_result.is_err() && !pr {
+                std::process::exit(1);
             }
         }
         Some(Commands::Container { cmd }) => match cmd {
@@ -757,98 +681,51 @@ async fn main() {
         },
         Some(Commands::Review {
             branch,
-            base,
+            base: _,
             repo,
             project,
             image,
             ssh_key,
-            keep_alive,
+            keep_alive: _,
         }) => {
             let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             });
 
-            let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            });
-
-            // Resolve image: flag > project config > default
-            let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
-
-            // Check for SSH key in environment if not provided
-            let ssh_key_path =
-                ssh_key.or_else(|| std::env::var("SSH_KEY_PATH").ok().map(PathBuf::from));
-
-            println!("Review: {}", branch);
-            println!("  Repository: {}", resolved_repo);
             if resolved_repo.starts_with("https://") {
                 eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git) with --ssh-key.");
                 std::process::exit(1);
             }
+
+            let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+            let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
+            let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
+
+            println!("Review: {}", branch);
+            println!("  Repository: {}", resolved_repo);
             println!("  Image: {}", resolved_image);
 
-            // Set up containerized workspace
-            let container_name = match setup_containerized_workspace(
-                &resolved_repo,
-                "review",
-                Some(&branch),
-                ssh_key_path.as_ref(),
-                Some(&resolved_image),
-            ) {
-                Ok(name) => {
-                    println!("  ✓ Container created and repository cloned");
-                    println!("  Container: {}", name);
-                    name
+            match dagger_pipeline::with_connection(move |conn| {
+                let repo = resolved_repo.clone();
+                let br = branch.clone();
+                let img = resolved_image.clone();
+                let ssh = ssh_key_path.clone();
+                async move {
+                    dagger_pipeline::run_review(&conn, &repo, &br, None, &img, ssh.as_deref())
+                        .await
+                        .map_err(|e| eyre::eyre!("{}", e))
                 }
+            })
+            .await
+            {
+                Ok(review_output) => println!("\n{}", review_output),
                 Err(e) => {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
-                }
-            };
-
-            // Initialize and review the branch
-            let agent = agent::OpenCodeAgent;
-            match agent.initialize(&container_name) {
-                Ok(_) => {
-                    println!("  ✓ Agent initialized");
-                    match agent.review(&container_name, &branch, base.as_deref()) {
-                        Ok(review_output) => {
-                            println!("\n{}", review_output);
-                        }
-                        Err(e) => {
-                            eprintln!("Error: {}", e);
-                            // Clean up container on error
-                            let _ = docker::remove_container(&container_name);
-                            std::process::exit(1);
-                        }
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Error initializing agent: {}", e);
-                    // Clean up container on error
-                    let _ = docker::remove_container(&container_name);
-                    std::process::exit(1);
-                }
-            }
-
-            // Clean up container when done (unless keep_alive is set)
-            if keep_alive {
-                println!("  Container kept alive: {}", container_name);
-                println!(
-                    "  Use 'docker exec -it {} sh' to access the container interactively",
-                    container_name
-                );
-                println!("  Use 'smith container stop {}' to stop it", container_name);
-                println!(
-                    "  Use 'smith container remove {}' to remove it",
-                    container_name
-                );
-            } else {
-                match docker::remove_container(&container_name) {
-                    Ok(_) => println!("  ✓ Container removed"),
-                    Err(e) => eprintln!("  Warning: Failed to remove container: {}", e),
                 }
             }
         }
@@ -879,6 +756,7 @@ mod tests {
             name: "test".to_string(),
             repo: "https://example.com/repo".to_string(),
             image: None,
+            ssh_key: None,
         });
         let serialized = toml::to_string(&cfg).unwrap();
         let deserialized: SmithConfig = toml::from_str(&serialized).unwrap();
