@@ -110,6 +110,9 @@ enum Commands {
         /// Keep container alive after answering (for debugging/inspection)
         #[arg(long)]
         keep_alive: bool,
+        /// Timeout in seconds for the agent run (default: 300)
+        #[arg(long)]
+        timeout: Option<u64>,
         /// Show full Dagger and pipeline output
         #[arg(long)]
         verbose: bool,
@@ -142,6 +145,9 @@ enum Commands {
         /// Create or update a pull request after pushing (requires GitHub token configured)
         #[arg(long)]
         pr: bool,
+        /// Timeout in seconds for the agent run (default: 300)
+        #[arg(long)]
+        timeout: Option<u64>,
         /// Show verbose output from OpenCode agent
         #[arg(long)]
         verbose: bool,
@@ -173,6 +179,9 @@ enum Commands {
         /// Keep container alive after review (for debugging/inspection)
         #[arg(long)]
         keep_alive: bool,
+        /// Timeout in seconds for the agent run (default: 300)
+        #[arg(long)]
+        timeout: Option<u64>,
         /// Show full Dagger and pipeline output
         #[arg(long)]
         verbose: bool,
@@ -293,10 +302,20 @@ fn save_config(config: &SmithConfig) -> Result<(), String> {
     let content =
         toml::to_string_pretty(config).map_err(|e| format!("Failed to serialize config: {}", e))?;
 
-    // Atomic write: write to temp file then rename
+    // Atomic write: write to temp file then rename. On EXDEV (cross-filesystem), fall back to copy + remove.
     let temp_file = file.with_extension("toml.tmp");
     fs::write(&temp_file, content).map_err(|e| format!("Failed to write config: {}", e))?;
-    fs::rename(&temp_file, &file).map_err(|e| format!("Failed to finalize config: {}", e))?;
+    if let Err(e) = fs::rename(&temp_file, &file) {
+        // EXDEV = cross-filesystem rename not supported (MSRV 1.83: avoid ErrorKind::CrossesDevices)
+        let is_cross_device = e.raw_os_error() == Some(libc::EXDEV);
+        if is_cross_device {
+            fs::copy(&temp_file, &file).map_err(|e| format!("Failed to copy config: {}", e))?;
+            fs::remove_file(&temp_file)
+                .map_err(|e| format!("Failed to remove temp config: {}", e))?;
+        } else {
+            return Err(format!("Failed to finalize config: {}", e));
+        }
+    }
     Ok(())
 }
 
@@ -555,6 +574,7 @@ async fn main() {
             image,
             ssh_key,
             keep_alive: _,
+            timeout,
             verbose,
         }) => {
             let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
@@ -594,12 +614,14 @@ async fn main() {
                 None
             };
 
+            let timeout_secs = timeout.unwrap_or(300);
             let result = dagger_pipeline::with_connection(move |conn| {
                 let repo = resolved_repo.clone();
                 let q = question.clone();
                 let img = resolved_image.clone();
                 let ssh = ssh_key_path.clone();
                 let br = branch.clone();
+                let to = timeout_secs;
                 async move {
                     dagger_pipeline::run_ask(
                         &conn,
@@ -608,6 +630,7 @@ async fn main() {
                         &q,
                         &img,
                         ssh.as_deref(),
+                        to,
                     )
                     .await
                     .map_err(|e| eyre::eyre!("{}", e))
@@ -641,6 +664,7 @@ async fn main() {
             ssh_key,
             keep_alive: _,
             pr,
+            timeout,
             verbose,
         }) => {
             let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
@@ -684,6 +708,7 @@ async fn main() {
             };
 
             let verb_for_closure = verbose;
+            let timeout_secs = timeout.unwrap_or(300);
             let dev_result = dagger_pipeline::with_connection(move |conn| {
                 let repo = resolved_repo.clone();
                 let t = task.clone();
@@ -691,6 +716,7 @@ async fn main() {
                 let img = resolved_image.clone();
                 let ssh = ssh_key_path.clone();
                 let base_br = base.clone();
+                let to = timeout_secs;
                 async move {
                     dagger_pipeline::run_dev(
                         &conn,
@@ -701,6 +727,7 @@ async fn main() {
                         &img,
                         ssh.as_deref(),
                         verb_for_closure,
+                        to,
                     )
                     .await
                     .map_err(|e| eyre::eyre!("{}", e))
@@ -809,12 +836,13 @@ async fn main() {
         },
         Some(Commands::Review {
             branch,
-            base: _,
+            base,
             repo,
             project,
             image,
             ssh_key,
             keep_alive: _,
+            timeout,
             verbose,
         }) => {
             let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
@@ -853,15 +881,26 @@ async fn main() {
                 None
             };
 
+            let timeout_secs = timeout.unwrap_or(300);
             let result = dagger_pipeline::with_connection(move |conn| {
                 let repo = resolved_repo.clone();
                 let br = branch.clone();
+                let base_br = base.clone();
                 let img = resolved_image.clone();
                 let ssh = ssh_key_path.clone();
+                let to = timeout_secs;
                 async move {
-                    dagger_pipeline::run_review(&conn, &repo, &br, None, &img, ssh.as_deref())
-                        .await
-                        .map_err(|e| eyre::eyre!("{}", e))
+                    dagger_pipeline::run_review(
+                        &conn,
+                        &repo,
+                        &br,
+                        base_br.as_deref(),
+                        &img,
+                        ssh.as_deref(),
+                        to,
+                    )
+                    .await
+                    .map_err(|e| eyre::eyre!("{}", e))
                 }
             })
             .await;

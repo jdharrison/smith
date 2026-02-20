@@ -1,4 +1,39 @@
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
+
+/// Max retries for GitHub API calls (rate limit / transient errors).
+const GITHUB_API_MAX_RETRIES: u32 = 3;
+/// Initial backoff duration; doubles each retry.
+const GITHUB_API_INITIAL_BACKOFF_MS: u64 = 1000;
+
+/// Run an async closure with retry and exponential backoff. Retries on 429 (rate limit),
+/// 503 (unavailable), and transient reqwest errors.
+async fn with_retry<F, Fut, T>(mut f: F) -> Result<T, String>
+where
+    F: FnMut() -> Fut,
+    Fut: std::future::Future<Output = Result<T, String>>,
+{
+    let mut backoff_ms = GITHUB_API_INITIAL_BACKOFF_MS;
+    for attempt in 0..=GITHUB_API_MAX_RETRIES {
+        match f().await {
+            Ok(t) => return Ok(t),
+            Err(e) => {
+                let retryable = e.contains("429")
+                    || e.contains("503")
+                    || e.contains("Failed to query")
+                    || e.contains("Failed to create")
+                    || e.contains("Failed to update");
+                if retryable && attempt < GITHUB_API_MAX_RETRIES {
+                    tokio::time::sleep(Duration::from_millis(backoff_ms)).await;
+                    backoff_ms = (backoff_ms * 2).min(30_000);
+                } else {
+                    return Err(e);
+                }
+            }
+        }
+    }
+    unreachable!()
+}
 
 /// Repository information extracted from URL
 pub struct RepoInfo {
@@ -219,7 +254,8 @@ async fn update_pr(
 }
 
 /// Create or update a pull request
-/// Only creates one PR per branch (updates existing if found)
+/// Only creates one PR per branch (updates existing if found).
+/// Uses retry with backoff for rate limits and transient errors.
 pub async fn create_or_update_pr(
     token: &str,
     owner: &str,
@@ -228,35 +264,44 @@ pub async fn create_or_update_pr(
     base: &str,
     title: &str,
 ) -> Result<String, String> {
-    // Try to find existing PR for this branch
-    match find_existing_pr(token, owner, repo, branch).await {
+    let existing =
+        with_retry(|| async move { find_existing_pr(token, owner, repo, branch).await }).await;
+
+    match existing {
         Ok(Some(existing_pr)) => {
-            // Update existing PR
             println!(
                 "  Found existing PR #{} for branch '{}', updating...",
                 existing_pr.number, branch
             );
-            update_pr(token, owner, repo, existing_pr.number, Some(title), None).await
+            with_retry(|| async move {
+                update_pr(token, owner, repo, existing_pr.number, Some(title), None).await
+            })
+            .await
         }
         Ok(None) => {
-            // Create new PR
             println!("  Creating new pull request for branch '{}'...", branch);
             let body = format!(
                 "Automated PR created by Agent Smith for branch `{}`",
                 branch
             );
-            create_pr(token, owner, repo, branch, base, title, &body).await
+            with_retry(|| {
+                let b = body.clone();
+                async move { create_pr(token, owner, repo, branch, base, title, &b).await }
+            })
+            .await
         }
         Err(e) => {
-            // If we can't find existing PRs, try to create anyway
-            // (might be a permissions issue, but creation might still work)
             println!("  Could not check for existing PRs: {}", e);
             println!("  Attempting to create new pull request...");
             let body = format!(
                 "Automated PR created by Agent Smith for branch `{}`",
                 branch
             );
-            create_pr(token, owner, repo, branch, base, title, &body).await
+            with_retry(|| {
+                let b = body.clone();
+                async move { create_pr(token, owner, repo, branch, base, title, &b).await }
+            })
+            .await
         }
     }
 }

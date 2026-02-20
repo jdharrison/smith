@@ -43,14 +43,19 @@ const SETUP_CHECK_CAPTURE_SCRIPT: &str = r#"
   exit 0
 "#;
 
-/// Execute check: fmt + build. Echoes SMITH_EXEC_CHECK_EXIT=0|1 then exits 0 for loop.
+/// Execute check: fmt + build + tests. Echoes SMITH_EXEC_CHECK_EXIT=0|1 then exits 0 for loop.
 const EXEC_CHECK_CAPTURE_SCRIPT: &str = r#"
   e=0
   if [ -f Cargo.toml ]; then
     cargo fmt --check 2>&1; r=$?; [ $r -ne 0 ] && e=1
     cargo check 2>&1; r=$?; [ $r -ne 0 ] && e=1
+    cargo test 2>&1; r=$?; [ $r -ne 0 ] && e=1
   elif [ -f package.json ]; then
     npm run build 2>&1; r=$?; [ $r -ne 0 ] && e=1
+    npm test 2>&1; r=$?; [ $r -ne 0 ] && e=1
+  elif [ -f go.mod ]; then
+    go build ./... 2>&1; r=$?; [ $r -ne 0 ] && e=1
+    go test ./... 2>&1; r=$?; [ $r -ne 0 ] && e=1
   fi
   echo "SMITH_EXEC_CHECK_EXIT=$e"
   exit 0
@@ -77,6 +82,22 @@ fn assurance_passed(stdout: &str) -> bool {
 /// Result type for pipeline operations (avoids exposing eyre in public API).
 pub type PipelineResult<T> = Result<T, String>;
 
+/// Map clone/branch-not-found errors to a clear message for read-only commands (ask/review).
+fn map_branch_not_found_err(e: String, branch: &str) -> String {
+    let s = e.to_lowercase();
+    if s.contains("couldn't find remote ref")
+        || s.contains("not found in upstream")
+        || s.contains("remote branch")
+    {
+        format!(
+            "Branch '{}' does not exist on remote. Ask and Review only work on existing branches.",
+            branch
+        )
+    } else {
+        e
+    }
+}
+
 /// Run a minimal pipeline to verify the Dagger engine and API.
 /// Returns Ok(()) if the engine is reachable and a simple container exec works.
 pub async fn run_doctor(conn: &Query) -> eyre::Result<()> {
@@ -95,10 +116,13 @@ pub async fn run_doctor(conn: &Query) -> eyre::Result<()> {
 /// Build container after Setup: clone repo, install deps, bootstrap OpenCode.
 /// Setup check is run in a loop (run_setup_loop) so failures can be fed back into a fix step.
 /// SSH: use explicit --ssh-key if provided; else for git@ URLs mount the host's ~/.ssh so whatever works on the host works in the pipeline.
+/// - clone_branch: branch to clone from remote (must exist).
+/// - work_branch: if Some(b), after clone run `git checkout -b b` (for dev on a new branch); if None, stay on clone_branch (for ask/review on existing branch).
 fn build_setup_container(
     conn: &Query,
     repo_url: &str,
-    branch: &str,
+    clone_branch: &str,
+    work_branch: Option<&str>,
     base_image: &str,
     ssh_key_path: Option<&std::path::Path>,
 ) -> PipelineResult<Container> {
@@ -110,14 +134,23 @@ fn build_setup_container(
     let mut c = conn.container().from(base_image);
 
     if let Some(ref key) = key_content {
-        // Explicit key: mount as secret
-        let secret = conn.set_secret("smith_ssh_key", key.clone());
+        // Explicit key: mount as secret. Use a unique secret name per invocation to avoid
+        // a fixed identifier that could be logged or searched (secret value is never logged).
+        let secret_name = format!(
+            "dk_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos()
+        );
+        let secret = conn.set_secret(&secret_name, key.clone());
         c = c
             .with_mounted_secret("/root/.ssh/id_ed25519", secret)
             .with_exec(vec![
                 "sh",
                 "-c",
-                "mkdir -p /root/.ssh && chmod 700 /root/.ssh && chmod 600 /root/.ssh/id_ed25519 2>/dev/null || true",
+                "mkdir -p /root/.ssh && chmod 700 /root/.ssh && chmod 600 /root/.ssh/id_ed25519 || { echo 'Setup failed: could not set SSH key permissions (600). Aborting.'; exit 1; }",
             ]);
     } else if uses_ssh_url {
         // No explicit key but SSH URL: mount host's ~/.ssh and optionally forward ssh-agent
@@ -166,14 +199,18 @@ fn build_setup_container(
         ]);
     }
 
-    let branch_escaped = branch.replace('\'', "'\"'\"'");
+    let clone_branch_escaped = clone_branch.replace('\'', "'\"'\"'");
     let repo_escaped = repo_url.replace('\'', "'\"'\"'");
     let clone_cmd = format!(
-        "git clone --depth 1 --branch '{}' '{}' /workspace 2>/dev/null || (git clone --depth 1 '{}' /workspace && cd /workspace && git checkout -b '{}')",
-        branch_escaped, repo_escaped, repo_escaped, branch_escaped
+        "git clone --depth 1 --branch '{}' '{}' /workspace",
+        clone_branch_escaped, repo_escaped
     );
     c = c.with_exec(vec!["sh", "-c", &clone_cmd]);
     c = c.with_workdir("/workspace");
+    if let Some(wb) = work_branch {
+        let checkout_cmd = format!("git checkout -b '{}'", wb.replace('\'', "'\"'\"'"));
+        c = c.with_exec(vec!["sh", "-c", &checkout_cmd]);
+    }
 
     // Install Rust (rustup + default toolchain) when the project has Cargo.toml; need build-base/build-essential for native deps
     c = c.with_exec(vec![
@@ -382,14 +419,18 @@ pub async fn run_ask(
     question: &str,
     base_image: &str,
     ssh_key_path: Option<&std::path::Path>,
+    timeout_secs: u64,
 ) -> PipelineResult<String> {
     let branch = branch.unwrap_or("main");
-    let c = build_setup_container(conn, repo_url, branch, base_image, ssh_key_path)?;
-    let c = run_setup_loop(c).await?;
+    let c = build_setup_container(conn, repo_url, branch, None, base_image, ssh_key_path)
+        .map_err(|e| map_branch_not_found_err(e, branch))?;
+    let c = run_setup_loop(c)
+        .await
+        .map_err(|e| map_branch_not_found_err(e, branch))?;
     let escaped = question.replace('\'', "'\"'\"'");
     let cmd = format!(
-        "cd /workspace && timeout 300 opencode run '{}' 2>&1",
-        escaped
+        "cd /workspace && timeout {} opencode run '{}' 2>&1",
+        timeout_secs, escaped
     );
     let raw: String = c
         .with_exec(vec!["sh", "-c", &cmd])
@@ -407,16 +448,25 @@ pub async fn run_dev(
     conn: &Query,
     repo_url: &str,
     branch: &str,
-    _base: Option<&str>,
+    base: Option<&str>,
     task: &str,
     base_image: &str,
     ssh_key_path: Option<&std::path::Path>,
     _verbose: bool,
+    timeout_secs: u64,
 ) -> PipelineResult<String> {
-    let c = build_setup_container(conn, repo_url, branch, base_image, ssh_key_path)?;
+    let clone_branch = base.unwrap_or("main");
+    let c = build_setup_container(
+        conn,
+        repo_url,
+        clone_branch,
+        Some(branch),
+        base_image,
+        ssh_key_path,
+    )?;
     let c = run_setup_loop(c).await?;
     let escaped = task.replace('\'', "'\"'\"'");
-    let exec_cmd = format!("cd /workspace && git config user.name 'Agent Smith' && git config user.email 'smith@agentsmith.dev' && timeout 300 opencode run '{}' 2>&1", escaped);
+    let exec_cmd = format!("cd /workspace && git config user.name 'Agent Smith' && git config user.email 'smith@agentsmith.dev' && timeout {} opencode run '{}' 2>&1", timeout_secs, escaped);
     let c = c.with_exec(vec!["sh", "-c", &exec_cmd]);
     let _ = c.stdout().await.map_err(|e| e.to_string())?;
     let c = run_execute_check_loop(c, task).await?;
@@ -456,21 +506,39 @@ pub async fn run_dev(
 }
 
 /// Run the Review pipeline: setup → setup loop → opencode analysis. Returns the review text.
+/// Clones the base branch first, then checks out the feature branch so git diff can compare them.
 pub async fn run_review(
     conn: &Query,
     repo_url: &str,
     branch: &str,
-    _base: Option<&str>,
+    base: Option<&str>,
     base_image: &str,
     ssh_key_path: Option<&std::path::Path>,
+    timeout_secs: u64,
 ) -> PipelineResult<String> {
-    let c = build_setup_container(conn, repo_url, branch, base_image, ssh_key_path)?;
-    let c = run_setup_loop(c).await?;
-    let review_prompt = "Analyze the changes in this branch compared to the base branch. Report any issues, security concerns, or suggested improvements.";
+    let base_branch = base.unwrap_or("main");
+    // Clone base branch first, then checkout feature branch for comparison
+    let c = build_setup_container(conn, repo_url, base_branch, None, base_image, ssh_key_path)
+        .map_err(|e| map_branch_not_found_err(e, base_branch))?;
+    // Fetch and checkout the feature branch to compare against base
+    let branch_escaped = branch.replace('\'', "'\"'\"'");
+    let checkout_cmd = format!(
+        "cd /workspace && git fetch origin '{}' 2>&1 && git checkout '{}' 2>&1",
+        branch_escaped, branch_escaped
+    );
+    let c = c.with_exec(vec!["sh", "-c", &checkout_cmd]);
+    let _ = c.stdout().await.map_err(|e| e.to_string())?;
+    let c = run_setup_loop(c)
+        .await
+        .map_err(|e| map_branch_not_found_err(e, branch))?;
+    let review_prompt = format!(
+        "Analyze the changes in branch '{}' compared to base branch '{}'. Report any issues, security concerns, or suggested improvements.",
+        branch, base_branch
+    );
     let escaped = review_prompt.replace('\'', "'\"'\"'");
     let cmd = format!(
-        "cd /workspace && timeout 300 opencode run '{}' 2>&1",
-        escaped
+        "cd /workspace && timeout {} opencode run '{}' 2>&1",
+        timeout_secs, escaped
     );
     let out: String = c
         .with_exec(vec!["sh", "-c", &cmd])
