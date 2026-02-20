@@ -134,12 +134,24 @@ fn build_setup_container(
         }
     }
 
-    // Install git and openssh
+    // Install git, openssh, curl, ca-certificates, tar, bash (OpenCode install script needs bash; no Node unless project has package.json)
     c = c.with_exec(vec![
         "sh",
         "-c",
-        "apk add --no-cache git openssh-client 2>/dev/null || (apt-get update && apt-get install -y git openssh-client) 2>/dev/null || true",
+        "apk add --no-cache git openssh-client curl ca-certificates tar bash 2>/dev/null || (apt-get update && apt-get install -y git openssh-client curl ca-certificates tar bash) 2>/dev/null || true",
     ]);
+    // Install OpenCode via official script (no Node/npm required; supports alpine/debian in container)
+    c = c.with_exec(vec![
+        "sh",
+        "-c",
+        "OPENCODE_INSTALL_DIR=/usr/local/bin curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path 2>&1 || { echo 'Setup failed: opencode install failed. Aborting.'; exit 1; }",
+    ]);
+    // Ensure opencode and cargo (when installed) are on PATH. Include /usr/local/cargo/bin
+    // so Rust official images (e.g. rust:1-bookworm) keep cargo; alpine gets it from rustup in /root/.cargo/bin.
+    c = c.with_env_variable(
+        "PATH",
+        "/root/.cargo/bin:/usr/local/cargo/bin:/root/.opencode/bin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    );
     // When we didn't mount host .ssh, create .ssh and populate known_hosts so clone can at least verify the host
     if key_content.is_some() || !uses_ssh_url {
         c = c.with_exec(vec![
@@ -162,6 +174,18 @@ fn build_setup_container(
     c = c.with_exec(vec!["sh", "-c", &clone_cmd]);
     c = c.with_workdir("/workspace");
 
+    // Install Rust (rustup + default toolchain) when the project has Cargo.toml; need build-base/build-essential for native deps
+    c = c.with_exec(vec![
+        "sh",
+        "-c",
+        "[ -f /workspace/Cargo.toml ] && (apk add --no-cache build-base 2>/dev/null || (apt-get update && apt-get install -y build-essential) 2>/dev/null) && (curl -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable) || true",
+    ]);
+    // Install Node/npm only when the project has package.json (Rust/Go/Python-only repos stay Node-free)
+    c = c.with_exec(vec![
+        "sh",
+        "-c",
+        "[ -f /workspace/package.json ] && (apk add --no-cache nodejs npm 2>/dev/null || (apt-get update && apt-get install -y nodejs npm) 2>/dev/null) || true",
+    ]);
     // Install dependencies by project type. Fail with a clear message if install cannot be resolved.
     c = c.with_exec(vec!["sh", "-c", INSTALL_SCRIPT]);
 
@@ -169,7 +193,7 @@ fn build_setup_container(
     c = c.with_exec(vec![
         "sh",
         "-c",
-        "npx -y opencode-ai --version 2>&1 || { echo 'Setup failed: opencode-ai could not be run. Aborting.'; exit 1; }",
+        "opencode --version 2>&1 || { echo 'Setup failed: opencode could not be run. Aborting.'; exit 1; }",
     ]);
 
     Ok(c)
@@ -235,7 +259,7 @@ async fn run_setup_loop(mut c: Container) -> PipelineResult<Container> {
         );
         let fix_escaped = fix_prompt.replace('\'', "'\"'\"'");
         let fix_cmd = format!(
-            "cd /workspace && timeout 300 npx -y opencode-ai run '{}' 2>&1",
+            "cd /workspace && timeout 300 opencode run '{}' 2>&1",
             fix_escaped
         );
         c = c.with_exec(vec!["sh", "-c", &fix_cmd]);
@@ -272,7 +296,7 @@ async fn run_execute_check_loop(mut c: Container, task_summary: &str) -> Pipelin
         );
         let fix_escaped = fix_prompt.replace('\'', "'\"'\"'");
         let fix_cmd = format!(
-            "cd /workspace && timeout 300 npx -y opencode-ai run '{}' 2>&1",
+            "cd /workspace && timeout 300 opencode run '{}' 2>&1",
             fix_escaped
         );
         c = c.with_exec(vec!["sh", "-c", &fix_cmd]);
@@ -286,7 +310,7 @@ async fn run_assurance_loop(mut c: Container, task_summary: &str) -> PipelineRes
     let assurance_escaped = ASSURANCE_PROMPT.replace('\'', "'\"'\"'");
     for attempt in 0..MAX_ASSURANCE_LOOP_RETRIES {
         let assurance_cmd = format!(
-            "cd /workspace && timeout 90 npx -y opencode-ai run '{}' 2>&1",
+            "cd /workspace && timeout 90 opencode run '{}' 2>&1",
             assurance_escaped
         );
         let out: String = c
@@ -308,7 +332,7 @@ async fn run_assurance_loop(mut c: Container, task_summary: &str) -> PipelineRes
         );
         let fix_escaped = fix_prompt.replace('\'', "'\"'\"'");
         let fix_cmd = format!(
-            "cd /workspace && timeout 180 npx -y opencode-ai run '{}' 2>&1",
+            "cd /workspace && timeout 180 opencode run '{}' 2>&1",
             fix_escaped
         );
         c = c.with_exec(vec!["sh", "-c", &fix_cmd]);
@@ -324,7 +348,7 @@ async fn run_ask_assurance_pass(c: &Container, text: &str) -> Option<String> {
     let full_prompt = format!("{}{}", ASK_CLEANUP_PROMPT_PREFIX, truncated);
     let escaped = full_prompt.replace('\'', "'\"'\"'");
     let cmd = format!(
-        "cd /workspace && timeout 120 npx -y opencode-ai run '{}' 2>&1",
+        "cd /workspace && timeout 120 opencode run '{}' 2>&1",
         escaped
     );
     let out: String = c.with_exec(vec!["sh", "-c", &cmd]).stdout().await.ok()?;
@@ -363,7 +387,7 @@ pub async fn run_ask(
     let c = run_setup_loop(c).await?;
     let escaped = question.replace('\'', "'\"'\"'");
     let cmd = format!(
-        "cd /workspace && timeout 300 npx -y opencode-ai run '{}' 2>&1",
+        "cd /workspace && timeout 300 opencode run '{}' 2>&1",
         escaped
     );
     let raw: String = c
@@ -391,7 +415,7 @@ pub async fn run_dev(
     let c = build_setup_container(conn, repo_url, branch, base_image, ssh_key_path)?;
     let c = run_setup_loop(c).await?;
     let escaped = task.replace('\'', "'\"'\"'");
-    let exec_cmd = format!("cd /workspace && git config user.name 'Agent Smith' && git config user.email 'smith@agentsmith.dev' && timeout 300 npx -y opencode-ai run '{}' 2>&1", escaped);
+    let exec_cmd = format!("cd /workspace && git config user.name 'Agent Smith' && git config user.email 'smith@agentsmith.dev' && timeout 300 opencode run '{}' 2>&1", escaped);
     let c = c.with_exec(vec!["sh", "-c", &exec_cmd]);
     let _ = c.stdout().await.map_err(|e| e.to_string())?;
     let c = run_execute_check_loop(c, task).await?;
@@ -444,7 +468,7 @@ pub async fn run_review(
     let review_prompt = "Analyze the changes in this branch compared to the base branch. Report any issues, security concerns, or suggested improvements.";
     let escaped = review_prompt.replace('\'', "'\"'\"'");
     let cmd = format!(
-        "cd /workspace && timeout 300 npx -y opencode-ai run '{}' 2>&1",
+        "cd /workspace && timeout 300 opencode run '{}' 2>&1",
         escaped
     );
     let out: String = c

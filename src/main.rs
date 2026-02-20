@@ -6,7 +6,60 @@ use clap::{CommandFactory, Parser, Subcommand};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::os::fd::AsRawFd;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread;
+use std::time::Duration;
+
+/// When dropped, restores stderr. Used for quiet mode to hide Dagger progress. No-op on non-Unix.
+struct StderrRedirectGuard(Option<std::os::unix::io::RawFd>);
+
+#[cfg(unix)]
+fn redirect_stderr_to_null() -> Option<StderrRedirectGuard> {
+    let null_fd = std::fs::File::open("/dev/null").ok()?;
+    let null_raw = null_fd.as_raw_fd();
+    let saved = unsafe { libc::dup(libc::STDERR_FILENO) };
+    if saved < 0 {
+        return None;
+    }
+    if unsafe { libc::dup2(null_raw, libc::STDERR_FILENO) } < 0 {
+        unsafe { libc::close(saved) };
+        return None;
+    }
+    Some(StderrRedirectGuard(Some(saved)))
+}
+
+#[cfg(not(unix))]
+fn redirect_stderr_to_null() -> Option<StderrRedirectGuard> {
+    None
+}
+
+impl Drop for StderrRedirectGuard {
+    fn drop(&mut self) {
+        #[cfg(unix)]
+        if let Some(saved) = self.0.take() {
+            unsafe {
+                libc::dup2(saved, libc::STDERR_FILENO);
+                libc::close(saved);
+            }
+        }
+    }
+}
+
+/// Spinner chars; runs until done is true.
+fn run_spinner_until(done: &AtomicBool) {
+    const CHARS: [&str; 10] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+    let mut i = 0usize;
+    while !done.load(Ordering::Relaxed) {
+        print!("\r  {}  ", CHARS[i % CHARS.len()]);
+        let _ = std::io::Write::flush(&mut std::io::stdout());
+        thread::sleep(Duration::from_millis(80));
+        i += 1;
+    }
+    print!("\r    \r");
+    let _ = std::io::Write::flush(&mut std::io::stdout());
+}
 
 #[derive(Parser)]
 #[command(name = "smith")]
@@ -20,7 +73,11 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Validate the local environment
-    Doctor,
+    Doctor {
+        /// Show full Dagger and pipeline output
+        #[arg(long)]
+        verbose: bool,
+    },
     /// Manage configuration
     Config {
         #[command(subcommand)]
@@ -53,6 +110,9 @@ enum Commands {
         /// Keep container alive after answering (for debugging/inspection)
         #[arg(long)]
         keep_alive: bool,
+        /// Show full Dagger and pipeline output
+        #[arg(long)]
+        verbose: bool,
     },
     /// Execute a development action (read/write) with validation and commit
     Dev {
@@ -113,6 +173,9 @@ enum Commands {
         /// Keep container alive after review (for debugging/inspection)
         #[arg(long)]
         keep_alive: bool,
+        /// Show full Dagger and pipeline output
+        #[arg(long)]
+        verbose: bool,
     },
 }
 
@@ -272,7 +335,7 @@ fn resolve_image(explicit_image: Option<&str>, project_config: Option<&ProjectCo
     explicit_image
         .map(|s| s.to_string())
         .or_else(|| project_config.and_then(|p| p.image.clone()))
-        .unwrap_or_else(|| "node:20-alpine".to_string())
+        .unwrap_or_else(|| "alpine:latest".to_string())
 }
 
 /// Resolve SSH key path: explicit --ssh-key > project ssh_key > SSH_KEY_PATH env
@@ -301,13 +364,17 @@ async fn main() {
             cmd.print_help().unwrap();
             std::process::exit(0);
         }
-        Some(Commands::Doctor) => {
-            println!("Doctor: Validating environment...");
+        Some(Commands::Doctor { verbose }) => {
+            if verbose {
+                println!("Doctor: Validating environment...");
+            }
 
             // Check config directory
             match config_dir() {
                 Ok(dir) => {
-                    println!("  ✓ Config directory accessible: {}", dir.display());
+                    if verbose {
+                        println!("  ✓ Config directory accessible: {}", dir.display());
+                    }
                 }
                 Err(e) => {
                     println!("  ✗ Config directory error: {}", e);
@@ -317,22 +384,34 @@ async fn main() {
             // Check Docker (Dagger uses it as container runtime)
             match docker::check_docker_available() {
                 Ok(_) => {
-                    println!("  ✓ Docker is available and running");
+                    if verbose {
+                        println!("  ✓ Docker is available and running");
+                    }
                 }
                 Err(e) => {
                     println!("  ✗ Docker: {}", e);
                 }
             }
 
-            // Check Dagger (run smith with: dagger run smith ... for ask/dev/review)
-            match dagger_pipeline::with_connection(|conn| {
-                let conn = conn;
-                async move { dagger_pipeline::run_doctor(&conn).await }
-            })
-            .await
-            {
+            // Check Dagger
+            let dagger_ok = {
+                let _guard = if !verbose {
+                    redirect_stderr_to_null()
+                } else {
+                    None
+                };
+                dagger_pipeline::with_connection(|conn| async move {
+                    dagger_pipeline::run_doctor(&conn).await
+                })
+                .await
+            };
+            match dagger_ok {
                 Ok(_) => {
-                    println!("  ✓ Dagger engine is available");
+                    if verbose {
+                        println!("  ✓ Dagger engine is available");
+                    } else {
+                        println!("Doctor: ✓ Config, Docker, and Dagger OK");
+                    }
                 }
                 Err(e) => {
                     println!("  ✗ Dagger: {}", e);
@@ -476,6 +555,7 @@ async fn main() {
             image,
             ssh_key,
             keep_alive: _,
+            verbose,
         }) => {
             let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
@@ -494,12 +574,27 @@ async fn main() {
             let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
             let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
 
-            println!("Ask: {}", question);
-            println!("  Repository: {}", resolved_repo);
-            println!("  Image: {}", resolved_image);
+            if verbose {
+                println!("Ask: {}", question);
+                println!("  Repository: {}", resolved_repo);
+                println!("  Image: {}", resolved_image);
+            }
 
             let branch = base.as_deref().unwrap_or("main").to_string();
-            match dagger_pipeline::with_connection(move |conn| {
+            let done = std::sync::Arc::new(AtomicBool::new(false));
+            let done_clone = done.clone();
+            let spinner_handle = if !verbose {
+                Some(thread::spawn(move || run_spinner_until(&done_clone)))
+            } else {
+                None
+            };
+            let _guard = if !verbose {
+                redirect_stderr_to_null()
+            } else {
+                None
+            };
+
+            let result = dagger_pipeline::with_connection(move |conn| {
                 let repo = resolved_repo.clone();
                 let q = question.clone();
                 let img = resolved_image.clone();
@@ -518,8 +613,17 @@ async fn main() {
                     .map_err(|e| eyre::eyre!("{}", e))
                 }
             })
-            .await
-            {
+            .await;
+
+            if !verbose {
+                done.store(true, Ordering::Relaxed);
+                if let Some(h) = spinner_handle {
+                    let _: std::thread::Result<()> = h.join();
+                }
+            }
+            drop(_guard);
+
+            match result {
                 Ok(answer) => println!("\nAnswer: {}", answer),
                 Err(e) => {
                     eprintln!("Error: {}", e);
@@ -556,14 +660,30 @@ async fn main() {
             let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
             let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
 
-            println!("Dev: {}", task);
-            println!("  Repository: {}", resolved_repo);
-            println!("  Image: {}", resolved_image);
+            if verbose {
+                println!("Dev: {}", task);
+                println!("  Repository: {}", resolved_repo);
+                println!("  Image: {}", resolved_image);
+            }
 
             let branch_out = branch.clone();
             let resolved_repo_pr = resolved_repo.clone();
             let base_pr = base.clone();
             let task_pr = task.clone();
+            let done = std::sync::Arc::new(AtomicBool::new(false));
+            let done_clone = done.clone();
+            let spinner_handle = if !verbose {
+                Some(thread::spawn(move || run_spinner_until(&done_clone)))
+            } else {
+                None
+            };
+            let _guard = if !verbose {
+                redirect_stderr_to_null()
+            } else {
+                None
+            };
+
+            let verb_for_closure = verbose;
             let dev_result = dagger_pipeline::with_connection(move |conn| {
                 let repo = resolved_repo.clone();
                 let t = task.clone();
@@ -580,13 +700,21 @@ async fn main() {
                         &t,
                         &img,
                         ssh.as_deref(),
-                        verbose,
+                        verb_for_closure,
                     )
                     .await
                     .map_err(|e| eyre::eyre!("{}", e))
                 }
             })
             .await;
+
+            if !verbose {
+                done.store(true, Ordering::Relaxed);
+                if let Some(h) = spinner_handle {
+                    let _: std::thread::Result<()> = h.join();
+                }
+            }
+            drop(_guard);
 
             match &dev_result {
                 Ok(commit) => {
@@ -687,6 +815,7 @@ async fn main() {
             image,
             ssh_key,
             keep_alive: _,
+            verbose,
         }) => {
             let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
@@ -705,11 +834,26 @@ async fn main() {
             let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
             let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
 
-            println!("Review: {}", branch);
-            println!("  Repository: {}", resolved_repo);
-            println!("  Image: {}", resolved_image);
+            if verbose {
+                println!("Review: {}", branch);
+                println!("  Repository: {}", resolved_repo);
+                println!("  Image: {}", resolved_image);
+            }
 
-            match dagger_pipeline::with_connection(move |conn| {
+            let done = std::sync::Arc::new(AtomicBool::new(false));
+            let done_clone = done.clone();
+            let spinner_handle = if !verbose {
+                Some(thread::spawn(move || run_spinner_until(&done_clone)))
+            } else {
+                None
+            };
+            let _guard = if !verbose {
+                redirect_stderr_to_null()
+            } else {
+                None
+            };
+
+            let result = dagger_pipeline::with_connection(move |conn| {
                 let repo = resolved_repo.clone();
                 let br = branch.clone();
                 let img = resolved_image.clone();
@@ -720,8 +864,17 @@ async fn main() {
                         .map_err(|e| eyre::eyre!("{}", e))
                 }
             })
-            .await
-            {
+            .await;
+
+            if !verbose {
+                done.store(true, Ordering::Relaxed);
+                if let Some(h) = spinner_handle {
+                    let _: std::thread::Result<()> = h.join();
+                }
+            }
+            drop(_guard);
+
+            match result {
                 Ok(review_output) => println!("\n{}", review_output),
                 Err(e) => {
                     eprintln!("Error: {}", e);

@@ -1,6 +1,6 @@
 [package]
 name = "smith"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 authors = ["Jacob D. Harrison"]
 description = "Agent Smith — open-source control plane for coding orchestration and configuration"
@@ -17,4 +17,5 @@ serde = { version = "1", features = ["derive"] }
 toml = "0.8"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 tokio = { version = "1", features = ["full"] }
+libc = "0.2"
 

@@ -66,7 +66,7 @@ dagger run smith dev "Add login endpoint" --branch feature/login --project mypro
 dagger run smith review feature/login --project myproject
 ```
 
-Use **SSH repository URLs** (e.g. `git@github.com:user/repo.git`). By default the pipeline mounts your host `~/.ssh` and forwards `SSH_AUTH_SOCK` if set, so whatever works on the host (e.g. `ssh-add` for passphrase-protected keys) works in the pipeline. Alternatively use `--ssh-key <path>` to supply a specific key (e.g. a dedicated or deploy key with no passphrase for automation). The pipeline uses your project's `--image` (or default `node:20-alpine`) as the base container. A future release may support a custom Dagger module in your repo to override the default pipeline.
+Use **SSH repository URLs** (e.g. `git@github.com:user/repo.git`). By default the pipeline mounts your host `~/.ssh` and forwards `SSH_AUTH_SOCK` if set, so whatever works on the host (e.g. `ssh-add` for passphrase-protected keys) works in the pipeline. Alternatively use `--ssh-key <path>` to supply a specific key (e.g. a dedicated or deploy key with no passphrase for automation). The pipeline uses your project's `--image` (or default `alpine:latest`) as the base container. OpenCode is installed via the [official install script](https://github.com/anomalyco/opencode#installation) (no Node required). Node/npm are only installed when the project has a `package.json`. A future release may support a custom Dagger module in your repo to override the default pipeline.
 
 - `smith doctor` — validates Docker and Dagger (run as `smith doctor`, no `dagger run` needed)
 
