@@ -23,7 +23,7 @@ curl https://sh.rustup.rs -sSf | sh
 cargo install --git https://github.com/jdharrison/smith.git
 ```
 
-**Prerequisites:** Rust 1.75+ and Cargo installed. If you don't have Rust, install it from [rustup.rs](https://rustup.rs/).
+**Prerequisites:** Rust 1.83+ (stable recommended). Install via [rustup](https://rustup.rs/) so the project's `rust-toolchain.toml` is used.
 
 ### Option 2: Download Pre-built Binaries
 
@@ -33,7 +33,7 @@ Pre-built binaries for Windows, macOS, and Linux are available in [GitHub Releas
 
 ### Prerequisites
 
-- Rust 1.75+
+- Rust 1.83+ (use [rustup](https://rustup.rs/) for stable toolchain)
 - Docker
 
 ### Build and Run
