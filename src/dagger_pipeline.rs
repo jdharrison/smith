@@ -166,10 +166,11 @@ fn build_setup_container(
         ]);
     }
 
+    let branch_escaped = branch.replace('\'', "'\"'\"'");
+    let repo_escaped = repo_url.replace('\'', "'\"'\"'");
     let clone_cmd = format!(
-        "git clone --depth 1 --branch '{}' '{}' /workspace",
-        branch.replace('\'', "'\"'\"'"),
-        repo_url.replace('\'', "'\"'\"'")
+        "git clone --depth 1 --branch '{}' '{}' /workspace 2>/dev/null || (git clone --depth 1 '{}' /workspace && cd /workspace && git checkout -b '{}')",
+        branch_escaped, repo_escaped, repo_escaped, branch_escaped
     );
     c = c.with_exec(vec!["sh", "-c", &clone_cmd]);
     c = c.with_workdir("/workspace");
