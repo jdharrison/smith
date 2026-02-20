@@ -687,11 +687,13 @@ async fn main() {
                     }
 
                     // If dev failed and PR wasn't requested, exit with error
-                    if dev_result.is_err() && !pr {
-                        eprintln!("Error: {}", dev_result.as_ref().unwrap_err());
-                        // Clean up container on error
-                        let _ = docker::remove_container(&container_name);
-                        std::process::exit(1);
+                    if let Err(e) = &dev_result {
+                        if !pr {
+                            eprintln!("Error: {}", e);
+                            // Clean up container on error
+                            let _ = docker::remove_container(&container_name);
+                            std::process::exit(1);
+                        }
                     }
                 }
                 Err(e) => {

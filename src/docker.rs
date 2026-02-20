@@ -21,8 +21,6 @@ fn sanitize_for_container_name(s: &str) -> String {
         .map(|c| {
             if c.is_alphanumeric() || c == '-' || c == '_' {
                 c
-            } else if c == '/' {
-                '_'
             } else {
                 '_'
             }
@@ -43,7 +41,7 @@ pub fn generate_container_name(command: &str, branch_or_question: Option<&str>) 
         % 1_000_000_000; // Use last 9 digits for shorter names
 
     let sanitized_branch = branch_or_question
-        .map(|s| sanitize_for_container_name(s))
+        .map(sanitize_for_container_name)
         .unwrap_or_else(|| "default".to_string());
 
     format!("smith_{}_{}_{}", command, sanitized_branch, timestamp)
