@@ -15,7 +15,6 @@ Agent Smith — open-source control plane for coding orchestration and configura
 Install directly from the GitHub repository using Cargo:
 
 ```bash
-
 # Install cargo/Rust if needed (unix); for all others: https://rustup.rs
 curl https://sh.rustup.rs -sSf | sh
 
@@ -33,97 +32,142 @@ Pre-built binaries for Windows, macOS, and Linux are available in [GitHub Releas
 
 ### Prerequisites
 
-- Rust 1.83+ (use [rustup](https://rustup.rs/) for stable toolchain)
-- **Docker** — used as the container runtime by Dagger
-- **Dagger CLI** — required for `ask`, `dev`, and `review`. Install from [docs.dagger.io](https://docs.dagger.io/install) or `curl -L https://dl.dagger.io/dagger/install.sh | sh`
+- Rust 1.83+
+- **Docker** — container runtime used by Dagger
+- **Dagger** — the `ask`, `dev`, and `review` pipelines run via the Dagger Rust SDK; the engine starts automatically (e.g. `docker start dagger-engine-*`). Install the [Dagger CLI](https://docs.dagger.io/install) if you use it separately, or rely on the SDK-managed engine.
 
 ### Build and Run
 
 ```bash
-# Build
 cargo build
-
-# Run directly
 cargo run -- --help
-
-# Or install globally
-cargo install --path .
+# or after install:
 smith --help
 ```
 
-### Running ask / dev / review (Dagger)
+### Pipeline commands (ask / dev / review)
 
-The **ask**, **dev**, and **review** commands run a phased pipeline (setup → setup check → execute → execute check → assurance) inside the Dagger engine. You must run them via **`dagger run`** so the engine is available:
+Run **ask**, **dev**, or **review** directly with `smith` (or `cargo run --`). The pipeline runs inside the Dagger engine; by default you see a spinner and then the result. Use **`--verbose`** to see full pipeline output.
 
 ```bash
-# Ask a question (read-only)
-dagger run smith ask "How does auth work?" --project myproject
+# Ask a question (read-only); default branch is main, use --base to ask about another branch
+smith ask "How does auth work?" --project myproject
+smith ask "What's in this branch?" --project myproject --base feature/x
 
-# Run a development task and optionally open a PR
-dagger run smith dev "Add login endpoint" --branch feature/login --project myproject --pr
+# Run a development task (commit + push); use --pr to create or update a PR
+smith dev "Add login endpoint" --branch feature/login --project myproject
+smith dev "Fix bug" --branch fix/123 --project myproject --pr --verbose
 
 # Review a branch
-dagger run smith review feature/login --project myproject
+smith review feature/login --project myproject
+smith review feature/login --project myproject --base main --verbose
 ```
 
-Use **SSH repository URLs** (e.g. `git@github.com:user/repo.git`). By default the pipeline mounts your host `~/.ssh` and forwards `SSH_AUTH_SOCK` if set, so whatever works on the host (e.g. `ssh-add` for passphrase-protected keys) works in the pipeline. Alternatively use `--ssh-key <path>` to supply a specific key (e.g. a dedicated or deploy key with no passphrase for automation). The pipeline uses your project's `--image` (or default `alpine:latest`) as the base container. OpenCode is installed via the [official install script](https://github.com/anomalyco/opencode#installation) (no Node required). Node/npm are only installed when the project has a `package.json`. A future release may support a custom Dagger module in your repo to override the default pipeline.
+Use **SSH repository URLs** (e.g. `git@github.com:user/repo.git`). The pipeline mounts your host `~/.ssh` and forwards `SSH_AUTH_SOCK` when set, so host auth (e.g. `ssh-add`) works. Use `--ssh-key <path>` to supply a specific key. Projects can store an image and SSH key via `smith project add/update`.
 
-- `smith doctor` — validates Docker and Dagger (run as `smith doctor`, no `dagger run` needed)
+---
 
-### Core Commands
+## Agent pipeline and feedback loops
 
-- `dagger run smith ask <question> --project <name>` — Ask a question to an agent about a project (read-only)
-- `dagger run smith dev <task> --branch <branch> --project <name> [--pr]` — Execute a development task with validation and commit (read/write). Use `--pr` to create or update a pull request.
-- `dagger run smith review <branch> --project <name>` — Review changes on a branch (read-only)
-- `smith doctor` — Validate the local environment (Docker + Dagger)
+All pipeline commands (ask, dev, review) use the same high-level flow.
 
-### Project Commands
+### Phases
 
-- `smith project add <name> --repo <path-or-url>` - Register a project
-- `smith project list` - List registered projects
-- `smith project remove <name>` - Remove a project
+1. **Setup** — Clone repo, install deps (cargo check / npm install / go mod / pip), bootstrap opencode-ai. If install fails, the run fails with a clear message.
+2. **Setup check (loop)** — Build and run tests. If this fails, the **setup loop** runs: the agent is given the failure output and asked to fix the project (deps/config/code); we re-run install and setup check. Repeats up to 3 times; then the run fails.
+3. **Execute** — Run the agent (ask: answer the question; dev: run the task; review: run the review prompt).
+4. **Execute check (dev only, loop)** — Format and build (e.g. `cargo fmt --check`, `cargo check`). If this fails, the **execute-check loop** runs: the agent is given the failure and asked to fix the code; we re-run the check. Repeats up to 3 times; then the run fails.
+5. **Assurance** — Depends on the command:
+   - **Ask:** **Ask assurance** — Filter step: the raw answer is passed through a cleanup prompt (trim preamble/cruft); that can run up to 2 passes (feed back into itself). Does not fail the run.
+   - **Dev:** **Assurance loop** — Agent reviews recent changes. If the review reports issues, the agent is asked to address them; we re-run execute check, then assurance again. Up to 3 attempts; then we continue to commit.
+6. **Commit / push (dev only)** — Commit, `git pull --rebase` when the remote branch exists, then push. Push failures (e.g. non–fast-forward) are reported.
 
-### Config Commands
+### Summary
 
-- `smith config path` - Show config file location
-- `smith config set-github-token <token>` - Set GitHub API token for PR creation
+| Command | Setup loop | Execute | Execute-check loop | Assurance | Commit/push |
+|--------|------------|---------|--------------------|-----------|-------------|
+| **ask**  | ✓ | Question → answer | — | Cleanup filter (2 passes) | — |
+| **dev**  | ✓ | Task → edits | ✓ | Review → fix loop | ✓ |
+| **review** | ✓ | Review prompt → text | — | — | — |
 
-### Container Commands
+---
 
-- `smith container list` - List all smith containers
-- `smith container stop <name>` - Stop a container
-- `smith container remove <name>` - Remove a container
+## Commands and options
+
+### Pipeline commands (Dagger)
+
+- **`smith doctor [--verbose]`**  
+  Validate environment (config dir, Docker, Dagger). Without `--verbose`, only a short success line is printed.
+
+- **`smith ask "<question>"`**  
+  Ask the agent about the project (read-only).  
+  - `--base <branch>` — Branch to clone and ask about (default: `main`).  
+  - `--repo <url>` — Override repo (SSH URL).  
+  - `--project <name>` — Use repo/image/ssh_key from config.  
+  - `--image <image>` — Override Docker image (e.g. `rust:1-bookworm` for Rust repos).  
+  - `--ssh-key <path>` — SSH key path (overrides project config and `SSH_KEY_PATH`).  
+  - `--keep-alive` — Keep container alive after run (debugging).  
+  - `--verbose` — Show full Dagger and pipeline output (default: spinner then result).
+
+- **`smith dev "<task>" --branch <branch>`**  
+  Run a development task, validate, commit, and push.  
+  - `--branch <branch>` — **(required)** Target branch to work on and push.  
+  - `--base <branch>` — Base branch to start from (default: `main`).  
+  - `--repo`, `--project`, `--image`, `--ssh-key`, `--keep-alive` — Same as ask.  
+  - `--pr` — Create or update a GitHub PR after push (requires token).  
+  - `--verbose` — Full output.
+
+- **`smith review <branch>`**  
+  Review the given branch (read-only).  
+  - `--base <branch>` — Base branch to compare against (optional).  
+  - `--repo`, `--project`, `--image`, `--ssh-key`, `--keep-alive`, `--verbose` — Same as above.
+
+### Project commands
+
+- **`smith project add <name> --repo <path-or-url>`**  
+  Register a project.  
+  - `--image <image>` — Docker image for this project.  
+  - `--ssh-key <path>` — SSH key path for this project.
+
+- **`smith project list`**  
+  List registered projects (shows repo, image, and ssh_key when set).
+
+- **`smith project update <name>`**  
+  Update a project.  
+  - `--repo <url>`, `--image <image>`, `--ssh-key <path>` — Set new value; `--ssh-key ""` clears project SSH key.
+
+- **`smith project remove <name>`**  
+  Remove a project.
+
+### Config commands
+
+- **`smith config path`** — Print config file path.
+- **`smith config set-github-token <token>`** — Set GitHub token for PR creation.
+
+### Container commands
+
+- **`smith container list`** — List smith-related containers.
+- **`smith container stop <name>`** — Stop a container.
+- **`smith container remove <name>`** — Remove a container.
+
+---
 
 ## GitHub Pull Requests
 
-Agent Smith supports creating and updating pull requests on GitHub:
-
-1. **Configure GitHub token:**
+1. Set a GitHub token:
    ```bash
    smith config set-github-token <your-github-token>
    ```
-
-2. **Use `--pr` flag with `dev` command:**
+2. Use `--pr` with `dev`:
    ```bash
    smith dev "Add new feature" --branch feature/new-feature --project myproject --pr
    ```
-
-The `--pr` flag will:
-- Create a new pull request if one doesn't exist for the branch
-- Update an existing pull request if one already exists (only one PR per branch)
-- Use the task description as the PR title
-- Default to `main` as the base branch (or use `--base` to specify)
+   This creates a PR if none exists for the branch, or updates the existing one. The task is used as the PR title. Base branch is `main` unless you pass `--base`.
 
 ## Development
 
 ```bash
-# Run tests
 cargo test
-
-# Format code
 cargo fmt
-
-# Lint
 cargo clippy --all-targets -- -D warnings
 ```
-
