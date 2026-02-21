@@ -77,14 +77,16 @@ All pipeline commands (ask, dev, review) use the same high-level flow.
 
 ### Phases
 
-1. **Setup** — Clone repo, install deps (cargo check / npm install / go mod / pip), bootstrap opencode-ai. If install fails, the run fails with a clear message.
-2. **Setup check (loop)** — Build and run tests. If this fails, the **setup loop** runs: the agent is given the failure output and asked to fix the project (deps/config/code); we re-run install and setup check. Repeats up to 3 times; then the run fails.
-3. **Execute** — Run the agent (ask: answer the question; dev: run the task; review: run the review prompt).
-4. **Execute check (dev only, loop)** — Format and build (e.g. `cargo fmt --check`, `cargo check`). If this fails, the **execute-check loop** runs: the agent is given the failure and asked to fix the code; we re-run the check. Repeats up to 3 times; then the run fails.
+1. **Setup**
+   - **Setup Run** — Clone repo, install deps (cargo check / npm install / go mod / pip), bootstrap opencode-ai. If install fails, the run fails with a clear message.
+   - **Setup Check** — Build and run tests. If this fails, the agent is given the failure output and asked to fix the project (deps/config/code); we re-run install and re-check. Repeats up to 3 times.
+3. **Execute**
+   - **Execute Run** — Run the agent (ask: answer the question; dev: run the task; review: run the review prompt).
+   - **Execute Check** — Validate the output (for dev, format and build). If this fails, the agent is given the failure, asked to fix the code, then re-checks. Repeats up to 3 times.
 5. **Assurance** — Depends on the command:
    - **Ask:** **Ask assurance** — Filter step: the raw answer is passed through a cleanup prompt (trim preamble/cruft); that can run up to 2 passes (feed back into itself). Does not fail the run.
    - **Dev:** **Assurance loop** — Agent reviews recent changes. If the review reports issues, the agent is asked to address them; we re-run execute check, then assurance again. Up to 3 attempts; then we continue to commit.
-6. **Commit / push (dev only)** — Commit, `git pull --rebase` when the remote branch exists, then push. Push failures (e.g. non–fast-forward) are reported.
+6. **Commit & Push (dev only)** — Commit, `git pull --rebase` when the remote branch exists, then push. Push failures (e.g. non–fast-forward) are reported.
 
 ### Summary
 
