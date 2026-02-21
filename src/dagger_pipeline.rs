@@ -574,11 +574,18 @@ pub async fn run_review(
     // Clone base branch first, then checkout feature branch for comparison
     let c = build_setup_container(conn, repo_url, base_branch, None, base_image, ssh_key_path)
         .map_err(|e| map_branch_not_found_err(e, base_branch))?;
-    // Fetch and checkout the feature branch to compare against base
+    // Fetch all refs and checkout the feature branch to compare against base
     let branch_escaped = branch.replace('\'', "'\"'\"'");
+    let remote_ref = format!("refs/remotes/origin/{}", branch);
+    let remote_ref_escaped = remote_ref.replace('\'', "'\"'\"'");
     let checkout_cmd = format!(
-        "cd /workspace && git fetch origin '{}' 2>&1 && git checkout '{}' 2>&1",
-        branch_escaped, branch_escaped
+        r#"cd /workspace && git fetch origin 2>&1 || {{ echo 'Setup failed: could not fetch from origin. Aborting.'; exit 1; }}
+if git rev-parse --verify "{}" >/dev/null 2>&1; then
+  git checkout -b '{}' "{}" 2>&1 || {{ echo 'Setup failed: could not checkout branch from origin. Aborting.'; exit 1; }}
+else
+  git checkout -b '{}' 2>&1 || {{ echo 'Setup failed: could not create branch. Aborting.'; exit 1; }}
+fi"#,
+        remote_ref_escaped, branch_escaped, remote_ref_escaped, branch_escaped
     );
     let c = c.with_exec(vec!["sh", "-c", &checkout_cmd]);
     let _ = c.stdout().await.map_err(|e| e.to_string())?;
