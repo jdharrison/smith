@@ -5,6 +5,7 @@ mod github;
 use clap::{CommandFactory, Parser, Subcommand};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::fs;
 use std::os::fd::AsRawFd;
 use std::path::PathBuf;
@@ -59,6 +60,52 @@ fn run_spinner_until(done: &AtomicBool) {
     }
     print!("\r    \r");
     let _ = std::io::Write::flush(&mut std::io::stdout());
+}
+
+/// When the Dagger SDK fails to parse an error response (e.g. "invalid type: sequence, expected a string"),
+/// the real exec error is still in the response body. Extract and return a clearer message when possible.
+fn clarify_dagger_error(err: &str) -> String {
+    const PREFIX: &str = "The response body is: ";
+    let Some(start) = err.find(PREFIX) else {
+        return err.to_string();
+    };
+    let json_str = &err[start + PREFIX.len()..];
+    let Ok(root): Result<Value, _> = serde_json::from_str(json_str) else {
+        return err.to_string();
+    };
+    let Some(errors) = root.get("errors").and_then(Value::as_array) else {
+        return err.to_string();
+    };
+    let Some(first) = errors.first() else {
+        return err.to_string();
+    };
+    let mut out = String::new();
+    if let Some(msg) = first.get("message").and_then(Value::as_str) {
+        out.push_str(msg);
+    }
+    if let Some(ext) = first.get("extensions") {
+        if let Some(stdout) = ext.get("stdout").and_then(Value::as_str) {
+            if !stdout.trim().is_empty() {
+                if !out.is_empty() {
+                    out.push('\n');
+                }
+                out.push_str(stdout.trim());
+            }
+        }
+        if let Some(stderr) = ext.get("stderr").and_then(Value::as_str) {
+            if !stderr.trim().is_empty() {
+                if !out.is_empty() {
+                    out.push('\n');
+                }
+                out.push_str(stderr.trim());
+            }
+        }
+    }
+    if out.is_empty() {
+        err.to_string()
+    } else {
+        out
+    }
 }
 
 #[derive(Parser)]
@@ -649,7 +696,8 @@ async fn main() {
             match result {
                 Ok(answer) => println!("\nAnswer: {}", answer),
                 Err(e) => {
-                    eprintln!("Error: {}", e);
+                    let msg = e.to_string();
+                    eprintln!("Error: {}", clarify_dagger_error(&msg));
                     std::process::exit(1);
                 }
             }
@@ -753,7 +801,8 @@ async fn main() {
                     if e.contains("No changes to commit") {
                         println!("\n⚠ No changes were made by the development task");
                     } else {
-                        eprintln!("Error: {}", e);
+                        let msg = e.to_string();
+                        eprintln!("Error: {}", clarify_dagger_error(&msg));
                         std::process::exit(1);
                     }
                 }
@@ -916,7 +965,8 @@ async fn main() {
             match result {
                 Ok(review_output) => println!("\n{}", review_output),
                 Err(e) => {
-                    eprintln!("Error: {}", e);
+                    let msg = e.to_string();
+                    eprintln!("Error: {}", clarify_dagger_error(&msg));
                     std::process::exit(1);
                 }
             }

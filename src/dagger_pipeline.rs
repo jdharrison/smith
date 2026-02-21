@@ -207,9 +207,21 @@ fn build_setup_container(
     );
     c = c.with_exec(vec!["sh", "-c", &clone_cmd]);
     c = c.with_workdir("/workspace");
+    // When dev specifies a work branch: fetch origin, then create branch from origin/<branch> if it exists so HEAD is based off origin; else create new branch from current HEAD.
     if let Some(wb) = work_branch {
-        let checkout_cmd = format!("git checkout -b '{}'", wb.replace('\'', "'\"'\"'"));
-        c = c.with_exec(vec!["sh", "-c", &checkout_cmd]);
+        let wb_escaped = wb.replace('\'', "'\"'\"'");
+        let remote_ref = format!("refs/remotes/origin/{}", wb);
+        let remote_ref_escaped = remote_ref.replace('\'', "'\"'\"'");
+        let branch_setup_cmd = format!(
+            r#"git fetch origin 2>&1 || {{ echo 'Setup failed: could not fetch from origin. Aborting.'; exit 1; }}
+if git rev-parse --verify "{}" >/dev/null 2>&1; then
+  git checkout -b '{}' "{}" 2>&1 || {{ echo 'Setup failed: could not checkout branch from origin. Aborting.'; exit 1; }}
+else
+  git checkout -b '{}' 2>&1 || {{ echo 'Setup failed: could not create branch. Aborting.'; exit 1; }}
+fi"#,
+            remote_ref_escaped, wb_escaped, remote_ref_escaped, wb_escaped
+        );
+        c = c.with_exec(vec!["sh", "-c", &branch_setup_cmd]);
     }
 
     // Install Rust (rustup + default toolchain) when the project has Cargo.toml; need build-base/build-essential for native deps
@@ -235,6 +247,21 @@ fn build_setup_container(
     ]);
 
     Ok(c)
+}
+
+/// Branch-sync check: when origin/<branch> exists, HEAD must equal origin/<branch>. Exit 1 with message otherwise; exit 0 when in sync or branch is new on remote.
+fn branch_sync_check_script(branch: &str) -> String {
+    let branch_escaped = branch.replace('\'', "'\"'\"'");
+    let remote_ref = format!("refs/remotes/origin/{}", branch);
+    let remote_ref_escaped = remote_ref.replace('\'', "'\"'\"'");
+    format!(
+        r#"cd /workspace && if git rev-parse --verify "{}" >/dev/null 2>&1; then
+  HEAD=$(git rev-parse HEAD) && ORIGIN=$(git rev-parse "{}") && if [ "$HEAD" != "$ORIGIN" ]; then
+    echo 'Setup check failed: HEAD is not at origin/{} (branch exists on remote). Sync or resolve before continuing.'; exit 1;
+  fi;
+fi"#,
+        remote_ref_escaped, remote_ref_escaped, branch_escaped
+    )
 }
 
 /// Parse "SMITH_SETUP_EXIT=0" or "SMITH_SETUP_EXIT=1" from stdout; default 1 if not found.
@@ -274,7 +301,16 @@ fn parse_exec_check_exit(stdout: &str) -> u32 {
 }
 
 /// Setup check feedback loop: run setup check; if it fails, run opencode with the error, re-install, retry.
-async fn run_setup_loop(mut c: Container) -> PipelineResult<Container> {
+/// When branch_sync is Some(branch), we first verify HEAD is at origin/branch (when that ref exists); we never pass setup if not in sync.
+async fn run_setup_loop(mut c: Container, branch_sync: Option<&str>) -> PipelineResult<Container> {
+    if let Some(branch) = branch_sync {
+        let sync_script = branch_sync_check_script(branch);
+        let _ = c
+            .with_exec(vec!["sh", "-c", &sync_script])
+            .stdout()
+            .await
+            .map_err(|e| e.to_string())?;
+    }
     for attempt in 0..MAX_SETUP_LOOP_RETRIES {
         let out: String = c
             .with_exec(vec!["sh", "-c", SETUP_CHECK_CAPTURE_SCRIPT])
@@ -282,6 +318,14 @@ async fn run_setup_loop(mut c: Container) -> PipelineResult<Container> {
             .await
             .map_err(|e| e.to_string())?;
         if parse_setup_exit(&out) == 0 {
+            if let Some(branch) = branch_sync {
+                let sync_script = branch_sync_check_script(branch);
+                let _ = c
+                    .with_exec(vec!["sh", "-c", &sync_script])
+                    .stdout()
+                    .await
+                    .map_err(|e| e.to_string())?;
+            }
             return Ok(c);
         }
         if attempt + 1 >= MAX_SETUP_LOOP_RETRIES {
@@ -424,7 +468,7 @@ pub async fn run_ask(
     let branch = branch.unwrap_or("main");
     let c = build_setup_container(conn, repo_url, branch, None, base_image, ssh_key_path)
         .map_err(|e| map_branch_not_found_err(e, branch))?;
-    let c = run_setup_loop(c)
+    let c = run_setup_loop(c, None)
         .await
         .map_err(|e| map_branch_not_found_err(e, branch))?;
     let escaped = question.replace('\'', "'\"'\"'");
@@ -464,7 +508,7 @@ pub async fn run_dev(
         base_image,
         ssh_key_path,
     )?;
-    let c = run_setup_loop(c).await?;
+    let c = run_setup_loop(c, Some(branch)).await?;
     let escaped = task.replace('\'', "'\"'\"'");
     let exec_cmd = format!("cd /workspace && git config user.name 'Agent Smith' && git config user.email 'smith@agentsmith.dev' && timeout {} opencode run '{}' 2>&1", timeout_secs, escaped);
     let c = c.with_exec(vec!["sh", "-c", &exec_cmd]);
@@ -490,17 +534,27 @@ pub async fn run_dev(
     if hash == "no-commit" {
         return Err("No changes to commit".to_string());
     }
-    // Pull --rebase when remote branch exists so we're not pushing outdated history; fail on conflict (merge conflict management can be added later).
+    // Bust cache so we always run fetch+rebase+push (remote state changes; cached result would be stale).
+    let run_id = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    // Fetch all refs so we see if remote branch exists; rebase onto it when it does so push is never behind.
     let branch_escaped = branch.replace('\'', "'\"'\"'");
-    let pull_cmd = format!(
-        r#"cd /workspace && git fetch origin 2>&1 && (git rev-parse --verify "origin/{}" >/dev/null 2>&1 && (git pull --rebase origin '{}' 2>&1 || {{ echo 'Push aborted: branch is out of date; pull --rebase failed (merge conflicts or network error). Resolve conflicts or retry.'; exit 1; }}) || true)"#,
-        branch_escaped, branch_escaped
+    let remote_ref = format!("refs/remotes/origin/{}", branch);
+    let remote_ref_escaped = remote_ref.replace('\'', "'\"'\"'");
+    let rebase_cmd = format!(
+        r#"cd /workspace && : run_{} && git fetch origin 2>&1 && if git rev-parse --verify "{}" >/dev/null 2>&1; then git rebase "{}" 2>&1 || {{ echo 'Push aborted: rebase onto origin/{} failed (conflicts or network). Resolve conflicts or retry.'; exit 1; }}; fi"#,
+        run_id, remote_ref_escaped, remote_ref_escaped, branch_escaped
     );
-    let c = c.with_exec(vec!["sh", "-c", &pull_cmd]);
+    let c = c.with_exec(vec!["sh", "-c", &rebase_cmd]);
     let _ = c.stdout().await.map_err(|e| e.to_string())?;
     // Push; surface failure (e.g. non-fast-forward, permission denied).
-    let push_cmd = "cd /workspace && git push origin HEAD 2>&1 || { echo 'Push failed: remote rejected (e.g. non-fast-forward) or network/SSH error.'; exit 1; }";
-    let c = c.with_exec(vec!["sh", "-c", push_cmd]);
+    let push_cmd = format!(
+        "cd /workspace && : run_{} && git push origin HEAD 2>&1 || {{ echo 'Push failed: remote rejected (e.g. non-fast-forward) or network/SSH error.'; exit 1; }}",
+        run_id
+    );
+    let c = c.with_exec(vec!["sh", "-c", &push_cmd]);
     let _ = c.stdout().await.map_err(|e| e.to_string())?;
     Ok(hash)
 }
@@ -528,7 +582,7 @@ pub async fn run_review(
     );
     let c = c.with_exec(vec!["sh", "-c", &checkout_cmd]);
     let _ = c.stdout().await.map_err(|e| e.to_string())?;
-    let c = run_setup_loop(c)
+    let c = run_setup_loop(c, None)
         .await
         .map_err(|e| map_branch_not_found_err(e, branch))?;
     let review_prompt = format!(
