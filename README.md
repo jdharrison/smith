@@ -1,6 +1,6 @@
 # Agent Smith
 
-Agent Smith — open-source control plane for coding orchestration and configuration
+Agent Smith — open-source control plane for local agent orchestration and configuration
 
 ![46a22884bfb0164c9d70b69a5db74027](https://github.com/user-attachments/assets/b4eacebe-6161-4718-bbf2-42797d3f1ecc)
 
@@ -41,10 +41,12 @@ Pre-built binaries for Linux and macOS are available in [GitHub Releases](https:
 ### Build and Run
 
 ```bash
+# Direct install
+smith --help
+
+# Development
 cargo build
 cargo run -- --help
-# or after install:
-smith --help
 ```
 
 ### Pipeline commands (ask / dev / review)
