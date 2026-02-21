@@ -602,6 +602,75 @@ pub async fn run_review(
     Ok(out.trim().to_string())
 }
 
+/// Integration result containing merge status
+pub struct IntegrateResult {
+    pub commit_sha: String,
+    #[allow(dead_code)]
+    pub message: String,
+}
+
+/// Run the Integrate pipeline: pull changes → build check → assurance → merge into target
+pub async fn run_integrate(
+    conn: &Query,
+    repo_url: &str,
+    branch: &str,
+    target: Option<&str>,
+    base_image: &str,
+    ssh_key_path: Option<&std::path::Path>,
+    _timeout_secs: u64,
+) -> PipelineResult<IntegrateResult> {
+    let target_branch = target.unwrap_or("main");
+
+    // Clone source branch, then fetch and rebase onto target branch
+    let c = build_setup_container(conn, repo_url, branch, None, base_image, ssh_key_path)
+        .map_err(|e| map_branch_not_found_err(e, branch))?;
+
+    // Fetch target branch and rebase onto it
+    let target_escaped = target_branch.replace('\'', "'\"'\"'");
+    let rebase_cmd = format!(
+        "cd /workspace && git fetch origin '{}' 2>&1 && git rebase 'origin/{}' 2>&1 || {{ echo 'Rebase failed: resolve conflicts and retry.'; exit 1; }}",
+        target_escaped, target_escaped
+    );
+    let c = c.with_exec(vec!["sh", "-c", &rebase_cmd]);
+    let _ = c.stdout().await.map_err(|e| e.to_string())?;
+
+    // Run setup loop (build + tests)
+    let c = run_setup_loop(c, Some(target_branch)).await?;
+
+    // Run execute check (fmt + build + tests)
+    let c = run_execute_check_loop(c, "integration check").await?;
+
+    // Run assurance loop (check for blocker issues)
+    let c = run_assurance_loop(c, "integration review").await?;
+
+    // Push the rebased branch
+    let run_id = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let push_cmd = format!(
+        "cd /workspace && : run_{} && git push origin HEAD --force-with-lease 2>&1 || {{ echo 'Push failed: remote changed or network/SSH error.'; exit 1; }}",
+        run_id
+    );
+    let c = c.with_exec(vec!["sh", "-c", &push_cmd]);
+    let _ = c.stdout().await.map_err(|e| e.to_string())?;
+
+    // Get the final commit SHA
+    let sha_out: String = c
+        .with_exec(vec!["sh", "-c", "cd /workspace && git rev-parse HEAD"])
+        .stdout()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(IntegrateResult {
+        commit_sha: sha_out.trim().to_string(),
+        message: format!(
+            "Branch '{}' rebased onto '{}' and validated successfully",
+            branch, target_branch
+        ),
+    })
+}
+
 /// Connect to Dagger and run the given async closure, mapping eyre errors to String.
 pub async fn with_connection<F, Fut, T>(f: F) -> PipelineResult<T>
 where

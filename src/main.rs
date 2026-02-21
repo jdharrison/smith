@@ -233,6 +233,42 @@ enum Commands {
         #[arg(long)]
         verbose: bool,
     },
+    /// Pull changes, verify build, check for issues, and merge into target branch
+    Integrate {
+        /// Source branch to integrate (must exist on remote)
+        #[arg(long)]
+        branch: String,
+        /// Target branch to merge into (default: main)
+        #[arg(long)]
+        target: Option<String>,
+        /// Repository path or URL (overrides project config if provided)
+        #[arg(long)]
+        repo: Option<String>,
+        /// Project name from config
+        #[arg(long)]
+        project: Option<String>,
+        /// Docker image to use (overrides project config if provided)
+        #[arg(long)]
+        image: Option<String>,
+        /// SSH key path for private repositories (optional)
+        #[arg(long)]
+        ssh_key: Option<PathBuf>,
+        /// Commit message for the merge (optional, auto-generated if not provided)
+        #[arg(long)]
+        message: Option<String>,
+        /// Merge method: merge, squash, or rebase (default: merge)
+        #[arg(long)]
+        method: Option<String>,
+        /// Keep container alive after completion (for debugging/inspection)
+        #[arg(long)]
+        keep_alive: bool,
+        /// Timeout in seconds for the agent run (default: 300)
+        #[arg(long)]
+        timeout: Option<u64>,
+        /// Show full Dagger and pipeline output
+        #[arg(long)]
+        verbose: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -964,6 +1000,154 @@ async fn main() {
 
             match result {
                 Ok(review_output) => println!("\n{}", review_output),
+                Err(e) => {
+                    let msg = e.to_string();
+                    eprintln!("Error: {}", clarify_dagger_error(&msg));
+                    std::process::exit(1);
+                }
+            }
+        }
+        Some(Commands::Integrate {
+            branch,
+            target,
+            repo,
+            project,
+            image,
+            ssh_key,
+            message,
+            method,
+            keep_alive: _,
+            timeout,
+            verbose,
+        }) => {
+            let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+
+            if resolved_repo.starts_with("https://") {
+                eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git) with --ssh-key.");
+                std::process::exit(1);
+            }
+
+            let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+            let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
+            let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
+
+            let target_branch = target.clone().unwrap_or_else(|| "main".to_string());
+            let target_branch_for_output = target_branch.clone();
+            if verbose {
+                println!("Integrate: {} into {}", branch, target_branch);
+                println!("  Repository: {}", resolved_repo);
+                println!("  Image: {}", resolved_image);
+            }
+
+            let branch_for_output = branch.clone();
+            let resolved_repo_for_github = resolved_repo.clone();
+            let done = std::sync::Arc::new(AtomicBool::new(false));
+            let done_clone = done.clone();
+            let spinner_handle = if !verbose {
+                Some(thread::spawn(move || run_spinner_until(&done_clone)))
+            } else {
+                None
+            };
+            let _guard = if !verbose {
+                redirect_stderr_to_null()
+            } else {
+                None
+            };
+
+            let timeout_secs = timeout.unwrap_or(300);
+            let result = dagger_pipeline::with_connection(move |conn| {
+                let repo = resolved_repo.clone();
+                let br = branch.clone();
+                let tg = target_branch.clone();
+                let img = resolved_image.clone();
+                let ssh = ssh_key_path.clone();
+                let to = timeout_secs;
+                async move {
+                    dagger_pipeline::run_integrate(
+                        &conn,
+                        &repo,
+                        &br,
+                        Some(tg.as_str()),
+                        &img,
+                        ssh.as_deref(),
+                        to,
+                    )
+                    .await
+                    .map_err(|e| eyre::eyre!("{}", e))
+                }
+            })
+            .await;
+
+            if !verbose {
+                done.store(true, Ordering::Relaxed);
+                if let Some(h) = spinner_handle {
+                    let _: std::thread::Result<()> = h.join();
+                }
+            }
+            drop(_guard);
+
+            match result {
+                Ok(integrate_result) => {
+                    println!("\n✓ Integration successful");
+                    println!("  Commit: {}", integrate_result.commit_sha);
+                    println!(
+                        "  Branch '{}' rebased onto '{}'",
+                        branch_for_output, target_branch_for_output
+                    );
+
+                    let cfg = load_config().unwrap_or_else(|e| {
+                        eprintln!("Error loading config: {}", e);
+                        std::process::exit(1);
+                    });
+                    if let Some(github_config) = cfg.github {
+                        if let Ok(repo_info) = github::extract_repo_info(&resolved_repo_for_github)
+                        {
+                            let merge_method = method
+                                .as_deref()
+                                .unwrap_or("merge")
+                                .parse::<github::MergeMethod>()
+                                .unwrap_or(github::MergeMethod::Merge);
+
+                            match github::merge_branch(
+                                &github_config.token,
+                                &repo_info.owner,
+                                &repo_info.name,
+                                &branch_for_output,
+                                message.as_deref(),
+                                merge_method,
+                            )
+                            .await
+                            {
+                                Ok(merge_result) => {
+                                    println!("  ✓ Merged: {}", merge_result);
+                                }
+                                Err(e) => {
+                                    eprintln!("  ⚠ Merge failed: {}", e);
+                                    eprintln!(
+                                        "     The branch was rebased and pushed successfully, but merge could not be completed."
+                                    );
+                                    eprintln!(
+                                        "     You may need to merge manually or check PR status."
+                                    );
+                                }
+                            }
+                        } else {
+                            eprintln!(
+                                "  ⚠ Could not extract repository info from URL: {}",
+                                resolved_repo_for_github
+                            );
+                        }
+                    } else {
+                        eprintln!("  ⚠ GitHub token not configured. Use 'smith config set-github-token <token>' to enable automatic merging.");
+                        eprintln!("     The branch was rebased and pushed successfully.");
+                    }
+                }
                 Err(e) => {
                     let msg = e.to_string();
                     eprintln!("Error: {}", clarify_dagger_error(&msg));

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use std::time::Duration;
 
 /// Max retries for GitHub API calls (rate limit / transient errors).
@@ -251,6 +252,177 @@ async fn update_pr(
         .map_err(|e| format!("Failed to parse PR response: {}", e))?;
 
     Ok(pr.html_url)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum MergeMethod {
+    Merge,
+    Squash,
+    Rebase,
+}
+
+impl Default for MergeMethod {
+    fn default() -> Self {
+        MergeMethod::Merge
+    }
+}
+
+impl FromStr for MergeMethod {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "merge" => Ok(MergeMethod::Merge),
+            "squash" => Ok(MergeMethod::Squash),
+            "rebase" => Ok(MergeMethod::Rebase),
+            _ => Err(format!(
+                "Invalid merge method '{}'. Valid options: merge, squash, rebase",
+                s
+            )),
+        }
+    }
+}
+
+/// Merge a pull request
+async fn merge_pr(
+    token: &str,
+    owner: &str,
+    repo: &str,
+    pr_number: u64,
+    commit_title: &str,
+    commit_message: &str,
+    merge_method: MergeMethod,
+) -> Result<String, String> {
+    let client = reqwest::Client::new();
+    let url = format!(
+        "https://api.github.com/repos/{}/{}/pulls/{}/merge",
+        owner, repo, pr_number
+    );
+
+    let method_str = match merge_method {
+        MergeMethod::Merge => "merge",
+        MergeMethod::Squash => "squash",
+        MergeMethod::Rebase => "rebase",
+    };
+
+    #[derive(Serialize)]
+    struct MergeRequest {
+        commit_title: String,
+        commit_message: String,
+        merge_method: String,
+    }
+
+    let payload = MergeRequest {
+        commit_title: commit_title.to_string(),
+        commit_message: commit_message.to_string(),
+        merge_method: method_str.to_string(),
+    };
+
+    let response = client
+        .put(&url)
+        .header("Authorization", format!("token {}", token))
+        .header("Accept", "application/vnd.github.v3+json")
+        .header("User-Agent", "agent-smith")
+        .header("Content-Type", "application/json")
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to merge PR: {}", e))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("Failed to merge PR ({}): {}", status, error_text));
+    }
+
+    #[derive(Deserialize)]
+    struct MergeResponse {
+        sha: String,
+        #[allow(dead_code)]
+        merged: bool,
+        message: String,
+    }
+
+    let result: MergeResponse = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse merge response: {}", e))?;
+
+    Ok(format!("{} ({})", result.sha, result.message))
+}
+
+/// Get PR number by branch name
+async fn get_pr_by_branch(
+    token: &str,
+    owner: &str,
+    repo: &str,
+    branch: &str,
+) -> Result<Option<u64>, String> {
+    let client = reqwest::Client::new();
+    let url = format!(
+        "https://api.github.com/repos/{}/{}/pulls?head={}:{}&state=open",
+        owner, repo, owner, branch
+    );
+
+    let response = client
+        .get(&url)
+        .header("Authorization", format!("token {}", token))
+        .header("Accept", "application/vnd.github.v3+json")
+        .header("User-Agent", "agent-smith")
+        .send()
+        .await
+        .map_err(|e| format!("Failed to query GitHub API: {}", e))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("GitHub API error ({}): {}", status, error_text));
+    }
+
+    #[derive(Deserialize)]
+    struct PullRequest {
+        number: u64,
+    }
+
+    let prs: Vec<PullRequest> = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse GitHub API response: {}", e))?;
+
+    Ok(prs.into_iter().next().map(|pr| pr.number))
+}
+
+/// Merge a branch into its base branch via PR
+/// Finds an open PR for the branch and merges it
+pub async fn merge_branch(
+    token: &str,
+    owner: &str,
+    repo: &str,
+    branch: &str,
+    commit_message: Option<&str>,
+    merge_method: MergeMethod,
+) -> Result<String, String> {
+    let pr_number =
+        with_retry(|| async move { get_pr_by_branch(token, owner, repo, branch).await })
+            .await?
+            .ok_or_else(|| format!("No open PR found for branch '{}'", branch))?;
+
+    let default_message = format!("Merge branch '{}' via Agent Smith", branch);
+    let message = commit_message.unwrap_or(&default_message);
+
+    with_retry(|| async move {
+        merge_pr(
+            token,
+            owner,
+            repo,
+            pr_number,
+            &format!("Merge branch '{}'", branch),
+            message,
+            merge_method,
+        )
+        .await
+    })
+    .await
 }
 
 /// Create or update a pull request
