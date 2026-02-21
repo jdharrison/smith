@@ -1,5 +1,20 @@
 use crate::docker;
 
+fn sanitize_branch_name(branch: &str) -> String {
+    branch
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('$', "\\$")
+        .replace('`', "\\`")
+        .replace(';', "\\;")
+        .replace('|', "\\|")
+        .replace('&', "\\&")
+        .replace('<', "\\<")
+        .replace('>', "\\>")
+        .replace('\n', "")
+        .replace('\r', "")
+}
+
 /// Trait for agents that can execute in containers
 pub trait Agent {
     /// Initialize the agent with a container
@@ -197,12 +212,19 @@ fn execute_opencode(container_name: &str, question: &str, verbose: bool) -> Resu
     // 2. Try opencode command if available
     // 3. Try /usr/local/bin/opencode
 
-    let escaped_question = question.replace("'", "'\"'\"'");
+    // Proper shell escaping to prevent command injection
+    let sanitized_question = question
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('$', "\\$")
+        .replace('`', "\\`")
+        .replace('\n', " ")
+        .replace('\r', "");
 
     // Try npx first (most reliable, doesn't require global install)
     let npx_cmd = format!(
-        "cd /workspace && timeout 300 npx -y opencode-ai run '{}' 2>&1",
-        escaped_question
+        "cd /workspace && timeout 300 npx -y opencode-ai run \"{}\" 2>&1",
+        sanitized_question
     );
 
     let npx_result = docker::exec_in_container(container_name, &npx_cmd);
@@ -226,8 +248,8 @@ fn execute_opencode(container_name: &str, question: &str, verbose: bool) -> Resu
 
     // Try opencode command if available
     let opencode_cmd = format!(
-        "cd /workspace && timeout 300 (opencode run '{}' 2>&1 || /usr/local/bin/opencode run '{}' 2>&1)",
-        escaped_question, escaped_question
+        "cd /workspace && timeout 300 (opencode run \"{}\" 2>&1 || /usr/local/bin/opencode run \"{}\" 2>&1)",
+        sanitized_question, sanitized_question
     );
 
     let result = docker::exec_in_container(container_name, &opencode_cmd)?;
@@ -322,7 +344,8 @@ fn dev_agent(
 
 /// Checkout a branch (simple version for ask command)
 fn checkout_branch_simple(container_name: &str, branch: &str) -> Result<(), String> {
-    let checkout_cmd = format!("cd /workspace && git checkout {}", branch);
+    let sanitized_branch = sanitize_branch_name(branch);
+    let checkout_cmd = format!("cd /workspace && git checkout {}", sanitized_branch);
     docker::exec_in_container(container_name, &checkout_cmd)
         .map_err(|e| format!("Failed to checkout branch '{}': {}", branch, e))?;
     Ok(())
@@ -331,6 +354,9 @@ fn checkout_branch_simple(container_name: &str, branch: &str) -> Result<(), Stri
 /// Set up branch: checkout base if provided, then create/checkout target branch
 /// Supports both creating new branches and continuing work on existing branches
 fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Result<(), String> {
+    let sanitized_base = base.map(sanitize_branch_name);
+    let sanitized_branch = sanitize_branch_name(branch);
+
     // Configure git user if not already configured
     let config_cmd = "cd /workspace && \
         git config user.name 'Agent Smith' 2>/dev/null || true && \
@@ -338,7 +364,7 @@ fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resul
     let _ = docker::exec_in_container(container_name, config_cmd);
 
     // If base is provided, checkout that branch first
-    if let Some(base_branch) = base {
+    if let Some(base_branch) = &sanitized_base {
         println!("  Checking out base branch: {}", base_branch);
         let checkout_base = format!("cd /workspace && git checkout {}", base_branch);
         docker::exec_in_container(container_name, &checkout_base)
@@ -348,7 +374,7 @@ fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resul
     // Check if branch exists locally
     let check_local = format!(
         "cd /workspace && git show-ref --verify --quiet refs/heads/{} && echo 'exists' || echo 'not_exists'",
-        branch
+        sanitized_branch
     );
     let local_exists = docker::exec_in_container(container_name, &check_local)?;
 
@@ -358,7 +384,7 @@ fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resul
             "  Branch '{}' exists locally, checking out to continue work",
             branch
         );
-        let checkout_cmd = format!("cd /workspace && git checkout {}", branch);
+        let checkout_cmd = format!("cd /workspace && git checkout {}", sanitized_branch);
         docker::exec_in_container(container_name, &checkout_cmd)
             .map_err(|e| format!("Failed to checkout existing branch '{}': {}", branch, e))?;
         println!("  ✓ Checked out existing branch: {}", branch);
@@ -377,7 +403,7 @@ fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resul
             let remote_name = "origin";
             let check_remote = format!(
                 "cd /workspace && git ls-remote --heads {} {} 2>/dev/null | wc -l",
-                remote_name, branch
+                remote_name, sanitized_branch
             );
             let remote_count = docker::exec_in_container(container_name, &check_remote)
                 .unwrap_or_else(|_| "0".to_string())
@@ -393,7 +419,7 @@ fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resul
                 );
                 let checkout_remote = format!(
                     "cd /workspace && git checkout --track {}/{}",
-                    remote_name, branch
+                    remote_name, sanitized_branch
                 );
                 docker::exec_in_container(container_name, &checkout_remote)
                     .map_err(|e| format!("Failed to checkout remote branch '{}': {}", branch, e))?;
@@ -401,7 +427,7 @@ fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resul
             } else {
                 // Branch doesn't exist anywhere, create new branch
                 println!("  Creating new branch: {}", branch);
-                let create_cmd = format!("cd /workspace && git checkout -b {}", branch);
+                let create_cmd = format!("cd /workspace && git checkout -b {}", sanitized_branch);
                 docker::exec_in_container(container_name, &create_cmd)
                     .map_err(|e| format!("Failed to create new branch '{}': {}", branch, e))?;
                 println!("  ✓ Created new branch: {}", branch);
@@ -409,7 +435,7 @@ fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resul
         } else {
             // No remote configured, create new branch
             println!("  Creating new branch: {}", branch);
-            let create_cmd = format!("cd /workspace && git checkout -b {}", branch);
+            let create_cmd = format!("cd /workspace && git checkout -b {}", sanitized_branch);
             docker::exec_in_container(container_name, &create_cmd)
                 .map_err(|e| format!("Failed to create new branch '{}': {}", branch, e))?;
             println!("  ✓ Created new branch: {}", branch);
@@ -421,6 +447,8 @@ fn setup_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resul
 
 /// Push changes to the specified branch
 fn push_to_branch(container_name: &str, branch: &str) -> Result<(), String> {
+    let sanitized_branch = sanitize_branch_name(branch);
+
     // Check if remote exists
     let remote_check = "cd /workspace && git remote -v";
     let remotes = docker::exec_in_container(container_name, remote_check)?;
@@ -446,10 +474,10 @@ fn push_to_branch(container_name: &str, branch: &str) -> Result<(), String> {
 
     // Check if there are commits to push by comparing local branch to remote
     // If remote branch doesn't exist, we'll push (git push -u will create it)
-    let remote_branch = format!("{}/{}", remote_name, branch);
+    let remote_branch = format!("{}/{}", remote_name, sanitized_branch);
     let check_remote_branch = format!(
         "cd /workspace && git ls-remote --heads {} {} 2>/dev/null | wc -l",
-        remote_name, branch
+        remote_name, sanitized_branch
     );
     let remote_exists = docker::exec_in_container(container_name, &check_remote_branch)
         .unwrap_or_else(|_| "0".to_string())
@@ -461,7 +489,7 @@ fn push_to_branch(container_name: &str, branch: &str) -> Result<(), String> {
         // Remote branch exists, check if we're ahead
         let ahead_check = format!(
             "cd /workspace && git rev-list --count {}..{} 2>/dev/null || echo '0'",
-            remote_branch, branch
+            remote_branch, sanitized_branch
         );
         let ahead_count = docker::exec_in_container(container_name, &ahead_check)
             .unwrap_or_else(|_| "0".to_string())
@@ -497,7 +525,7 @@ fn push_to_branch(container_name: &str, branch: &str) -> Result<(), String> {
     // Push to branch
     let push_cmd = format!(
         "cd /workspace && git push -u {} {} 2>&1",
-        remote_name, branch
+        remote_name, sanitized_branch
     );
 
     match docker::exec_in_container(container_name, &push_cmd) {
@@ -885,6 +913,8 @@ fn review_branch(container_name: &str, branch: &str, base: Option<&str>) -> Resu
 /// Find the base branch for a feature branch
 /// Tries: provided base, main, master, or merge-base with main/master
 fn find_base_branch(container_name: &str, branch: &str) -> Result<String, String> {
+    let sanitized_branch = sanitize_branch_name(branch);
+
     // Try to find merge-base with common base branches
     let common_bases = vec!["main", "master", "develop"];
 
@@ -902,7 +932,7 @@ fn find_base_branch(container_name: &str, branch: &str) -> Result<String, String
             // Try to find merge-base
             let merge_base_cmd = format!(
                 "cd /workspace && git merge-base {} {} 2>/dev/null | head -1",
-                base, branch
+                base, sanitized_branch
             );
             let merge_base =
                 docker::exec_in_container(container_name, &merge_base_cmd).unwrap_or_default();
@@ -935,6 +965,9 @@ fn find_base_branch(container_name: &str, branch: &str) -> Result<String, String
 
 /// Get git diff between two branches
 fn get_git_diff(container_name: &str, base: &str, branch: &str) -> Result<String, String> {
+    let sanitized_base = sanitize_branch_name(base);
+    let sanitized_branch = sanitize_branch_name(branch);
+
     // Ensure we have the latest refs
     let _ = docker::exec_in_container(
         container_name,
@@ -942,15 +975,18 @@ fn get_git_diff(container_name: &str, base: &str, branch: &str) -> Result<String
     );
 
     // Try to get diff, handling both local and remote branches
-    let diff_cmd = format!("cd /workspace && git diff {}...{} 2>&1", base, branch);
+    let diff_cmd = format!(
+        "cd /workspace && git diff {}...{} 2>&1",
+        sanitized_base, sanitized_branch
+    );
 
     let diff = docker::exec_in_container(container_name, &diff_cmd)?;
 
     // If diff is empty, try with origin/ prefix
     if diff.trim().is_empty() {
         let remote_diff_cmd = format!(
-            "cd /workspace && (git diff origin/{}...origin/{} 2>&1 || git diff {}...origin/{} 2>&1 || git diff origin/{}...{} 2>&1)",
-            base, branch, base, branch, base, branch
+            "cd /workspace && (git diff origin/{}...origin/{} 2>&1 || git diff origin/{}...origin/{} 2>&1 || git diff origin/{}...{} 2>&1)",
+            sanitized_base, sanitized_branch, sanitized_base, sanitized_branch, sanitized_base, sanitized_branch
         );
         return docker::exec_in_container(container_name, &remote_diff_cmd);
     }
@@ -960,6 +996,15 @@ fn get_git_diff(container_name: &str, base: &str, branch: &str) -> Result<String
 
 /// Commit changes with a message
 fn commit_changes(container_name: &str, task: &str) -> Result<String, String> {
+    // Sanitize commit message to prevent command injection
+    let sanitized_message = task
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('$', "\\$")
+        .replace('`', "\\`")
+        .replace('\n', " ")
+        .replace('\r', "");
+
     // Configure git user if not already configured
     let config_cmd = "cd /workspace && \
         git config user.name 'Agent Smith' 2>/dev/null || true && \
@@ -980,10 +1025,7 @@ fn commit_changes(container_name: &str, task: &str) -> Result<String, String> {
     }
 
     // Create commit message from task (use task directly as commit message)
-    let commit_cmd = format!(
-        "cd /workspace && git commit -m '{}'",
-        task.replace("'", "'\"'\"'")
-    );
+    let commit_cmd = format!("cd /workspace && git commit -m \"{}\"", sanitized_message);
 
     docker::exec_in_container(container_name, &commit_cmd)?;
 
