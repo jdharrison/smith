@@ -3,7 +3,7 @@ name = "smith"
 version = "0.2.3"
 edition = "2021"
 authors = ["Jacob D. Harrison"]
-description = "Agent Smith — open-source control plane for coding orchestration and configuration"
+description = "smith — open-source control plane for local agent orchestration"
 license = "MIT"
 rust-version = "1.83"
 

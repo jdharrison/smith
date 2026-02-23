@@ -173,12 +173,12 @@ fn build_setup_container(
         "-c",
         "apk add --no-cache git openssh-client curl ca-certificates tar bash 2>/dev/null || (apt-get update && apt-get install -y git openssh-client curl ca-certificates tar bash) 2>/dev/null || true",
     ]);
-    // Install OpenCode via official script (no Node/npm required; supports alpine/debian in container)
-    c = c.with_exec(vec![
-        "sh",
-        "-c",
-        "OPENCODE_INSTALL_DIR=/usr/local/bin curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path 2>&1 || { echo 'Setup failed: opencode install failed. Aborting.'; exit 1; }",
-    ]);
+    // OpenCode install disabled for now: isolate Dagger + clone testing (smith project status).
+    // c = c.with_exec(vec![
+    //     "sh",
+    //     "-c",
+    //     "OPENCODE_INSTALL_DIR=/usr/local/bin curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path 2>&1 || { echo 'Setup failed: opencode install failed. Aborting.'; exit 1; }",
+    // ]);
     // Ensure opencode and cargo (when installed) are on PATH. Include /usr/local/cargo/bin
     // so Rust official images (e.g. rust:1-bookworm) keep cargo; alpine gets it from rustup in /root/.cargo/bin.
     c = c.with_env_variable(
@@ -603,6 +603,27 @@ fi"#,
     );
     let out: String = c
         .with_exec(vec!["sh", "-c", &cmd])
+        .stdout()
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(out.trim().to_string())
+}
+
+/// Run project status: spin up Dagger, clone repo into workspace, list files. Validates project is loadable.
+pub async fn run_project_status(
+    conn: &Query,
+    repo_url: &str,
+    branch: &str,
+    base_image: &str,
+    ssh_key_path: Option<&std::path::Path>,
+) -> PipelineResult<String> {
+    let c = build_setup_container(conn, repo_url, branch, None, base_image, ssh_key_path)?;
+    let out: String = c
+        .with_exec(vec![
+            "sh",
+            "-c",
+            "ls -la /workspace && echo '---' && find /workspace -maxdepth 2 -type f 2>/dev/null | head -40",
+        ])
         .stdout()
         .await
         .map_err(|e| e.to_string())?;

@@ -7,11 +7,47 @@ use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs;
+use std::io::{self, Write};
 use std::os::fd::AsRawFd;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
+
+/// ANSI color codes for status output (circle: red = not built, blue = built, green = online).
+const ANSI_RED: &str = "\x1b[31m";
+const ANSI_BLUE: &str = "\x1b[34m";
+const ANSI_GREEN: &str = "\x1b[32m";
+const ANSI_YELLOW: &str = "\x1b[33m";
+const ANSI_RESET: &str = "\x1b[0m";
+
+/// Colored bullet for status/install output (avoids format! in format args).
+const BULLET_GREEN: &str = "\x1b[32m●\x1b[0m";
+const BULLET_BLUE: &str = "\x1b[34m●\x1b[0m";
+const BULLET_RED: &str = "\x1b[31m●\x1b[0m";
+const BULLET_YELLOW: &str = "\x1b[33m●\x1b[0m";
+
+/// OSC 8 hyperlink so the URL is clickable in supported terminals (e.g. VS Code, iTerm2, Windows Terminal).
+fn clickable_agent_url(port: u16) -> String {
+    let url = format!("http://127.0.0.1:{}", port);
+    format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", url, url)
+}
+
+/// active = container running, reachable = health endpoint responds (only meaningful when active).
+fn status_circle(active: bool, reachable: Option<bool>, built: bool) -> String {
+    let bullet = "●";
+    let color = if active && reachable == Some(false) {
+        ANSI_YELLOW
+    } else if active {
+        ANSI_GREEN
+    } else if built {
+        ANSI_BLUE
+    } else {
+        ANSI_RED
+    };
+    format!("{}{}{}", color, bullet, ANSI_RESET)
+}
 
 /// When dropped, restores stderr. Used for quiet mode to hide Dagger progress. No-op on non-Unix.
 struct StderrRedirectGuard(Option<std::os::unix::io::RawFd>);
@@ -110,8 +146,10 @@ fn clarify_dagger_error(err: &str) -> String {
 
 #[derive(Parser)]
 #[command(name = "smith")]
-#[command(version)]
-#[command(about = "Agent Smith — open-source control plane for coding orchestration and configuration", long_about = None)]
+#[command(about = "smith — open-source control plane for local agent orchestration", long_about = None)]
+#[command(disable_help_flag = true)]
+#[command(disable_version_flag = true)]
+#[command(disable_help_subcommand = true)]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -119,22 +157,189 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Validate the local environment
-    Doctor {
-        /// Show full Dagger and pipeline output
-        #[arg(long)]
+    /// Dependencies, agents, projects
+    #[command(next_help_heading = "System")]
+    Status {
+        /// Show raw output (config path, docker version/info, agent details)
+        #[arg(short, long)]
         verbose: bool,
     },
-    /// Manage configuration
-    Config {
+    /// Docker, config dir, optional Dagger
+    Install,
+    /// Print help
+    Help,
+    /// Print version
+    Version,
+    #[command(next_help_heading = "Commands")]
+    /// Agent containers (opencode serve)
+    Agent {
         #[command(subcommand)]
-        cmd: ConfigCommands,
+        cmd: AgentCommands,
     },
-    /// Manage projects registered with Agent Smith
+    /// Repos and config for run pipelines
     Project {
         #[command(subcommand)]
         cmd: ProjectCommands,
     },
+    /// Run a pipeline (agent + project scoped)
+    Run {
+        #[command(subcommand)]
+        cmd: RunCommands,
+    },
+}
+
+/// Built-in agent name and image when no config is set (OpenCode cloud wrapper).
+const DEFAULT_AGENT_NAME: &str = "opencode";
+const DEFAULT_AGENT_IMAGE: &str = "ghcr.io/anomalyco/opencode";
+
+#[derive(Subcommand)]
+enum AgentCommands {
+    /// Add an agent
+    Add {
+        /// Agent name (id)
+        name: String,
+        /// Docker image (e.g. ghcr.io/anomalyco/opencode); default: official OpenCode image
+        #[arg(long)]
+        image: Option<String>,
+        /// Model (e.g. big-pickle, qwen2). Omit or empty = use container default (no model specifics)
+        #[arg(long)]
+        model: Option<String>,
+        /// Mode: cloud (start container, use/add model) or local (pull model, more setup)
+        #[arg(long)]
+        mode: Option<String>,
+    },
+    /// Show status of all configured agents (systemctl-style, compact table per agent)
+    Status,
+    /// Build Docker image for one agent or all (generate Dockerfile if missing, then docker build)
+    Build {
+        /// Agent name to build (e.g. opencode); omit to build all
+        #[arg()]
+        name: Option<String>,
+        /// Build all configured agents
+        #[arg(short = 'a', long = "all", alias = "A")]
+        all: bool,
+        /// Remove existing image and build with --no-cache (clean build)
+        #[arg(long)]
+        force: bool,
+        /// Print Dockerfile path and docker build command per agent
+        #[arg(long)]
+        verbose: bool,
+    },
+    /// Update an existing agent
+    Update {
+        /// Agent name
+        name: String,
+        /// Docker image (pass empty to clear)
+        #[arg(long)]
+        image: Option<String>,
+        /// Model (pass empty to clear = use container default)
+        #[arg(long)]
+        model: Option<String>,
+        /// Mode: cloud or local (pass empty to clear)
+        #[arg(long)]
+        mode: Option<String>,
+    },
+    /// Remove an agent
+    Remove {
+        /// Agent name
+        name: String,
+    },
+    /// Start cloud agents (opencode serve; 1 agent -> 1 container). Idempotent: skips if already running. Local agents skipped.
+    Start {
+        /// Print docker command and health-check details
+        #[arg(short, long)]
+        verbose: bool,
+    },
+    /// Stop all running agent containers
+    Stop,
+    /// Stream live logs from an agent container (docker logs -f)
+    Logs {
+        /// Agent name (e.g. opencode)
+        name: String,
+    },
+    /// Reset all agents to default (opencode only). Prompts for confirmation unless --force.
+    Reset {
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        force: bool,
+    },
+}
+
+#[derive(Subcommand)]
+enum ProjectCommands {
+    /// Add a new project
+    Add {
+        /// Project name
+        name: String,
+        /// Repository path or URL
+        #[arg(long)]
+        repo: String,
+        /// Docker image to use for this project (optional)
+        #[arg(long)]
+        image: Option<String>,
+        /// SSH key path for this project (optional)
+        #[arg(long)]
+        ssh_key: Option<String>,
+        /// Base branch to use for clone/compare (optional, default: main)
+        #[arg(long)]
+        base_branch: Option<String>,
+        /// Remote name for fetch/push (optional, default: origin)
+        #[arg(long)]
+        remote: Option<String>,
+        /// GitHub personal access token for PR creation (optional)
+        #[arg(long)]
+        github_token: Option<String>,
+    },
+    /// List all registered projects
+    List,
+    /// Spin up Dagger, clone project, and list workspace files (validates project is loadable)
+    Status {
+        /// Project name (omit to run status for all projects)
+        #[arg(long)]
+        project: Option<String>,
+        /// Show full Dagger output
+        #[arg(long)]
+        verbose: bool,
+    },
+    /// Update an existing project's repository URL, image, or SSH key
+    Update {
+        /// Project name
+        name: String,
+        /// New repository path or URL
+        #[arg(long)]
+        repo: Option<String>,
+        /// New Docker image to use for this project
+        #[arg(long)]
+        image: Option<String>,
+        /// SSH key path for this project (pass empty to clear)
+        #[arg(long)]
+        ssh_key: Option<String>,
+        /// Base branch (pass empty to clear)
+        #[arg(long)]
+        base_branch: Option<String>,
+        /// Remote name (pass empty to clear)
+        #[arg(long)]
+        remote: Option<String>,
+        /// GitHub token for PR creation (pass empty to clear)
+        #[arg(long)]
+        github_token: Option<String>,
+    },
+    /// Remove a project
+    Remove {
+        /// Project name
+        name: String,
+    },
+    /// Remove all projects. Prompts for confirmation unless --force.
+    Reset {
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        force: bool,
+    },
+}
+
+/// Pipeline commands: agent + project scoped (run via `smith run <cmd>`).
+#[derive(Subcommand)]
+enum RunCommands {
     /// Ask a question to an agent about a project
     Ask {
         /// The question to ask the agent
@@ -199,11 +404,6 @@ enum Commands {
         #[arg(long)]
         verbose: bool,
     },
-    /// Manage containers
-    Container {
-        #[command(subcommand)]
-        cmd: ContainerCommands,
-    },
     /// Review changes in a feature branch
     Review {
         /// Feature branch name to review
@@ -235,77 +435,70 @@ enum Commands {
     },
 }
 
-#[derive(Subcommand)]
-enum ConfigCommands {
-    /// Show config file path
-    Path,
-    /// Set GitHub API token
-    SetGitHubToken {
-        /// GitHub personal access token
-        token: String,
-    },
-}
-
-#[derive(Subcommand)]
-enum ProjectCommands {
-    /// Add a new project
-    Add {
-        /// Project name
-        name: String,
-        /// Repository path or URL
-        #[arg(long)]
-        repo: String,
-        /// Docker image to use for this project (optional)
-        #[arg(long)]
-        image: Option<String>,
-        /// SSH key path for this project (optional)
-        #[arg(long)]
-        ssh_key: Option<String>,
-    },
-    /// List all registered projects
-    List,
-    /// Update an existing project's repository URL, image, or SSH key
-    Update {
-        /// Project name
-        name: String,
-        /// New repository path or URL
-        #[arg(long)]
-        repo: Option<String>,
-        /// New Docker image to use for this project
-        #[arg(long)]
-        image: Option<String>,
-        /// SSH key path for this project (pass empty to clear)
-        #[arg(long)]
-        ssh_key: Option<String>,
-    },
-    /// Remove a project
-    Remove {
-        /// Project name
-        name: String,
-    },
-}
-
-#[derive(Subcommand)]
-enum ContainerCommands {
-    /// List all smith containers
-    List,
-    /// Stop a container
-    Stop {
-        /// Container name
-        name: String,
-    },
-    /// Remove a container
-    Remove {
-        /// Container name
-        name: String,
-    },
-}
-
 #[derive(Serialize, Deserialize, Default)]
 struct SmithConfig {
     projects: Vec<ProjectConfig>,
+    /// Legacy: global github token (no longer used; PRs use project.github_token)
     #[serde(skip_serializing_if = "Option::is_none")]
     github: Option<GitHubConfig>,
+    /// Legacy: single agent image (used when agents list is empty)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    agent: Option<AgentConfig>,
+    /// Named agents (e.g. opencode = OpenCode image). When set, used for resolve.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    agents: Option<Vec<AgentEntry>>,
+    /// Which agent name to use for ask/dev/review (default: "opencode")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    current_agent: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default)]
+struct AgentConfig {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    image: Option<String>,
+}
+
+/// Agent run mode: cloud = start container and use/add requested model; local = pull model and prepare (more setup).
+const AGENT_MODE_CLOUD: &str = "cloud";
+const AGENT_MODE_LOCAL: &str = "local";
+
+fn valid_agent_mode(s: &str) -> bool {
+    let lower = s.to_lowercase();
+    lower == AGENT_MODE_CLOUD || lower == AGENT_MODE_LOCAL
+}
+
+/// Per-agent properties (e.g. port). Loaded by Dockerfile and at runtime.
+#[derive(Serialize, Deserialize, Clone, Default)]
+struct AgentProperties {
+    /// Port for opencode serve (default: 4096 + index among agents)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    port: Option<u16>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct AgentEntry {
+    /// Unique id/name for the agent
+    name: String,
+    /// Docker image (e.g. ghcr.io/anomalyco/opencode); custom images allowed
+    image: String,
+    /// Model to use (e.g. big-pickle, qwen2). Cloud: add/switch to model; local: pull and use
+    #[serde(skip_serializing_if = "Option::is_none")]
+    model: Option<String>,
+    /// local = pull model and get ready; cloud = start container and add/switch to model (default)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mode: Option<String>,
+    /// Optional properties (port, etc.). Port used in Dockerfile EXPOSE and at start.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    properties: Option<AgentProperties>,
+}
+
+/// Resolve port for an agent: properties.port if set, else OPENCODE_SERVER_PORT + index.
+fn agent_port(entry: &AgentEntry, index: usize) -> u16 {
+    entry
+        .properties
+        .as_ref()
+        .and_then(|p| p.port)
+        .unwrap_or_else(|| docker::OPENCODE_SERVER_PORT + index as u16)
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -321,16 +514,173 @@ struct ProjectConfig {
     image: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     ssh_key: Option<String>,
+    /// Base branch to clone and compare against (e.g. main). All actions fetch and use remote ref.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    base_branch: Option<String>,
+    /// Remote name for fetch/push (e.g. origin). All comparisons use refs on this remote.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    remote: Option<String>,
+    /// GitHub personal access token for PR creation (--pr). Per-repository.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    github_token: Option<String>,
 }
 
 fn config_dir() -> Result<PathBuf, String> {
-    ProjectDirs::from("com", "agentsmith", "smith")
+    ProjectDirs::from("com", "agent", "smith")
         .ok_or_else(|| "Could not determine config directory".to_string())
         .map(|dirs| dirs.config_dir().to_path_buf())
 }
 
+/// Build the Docker image for one agent: ensure agent dir and Dockerfile exist, then run docker build.
+/// `port` is written into the Dockerfile (EXPOSE and CMD) and should match the agent's properties.port or default.
+fn build_agent_image(
+    config_dir: &Path,
+    name: &str,
+    base_image: &str,
+    port: u16,
+    force: bool,
+) -> Result<(), String> {
+    let agent_dir = config_dir.join("agents").join(name);
+    fs::create_dir_all(&agent_dir).map_err(|e| format!("Failed to create agent dir: {}", e))?;
+    let dockerfile_path = agent_dir.join("Dockerfile");
+    if !dockerfile_path.exists() {
+        let content = format!(
+            r#"FROM {}
+
+LABEL smith.agent.name="{}"
+
+EXPOSE {}
+
+ENTRYPOINT ["opencode"]
+CMD ["serve", "--hostname", "0.0.0.0", "--port", "{}"]
+"#,
+            base_image, name, port, port
+        );
+        fs::write(&dockerfile_path, content)
+            .map_err(|e| format!("Failed to write Dockerfile: {}", e))?;
+    }
+    let tag = docker::agent_built_image_tag(name);
+    if force {
+        let _ = Command::new("docker").args(["rmi", "-f", &tag]).output();
+    }
+    let args = vec!["build", "-t", &tag, "--no-cache"];
+    let output = Command::new("docker")
+        .args(&args)
+        .arg(agent_dir.as_path())
+        .output()
+        .map_err(|e| format!("Failed to run docker build: {}", e))?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        Err(format!("docker build failed: {}", stderr.trim()))
+    }
+}
+
 fn config_file_path() -> Result<PathBuf, String> {
     config_dir().map(|dir| dir.join("config.toml"))
+}
+
+/// Prompt for confirmation; returns true if user types "yes"/"y" (case-insensitive) or if force is true.
+fn confirm_reset(prompt: &str, force: bool) -> bool {
+    if force {
+        return true;
+    }
+    print!("{}", prompt);
+    let _ = io::stdout().flush();
+    let mut line = String::new();
+    if io::stdin().read_line(&mut line).is_err() {
+        return false;
+    }
+    let line = line.trim().to_lowercase();
+    line == "yes" || line == "y"
+}
+
+/// Read a line from stdin (trimmed). For interactive install wizard.
+fn prompt_line(prompt: &str) -> String {
+    print!("{}", prompt);
+    let _ = io::stdout().flush();
+    let mut line = String::new();
+    let _ = io::stdin().read_line(&mut line);
+    line.trim().to_string()
+}
+
+/// Prompt [y/N]; returns true for y/yes, false for n/no or empty (default no).
+fn prompt_yn(prompt: &str, default_no: bool) -> bool {
+    let hint = if default_no { " [y/N]" } else { " [Y/n]" };
+    let line = prompt_line(&format!("{}{}: ", prompt, hint)).to_lowercase();
+    if line.is_empty() {
+        return !default_no;
+    }
+    matches!(line.as_str(), "y" | "yes")
+}
+
+/// Prompt [y/N/skip]; returns Some(true)=y, Some(false)=n, None=skip.
+fn prompt_yn_skip(prompt: &str) -> Option<bool> {
+    let line = prompt_line(&format!("{} [y/N/skip]: ", prompt)).to_lowercase();
+    if line.is_empty() || line == "n" || line == "no" {
+        return Some(false);
+    }
+    if line == "skip" || line == "s" {
+        return None;
+    }
+    if line == "y" || line == "yes" {
+        return Some(true);
+    }
+    Some(false)
+}
+
+/// Add an agent to config (used by CLI `agent add` and install wizard). Does not save.
+fn add_agent_to_config(
+    cfg: &mut SmithConfig,
+    name: String,
+    image: Option<String>,
+    model: Option<String>,
+    mode: Option<String>,
+) -> Result<(), String> {
+    if cfg
+        .agents
+        .as_ref()
+        .is_some_and(|a| a.iter().any(|e| e.name == name))
+    {
+        return Err(format!("Agent '{}' already exists", name));
+    }
+    let image = image
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| DEFAULT_AGENT_IMAGE.to_string());
+    let model = model.filter(|s| !s.is_empty());
+    let mode = match mode.filter(|s| !s.is_empty()) {
+        Some(s) => {
+            let lower = s.to_lowercase();
+            if !valid_agent_mode(&lower) {
+                return Err("mode must be 'local' or 'cloud'".to_string());
+            }
+            Some(lower)
+        }
+        None => None,
+    };
+    let agents = cfg.agents.get_or_insert_with(Vec::new);
+    let port = docker::OPENCODE_SERVER_PORT + agents.len() as u16;
+    agents.push(AgentEntry {
+        name: name.clone(),
+        image,
+        model,
+        mode: mode.or_else(|| Some(AGENT_MODE_CLOUD.to_string())),
+        properties: Some(AgentProperties { port: Some(port) }),
+    });
+    if cfg.current_agent.is_none() {
+        cfg.current_agent = Some(name);
+    }
+    Ok(())
+}
+
+/// Add a project to config (used by CLI `project add` and install wizard). Does not save.
+fn add_project_to_config(cfg: &mut SmithConfig, project: ProjectConfig) -> Result<(), String> {
+    if cfg.projects.iter().any(|p| p.name == project.name) {
+        return Err(format!("Project '{}' already exists", project.name));
+    }
+    cfg.projects.push(project);
+    Ok(())
 }
 
 fn load_config() -> Result<SmithConfig, String> {
@@ -366,6 +716,159 @@ fn save_config(config: &SmithConfig) -> Result<(), String> {
     Ok(())
 }
 
+const INSTALLED_MARKER: &str = ".smith-installed";
+
+/// True if the user has run `smith install` (marker file in config dir).
+fn is_installed() -> bool {
+    config_dir()
+        .map(|d| d.join(INSTALLED_MARKER).exists())
+        .unwrap_or(false)
+}
+
+/// Version last recorded by `smith install` (for migrations). None = not installed; Some("") = legacy empty marker.
+fn installed_version() -> Option<String> {
+    let path = config_dir().ok()?.join(INSTALLED_MARKER);
+    fs::read_to_string(&path).ok().map(|s| s.trim().to_string())
+}
+
+/// If Docker is not available, try to install it via the official get.docker.com script (Linux only).
+/// Requires sudo. On success, starts the docker service. Non-fatal on failure.
+#[cfg(target_os = "linux")]
+fn try_install_docker() {
+    if docker::check_docker_available().is_ok() {
+        println!("  {} docker - available", BULLET_GREEN);
+        return;
+    }
+    println!(
+        "  {} docker - installing (https://get.docker.com) ...",
+        BULLET_BLUE
+    );
+    let script_path = std::env::temp_dir().join("get-docker.sh");
+    let curl = Command::new("curl")
+        .args(["-fsSL", "https://get.docker.com", "-o"])
+        .arg(&script_path)
+        .status();
+    if let Ok(s) = curl {
+        if !s.success() {
+            eprintln!(
+                "  {} docker - install failed (could not download script)",
+                BULLET_RED
+            );
+            return;
+        }
+    } else {
+        eprintln!("  {} docker - install skipped (curl not found)", BULLET_RED);
+        return;
+    }
+    let install = Command::new("sudo")
+        .args(["sh", script_path.to_str().unwrap_or("get-docker.sh")])
+        .status();
+    let _ = fs::remove_file(&script_path);
+    match install {
+        Ok(s) if s.success() => {
+            let _ = Command::new("sudo")
+                .args(["systemctl", "start", "docker"])
+                .status();
+            let _ = Command::new("sudo")
+                .args(["systemctl", "enable", "docker"])
+                .status();
+            println!(
+                "  {} docker - available",
+                BULLET_GREEN
+            );
+            println!("       Log out and back in to use Docker without sudo (docker group).");
+        }
+        _ => eprintln!(
+            "  {} docker - install failed (run manually: curl -fsSL https://get.docker.com | sudo sh)",
+            BULLET_RED
+        ),
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+fn try_install_docker() {}
+
+/// On Linux, ensure Docker service is started and enabled (so it runs on boot). No-op if Docker not available. Non-fatal.
+#[cfg(target_os = "linux")]
+fn ensure_docker_started_and_enabled() {
+    if docker::check_docker_available().is_err() {
+        return;
+    }
+    let _ = Command::new("sudo")
+        .args(["systemctl", "start", "docker"])
+        .status();
+    let _ = Command::new("sudo")
+        .args(["systemctl", "enable", "docker"])
+        .status();
+}
+
+#[cfg(not(target_os = "linux"))]
+#[allow(dead_code)]
+fn ensure_docker_started_and_enabled() {}
+
+/// If Dagger CLI is not in PATH, try to install it via the official install script (Linux only).
+/// Installs to $HOME/.local/bin. Non-fatal on failure.
+#[cfg(target_os = "linux")]
+fn try_install_dagger() {
+    if Command::new("dagger")
+        .arg("version")
+        .output()
+        .is_ok_and(|o| o.status.success())
+    {
+        println!("  {} dagger - running", BULLET_GREEN);
+        return;
+    }
+    let home = match std::env::var("HOME") {
+        Ok(h) => h,
+        Err(_) => {
+            eprintln!("  {} dagger - install skipped (HOME not set)", BULLET_RED);
+            return;
+        }
+    };
+    let bin_dir = format!("{}/.local/bin", home);
+    if fs::create_dir_all(&bin_dir).is_err() {
+        eprintln!(
+            "  {} dagger - install skipped (could not create {})",
+            BULLET_RED, bin_dir
+        );
+        return;
+    }
+    println!("  {} dagger - installing to {} ...", BULLET_BLUE, bin_dir);
+    let status = Command::new("sh")
+        .arg("-c")
+        .arg("curl -fsSL https://dl.dagger.io/dagger/install.sh | sh")
+        .env("BIN_DIR", &bin_dir)
+        .status();
+    match status {
+        Ok(s) if s.success() => {
+            println!(
+                "  {} dagger - running (ensure {} is in PATH)",
+                BULLET_GREEN,
+                bin_dir
+            );
+        }
+        _ => eprintln!(
+            "  {} dagger - install failed (run manually: curl -fsSL https://dl.dagger.io/dagger/install.sh | BIN_DIR=$HOME/.local/bin sh)",
+            BULLET_RED
+        ),
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+fn try_install_dagger() {}
+
+/// Write config dir and install marker with current version (called at end of install wizard).
+/// Storing the version allows future migrations to run when upgrading.
+fn run_install_finish() -> Result<(), String> {
+    if let Ok(dir) = config_dir() {
+        fs::create_dir_all(&dir).map_err(|e| format!("Failed to create config dir: {}", e))?;
+        let version = env!("CARGO_PKG_VERSION");
+        fs::write(dir.join(INSTALLED_MARKER), version)
+            .map_err(|e| format!("Failed to write install marker: {}", e))?;
+    }
+    Ok(())
+}
+
 fn resolve_repo(repo: Option<String>, project: Option<String>) -> Result<String, String> {
     if let Some(r) = repo {
         return Ok(r);
@@ -395,13 +898,25 @@ fn resolve_project_config(project: Option<String>) -> Result<Option<ProjectConfi
     Ok(None)
 }
 
-/// Resolve Docker image to use (for Dagger pipeline base image)
-/// Priority: explicit flag > project config > default
-fn resolve_image(explicit_image: Option<&str>, project_config: Option<&ProjectConfig>) -> String {
-    explicit_image
-        .map(|s| s.to_string())
-        .or_else(|| project_config.and_then(|p| p.image.clone()))
-        .unwrap_or_else(|| "alpine:latest".to_string())
+/// Resolve agent container image. Priority: explicit --image > named agent (current or "opencode") > legacy agent.image > DEFAULT_AGENT_IMAGE.
+fn resolve_agent_image(explicit_image: Option<&str>) -> String {
+    if let Some(s) = explicit_image {
+        return s.to_string();
+    }
+    let cfg = match load_config() {
+        Ok(c) => c,
+        Err(_) => return DEFAULT_AGENT_IMAGE.to_string(),
+    };
+    let name = cfg.current_agent.as_deref().unwrap_or(DEFAULT_AGENT_NAME);
+    if let Some(ref agents) = cfg.agents {
+        if let Some(entry) = agents.iter().find(|a| a.name == name) {
+            return entry.image.clone();
+        }
+    }
+    cfg.agent
+        .as_ref()
+        .and_then(|a| a.image.clone())
+        .unwrap_or_else(|| DEFAULT_AGENT_IMAGE.to_string())
 }
 
 /// Resolve SSH key path: explicit --ssh-key > project ssh_key > SSH_KEY_PATH env
@@ -419,92 +934,970 @@ fn resolve_ssh_key(
         .or_else(|| std::env::var("SSH_KEY_PATH").ok().map(PathBuf::from))
 }
 
+/// Resolve base branch: explicit CLI --base > project base_branch > "main"
+fn resolve_base_branch(explicit: Option<&str>, project_config: Option<&ProjectConfig>) -> String {
+    explicit
+        .map(String::from)
+        .or_else(|| project_config.and_then(|p| p.base_branch.clone()))
+        .unwrap_or_else(|| "main".to_string())
+}
+
+/// Resolve remote name: project remote > "origin"
+fn resolve_remote(project_config: Option<&ProjectConfig>) -> String {
+    project_config
+        .and_then(|p| p.remote.clone())
+        .unwrap_or_else(|| "origin".to_string())
+}
+
+/// Column width for subcommand names so descriptions align (clap-style).
+const HELP_NAME_WIDTH: usize = 18;
+
+fn print_smith_help() {
+    let c = Cli::command();
+    if let Some(about) = c.get_about() {
+        println!("{}\n", about);
+    }
+    println!("Usage: smith [COMMAND]");
+    const SYSTEM: &[&str] = &["status", "install", "help", "version"];
+    const COMMANDS: &[&str] = &["agent", "project", "run"];
+    println!("\nCommands:");
+    for sub in c.get_subcommands() {
+        let name = sub.get_name();
+        if SYSTEM.contains(&name) {
+            let short = sub.get_about().unwrap_or_default();
+            println!("  {name:<HELP_NAME_WIDTH$}  {short}");
+        }
+    }
+    println!();
+    for sub in c.get_subcommands() {
+        let name = sub.get_name();
+        if COMMANDS.contains(&name) {
+            let short = sub.get_about().unwrap_or_default();
+            println!("  {name:<HELP_NAME_WIDTH$}  {short}");
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
 
     match cli.command {
         None => {
-            // Show help when no command provided
-            let mut cmd = Cli::command();
-            cmd.print_help().unwrap();
+            print_smith_help();
             std::process::exit(0);
         }
-        Some(Commands::Doctor { verbose }) => {
-            if verbose {
-                println!("Doctor: Validating environment...");
-            }
-
-            // Check config directory
-            match config_dir() {
-                Ok(dir) => {
-                    if verbose {
-                        println!("  ✓ Config directory accessible: {}", dir.display());
-                    }
-                }
-                Err(e) => {
-                    println!("  ✗ Config directory error: {}", e);
-                }
-            }
-
-            // Check Docker (Dagger uses it as container runtime)
-            match docker::check_docker_available() {
-                Ok(_) => {
-                    if verbose {
-                        println!("  ✓ Docker is available and running");
-                    }
-                }
-                Err(e) => {
-                    println!("  ✗ Docker: {}", e);
-                }
-            }
-
-            // Check Dagger
+        Some(Commands::Status { verbose }) => {
+            let docker_ok = docker::check_docker_available().is_ok();
             let dagger_ok = {
-                let _guard = if !verbose {
-                    redirect_stderr_to_null()
-                } else {
+                let _guard = if verbose {
                     None
+                } else {
+                    redirect_stderr_to_null()
                 };
                 dagger_pipeline::with_connection(|conn| async move {
                     dagger_pipeline::run_doctor(&conn).await
                 })
                 .await
+                .is_ok()
             };
-            match dagger_ok {
-                Ok(_) => {
-                    if verbose {
-                        println!("  ✓ Dagger engine is available");
+            let installed = is_installed();
+
+            let cfg = load_config().unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+            let running = docker::list_running_agent_containers().unwrap_or_default();
+            let list = cfg.agents.as_deref().unwrap_or(&[]);
+            let agents: Vec<String> = if list.is_empty() {
+                vec![DEFAULT_AGENT_NAME.to_string()]
+            } else {
+                list.iter()
+                    .filter(|e| e.mode.as_deref().unwrap_or(AGENT_MODE_CLOUD) == AGENT_MODE_CLOUD)
+                    .map(|e| e.name.clone())
+                    .collect()
+            };
+            let any_running = agents.iter().any(|n| running.contains(n));
+
+            let smith_bullet = if installed && any_running {
+                BULLET_GREEN
+            } else if installed {
+                BULLET_BLUE
+            } else {
+                BULLET_RED
+            };
+            println!("{} smith", smith_bullet);
+            let d_bullet = if docker_ok { BULLET_GREEN } else { BULLET_RED };
+            println!(
+                "     {} docker - {}",
+                d_bullet,
+                if docker_ok {
+                    "available"
+                } else {
+                    "unavailable"
+                }
+            );
+            let g_bullet = if dagger_ok { BULLET_GREEN } else { BULLET_RED };
+            println!(
+                "     {} dagger - {}",
+                g_bullet,
+                if dagger_ok { "running" } else { "not running" }
+            );
+            let any_built = agents.iter().any(|name| {
+                docker::image_exists(&docker::agent_built_image_tag(name)).unwrap_or(false)
+            });
+            let agents_bullet = if any_running {
+                BULLET_GREEN
+            } else if any_built {
+                BULLET_BLUE
+            } else {
+                BULLET_RED
+            };
+            println!("  {} agents", agents_bullet);
+            for (i, name) in agents.iter().enumerate() {
+                let active = running.contains(name);
+                let built =
+                    docker::image_exists(&docker::agent_built_image_tag(name)).unwrap_or(false);
+                let port = list
+                    .iter()
+                    .find(|e| e.name == *name)
+                    .map(|e| agent_port(e, i))
+                    .unwrap_or_else(|| docker::OPENCODE_SERVER_PORT + i as u16);
+                let reachable = if active {
+                    Some(docker::check_agent_reachable(port))
+                } else {
+                    None
+                };
+                let (bullet, state) = if active && reachable == Some(false) {
+                    (BULLET_YELLOW, "running (port unreachable)")
+                } else if active {
+                    (BULLET_GREEN, "running")
+                } else if built {
+                    (BULLET_BLUE, "built")
+                } else {
+                    (BULLET_RED, "not built")
+                };
+                if active {
+                    println!(
+                        "       {} agent/{} - {} {}",
+                        bullet,
+                        name,
+                        state,
+                        clickable_agent_url(port)
+                    );
+                } else {
+                    println!(
+                        "       {} agent/{} - {} (http://127.0.0.1:{})",
+                        bullet, name, state, port
+                    );
+                }
+            }
+            if agents.is_empty() {
+                println!("       {} (no cloud agents configured)", BULLET_RED);
+            }
+
+            // projects: workspace check per project, then summary bullet (green=all ok, yellow=some, red=none)
+            let mut project_results: Vec<(String, bool, String)> = Vec::new();
+            if !cfg.projects.is_empty() && dagger_ok {
+                for proj in &cfg.projects {
+                    let resolved_repo = &proj.repo;
+                    let name = proj.name.clone();
+                    if resolved_repo.starts_with("https://") {
+                        project_results.push((
+                            name,
+                            false,
+                            "skipped (HTTPS not supported)".to_string(),
+                        ));
+                        continue;
+                    }
+                    let base = resolve_base_branch(None, Some(proj));
+                    let agent_image = resolve_agent_image(proj.image.as_deref());
+                    let ssh_key_path = resolve_ssh_key(None, Some(proj));
+                    let done = std::sync::Arc::new(AtomicBool::new(false));
+                    let done_clone = done.clone();
+                    let spinner_handle = if !verbose {
+                        Some(thread::spawn(move || run_spinner_until(&done_clone)))
                     } else {
-                        println!("Doctor: ✓ Config, Docker, and Dagger OK");
+                        None
+                    };
+                    let _guard = if !verbose {
+                        redirect_stderr_to_null()
+                    } else {
+                        None
+                    };
+                    let repo = resolved_repo.clone();
+                    let branch = base.clone();
+                    let img = agent_image.clone();
+                    let ssh = ssh_key_path.clone();
+                    let result = dagger_pipeline::with_connection(move |conn| {
+                        let repo = repo.clone();
+                        let branch = branch.clone();
+                        let img = img.clone();
+                        let ssh = ssh.clone();
+                        async move {
+                            dagger_pipeline::run_project_status(
+                                &conn,
+                                &repo,
+                                &branch,
+                                &img,
+                                ssh.as_deref(),
+                            )
+                            .await
+                            .map_err(|e| eyre::eyre!("{}", e))
+                        }
+                    })
+                    .await;
+                    if !verbose {
+                        done.store(true, Ordering::Relaxed);
+                        if let Some(h) = spinner_handle {
+                            let _: std::thread::Result<()> = h.join();
+                        }
+                    }
+                    drop(_guard);
+                    match result {
+                        Ok(output) => {
+                            if output.contains(".git") {
+                                project_results.push((name, true, "workspace OK".to_string()));
+                            } else {
+                                project_results.push((
+                                    name,
+                                    false,
+                                    "workspace missing .git".to_string(),
+                                ));
+                            }
+                        }
+                        Err(_) => {
+                            project_results.push((name, false, "clone failed".to_string()));
+                        }
                     }
                 }
-                Err(e) => {
-                    println!("  ✗ Dagger: {}", e);
-                    println!("    Run ask/dev/review with: dagger run smith <command> ...");
+            }
+            let project_ok_count = project_results.iter().filter(|(_, ok, _)| *ok).count();
+            let project_total = project_results.len();
+            let projects_bullet = if project_total == 0 {
+                BULLET_RED
+            } else if project_ok_count == project_total {
+                BULLET_GREEN
+            } else if project_ok_count > 0 {
+                BULLET_YELLOW
+            } else {
+                BULLET_RED
+            };
+            println!("  {} projects", projects_bullet);
+            if project_results.is_empty() {
+                if cfg.projects.is_empty() {
+                    println!("       (none)");
+                } else if !dagger_ok {
+                    println!("       (dagger not running)");
+                }
+            } else {
+                for (name, ok, msg) in &project_results {
+                    let bullet = if *ok { BULLET_GREEN } else { BULLET_RED };
+                    println!("       {} project/{} - {}", bullet, name, msg);
+                }
+            }
+
+            if verbose {
+                println!();
+                println!("  --- verbose ---");
+                if let Ok(dir) = config_dir() {
+                    let config_path = dir.join("config.toml");
+                    println!("  config: {}", config_path.display());
+                }
+                if let Some(v) = installed_version() {
+                    println!(
+                        "  installed_version: {}",
+                        if v.is_empty() {
+                            "(legacy, unknown)"
+                        } else {
+                            &v
+                        }
+                    );
+                } else {
+                    println!("  installed_version: (not installed)");
+                }
+                if docker_ok {
+                    if let Ok(o) = Command::new("docker").arg("--version").output() {
+                        let out = String::from_utf8_lossy(&o.stdout);
+                        let v = out.trim();
+                        if !v.is_empty() {
+                            println!("  docker: {}", v);
+                        }
+                    }
+                    if let Ok(o) = Command::new("docker").arg("info").output() {
+                        let out = String::from_utf8_lossy(&o.stdout);
+                        for line in out.lines().take(15) {
+                            println!("    {}", line);
+                        }
+                        if out.lines().count() > 15 {
+                            println!("    ...");
+                        }
+                    }
+                }
+                println!("  running agent containers: {:?}", running);
+                let agents_list: Vec<&AgentEntry> = list
+                    .iter()
+                    .filter(|e| e.mode.as_deref().unwrap_or(AGENT_MODE_CLOUD) == AGENT_MODE_CLOUD)
+                    .collect();
+                if agents_list.is_empty() {
+                    println!(
+                        "  agent config: [{} (default)] {}",
+                        DEFAULT_AGENT_NAME,
+                        clickable_agent_url(docker::OPENCODE_SERVER_PORT)
+                    );
+                } else {
+                    for (i, e) in agents_list.iter().enumerate() {
+                        let port = agent_port(e, i);
+                        println!(
+                            "  agent config: {} -> image={} port={} {}",
+                            e.name,
+                            e.image,
+                            port,
+                            clickable_agent_url(port)
+                        );
+                    }
                 }
             }
         }
-        Some(Commands::Config { cmd }) => match cmd {
-            ConfigCommands::Path => {
-                let file = config_file_path().unwrap_or_else(|e| {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                });
-                println!("{}", file.display());
+        Some(Commands::Install) => {
+            println!("{} smith install", BULLET_GREEN);
+            println!();
+            // --- Dependencies ---
+            println!("  Dependencies:");
+            try_install_docker();
+            try_install_dagger();
+            println!();
+            // --- Docker always run (Linux) ---
+            #[cfg(target_os = "linux")]
+            {
+                if docker::check_docker_available().is_ok() {
+                    println!("  Always run Docker at boot so agents stay available after restart?");
+                    println!("  (Requires sudo / password to run systemctl enable docker)");
+                    if prompt_yn("Enable Docker at boot?", true) {
+                        ensure_docker_started_and_enabled();
+                        println!("  {} Docker - enabled at boot", BULLET_GREEN);
+                    }
+                    println!();
+                }
             }
-            ConfigCommands::SetGitHubToken { token } => {
+            // --- Config and agents ---
+            let mut cfg = load_config().unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+            let agents_list = cfg.agents.as_deref().unwrap_or(&[]);
+            if agents_list.is_empty() {
+                println!("  Current agents: (none — opencode used by default)");
+            } else {
+                println!("  Current agents:");
+                for a in agents_list {
+                    println!("    - {} (image: {})", a.name, a.image);
+                }
+            }
+            println!();
+            match prompt_yn_skip("Add more agents?") {
+                None => println!("  Skipping agents."),
+                Some(false) => {}
+                Some(true) => loop {
+                    let name = prompt_line("  Agent name: ");
+                    if name.is_empty() {
+                        println!("  Agent name cannot be empty.");
+                        continue;
+                    }
+                    let image_default = DEFAULT_AGENT_IMAGE.to_string();
+                    let image_in = prompt_line(&format!("  Image [{}]: ", image_default));
+                    let image = if image_in.is_empty() {
+                        None
+                    } else {
+                        Some(image_in)
+                    };
+                    let model_in = prompt_line("  Model (optional, Enter to skip): ");
+                    let model = if model_in.is_empty() {
+                        None
+                    } else {
+                        Some(model_in)
+                    };
+                    let mode_in = prompt_line("  Mode [cloud]: ");
+                    let mode = if mode_in.is_empty() {
+                        None
+                    } else {
+                        Some(mode_in)
+                    };
+                    match add_agent_to_config(&mut cfg, name.clone(), image, model, mode) {
+                        Ok(()) => println!("  {} Added agent '{}'", BULLET_GREEN, name),
+                        Err(e) => eprintln!("  {} {}", BULLET_RED, e),
+                    }
+                    save_config(&cfg).unwrap_or_else(|e| {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    });
+                    if !prompt_yn("Add another agent?", false) {
+                        break;
+                    }
+                },
+            }
+            println!();
+            // --- Projects ---
+            if cfg.projects.is_empty() {
+                println!("  Current projects: (none)");
+            } else {
+                println!("  Current projects:");
+                for p in &cfg.projects {
+                    println!("    - {} ({})", p.name, p.repo);
+                }
+            }
+            println!();
+            match prompt_yn_skip("Add any projects?") {
+                None => println!("  Skipping projects."),
+                Some(false) => {}
+                Some(true) => loop {
+                    let name = prompt_line("  Project name: ");
+                    if name.is_empty() {
+                        println!("  Project name cannot be empty.");
+                        continue;
+                    }
+                    let repo = prompt_line("  Repository (URL or path): ");
+                    if repo.is_empty() {
+                        println!("  Repository is required.");
+                        continue;
+                    }
+                    let image_in = prompt_line("  Image (optional, Enter to skip): ");
+                    let image = if image_in.is_empty() {
+                        None
+                    } else {
+                        Some(image_in)
+                    };
+                    let ssh_key_in = prompt_line("  SSH key path (optional): ");
+                    let ssh_key = if ssh_key_in.is_empty() {
+                        None
+                    } else {
+                        Some(ssh_key_in)
+                    };
+                    let base_in = prompt_line("  Base branch [main]: ");
+                    let base_branch = if base_in.is_empty() {
+                        None
+                    } else {
+                        Some(base_in)
+                    };
+                    let remote_in = prompt_line("  Remote name [origin]: ");
+                    let remote = if remote_in.is_empty() {
+                        None
+                    } else {
+                        Some(remote_in)
+                    };
+                    let token_in = prompt_line("  GitHub token for PRs (optional): ");
+                    let github_token = if token_in.is_empty() {
+                        None
+                    } else {
+                        Some(token_in)
+                    };
+                    let project = ProjectConfig {
+                        name: name.clone(),
+                        repo,
+                        image,
+                        ssh_key,
+                        base_branch,
+                        remote,
+                        github_token,
+                    };
+                    match add_project_to_config(&mut cfg, project) {
+                        Ok(()) => {
+                            save_config(&cfg).unwrap_or_else(|e| {
+                                eprintln!("Error: {}", e);
+                                std::process::exit(1);
+                            });
+                            println!("  {} Added project '{}'", BULLET_GREEN, name);
+                        }
+                        Err(e) => eprintln!("  {} {}", BULLET_RED, e),
+                    }
+                    if !prompt_yn("Add another project?", false) {
+                        break;
+                    }
+                },
+            }
+            println!();
+            if let Err(e) = run_install_finish() {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            }
+            println!(
+                "  {} You're ready to run agentic pipelines via `smith run`",
+                BULLET_GREEN
+            );
+            println!("     (e.g. smith run dev, smith run ask, smith run review)");
+        }
+        Some(Commands::Help) => {
+            print_smith_help();
+            std::process::exit(0);
+        }
+        Some(Commands::Version) => {
+            println!("{}", env!("CARGO_PKG_VERSION"));
+        }
+        Some(Commands::Agent { cmd }) => match cmd {
+            AgentCommands::Add {
+                name,
+                image,
+                model,
+                mode,
+            } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
                 });
-                cfg.github = Some(GitHubConfig { token });
+                if let Err(e) = add_agent_to_config(&mut cfg, name.clone(), image, model, mode) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
                 save_config(&cfg).unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
                 });
-                println!("GitHub token configured successfully");
-                println!("  Note: Token must have 'repo' scope (classic tokens) or 'pull-requests:write' permission (fine-grained tokens) to create PRs");
+                println!("Agent '{}' added successfully", name);
+            }
+            AgentCommands::Status => {
+                let cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                let running = docker::list_running_agent_containers().unwrap_or_default();
+                let current = cfg.current_agent.as_deref().unwrap_or(DEFAULT_AGENT_NAME);
+                let base = docker::OPENCODE_SERVER_PORT;
+                let list = cfg.agents.as_deref().unwrap_or(&[]);
+                let agents: Vec<(String, String, Option<String>, String, u16)> = if list.is_empty()
+                {
+                    vec![(
+                        DEFAULT_AGENT_NAME.to_string(),
+                        DEFAULT_AGENT_IMAGE.to_string(),
+                        None,
+                        AGENT_MODE_CLOUD.to_string(),
+                        base,
+                    )]
+                } else {
+                    list.iter()
+                        .filter(|e| {
+                            e.mode.as_deref().unwrap_or(AGENT_MODE_CLOUD) == AGENT_MODE_CLOUD
+                        })
+                        .enumerate()
+                        .map(|(i, e)| {
+                            (
+                                e.name.clone(),
+                                e.image.clone(),
+                                e.model.clone(),
+                                e.mode.as_deref().unwrap_or(AGENT_MODE_CLOUD).to_string(),
+                                agent_port(e, i),
+                            )
+                        })
+                        .collect()
+                };
+                for (name, image, model, mode, port) in &agents {
+                    let active = running.contains(name);
+                    let reachable = if active {
+                        Some(docker::check_agent_reachable(*port))
+                    } else {
+                        None
+                    };
+                    let built =
+                        docker::image_exists(&docker::agent_built_image_tag(name)).unwrap_or(false);
+                    let circle = status_circle(active, reachable, built);
+                    let current_mark = if *name == current { " (current)" } else { "" };
+                    println!("\n  {} agent/{} - {}{}", circle, name, image, current_mark);
+                    if active {
+                        if reachable == Some(false) {
+                            println!("      Active:   active (running)");
+                            println!(
+                                "      Port:     {} {} (warning: unreachable)",
+                                port,
+                                clickable_agent_url(*port)
+                            );
+                        } else {
+                            println!("      Active:   active (running)");
+                            println!("      Port:     {} {}", port, clickable_agent_url(*port));
+                        }
+                    } else {
+                        println!("      Active:   inactive");
+                    }
+                    let built_tag = docker::agent_built_image_tag(name);
+                    let image_line = if built {
+                        built_tag
+                    } else {
+                        format!("not built (uses {})", image)
+                    };
+                    println!("      Image:    {}", image_line);
+                    let model_str = model.as_deref().unwrap_or("default");
+                    println!("      Mode:     {:<8}  Model: {}", mode, model_str);
+                }
+                if agents.is_empty() {
+                    println!("\n  (no cloud agents configured)");
+                } else {
+                    println!();
+                }
+            }
+            AgentCommands::Update {
+                name,
+                image,
+                model,
+                mode,
+            } => {
+                let mut cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                let agents = cfg.agents.get_or_insert_with(Vec::new);
+                match agents.iter_mut().find(|a| a.name == name) {
+                    Some(entry) => {
+                        if let Some(ref s) = image {
+                            entry.image = if s.is_empty() {
+                                DEFAULT_AGENT_IMAGE.to_string()
+                            } else {
+                                s.clone()
+                            };
+                        }
+                        if let Some(ref s) = model {
+                            entry.model = if s.is_empty() { None } else { Some(s.clone()) };
+                        }
+                        if let Some(ref s) = mode {
+                            if s.is_empty() {
+                                entry.mode = None;
+                            } else {
+                                let lower = s.to_lowercase();
+                                if valid_agent_mode(&lower) {
+                                    entry.mode = Some(lower);
+                                } else {
+                                    eprintln!("Error: mode must be 'local' or 'cloud'");
+                                    std::process::exit(1);
+                                }
+                            }
+                        }
+                        save_config(&cfg).unwrap_or_else(|e| {
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        });
+                        println!("Agent '{}' updated successfully", name);
+                    }
+                    None => {
+                        eprintln!("Error: Agent '{}' not found", name);
+                        std::process::exit(1);
+                    }
+                }
+            }
+            AgentCommands::Remove { name } => {
+                let mut cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                let agents = cfg.agents.get_or_insert_with(Vec::new);
+                let initial_len = agents.len();
+                agents.retain(|a| a.name != name);
+                if agents.len() == initial_len {
+                    eprintln!("Error: Agent '{}' not found", name);
+                    std::process::exit(1);
+                }
+                if cfg.current_agent.as_deref() == Some(name.as_str()) {
+                    cfg.current_agent = Some(
+                        agents
+                            .first()
+                            .map(|e| e.name.clone())
+                            .unwrap_or_else(|| DEFAULT_AGENT_NAME.to_string()),
+                    );
+                }
+                save_config(&cfg).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                println!("Agent '{}' removed successfully", name);
+            }
+            AgentCommands::Build {
+                name,
+                all,
+                force,
+                verbose,
+            } => {
+                if let Err(e) = docker::check_docker_available() {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+                let cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                let agents: Vec<(String, String, u16)> = if all || name.is_none() {
+                    match cfg.agents.as_deref() {
+                        Some(a) if !a.is_empty() => a
+                            .iter()
+                            .enumerate()
+                            .map(|(i, e)| (e.name.clone(), e.image.clone(), agent_port(e, i)))
+                            .collect(),
+                        _ => vec![(
+                            DEFAULT_AGENT_NAME.to_string(),
+                            DEFAULT_AGENT_IMAGE.to_string(),
+                            docker::OPENCODE_SERVER_PORT,
+                        )],
+                    }
+                } else {
+                    let n = name.as_deref().unwrap_or(DEFAULT_AGENT_NAME);
+                    let (base_image, port) = cfg
+                        .agents
+                        .as_deref()
+                        .and_then(|a| {
+                            a.iter().position(|e| e.name == n).map(|idx| {
+                                let e = &a[idx];
+                                (e.image.clone(), agent_port(e, idx))
+                            })
+                        })
+                        .unwrap_or_else(|| {
+                            if n == DEFAULT_AGENT_NAME {
+                                (
+                                    DEFAULT_AGENT_IMAGE.to_string(),
+                                    docker::OPENCODE_SERVER_PORT,
+                                )
+                            } else {
+                                eprintln!("Error: Agent '{}' not found", n);
+                                std::process::exit(1);
+                            }
+                        });
+                    vec![(n.to_string(), base_image, port)]
+                };
+                let dir = config_dir().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                let mut ok = 0usize;
+                let mut failed = Vec::new();
+                for (agent_name, base_image, port) in &agents {
+                    if verbose {
+                        let agent_dir = dir.join("agents").join(agent_name);
+                        let dockerfile = agent_dir.join("Dockerfile");
+                        let tag = docker::agent_built_image_tag(agent_name);
+                        println!(
+                            "  {}: agent_dir={} Dockerfile={} image={} port={}",
+                            agent_name,
+                            agent_dir.display(),
+                            dockerfile.display(),
+                            tag,
+                            port
+                        );
+                    }
+                    match build_agent_image(dir.as_path(), agent_name, base_image, *port, force) {
+                        Ok(()) => {
+                            let tag = docker::agent_built_image_tag(agent_name);
+                            if verbose {
+                                println!(
+                                    "  {}: docker build -t {} {}",
+                                    agent_name,
+                                    tag,
+                                    dir.join("agents").join(agent_name).display()
+                                );
+                            }
+                            println!("  {}: built {}", agent_name, tag);
+                            ok += 1;
+                        }
+                        Err(e) => {
+                            eprintln!("  {}: build failed - {}", agent_name, e);
+                            failed.push((agent_name.clone(), e));
+                        }
+                    }
+                }
+                if failed.is_empty() {
+                    println!("Built {} agent image(s) successfully.", ok);
+                } else {
+                    println!("Built {}; {} failed.", ok, failed.len());
+                    std::process::exit(1);
+                }
+            }
+            AgentCommands::Start { verbose } => {
+                if let Err(e) = docker::check_docker_available() {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+                let cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                let agents = cfg.agents.as_deref().unwrap_or(&[]);
+                // Only cloud agents for now (1 agent : 1 container). Local agents skipped until implemented.
+                // Prefer built image (smith/<name>:latest) when it exists.
+                let cloud_agents: Vec<_> = if agents.is_empty() {
+                    let image =
+                        if docker::image_exists(&docker::agent_built_image_tag(DEFAULT_AGENT_NAME))
+                            .unwrap_or(false)
+                        {
+                            docker::agent_built_image_tag(DEFAULT_AGENT_NAME)
+                        } else {
+                            DEFAULT_AGENT_IMAGE.to_string()
+                        };
+                    vec![(
+                        DEFAULT_AGENT_NAME.to_string(),
+                        image,
+                        docker::OPENCODE_SERVER_PORT,
+                    )]
+                } else {
+                    agents
+                        .iter()
+                        .filter(|e| {
+                            e.mode.as_deref().unwrap_or(AGENT_MODE_CLOUD) == AGENT_MODE_CLOUD
+                        })
+                        .enumerate()
+                        .map(|(i, e)| {
+                            let image =
+                                if docker::image_exists(&docker::agent_built_image_tag(&e.name))
+                                    .unwrap_or(false)
+                                {
+                                    docker::agent_built_image_tag(&e.name)
+                                } else {
+                                    e.image.clone()
+                                };
+                            (e.name.clone(), image, agent_port(e, i))
+                        })
+                        .collect()
+                };
+                let running = docker::list_running_agent_containers().unwrap_or_default();
+                if verbose {
+                    println!("Cloud agents: {}", cloud_agents.len());
+                    for (name, image, port) in &cloud_agents {
+                        let status = if running.contains(name) {
+                            "already running"
+                        } else {
+                            "will start"
+                        };
+                        println!(
+                            "  {} -> {} port={} {} [{}]",
+                            name,
+                            image,
+                            port,
+                            clickable_agent_url(*port),
+                            status
+                        );
+                    }
+                    if !running.is_empty() {
+                        println!("Already running: {}", running.join(", "));
+                    }
+                }
+                let mut ok = 0usize;
+                let mut failed = Vec::new();
+                for (name, image, port) in &cloud_agents {
+                    if running.contains(name) {
+                        println!(
+                            "  {}: already running (port {} {})",
+                            name,
+                            port,
+                            clickable_agent_url(*port)
+                        );
+                        ok += 1;
+                        continue;
+                    }
+                    if verbose {
+                        let container_name = docker::agent_container_name(name);
+                        println!(
+                                "  {}: docker run -d --name {} -p {}:{} --entrypoint opencode {} serve --hostname 0.0.0.0 --port {}",
+                                name, container_name, port, port, image, port
+                            );
+                    }
+                    match docker::start_agent_container(name, image, *port) {
+                        Ok(()) => {
+                            println!(
+                                "  {}: started (port {} {})",
+                                name,
+                                port,
+                                clickable_agent_url(*port)
+                            );
+                            if verbose {
+                                println!("  {}: waiting 3s before health check...", name);
+                            }
+                            std::thread::sleep(std::time::Duration::from_secs(3));
+                            if verbose {
+                                println!("  {}: GET {}", name, clickable_agent_url(*port));
+                            }
+                            match docker::test_agent_server(*port) {
+                                Ok(()) => {
+                                    println!("  {}: health check OK", name);
+                                    ok += 1;
+                                }
+                                Err(e) => {
+                                    eprintln!("  {}: health check failed - {}", name, e);
+                                    failed.push((name.clone(), e));
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("  {}: failed to start - {}", name, e);
+                            failed.push((name.clone(), e));
+                        }
+                    }
+                }
+                if failed.is_empty() {
+                    println!("All {} cloud agent(s) started and tested successfully.", ok);
+                } else {
+                    println!("Started {}; {} failed.", ok, failed.len());
+                    std::process::exit(1);
+                }
+            }
+            AgentCommands::Stop => {
+                if let Err(e) = docker::check_docker_available() {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+                match docker::stop_all_agent_containers() {
+                    Ok(stopped) => {
+                        if stopped.is_empty() {
+                            println!("No running agent containers.");
+                        } else {
+                            for name in &stopped {
+                                println!("  {}: stopped", name);
+                            }
+                            println!("Stopped {} container(s).", stopped.len());
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            }
+            AgentCommands::Logs { name } => {
+                if let Err(e) = docker::check_docker_available() {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+                let container_name = docker::agent_container_name(&name);
+                if !docker::container_exists(&container_name).unwrap_or(false) {
+                    eprintln!(
+                        "Error: Container '{}' not found. Start the agent with 'smith agent start'.",
+                        container_name
+                    );
+                    std::process::exit(1);
+                }
+                let status = Command::new("docker")
+                    .args(["logs", "-f", &container_name])
+                    .status()
+                    .unwrap_or_else(|e| {
+                        eprintln!("Error: Failed to run docker logs: {}", e);
+                        std::process::exit(1);
+                    });
+                if let Some(code) = status.code() {
+                    std::process::exit(code);
+                }
+                std::process::exit(1);
+            }
+            AgentCommands::Reset { force } => {
+                if !confirm_reset(
+                    "Reset all agents to default (opencode only)? Type 'yes' to confirm: ",
+                    force,
+                ) {
+                    eprintln!("Reset cancelled.");
+                    std::process::exit(1);
+                }
+                let mut cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                cfg.agents = None;
+                cfg.agent = None;
+                cfg.current_agent = None;
+                save_config(&cfg).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                println!("Agents reset to default (opencode).");
             }
         },
         Some(Commands::Project { cmd }) => match cmd {
@@ -513,22 +1906,31 @@ async fn main() {
                 repo,
                 image,
                 ssh_key,
+                base_branch,
+                remote,
+                github_token,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
                 });
-                if cfg.projects.iter().any(|p| p.name == name) {
-                    eprintln!("Error: Project '{}' already exists", name);
-                    std::process::exit(1);
-                }
                 let ssh_key = ssh_key.filter(|s| !s.is_empty());
-                cfg.projects.push(ProjectConfig {
-                    name,
+                let base_branch = base_branch.filter(|s| !s.is_empty());
+                let remote = remote.filter(|s| !s.is_empty());
+                let github_token = github_token.filter(|s| !s.is_empty());
+                let project = ProjectConfig {
+                    name: name.clone(),
                     repo,
                     image,
                     ssh_key,
-                });
+                    base_branch,
+                    remote,
+                    github_token,
+                };
+                if let Err(e) = add_project_to_config(&mut cfg, project) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
                 save_config(&cfg).unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -551,7 +1953,121 @@ async fn main() {
                         if let Some(ref sk) = proj.ssh_key {
                             parts.push_str(&format!(" (ssh_key: {})", sk));
                         }
+                        if let Some(ref bb) = proj.base_branch {
+                            parts.push_str(&format!(" (base_branch: {})", bb));
+                        }
+                        if let Some(ref r) = proj.remote {
+                            parts.push_str(&format!(" (remote: {})", r));
+                        }
+                        if proj.github_token.is_some() {
+                            parts.push_str(" (github-token: set)");
+                        }
                         println!("{}", parts);
+                    }
+                }
+            }
+            ProjectCommands::Status { project, verbose } => {
+                let cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                let projects: Vec<&ProjectConfig> = match project.as_deref() {
+                    Some(name) => match cfg.projects.iter().find(|p| p.name == name) {
+                        Some(p) => vec![p],
+                        None => {
+                            eprintln!("Error: Project '{}' not found", name);
+                            std::process::exit(1);
+                        }
+                    },
+                    None => {
+                        if cfg.projects.is_empty() {
+                            eprintln!("No projects registered. Add one with `smith project add`.");
+                            std::process::exit(1);
+                        }
+                        cfg.projects.iter().collect()
+                    }
+                };
+                for proj in projects {
+                    let resolved_repo = &proj.repo;
+                    if resolved_repo.starts_with("https://") {
+                        eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git).");
+                        std::process::exit(1);
+                    }
+                    let base = resolve_base_branch(None, Some(proj));
+                    let agent_image = resolve_agent_image(proj.image.as_deref());
+                    let ssh_key_path = resolve_ssh_key(None, Some(proj));
+                    if verbose {
+                        println!("Project: {} -> {}", proj.name, resolved_repo);
+                        println!("  Branch: {}  Image: {}", base, agent_image);
+                    }
+                    let done = std::sync::Arc::new(AtomicBool::new(false));
+                    let done_clone = done.clone();
+                    let spinner_handle = if !verbose {
+                        Some(thread::spawn(move || run_spinner_until(&done_clone)))
+                    } else {
+                        None
+                    };
+                    let _guard = if !verbose {
+                        redirect_stderr_to_null()
+                    } else {
+                        None
+                    };
+                    let repo = resolved_repo.clone();
+                    let branch = base.clone();
+                    let img = agent_image.clone();
+                    let ssh = ssh_key_path.clone();
+                    let result = dagger_pipeline::with_connection(move |conn| {
+                        let repo = repo.clone();
+                        let branch = branch.clone();
+                        let img = img.clone();
+                        let ssh = ssh.clone();
+                        async move {
+                            dagger_pipeline::run_project_status(
+                                &conn,
+                                &repo,
+                                &branch,
+                                &img,
+                                ssh.as_deref(),
+                            )
+                            .await
+                            .map_err(|e| eyre::eyre!("{}", e))
+                        }
+                    })
+                    .await;
+                    if !verbose {
+                        done.store(true, Ordering::Relaxed);
+                        if let Some(h) = spinner_handle {
+                            let _: std::thread::Result<()> = h.join();
+                        }
+                    }
+                    drop(_guard);
+                    match result {
+                        Ok(output) => {
+                            if output.contains(".git") {
+                                println!("\n  {} {} - workspace OK", BULLET_GREEN, proj.name);
+                                if verbose {
+                                    println!("  ---");
+                                    for line in output.lines() {
+                                        println!("    {}", line);
+                                    }
+                                }
+                            } else {
+                                eprintln!(
+                                    "  {} {} - failed: workspace missing .git (clone may have failed)",
+                                    BULLET_RED, proj.name
+                                );
+                                std::process::exit(1);
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!(
+                                "  {} {} - failed: {}",
+                                BULLET_RED,
+                                proj.name,
+                                clarify_dagger_error(&e)
+                            );
+                            std::process::exit(1);
+                        }
                     }
                 }
             }
@@ -560,6 +2076,9 @@ async fn main() {
                 repo,
                 image,
                 ssh_key,
+                base_branch,
+                remote,
+                github_token,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -581,6 +2100,27 @@ async fn main() {
                                 None
                             } else {
                                 Some(new_ssh)
+                            };
+                        }
+                        if let Some(new_bb) = base_branch {
+                            proj.base_branch = if new_bb.is_empty() {
+                                None
+                            } else {
+                                Some(new_bb)
+                            };
+                        }
+                        if let Some(new_remote) = remote {
+                            proj.remote = if new_remote.is_empty() {
+                                None
+                            } else {
+                                Some(new_remote)
+                            };
+                        }
+                        if let Some(new_gt) = github_token {
+                            proj.github_token = if new_gt.is_empty() {
+                                None
+                            } else {
+                                Some(new_gt)
                             };
                         }
                         save_config(&cfg).unwrap_or_else(|e| {
@@ -612,365 +2152,361 @@ async fn main() {
                 });
                 println!("Project removed successfully");
             }
-        },
-        Some(Commands::Ask {
-            question,
-            base,
-            repo,
-            project,
-            image,
-            ssh_key,
-            keep_alive: _,
-            timeout,
-            verbose,
-        }) => {
-            let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            });
-
-            if resolved_repo.starts_with("https://") {
-                eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git).");
-                std::process::exit(1);
-            }
-
-            let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            });
-            let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
-            let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
-
-            if verbose {
-                println!("Ask: {}", question);
-                println!("  Repository: {}", resolved_repo);
-                println!("  Image: {}", resolved_image);
-            }
-
-            let branch = base.as_deref().unwrap_or("main").to_string();
-            let done = std::sync::Arc::new(AtomicBool::new(false));
-            let done_clone = done.clone();
-            let spinner_handle = if !verbose {
-                Some(thread::spawn(move || run_spinner_until(&done_clone)))
-            } else {
-                None
-            };
-            let _guard = if !verbose {
-                redirect_stderr_to_null()
-            } else {
-                None
-            };
-
-            let timeout_secs = timeout.unwrap_or(300);
-            let result = dagger_pipeline::with_connection(move |conn| {
-                let repo = resolved_repo.clone();
-                let q = question.clone();
-                let img = resolved_image.clone();
-                let ssh = ssh_key_path.clone();
-                let br = branch.clone();
-                let to = timeout_secs;
-                async move {
-                    dagger_pipeline::run_ask(
-                        &conn,
-                        &repo,
-                        Some(br.as_str()),
-                        &q,
-                        &img,
-                        ssh.as_deref(),
-                        to,
-                    )
-                    .await
-                    .map_err(|e| eyre::eyre!("{}", e))
-                }
-            })
-            .await;
-
-            if !verbose {
-                done.store(true, Ordering::Relaxed);
-                if let Some(h) = spinner_handle {
-                    let _: std::thread::Result<()> = h.join();
-                }
-            }
-            drop(_guard);
-
-            match result {
-                Ok(answer) => println!("\nAnswer: {}", answer),
-                Err(e) => {
-                    let msg = e.to_string();
-                    eprintln!("Error: {}", clarify_dagger_error(&msg));
+            ProjectCommands::Reset { force } => {
+                if !confirm_reset("Remove all projects? Type 'yes' to confirm: ", force) {
+                    eprintln!("Reset cancelled.");
                     std::process::exit(1);
                 }
+                let mut cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                cfg.projects.clear();
+                save_config(&cfg).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                println!("All projects removed.");
             }
-        }
-        Some(Commands::Dev {
-            task,
-            branch,
-            base,
-            repo,
-            project,
-            image,
-            ssh_key,
-            keep_alive: _,
-            pr,
-            timeout,
-            verbose,
-        }) => {
-            let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            });
+        },
+        Some(Commands::Run { cmd }) => match cmd {
+            RunCommands::Ask {
+                question,
+                base,
+                repo,
+                project,
+                image,
+                ssh_key,
+                keep_alive: _,
+                timeout,
+                verbose,
+            } => {
+                let resolved_repo =
+                    resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    });
 
-            if resolved_repo.starts_with("https://") {
-                eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git) with --ssh-key.");
-                std::process::exit(1);
-            }
-
-            let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            });
-            let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
-            let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
-
-            if verbose {
-                println!("Dev: {}", task);
-                println!("  Repository: {}", resolved_repo);
-                println!("  Image: {}", resolved_image);
-            }
-
-            let branch_out = branch.clone();
-            let resolved_repo_pr = resolved_repo.clone();
-            let base_pr = base.clone();
-            let task_pr = task.clone();
-            let done = std::sync::Arc::new(AtomicBool::new(false));
-            let done_clone = done.clone();
-            let spinner_handle = if !verbose {
-                Some(thread::spawn(move || run_spinner_until(&done_clone)))
-            } else {
-                None
-            };
-            let _guard = if !verbose {
-                redirect_stderr_to_null()
-            } else {
-                None
-            };
-
-            let verb_for_closure = verbose;
-            let timeout_secs = timeout.unwrap_or(300);
-            let dev_result = dagger_pipeline::with_connection(move |conn| {
-                let repo = resolved_repo.clone();
-                let t = task.clone();
-                let br = branch.clone();
-                let img = resolved_image.clone();
-                let ssh = ssh_key_path.clone();
-                let base_br = base.clone();
-                let to = timeout_secs;
-                async move {
-                    dagger_pipeline::run_dev(
-                        &conn,
-                        &repo,
-                        &br,
-                        base_br.as_deref(),
-                        &t,
-                        &img,
-                        ssh.as_deref(),
-                        verb_for_closure,
-                        to,
-                    )
-                    .await
-                    .map_err(|e| eyre::eyre!("{}", e))
+                if resolved_repo.starts_with("https://") {
+                    eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git).");
+                    std::process::exit(1);
                 }
-            })
-            .await;
 
-            if !verbose {
-                done.store(true, Ordering::Relaxed);
-                if let Some(h) = spinner_handle {
-                    let _: std::thread::Result<()> = h.join();
-                }
-            }
-            drop(_guard);
+                let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                let agent_image = resolve_agent_image(image.as_deref());
+                let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
+                let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
+                let _resolved_remote = resolve_remote(project_config.as_ref());
 
-            match &dev_result {
-                Ok(commit) => {
-                    println!("\n✓ Development action completed and committed");
-                    println!("  Commit: {}", commit);
-                    println!("  Branch: {}", branch_out);
+                if verbose {
+                    println!("Ask: {}", question);
+                    println!("  Repository: {}", resolved_repo);
+                    println!("  Agent image: {}", agent_image);
                 }
-                Err(e) => {
-                    if e.contains("No changes to commit") {
-                        println!("\n⚠ No changes were made by the development task");
-                    } else {
+
+                let branch = resolved_base.clone();
+                let done = std::sync::Arc::new(AtomicBool::new(false));
+                let done_clone = done.clone();
+                let spinner_handle = if !verbose {
+                    Some(thread::spawn(move || run_spinner_until(&done_clone)))
+                } else {
+                    None
+                };
+                let _guard = if !verbose {
+                    redirect_stderr_to_null()
+                } else {
+                    None
+                };
+
+                let timeout_secs = timeout.unwrap_or(300);
+                let result = dagger_pipeline::with_connection(move |conn| {
+                    let repo = resolved_repo.clone();
+                    let q = question.clone();
+                    let img = agent_image.clone();
+                    let ssh = ssh_key_path.clone();
+                    let br = branch.clone();
+                    let to = timeout_secs;
+                    async move {
+                        dagger_pipeline::run_ask(
+                            &conn,
+                            &repo,
+                            Some(br.as_str()),
+                            &q,
+                            &img,
+                            ssh.as_deref(),
+                            to,
+                        )
+                        .await
+                        .map_err(|e| eyre::eyre!("{}", e))
+                    }
+                })
+                .await;
+
+                if !verbose {
+                    done.store(true, Ordering::Relaxed);
+                    if let Some(h) = spinner_handle {
+                        let _: std::thread::Result<()> = h.join();
+                    }
+                }
+                drop(_guard);
+
+                match result {
+                    Ok(answer) => println!("\nAnswer: {}", answer),
+                    Err(e) => {
                         let msg = e.to_string();
                         eprintln!("Error: {}", clarify_dagger_error(&msg));
                         std::process::exit(1);
                     }
                 }
             }
+            RunCommands::Dev {
+                task,
+                branch,
+                base,
+                repo,
+                project,
+                image,
+                ssh_key,
+                keep_alive: _,
+                pr,
+                timeout,
+                verbose,
+            } => {
+                let resolved_repo =
+                    resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    });
 
-            if pr {
-                let cfg = load_config().unwrap_or_else(|e| {
-                    eprintln!("Error loading config: {}", e);
+                if resolved_repo.starts_with("https://") {
+                    eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git) with --ssh-key.");
+                    std::process::exit(1);
+                }
+
+                let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
                     std::process::exit(1);
                 });
-                if let Some(github_config) = cfg.github {
-                    if let Ok(repo_info) = github::extract_repo_info(&resolved_repo_pr) {
-                        let base_branch = base_pr.as_deref().unwrap_or("main");
-                        match github::create_or_update_pr(
-                            &github_config.token,
-                            &repo_info.owner,
-                            &repo_info.name,
-                            &branch_out,
-                            base_branch,
-                            &task_pr,
+                let agent_image = resolve_agent_image(image.as_deref());
+                let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
+                let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
+                let _resolved_remote = resolve_remote(project_config.as_ref());
+
+                if verbose {
+                    println!("Dev: {}", task);
+                    println!("  Repository: {}", resolved_repo);
+                    println!("  Agent image: {}", agent_image);
+                }
+
+                let branch_out = branch.clone();
+                let resolved_repo_pr = resolved_repo.clone();
+                let base_pr = resolved_base.clone();
+                let task_pr = task.clone();
+                let done = std::sync::Arc::new(AtomicBool::new(false));
+                let done_clone = done.clone();
+                let spinner_handle = if !verbose {
+                    Some(thread::spawn(move || run_spinner_until(&done_clone)))
+                } else {
+                    None
+                };
+                let _guard = if !verbose {
+                    redirect_stderr_to_null()
+                } else {
+                    None
+                };
+
+                let verb_for_closure = verbose;
+                let timeout_secs = timeout.unwrap_or(300);
+                let dev_result = dagger_pipeline::with_connection(move |conn| {
+                    let repo = resolved_repo.clone();
+                    let t = task.clone();
+                    let br = branch.clone();
+                    let img = agent_image.clone();
+                    let ssh = ssh_key_path.clone();
+                    let base_br = resolved_base.clone();
+                    let _rem = _resolved_remote.clone();
+                    let to = timeout_secs;
+                    async move {
+                        dagger_pipeline::run_dev(
+                            &conn,
+                            &repo,
+                            &br,
+                            Some(base_br.as_str()),
+                            &t,
+                            &img,
+                            ssh.as_deref(),
+                            verb_for_closure,
+                            to,
                         )
                         .await
-                        {
-                            Ok(pr_url) => println!("  ✓ Pull request: {}", pr_url),
-                            Err(e) => {
-                                eprintln!("  ⚠ Failed to create/update PR: {}", e);
-                                if e.contains("403") || e.contains("Resource not accessible") {
-                                    eprintln!(
-                                        "     Your token may be missing required permissions."
-                                    );
+                        .map_err(|e| eyre::eyre!("{}", e))
+                    }
+                })
+                .await;
+
+                if !verbose {
+                    done.store(true, Ordering::Relaxed);
+                    if let Some(h) = spinner_handle {
+                        let _: std::thread::Result<()> = h.join();
+                    }
+                }
+                drop(_guard);
+
+                match &dev_result {
+                    Ok(commit) => {
+                        println!("\n✓ Development action completed and committed");
+                        println!("  Commit: {}", commit);
+                        println!("  Branch: {}", branch_out);
+                    }
+                    Err(e) => {
+                        if e.contains("No changes to commit") {
+                            println!("\n⚠ No changes were made by the development task");
+                        } else {
+                            let msg = e.to_string();
+                            eprintln!("Error: {}", clarify_dagger_error(&msg));
+                            std::process::exit(1);
+                        }
+                    }
+                }
+
+                if pr {
+                    let token = project_config
+                        .as_ref()
+                        .and_then(|p| p.github_token.as_deref());
+                    if let Some(token) = token {
+                        if let Ok(repo_info) = github::extract_repo_info(&resolved_repo_pr) {
+                            let base_branch = base_pr.as_str();
+                            match github::create_or_update_pr(
+                                token,
+                                &repo_info.owner,
+                                &repo_info.name,
+                                &branch_out,
+                                base_branch,
+                                &task_pr,
+                            )
+                            .await
+                            {
+                                Ok(pr_url) => println!("  ✓ Pull request: {}", pr_url),
+                                Err(e) => {
+                                    eprintln!("  ⚠ Failed to create/update PR: {}", e);
+                                    if e.contains("403") || e.contains("Resource not accessible") {
+                                        eprintln!(
+                                            "     Your token may be missing required permissions."
+                                        );
+                                    }
                                 }
                             }
+                        } else {
+                            eprintln!(
+                                "  ⚠ Could not extract repository info from URL: {}",
+                                resolved_repo_pr
+                            );
                         }
                     } else {
-                        eprintln!(
-                            "  ⚠ Could not extract repository info from URL: {}",
-                            resolved_repo_pr
-                        );
+                        eprintln!("  ⚠ GitHub token not configured for this repository. Use --project with a project that has a token, or add/update the project with --github-token <token>.");
                     }
+                }
+
+                if dev_result.is_err() && !pr {
+                    std::process::exit(1);
+                }
+            }
+            RunCommands::Review {
+                branch,
+                base,
+                repo,
+                project,
+                image,
+                ssh_key,
+                keep_alive: _,
+                timeout,
+                verbose,
+            } => {
+                let resolved_repo =
+                    resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    });
+
+                if resolved_repo.starts_with("https://") {
+                    eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git) with --ssh-key.");
+                    std::process::exit(1);
+                }
+
+                let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                let agent_image = resolve_agent_image(image.as_deref());
+                let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
+                let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
+                let _resolved_remote = resolve_remote(project_config.as_ref());
+
+                if verbose {
+                    println!("Review: {}", branch);
+                    println!("  Repository: {}", resolved_repo);
+                    println!("  Agent image: {}", agent_image);
+                }
+
+                let done = std::sync::Arc::new(AtomicBool::new(false));
+                let done_clone = done.clone();
+                let spinner_handle = if !verbose {
+                    Some(thread::spawn(move || run_spinner_until(&done_clone)))
                 } else {
-                    eprintln!("  ⚠ GitHub token not configured. Use 'smith config set-github-token <token>'");
-                }
-            }
+                    None
+                };
+                let _guard = if !verbose {
+                    redirect_stderr_to_null()
+                } else {
+                    None
+                };
 
-            if dev_result.is_err() && !pr {
-                std::process::exit(1);
-            }
-        }
-        Some(Commands::Container { cmd }) => match cmd {
-            ContainerCommands::List => match docker::list_containers() {
-                Ok(containers) => {
-                    if containers.is_empty() {
-                        println!("No smith containers found");
-                    } else {
-                        println!("Smith containers:");
-                        for container in containers {
-                            println!("  {}", container);
-                        }
+                let timeout_secs = timeout.unwrap_or(300);
+                let result = dagger_pipeline::with_connection(move |conn| {
+                    let repo = resolved_repo.clone();
+                    let br = branch.clone();
+                    let base_br = resolved_base.clone();
+                    let _rem = _resolved_remote.clone();
+                    let img = agent_image.clone();
+                    let ssh = ssh_key_path.clone();
+                    let to = timeout_secs;
+                    async move {
+                        dagger_pipeline::run_review(
+                            &conn,
+                            &repo,
+                            &br,
+                            Some(base_br.as_str()),
+                            &img,
+                            ssh.as_deref(),
+                            to,
+                        )
+                        .await
+                        .map_err(|e| eyre::eyre!("{}", e))
+                    }
+                })
+                .await;
+
+                if !verbose {
+                    done.store(true, Ordering::Relaxed);
+                    if let Some(h) = spinner_handle {
+                        let _: std::thread::Result<()> = h.join();
                     }
                 }
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
+                drop(_guard);
+
+                match result {
+                    Ok(review_output) => println!("\n{}", review_output),
+                    Err(e) => {
+                        let msg = e.to_string();
+                        eprintln!("Error: {}", clarify_dagger_error(&msg));
+                        std::process::exit(1);
+                    }
                 }
-            },
-            ContainerCommands::Stop { name } => match docker::stop_container(&name) {
-                Ok(_) => println!("Container '{}' stopped", name),
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                }
-            },
-            ContainerCommands::Remove { name } => match docker::remove_container(&name) {
-                Ok(_) => println!("Container '{}' removed", name),
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                }
-            },
+            }
         },
-        Some(Commands::Review {
-            branch,
-            base,
-            repo,
-            project,
-            image,
-            ssh_key,
-            keep_alive: _,
-            timeout,
-            verbose,
-        }) => {
-            let resolved_repo = resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            });
-
-            if resolved_repo.starts_with("https://") {
-                eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git) with --ssh-key.");
-                std::process::exit(1);
-            }
-
-            let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            });
-            let resolved_image = resolve_image(image.as_deref(), project_config.as_ref());
-            let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
-
-            if verbose {
-                println!("Review: {}", branch);
-                println!("  Repository: {}", resolved_repo);
-                println!("  Image: {}", resolved_image);
-            }
-
-            let done = std::sync::Arc::new(AtomicBool::new(false));
-            let done_clone = done.clone();
-            let spinner_handle = if !verbose {
-                Some(thread::spawn(move || run_spinner_until(&done_clone)))
-            } else {
-                None
-            };
-            let _guard = if !verbose {
-                redirect_stderr_to_null()
-            } else {
-                None
-            };
-
-            let timeout_secs = timeout.unwrap_or(300);
-            let result = dagger_pipeline::with_connection(move |conn| {
-                let repo = resolved_repo.clone();
-                let br = branch.clone();
-                let base_br = base.clone();
-                let img = resolved_image.clone();
-                let ssh = ssh_key_path.clone();
-                let to = timeout_secs;
-                async move {
-                    dagger_pipeline::run_review(
-                        &conn,
-                        &repo,
-                        &br,
-                        base_br.as_deref(),
-                        &img,
-                        ssh.as_deref(),
-                        to,
-                    )
-                    .await
-                    .map_err(|e| eyre::eyre!("{}", e))
-                }
-            })
-            .await;
-
-            if !verbose {
-                done.store(true, Ordering::Relaxed);
-                if let Some(h) = spinner_handle {
-                    let _: std::thread::Result<()> = h.join();
-                }
-            }
-            drop(_guard);
-
-            match result {
-                Ok(review_output) => println!("\n{}", review_output),
-                Err(e) => {
-                    let msg = e.to_string();
-                    eprintln!("Error: {}", clarify_dagger_error(&msg));
-                    std::process::exit(1);
-                }
-            }
-        }
     }
 }
 
@@ -999,6 +2535,9 @@ mod tests {
             repo: "https://example.com/repo".to_string(),
             image: None,
             ssh_key: None,
+            base_branch: None,
+            remote: None,
+            github_token: None,
         });
         let serialized = toml::to_string(&cfg).unwrap();
         let deserialized: SmithConfig = toml::from_str(&serialized).unwrap();
