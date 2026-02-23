@@ -1,8 +1,8 @@
-# Agent Smith
+# smith
 
-Agent Smith — open-source control plane for local agent orchestration and configuration
+smith — open-source control plane for local agent orchestration
 
-![46a22884bfb0164c9d70b69a5db74027](https://github.com/user-attachments/assets/b4eacebe-6161-4718-bbf2-42797d3f1ecc)
+<img width="512" src="https://github.com/user-attachments/assets/8483313d-3d82-4c21-8751-ab6e63abd9a5" />
 
 ## Status
 
