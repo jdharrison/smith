@@ -177,34 +177,43 @@ All commands **fetch from the configured remote** and **reset/checkout to the la
 
 Agents are identified by **name** (id). Each agent has:
 - **name** — Unique id/name.
-- **mode** — `cloud` (start container, add/switch to model via API) or `local` (pull model and prepare; more setup). Default: `cloud`.
-- **model** — Model to use (e.g. `big-pickle`, `qwen2`). Omit or empty = use container default (no model specifics). Cloud: applied after start; local: pulled and used.
 - **image** — Docker image (default: `ghcr.io/anomalyco/opencode`). Use a custom image for advanced customization.
+- **model** — Model to use (e.g. `anthropic/claude-sonnet-4-5`, `openrouter/google/gemini-2.0-flash`). Baked into container.
+- **small_model** — Smaller model for internal operations (reduces API costs, e.g. `openrouter/google/gemini-2.0-flash:free`).
+- **provider** — Provider name (e.g. `anthropic`, `openai`, `openrouter`). Baked into container config.
+- **base_url** — Custom base URL for provider (for proxies/custom endpoints).
+
+**API Keys**: Set the corresponding environment variable on your host before starting agents. The agent will automatically forward it to the container:
+- `anthropic` → `ANTHROPIC_API_KEY`
+- `openai` → `OPENAI_API_KEY`
+- `openrouter` → `OPENROUTER_API_KEY`
 
 - **`smith agent add <name>`**  
   Register an agent.  
   - `--image <image>` — Docker image (default: `ghcr.io/anomalyco/opencode`).  
-  - `--model <model>` — Model (e.g. big-pickle, qwen2). Omit or empty = use container default.  
-  - `--mode <mode>` — `cloud` or `local` (default: `cloud`).
+  - `--model <model>` — Model to use (e.g. `anthropic/claude-sonnet-4-5`).  
+  - `--small-model <model>` — Small model for internal ops.  
+  - `--provider <name>` — Provider name (`anthropic`, `openai`, `openrouter`, etc.).  
+  - `--base-url <url>` — Custom base URL for provider.
 
 - **`smith agent status`**  
-  Show status of all configured agents (active/inactive, image, port, mode, model).
+  Show status of all configured agents (active/inactive, image, port, model, provider).
 
 - **`smith agent build [<name>] [--all] [--force] [--verbose]`**  
   Build Docker image for one agent or all. Generates Dockerfile if missing, then runs `docker build`. Use `--all` to build all configured agents, `--force` for clean build (remove image, build with `--no-cache`), `--verbose` to print Dockerfile path and docker build command.
 
 - **`smith agent update <name>`**  
   Update an agent.  
-  - `--image <image>`, `--model <model>`, `--mode <mode>` — Set new value; pass `""` for model to clear (use container default). Mode must be `local` or `cloud` if set.
+  - `--image <image>`, `--model <model>`, `--small-model <model>`, `--provider <name>`, `--base-url <url>` — Set new value; pass `""` to clear.
 
 - **`smith agent remove <name>`**  
   Remove an agent.
 
 - **`smith agent start [--verbose]`**  
-  One container per agent running either agent in headless mode or locally managed through ollama. Skips agents that already have a running container. Use `--verbose` to print docker command and health-check details.
+  Start all configured agents. Each agent runs in its own container with the configured model/provider. Skips agents that already have a running container. Use `--verbose` to print docker command and health-check details.
 
 - **`smith agent stop`**  
-  Stop all running agent containers (smith-agent-*). Each cloud agent has one container; stop shuts them down.
+  Stop all running agent containers (smith-agent-*).
 
 - **`smith agent logs <name>`**  
   Stream live logs from an agent container (`docker logs -f`).

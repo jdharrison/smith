@@ -29,31 +29,65 @@ pub fn agent_container_name(name: &str) -> String {
     }
 }
 
+/// Map provider name to the expected environment variable name for API key.
+/// e.g., "anthropic" -> "ANTHROPIC_API_KEY", "openai" -> "OPENAI_API_KEY"
+fn provider_api_key_env(provider: &str) -> String {
+    let normalized = provider
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() {
+                c.to_ascii_uppercase()
+            } else {
+                '_'
+            }
+        })
+        .collect::<String>();
+    format!("{}_API_KEY", normalized)
+}
+
 /// Start an agent container running OpenCode in server mode. Exposes `port` on the host.
 /// Uses `--entrypoint opencode` so the container runs exactly `opencode serve --hostname 0.0.0.0 --port N`.
 /// If a container with this name already exists, tries to start it (e.g. after stop).
-pub fn start_agent_container(agent_name: &str, image: &str, port: u16) -> Result<(), String> {
+/// If provider is Some, passes through the corresponding API key env var from host to container.
+pub fn start_agent_container(
+    agent_name: &str,
+    image: &str,
+    port: u16,
+    provider: Option<&str>,
+) -> Result<(), String> {
     let name = agent_container_name(agent_name);
     let port_str = port.to_string();
+
+    let mut args = vec![
+        "run".to_string(),
+        "-d".to_string(),
+        "--restart".to_string(),
+        "unless-stopped".to_string(),
+        "--name".to_string(),
+        name.clone(),
+        "-p".to_string(),
+        format!("{}:{}", port, port),
+    ];
+
+    if let Some(prov) = provider {
+        let env_var = provider_api_key_env(prov);
+        args.push("-e".to_string());
+        args.push(env_var);
+    }
+
+    args.extend([
+        "--entrypoint".to_string(),
+        "opencode".to_string(),
+        image.to_string(),
+        "serve".to_string(),
+        "--hostname".to_string(),
+        "0.0.0.0".to_string(),
+        "--port".to_string(),
+        port_str.clone(),
+    ]);
+
     let run = Command::new("docker")
-        .args([
-            "run",
-            "-d",
-            "--restart",
-            "unless-stopped",
-            "--name",
-            &name,
-            "-p",
-            &format!("{}:{}", port, port),
-            "--entrypoint",
-            "opencode",
-            image,
-            "serve",
-            "--hostname",
-            "0.0.0.0",
-            "--port",
-            &port_str,
-        ])
+        .args(&args)
         .output()
         .map_err(|e| format!("Failed to run container: {}", e))?;
     if run.status.success() {
@@ -61,27 +95,38 @@ pub fn start_agent_container(agent_name: &str, image: &str, port: u16) -> Result
     }
     let stderr = String::from_utf8_lossy(&run.stderr);
     if stderr.contains("already in use") || stderr.contains("Conflict") {
-        // Existing container may be from an old image or wrong port mapping. Remove and recreate.
         let _ = Command::new("docker").args(["rm", "-f", &name]).output();
+
+        let mut args2 = vec![
+            "run".to_string(),
+            "-d".to_string(),
+            "--restart".to_string(),
+            "unless-stopped".to_string(),
+            "--name".to_string(),
+            name.clone(),
+            "-p".to_string(),
+            format!("{}:{}", port, port),
+        ];
+
+        if let Some(prov) = provider {
+            let env_var = provider_api_key_env(prov);
+            args2.push("-e".to_string());
+            args2.push(env_var);
+        }
+
+        args2.extend([
+            "--entrypoint".to_string(),
+            "opencode".to_string(),
+            image.to_string(),
+            "serve".to_string(),
+            "--hostname".to_string(),
+            "0.0.0.0".to_string(),
+            "--port".to_string(),
+            port_str.clone(),
+        ]);
+
         let run2 = Command::new("docker")
-            .args([
-                "run",
-                "-d",
-                "--restart",
-                "unless-stopped",
-                "--name",
-                &name,
-                "-p",
-                &format!("{}:{}", port, port),
-                "--entrypoint",
-                "opencode",
-                image,
-                "serve",
-                "--hostname",
-                "0.0.0.0",
-                "--port",
-                &port_str,
-            ])
+            .args(&args2)
             .output()
             .map_err(|e| format!("Failed to run container: {}", e))?;
         if run2.status.success() {

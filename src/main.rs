@@ -201,12 +201,18 @@ enum AgentCommands {
         /// Docker image (e.g. ghcr.io/anomalyco/opencode); default: official OpenCode image
         #[arg(long)]
         image: Option<String>,
-        /// Model (e.g. big-pickle, qwen2). Omit or empty = use container default (no model specifics)
+        /// Model to use (e.g. "anthropic/claude-sonnet-4-5", "openrouter/google/gemini-2.0-flash")
         #[arg(long)]
         model: Option<String>,
-        /// Mode: cloud (start container, use/add model) or local (pull model, more setup)
+        /// Smaller model for internal operations (reduces API costs)
         #[arg(long)]
-        mode: Option<String>,
+        small_model: Option<String>,
+        /// Provider name (e.g. "anthropic", "openai", "openrouter")
+        #[arg(long)]
+        provider: Option<String>,
+        /// Custom base URL for provider (for proxies/custom endpoints)
+        #[arg(long)]
+        base_url: Option<String>,
     },
     /// Show status of all configured agents (systemctl-style, compact table per agent)
     Status,
@@ -235,16 +241,22 @@ enum AgentCommands {
         /// Model (pass empty to clear = use container default)
         #[arg(long)]
         model: Option<String>,
-        /// Mode: cloud or local (pass empty to clear)
+        /// Small model (pass empty to clear)
         #[arg(long)]
-        mode: Option<String>,
+        small_model: Option<String>,
+        /// Provider name (pass empty to clear)
+        #[arg(long)]
+        provider: Option<String>,
+        /// Base URL (pass empty to clear)
+        #[arg(long)]
+        base_url: Option<String>,
     },
     /// Remove an agent
     Remove {
         /// Agent name
         name: String,
     },
-    /// Start cloud agents (opencode serve; 1 agent -> 1 container). Idempotent: skips if already running. Local agents skipped.
+    /// Start cloud agents (opencode serve; 1 agent -> 1 container). Idempotent: skips if already running.
     Start {
         /// Print docker command and health-check details
         #[arg(short, long)]
@@ -458,13 +470,15 @@ struct AgentConfig {
     image: Option<String>,
 }
 
-/// Agent run mode: cloud = start container and use/add requested model; local = pull model and prepare (more setup).
-const AGENT_MODE_CLOUD: &str = "cloud";
-const AGENT_MODE_LOCAL: &str = "local";
-
-fn valid_agent_mode(s: &str) -> bool {
-    let lower = s.to_lowercase();
-    lower == AGENT_MODE_CLOUD || lower == AGENT_MODE_LOCAL
+/// Provider configuration for an agent (baked into container).
+#[derive(Serialize, Deserialize, Clone, Default)]
+struct AgentProviderConfig {
+    /// Provider name: "anthropic", "openai", "openrouter", etc.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    provider: Option<String>,
+    /// Custom base URL (for proxies/custom endpoints)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    base_url: Option<String>,
 }
 
 /// Per-agent properties (e.g. port). Loaded by Dockerfile and at runtime.
@@ -481,12 +495,15 @@ struct AgentEntry {
     name: String,
     /// Docker image (e.g. ghcr.io/anomalyco/opencode); custom images allowed
     image: String,
-    /// Model to use (e.g. big-pickle, qwen2). Cloud: add/switch to model; local: pull and use
+    /// Model to use (e.g. "anthropic/claude-sonnet-4-5", "openrouter/google/gemini-2.0-flash")
     #[serde(skip_serializing_if = "Option::is_none")]
     model: Option<String>,
-    /// local = pull model and get ready; cloud = start container and add/switch to model (default)
+    /// Smaller model for internal operations (reduces API costs)
     #[serde(skip_serializing_if = "Option::is_none")]
-    mode: Option<String>,
+    small_model: Option<String>,
+    /// Provider configuration (baked into container)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    provider: Option<AgentProviderConfig>,
     /// Optional properties (port, etc.). Port used in Dockerfile EXPOSE and at start.
     #[serde(skip_serializing_if = "Option::is_none")]
     properties: Option<AgentProperties>,
@@ -533,29 +550,97 @@ fn config_dir() -> Result<PathBuf, String> {
 
 /// Build the Docker image for one agent: ensure agent dir and Dockerfile exist, then run docker build.
 /// `port` is written into the Dockerfile (EXPOSE and CMD) and should match the agent's properties.port or default.
+#[allow(clippy::too_many_arguments)]
 fn build_agent_image(
     config_dir: &Path,
     name: &str,
     base_image: &str,
     port: u16,
+    model: Option<&str>,
+    small_model: Option<&str>,
+    provider: Option<&AgentProviderConfig>,
     force: bool,
 ) -> Result<(), String> {
     let agent_dir = config_dir.join("agents").join(name);
     fs::create_dir_all(&agent_dir).map_err(|e| format!("Failed to create agent dir: {}", e))?;
     let dockerfile_path = agent_dir.join("Dockerfile");
-    if !dockerfile_path.exists() {
-        let content = format!(
+
+    let port_str = port.to_string();
+    let mut env_lines = String::new();
+    let mut cmd_args = vec!["serve", "--hostname", "0.0.0.0", "--port", &port_str];
+
+    if let Some(m) = model {
+        cmd_args.push("--model");
+        cmd_args.push(m);
+        env_lines.push_str(&format!("ENV OPENCODE_MODEL=\"{}\"\n", m));
+    }
+
+    if let Some(sm) = small_model {
+        env_lines.push_str(&format!("ENV OPENCODE_SMALL_MODEL=\"{}\"\n", sm));
+    }
+
+    let mut config_json = String::new();
+    if let Some(p) = provider {
+        if let Some(ref prov) = p.provider {
+            if !config_json.is_empty() {
+                config_json.push_str(",\n");
+            }
+            config_json.push_str(&format!(
+                "  \"provider\": {{\n    \"{}\": {{\n      \"options\": {{\n",
+                prov
+            ));
+            if let Some(ref url) = p.base_url {
+                config_json.push_str(&format!("        \"baseURL\": \"{}\"\n", url));
+            }
+            config_json.push_str("      }}\n    }\n  }");
+        }
+    }
+
+    let opencode_config = if !config_json.is_empty() || model.is_some() || small_model.is_some() {
+        let mut cfg = String::from("{\n");
+        if let Some(m) = model {
+            cfg.push_str(&format!("  \"model\": \"{}\",\n", m));
+        }
+        if let Some(sm) = small_model {
+            cfg.push_str(&format!("  \"small_model\": \"{}\",\n", sm));
+        }
+        cfg.push_str(&config_json);
+        cfg.push_str("\n}\n");
+        Some(cfg)
+    } else {
+        None
+    };
+
+    if !dockerfile_path.exists() || force {
+        let mut content = format!(
             r#"FROM {}
 
 LABEL smith.agent.name="{}"
 
 EXPOSE {}
 
-ENTRYPOINT ["opencode"]
-CMD ["serve", "--hostname", "0.0.0.0", "--port", "{}"]
 "#,
-            base_image, name, port, port
+            base_image, name, port
         );
+
+        content.push_str(&env_lines);
+
+        if let Some(ref cfg) = opencode_config {
+            let config_path = agent_dir.join("opencode.jsonc");
+            fs::write(&config_path, cfg)
+                .map_err(|e| format!("Failed to write opencode config: {}", e))?;
+            content.push_str("COPY opencode.jsonc /home/opencode.jsonc\n");
+            content.push_str("ENV OPENCODE_CONFIG=/home/opencode.jsonc\n");
+        }
+
+        content.push_str(&format!(
+            r#"
+ENTRYPOINT ["opencode"]
+CMD ["{}"]
+"#,
+            cmd_args.join("\", \"")
+        ));
+
         fs::write(&dockerfile_path, content)
             .map_err(|e| format!("Failed to write Dockerfile: {}", e))?;
     }
@@ -563,7 +648,10 @@ CMD ["serve", "--hostname", "0.0.0.0", "--port", "{}"]
     if force {
         let _ = Command::new("docker").args(["rmi", "-f", &tag]).output();
     }
-    let args = vec!["build", "-t", &tag, "--no-cache"];
+    let mut args = vec!["build", "-t", &tag];
+    if force {
+        args.push("--no-cache");
+    }
     let output = Command::new("docker")
         .args(&args)
         .arg(agent_dir.as_path())
@@ -636,7 +724,9 @@ fn add_agent_to_config(
     name: String,
     image: Option<String>,
     model: Option<String>,
-    mode: Option<String>,
+    small_model: Option<String>,
+    provider: Option<String>,
+    base_url: Option<String>,
 ) -> Result<(), String> {
     if cfg
         .agents
@@ -649,15 +739,13 @@ fn add_agent_to_config(
         .filter(|s| !s.is_empty())
         .unwrap_or_else(|| DEFAULT_AGENT_IMAGE.to_string());
     let model = model.filter(|s| !s.is_empty());
-    let mode = match mode.filter(|s| !s.is_empty()) {
-        Some(s) => {
-            let lower = s.to_lowercase();
-            if !valid_agent_mode(&lower) {
-                return Err("mode must be 'local' or 'cloud'".to_string());
-            }
-            Some(lower)
-        }
-        None => None,
+    let small_model = small_model.filter(|s| !s.is_empty());
+    let provider = provider.filter(|s| !s.is_empty());
+    let base_url = base_url.filter(|s| !s.is_empty());
+    let provider_config = if provider.is_some() || base_url.is_some() {
+        Some(AgentProviderConfig { provider, base_url })
+    } else {
+        None
     };
     let agents = cfg.agents.get_or_insert_with(Vec::new);
     let port = docker::OPENCODE_SERVER_PORT + agents.len() as u16;
@@ -665,7 +753,8 @@ fn add_agent_to_config(
         name: name.clone(),
         image,
         model,
-        mode: mode.or_else(|| Some(AGENT_MODE_CLOUD.to_string())),
+        small_model,
+        provider: provider_config,
         properties: Some(AgentProperties { port: Some(port) }),
     });
     if cfg.current_agent.is_none() {
@@ -1012,10 +1101,7 @@ async fn main() {
             let agents: Vec<String> = if list.is_empty() {
                 vec![DEFAULT_AGENT_NAME.to_string()]
             } else {
-                list.iter()
-                    .filter(|e| e.mode.as_deref().unwrap_or(AGENT_MODE_CLOUD) == AGENT_MODE_CLOUD)
-                    .map(|e| e.name.clone())
-                    .collect()
+                list.iter().map(|e| e.name.clone()).collect()
             };
             let any_running = agents.iter().any(|n| running.contains(n));
 
@@ -1235,10 +1321,7 @@ async fn main() {
                     }
                 }
                 println!("  running agent containers: {:?}", running);
-                let agents_list: Vec<&AgentEntry> = list
-                    .iter()
-                    .filter(|e| e.mode.as_deref().unwrap_or(AGENT_MODE_CLOUD) == AGENT_MODE_CLOUD)
-                    .collect();
+                let agents_list: Vec<&AgentEntry> = list.iter().collect();
                 if agents_list.is_empty() {
                     println!(
                         "  agent config: [{} (default)] {}",
@@ -1311,19 +1394,44 @@ async fn main() {
                     } else {
                         Some(image_in)
                     };
-                    let model_in = prompt_line("  Model (optional, Enter to skip): ");
+                    let model_in =
+                        prompt_line("  Model (e.g. anthropic/claude-sonnet-4-5, Enter to skip): ");
                     let model = if model_in.is_empty() {
                         None
                     } else {
                         Some(model_in)
                     };
-                    let mode_in = prompt_line("  Mode [cloud]: ");
-                    let mode = if mode_in.is_empty() {
+                    let small_model_in =
+                        prompt_line("  Small model for internal ops (optional, Enter to skip): ");
+                    let small_model = if small_model_in.is_empty() {
                         None
                     } else {
-                        Some(mode_in)
+                        Some(small_model_in)
                     };
-                    match add_agent_to_config(&mut cfg, name.clone(), image, model, mode) {
+                    let provider_in = prompt_line(
+                        "  Provider (e.g. anthropic, openai, openrouter, Enter to skip): ",
+                    );
+                    let provider = if provider_in.is_empty() {
+                        None
+                    } else {
+                        Some(provider_in)
+                    };
+                    let base_url_in =
+                        prompt_line("  Base URL for provider (optional, Enter to skip): ");
+                    let base_url = if base_url_in.is_empty() {
+                        None
+                    } else {
+                        Some(base_url_in)
+                    };
+                    match add_agent_to_config(
+                        &mut cfg,
+                        name.clone(),
+                        image,
+                        model,
+                        small_model,
+                        provider,
+                        base_url,
+                    ) {
                         Ok(()) => println!("  {} Added agent '{}'", BULLET_GREEN, name),
                         Err(e) => eprintln!("  {} {}", BULLET_RED, e),
                     }
@@ -1438,13 +1546,23 @@ async fn main() {
                 name,
                 image,
                 model,
-                mode,
+                small_model,
+                provider,
+                base_url,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
                 });
-                if let Err(e) = add_agent_to_config(&mut cfg, name.clone(), image, model, mode) {
+                if let Err(e) = add_agent_to_config(
+                    &mut cfg,
+                    name.clone(),
+                    image,
+                    model,
+                    small_model,
+                    provider,
+                    base_url,
+                ) {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
                 }
@@ -1463,33 +1581,39 @@ async fn main() {
                 let current = cfg.current_agent.as_deref().unwrap_or(DEFAULT_AGENT_NAME);
                 let base = docker::OPENCODE_SERVER_PORT;
                 let list = cfg.agents.as_deref().unwrap_or(&[]);
-                let agents: Vec<(String, String, Option<String>, String, u16)> = if list.is_empty()
-                {
+                #[allow(clippy::type_complexity)]
+                let agents: Vec<(
+                    String,
+                    String,
+                    Option<String>,
+                    Option<String>,
+                    Option<AgentProviderConfig>,
+                    u16,
+                )> = if list.is_empty() {
                     vec![(
                         DEFAULT_AGENT_NAME.to_string(),
                         DEFAULT_AGENT_IMAGE.to_string(),
                         None,
-                        AGENT_MODE_CLOUD.to_string(),
+                        None,
+                        None,
                         base,
                     )]
                 } else {
                     list.iter()
-                        .filter(|e| {
-                            e.mode.as_deref().unwrap_or(AGENT_MODE_CLOUD) == AGENT_MODE_CLOUD
-                        })
                         .enumerate()
                         .map(|(i, e)| {
                             (
                                 e.name.clone(),
                                 e.image.clone(),
                                 e.model.clone(),
-                                e.mode.as_deref().unwrap_or(AGENT_MODE_CLOUD).to_string(),
+                                e.small_model.clone(),
+                                e.provider.clone(),
                                 agent_port(e, i),
                             )
                         })
                         .collect()
                 };
-                for (name, image, model, mode, port) in &agents {
+                for (name, image, model, small_model, provider, port) in &agents {
                     let active = running.contains(name);
                     let reachable = if active {
                         Some(docker::check_agent_reachable(*port))
@@ -1524,7 +1648,15 @@ async fn main() {
                     };
                     println!("      Image:    {}", image_line);
                     let model_str = model.as_deref().unwrap_or("default");
-                    println!("      Mode:     {:<8}  Model: {}", mode, model_str);
+                    let small_model_str = small_model.as_deref().unwrap_or("-");
+                    let provider_str = provider
+                        .as_ref()
+                        .map(|p| p.provider.as_deref().unwrap_or("-"))
+                        .unwrap_or("-");
+                    println!(
+                        "      Model:    {}  Small: {}  Provider: {}",
+                        model_str, small_model_str, provider_str
+                    );
                 }
                 if agents.is_empty() {
                     println!("\n  (no cloud agents configured)");
@@ -1536,7 +1668,9 @@ async fn main() {
                 name,
                 image,
                 model,
-                mode,
+                small_model,
+                provider,
+                base_url,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -1555,17 +1689,29 @@ async fn main() {
                         if let Some(ref s) = model {
                             entry.model = if s.is_empty() { None } else { Some(s.clone()) };
                         }
-                        if let Some(ref s) = mode {
-                            if s.is_empty() {
-                                entry.mode = None;
-                            } else {
-                                let lower = s.to_lowercase();
-                                if valid_agent_mode(&lower) {
-                                    entry.mode = Some(lower);
-                                } else {
-                                    eprintln!("Error: mode must be 'local' or 'cloud'");
-                                    std::process::exit(1);
-                                }
+                        if let Some(ref s) = small_model {
+                            entry.small_model = if s.is_empty() { None } else { Some(s.clone()) };
+                        }
+                        if let Some(ref s) = provider {
+                            let provider_name = if s.is_empty() { None } else { Some(s.clone()) };
+                            if let Some(ref mut p) = entry.provider {
+                                p.provider = provider_name;
+                            } else if provider_name.is_some() {
+                                entry.provider = Some(AgentProviderConfig {
+                                    provider: provider_name,
+                                    base_url: None,
+                                });
+                            }
+                        }
+                        if let Some(ref s) = base_url {
+                            let url = if s.is_empty() { None } else { Some(s.clone()) };
+                            if let Some(ref mut p) = entry.provider {
+                                p.base_url = url;
+                            } else if url.is_some() {
+                                entry.provider = Some(AgentProviderConfig {
+                                    provider: None,
+                                    base_url: url,
+                                });
                             }
                         }
                         save_config(&cfg).unwrap_or_else(|e| {
@@ -1620,34 +1766,63 @@ async fn main() {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
                 });
-                let agents: Vec<(String, String, u16)> = if all || name.is_none() {
+                #[allow(clippy::type_complexity)]
+                let agents: Vec<(
+                    String,
+                    String,
+                    Option<String>,
+                    Option<String>,
+                    Option<AgentProviderConfig>,
+                    u16,
+                )> = if all || name.is_none() {
                     match cfg.agents.as_deref() {
                         Some(a) if !a.is_empty() => a
                             .iter()
                             .enumerate()
-                            .map(|(i, e)| (e.name.clone(), e.image.clone(), agent_port(e, i)))
+                            .map(|(i, e)| {
+                                (
+                                    e.name.clone(),
+                                    e.image.clone(),
+                                    e.model.clone(),
+                                    e.small_model.clone(),
+                                    e.provider.clone(),
+                                    agent_port(e, i),
+                                )
+                            })
                             .collect(),
                         _ => vec![(
                             DEFAULT_AGENT_NAME.to_string(),
                             DEFAULT_AGENT_IMAGE.to_string(),
+                            None,
+                            None,
+                            None,
                             docker::OPENCODE_SERVER_PORT,
                         )],
                     }
                 } else {
                     let n = name.as_deref().unwrap_or(DEFAULT_AGENT_NAME);
-                    let (base_image, port) = cfg
+                    let (base_image, model, small_model, provider, port) = cfg
                         .agents
                         .as_deref()
                         .and_then(|a| {
                             a.iter().position(|e| e.name == n).map(|idx| {
                                 let e = &a[idx];
-                                (e.image.clone(), agent_port(e, idx))
+                                (
+                                    e.image.clone(),
+                                    e.model.clone(),
+                                    e.small_model.clone(),
+                                    e.provider.clone(),
+                                    agent_port(e, idx),
+                                )
                             })
                         })
                         .unwrap_or_else(|| {
                             if n == DEFAULT_AGENT_NAME {
                                 (
                                     DEFAULT_AGENT_IMAGE.to_string(),
+                                    None,
+                                    None,
+                                    None,
                                     docker::OPENCODE_SERVER_PORT,
                                 )
                             } else {
@@ -1655,7 +1830,14 @@ async fn main() {
                                 std::process::exit(1);
                             }
                         });
-                    vec![(n.to_string(), base_image, port)]
+                    vec![(
+                        n.to_string(),
+                        base_image,
+                        model,
+                        small_model,
+                        provider,
+                        port,
+                    )]
                 };
                 let dir = config_dir().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -1663,7 +1845,7 @@ async fn main() {
                 });
                 let mut ok = 0usize;
                 let mut failed = Vec::new();
-                for (agent_name, base_image, port) in &agents {
+                for (agent_name, base_image, model, small_model, provider, port) in &agents {
                     if verbose {
                         let agent_dir = dir.join("agents").join(agent_name);
                         let dockerfile = agent_dir.join("Dockerfile");
@@ -1677,7 +1859,16 @@ async fn main() {
                             port
                         );
                     }
-                    match build_agent_image(dir.as_path(), agent_name, base_image, *port, force) {
+                    match build_agent_image(
+                        dir.as_path(),
+                        agent_name,
+                        base_image,
+                        *port,
+                        model.as_deref(),
+                        small_model.as_deref(),
+                        provider.as_ref(),
+                        force,
+                    ) {
                         Ok(()) => {
                             let tag = docker::agent_built_image_tag(agent_name);
                             if verbose {
@@ -1728,14 +1919,12 @@ async fn main() {
                     vec![(
                         DEFAULT_AGENT_NAME.to_string(),
                         image,
+                        None,
                         docker::OPENCODE_SERVER_PORT,
                     )]
                 } else {
                     agents
                         .iter()
-                        .filter(|e| {
-                            e.mode.as_deref().unwrap_or(AGENT_MODE_CLOUD) == AGENT_MODE_CLOUD
-                        })
                         .enumerate()
                         .map(|(i, e)| {
                             let image =
@@ -1746,24 +1935,31 @@ async fn main() {
                                 } else {
                                     e.image.clone()
                                 };
-                            (e.name.clone(), image, agent_port(e, i))
+                            (
+                                e.name.clone(),
+                                image,
+                                e.provider.as_ref().and_then(|p| p.provider.clone()),
+                                agent_port(e, i),
+                            )
                         })
                         .collect()
                 };
                 let running = docker::list_running_agent_containers().unwrap_or_default();
                 if verbose {
                     println!("Cloud agents: {}", cloud_agents.len());
-                    for (name, image, port) in &cloud_agents {
+                    for (name, image, provider, port) in &cloud_agents {
                         let status = if running.contains(name) {
                             "already running"
                         } else {
                             "will start"
                         };
+                        let provider_str = provider.as_deref().unwrap_or("-");
                         println!(
-                            "  {} -> {} port={} {} [{}]",
+                            "  {} -> {} port={} provider={} {} [{}]",
                             name,
                             image,
                             port,
+                            provider_str,
                             clickable_agent_url(*port),
                             status
                         );
@@ -1774,7 +1970,7 @@ async fn main() {
                 }
                 let mut ok = 0usize;
                 let mut failed = Vec::new();
-                for (name, image, port) in &cloud_agents {
+                for (name, image, provider, port) in &cloud_agents {
                     if running.contains(name) {
                         println!(
                             "  {}: already running (port {} {})",
@@ -1787,12 +1983,16 @@ async fn main() {
                     }
                     if verbose {
                         let container_name = docker::agent_container_name(name);
+                        let env_flag = provider
+                            .as_ref()
+                            .map(|p| format!(" -e {}_API_KEY", p.to_uppercase()))
+                            .unwrap_or_default();
                         println!(
-                                "  {}: docker run -d --name {} -p {}:{} --entrypoint opencode {} serve --hostname 0.0.0.0 --port {}",
-                                name, container_name, port, port, image, port
+                                "  {}: docker run -d --name {} -p {}:{}{} --entrypoint opencode {} serve --hostname 0.0.0.0 --port {}",
+                                name, container_name, port, port, env_flag, image, port
                             );
                     }
-                    match docker::start_agent_container(name, image, *port) {
+                    match docker::start_agent_container(name, image, *port, provider.as_deref()) {
                         Ok(()) => {
                             println!(
                                 "  {}: started (port {} {})",
