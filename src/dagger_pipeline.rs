@@ -118,6 +118,7 @@ pub async fn run_doctor(conn: &Query) -> eyre::Result<()> {
 /// SSH: use explicit --ssh-key if provided; else for git@ URLs mount the host's ~/.ssh so whatever works on the host works in the pipeline.
 /// - clone_branch: branch to clone from remote (must exist).
 /// - work_branch: if Some(b), after clone run `git checkout -b b` (for dev on a new branch); if None, stay on clone_branch (for ask/review on existing branch).
+/// - script: optional script to run in container (e.g., install OpenCode)
 fn build_setup_container(
     conn: &Query,
     repo_url: &str,
@@ -125,6 +126,7 @@ fn build_setup_container(
     work_branch: Option<&str>,
     base_image: &str,
     ssh_key_path: Option<&std::path::Path>,
+    script: Option<&str>,
 ) -> PipelineResult<Container> {
     let key_content = ssh_key_path
         .map(|p| std::fs::read_to_string(p).map_err(|e| e.to_string()))
@@ -132,6 +134,8 @@ fn build_setup_container(
 
     let uses_ssh_url = repo_url.starts_with("git@");
     let mut c = conn.container().from(base_image);
+
+    // Note: Network access to host uses host.docker.internal or bridge IP by default
 
     if let Some(ref key) = key_content {
         // Explicit key: mount as secret. Use a unique secret name per invocation to avoid
@@ -185,6 +189,7 @@ fn build_setup_container(
         "PATH",
         "/root/.cargo/bin:/usr/local/cargo/bin:/root/.opencode/bin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
     );
+
     // When we didn't mount host .ssh, create .ssh and populate known_hosts so clone can at least verify the host
     if key_content.is_some() || !uses_ssh_url {
         c = c.with_exec(vec![
@@ -222,6 +227,15 @@ fi"#,
             remote_ref_escaped, wb_escaped, remote_ref_escaped, wb_escaped
         );
         c = c.with_exec(vec!["sh", "-c", &branch_setup_cmd]);
+    }
+
+    // Run project script if provided (e.g., install OpenCode) - runs after repo clone so codebase is available
+    if let Some(script) = script {
+        c = c.with_exec(vec![
+            "sh",
+            "-c",
+            script,
+        ]);
     }
 
     // Install Rust (rustup + default toolchain) when the project has Cargo.toml; need build-base/build-essential for native deps
@@ -456,6 +470,7 @@ async fn run_ask_assurance(c: Container, raw_answer: String) -> String {
 }
 
 /// Run the Ask pipeline: setup → setup loop → opencode run (read-only) → ask assurance (cleanup filter). Returns the agent's answer.
+/// OpenCode runs locally in the container - model/provider is configured in the container image.
 pub async fn run_ask(
     conn: &Query,
     repo_url: &str,
@@ -464,29 +479,34 @@ pub async fn run_ask(
     base_image: &str,
     ssh_key_path: Option<&std::path::Path>,
     timeout_secs: u64,
+    script: Option<&str>,
 ) -> PipelineResult<String> {
     let branch = branch.unwrap_or("main");
-    let c = build_setup_container(conn, repo_url, branch, None, base_image, ssh_key_path)
+    let c = build_setup_container(conn, repo_url, branch, None, base_image, ssh_key_path, script)
         .map_err(|e| map_branch_not_found_err(e, branch))?;
     let c = run_setup_loop(c, None)
         .await
         .map_err(|e| map_branch_not_found_err(e, branch))?;
+
+    // Run opencode normally - model/provider is configured in the container image
     let escaped = question.replace('\'', "'\"'\"'");
     let cmd = format!(
         "cd /workspace && timeout {} opencode run '{}' 2>&1",
         timeout_secs, escaped
     );
-    let raw: String = c
+    let raw = c
         .with_exec(vec!["sh", "-c", &cmd])
         .stdout()
         .await
         .map_err(|e| e.to_string())?;
+
     let answer = run_ask_assurance(c, raw.trim().to_string()).await;
     Ok(answer)
 }
 
 /// Run the Dev pipeline: setup → setup loop → execute → execute check loop → assurance → commit/push.
 /// Returns the commit hash on success.
+/// OpenCode runs locally in the container - model/provider is configured in the container image.
 #[allow(clippy::too_many_arguments)]
 pub async fn run_dev(
     conn: &Query,
@@ -498,6 +518,7 @@ pub async fn run_dev(
     ssh_key_path: Option<&std::path::Path>,
     _verbose: bool,
     timeout_secs: u64,
+    script: Option<&str>,
 ) -> PipelineResult<String> {
     let clone_branch = base.unwrap_or("main");
     let c = build_setup_container(
@@ -507,12 +528,19 @@ pub async fn run_dev(
         Some(branch),
         base_image,
         ssh_key_path,
+        script,
     )?;
     let c = run_setup_loop(c, Some(branch)).await?;
+
+    // Run opencode normally - model/provider is configured in the container image
     let escaped = task.replace('\'', "'\"'\"'");
-    let exec_cmd = format!("cd /workspace && git config user.name 'Agent Smith' && git config user.email 'smith@agentsmith.dev' && timeout {} opencode run '{}' 2>&1", timeout_secs, escaped);
+    let exec_cmd = format!(
+        "cd /workspace && git config user.name 'Agent Smith' && git config user.email 'smith@agentsmith.dev' && timeout {} opencode run '{}' 2>&1",
+        timeout_secs, escaped
+    );
     let c = c.with_exec(vec!["sh", "-c", &exec_cmd]);
     let _ = c.stdout().await.map_err(|e| e.to_string())?;
+
     let c = run_execute_check_loop(c, task).await?;
     let c = run_assurance_loop(c, task).await?;
     // Commit and push (requires SSH for push)
@@ -561,6 +589,7 @@ pub async fn run_dev(
 
 /// Run the Review pipeline: setup → setup loop → opencode analysis. Returns the review text.
 /// Clones the base branch first, then checks out the feature branch so git diff can compare them.
+/// OpenCode runs locally in the container - model/provider is configured in the container image.
 pub async fn run_review(
     conn: &Query,
     repo_url: &str,
@@ -569,10 +598,11 @@ pub async fn run_review(
     base_image: &str,
     ssh_key_path: Option<&std::path::Path>,
     timeout_secs: u64,
+    script: Option<&str>,
 ) -> PipelineResult<String> {
     let base_branch = base.unwrap_or("main");
     // Clone base branch first, then checkout feature branch for comparison
-    let c = build_setup_container(conn, repo_url, base_branch, None, base_image, ssh_key_path)
+    let c = build_setup_container(conn, repo_url, base_branch, None, base_image, ssh_key_path, script)
         .map_err(|e| map_branch_not_found_err(e, base_branch))?;
     // Fetch all refs and checkout the feature branch to compare against base
     let branch_escaped = branch.replace('\'', "'\"'\"'");
@@ -596,12 +626,14 @@ fi"#,
         "Analyze the changes in branch '{}' compared to base branch '{}'. Report any issues, security concerns, or suggested improvements.",
         branch, base_branch
     );
+
+    // Run opencode normally - model/provider is configured in the container image
     let escaped = review_prompt.replace('\'', "'\"'\"'");
     let cmd = format!(
         "cd /workspace && timeout {} opencode run '{}' 2>&1",
         timeout_secs, escaped
     );
-    let out: String = c
+    let out = c
         .with_exec(vec!["sh", "-c", &cmd])
         .stdout()
         .await
@@ -616,8 +648,9 @@ pub async fn run_project_status(
     branch: &str,
     base_image: &str,
     ssh_key_path: Option<&std::path::Path>,
+    script: Option<&str>,
 ) -> PipelineResult<String> {
-    let c = build_setup_container(conn, repo_url, branch, None, base_image, ssh_key_path)?;
+    let c = build_setup_container(conn, repo_url, branch, None, base_image, ssh_key_path, script)?;
     let out: String = c
         .with_exec(vec![
             "sh",

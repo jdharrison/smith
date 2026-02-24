@@ -30,7 +30,7 @@ const BULLET_YELLOW: &str = "\x1b[33m●\x1b[0m";
 
 /// OSC 8 hyperlink so the URL is clickable in supported terminals (e.g. VS Code, iTerm2, Windows Terminal).
 fn clickable_agent_url(port: u16) -> String {
-    let url = format!("http://127.0.0.1:{}", port);
+    let url = format!("http://host.docker.internal:{}", port);
     format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", url, url)
 }
 
@@ -213,6 +213,9 @@ enum AgentCommands {
         /// Custom base URL for provider (for proxies/custom endpoints)
         #[arg(long)]
         base_url: Option<String>,
+        /// Roles for this agent (comma-separated, e.g. "builder,analyst")
+        #[arg(long, value_delimiter = ',')]
+        roles: Option<Vec<String>>,
     },
     /// Show status of all configured agents (systemctl-style, compact table per agent)
     Status,
@@ -286,7 +289,7 @@ enum ProjectCommands {
         /// Repository path or URL
         #[arg(long)]
         repo: String,
-        /// Docker image to use for this project (optional)
+        /// Docker image to use for this project (required)
         #[arg(long)]
         image: Option<String>,
         /// SSH key path for this project (optional)
@@ -301,6 +304,9 @@ enum ProjectCommands {
         /// GitHub personal access token for PR creation (optional)
         #[arg(long)]
         github_token: Option<String>,
+        /// Script to run in container before pipeline (optional, e.g., install OpenCode)
+        #[arg(long)]
+        script: Option<String>,
     },
     /// List all registered projects
     List,
@@ -507,6 +513,9 @@ struct AgentEntry {
     /// Optional properties (port, etc.). Port used in Dockerfile EXPOSE and at start.
     #[serde(skip_serializing_if = "Option::is_none")]
     properties: Option<AgentProperties>,
+    /// Roles this agent can fulfill (e.g. ["builder", "analyst"]). If empty, agent can do all.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    roles: Vec<String>,
 }
 
 /// Resolve port for an agent: properties.port if set, else OPENCODE_SERVER_PORT + index.
@@ -540,6 +549,10 @@ struct ProjectConfig {
     /// GitHub personal access token for PR creation (--pr). Per-repository.
     #[serde(skip_serializing_if = "Option::is_none")]
     github_token: Option<String>,
+    /// Script to run in container before pipeline (e.g., install OpenCode).
+    /// Example: "curl -fsSL https://opencode.ai/install.sh | sh"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    script: Option<String>,
 }
 
 fn config_dir() -> Result<PathBuf, String> {
@@ -727,6 +740,7 @@ fn add_agent_to_config(
     small_model: Option<String>,
     provider: Option<String>,
     base_url: Option<String>,
+    roles: Vec<String>,
 ) -> Result<(), String> {
     if cfg
         .agents
@@ -756,6 +770,7 @@ fn add_agent_to_config(
         small_model,
         provider: provider_config,
         properties: Some(AgentProperties { port: Some(port) }),
+        roles,
     });
     if cfg.current_agent.is_none() {
         cfg.current_agent = Some(name);
@@ -1031,6 +1046,11 @@ fn resolve_base_branch(explicit: Option<&str>, project_config: Option<&ProjectCo
         .unwrap_or_else(|| "main".to_string())
 }
 
+/// Resolve project script: project script > None
+fn resolve_project_script(project_config: Option<&ProjectConfig>) -> Option<String> {
+    project_config.and_then(|p| p.script.clone())
+}
+
 /// Resolve remote name: project remote > "origin"
 fn resolve_remote(project_config: Option<&ProjectConfig>) -> String {
     project_config
@@ -1173,7 +1193,7 @@ async fn main() {
                     );
                 } else {
                     println!(
-                        "       {} agent/{} - {} (http://127.0.0.1:{})",
+                        "       {} agent/{} - {} (http://host.docker.internal:{})",
                         bullet, name, state, port
                     );
                 }
@@ -1199,6 +1219,7 @@ async fn main() {
                     let base = resolve_base_branch(None, Some(proj));
                     let agent_image = resolve_agent_image(proj.image.as_deref());
                     let ssh_key_path = resolve_ssh_key(None, Some(proj));
+                    let project_script = resolve_project_script(Some(proj));
                     let done = std::sync::Arc::new(AtomicBool::new(false));
                     let done_clone = done.clone();
                     let spinner_handle = if !verbose {
@@ -1215,6 +1236,7 @@ async fn main() {
                     let branch = base.clone();
                     let img = agent_image.clone();
                     let ssh = ssh_key_path.clone();
+                    let scr = project_script.clone();
                     let result = dagger_pipeline::with_connection(move |conn| {
                         let repo = repo.clone();
                         let branch = branch.clone();
@@ -1227,6 +1249,7 @@ async fn main() {
                                 &branch,
                                 &img,
                                 ssh.as_deref(),
+                                scr.as_deref(),
                             )
                             .await
                             .map_err(|e| eyre::eyre!("{}", e))
@@ -1423,6 +1446,12 @@ async fn main() {
                     } else {
                         Some(base_url_in)
                     };
+                    let roles_in = prompt_line("  Roles (comma-separated, e.g. builder,analyst, Enter for none): ");
+                    let roles: Vec<String> = if roles_in.is_empty() {
+                        vec![]
+                    } else {
+                        roles_in.split(',').map(|s| s.trim().to_string()).collect()
+                    };
                     match add_agent_to_config(
                         &mut cfg,
                         name.clone(),
@@ -1431,6 +1460,7 @@ async fn main() {
                         small_model,
                         provider,
                         base_url,
+                        roles,
                     ) {
                         Ok(()) => println!("  {} Added agent '{}'", BULLET_GREEN, name),
                         Err(e) => eprintln!("  {} {}", BULLET_RED, e),
@@ -1499,6 +1529,12 @@ async fn main() {
                     } else {
                         Some(token_in)
                     };
+                    let script_in = prompt_line("  Script to run in container (optional, e.g. curl -fsSL https://opencode.ai/install | sh): ");
+                    let script = if script_in.is_empty() {
+                        None
+                    } else {
+                        Some(script_in)
+                    };
                     let project = ProjectConfig {
                         name: name.clone(),
                         repo,
@@ -1507,6 +1543,7 @@ async fn main() {
                         base_branch,
                         remote,
                         github_token,
+                        script,
                     };
                     match add_project_to_config(&mut cfg, project) {
                         Ok(()) => {
@@ -1549,6 +1586,7 @@ async fn main() {
                 small_model,
                 provider,
                 base_url,
+                roles,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -1562,6 +1600,7 @@ async fn main() {
                     small_model,
                     provider,
                     base_url,
+                    roles.unwrap_or_default(),
                 ) {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -2109,6 +2148,7 @@ async fn main() {
                 base_branch,
                 remote,
                 github_token,
+                script,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -2118,6 +2158,7 @@ async fn main() {
                 let base_branch = base_branch.filter(|s| !s.is_empty());
                 let remote = remote.filter(|s| !s.is_empty());
                 let github_token = github_token.filter(|s| !s.is_empty());
+                let script = script.filter(|s| !s.is_empty());
                 let project = ProjectConfig {
                     name: name.clone(),
                     repo,
@@ -2126,6 +2167,7 @@ async fn main() {
                     base_branch,
                     remote,
                     github_token,
+                    script,
                 };
                 if let Err(e) = add_project_to_config(&mut cfg, project) {
                     eprintln!("Error: {}", e);
@@ -2196,6 +2238,7 @@ async fn main() {
                     let base = resolve_base_branch(None, Some(proj));
                     let agent_image = resolve_agent_image(proj.image.as_deref());
                     let ssh_key_path = resolve_ssh_key(None, Some(proj));
+                    let project_script = resolve_project_script(Some(proj));
                     if verbose {
                         println!("Project: {} -> {}", proj.name, resolved_repo);
                         println!("  Branch: {}  Image: {}", base, agent_image);
@@ -2216,6 +2259,7 @@ async fn main() {
                     let branch = base.clone();
                     let img = agent_image.clone();
                     let ssh = ssh_key_path.clone();
+                    let scr = project_script.clone();
                     let result = dagger_pipeline::with_connection(move |conn| {
                         let repo = repo.clone();
                         let branch = branch.clone();
@@ -2228,6 +2272,7 @@ async fn main() {
                                 &branch,
                                 &img,
                                 ssh.as_deref(),
+                                scr.as_deref(),
                             )
                             .await
                             .map_err(|e| eyre::eyre!("{}", e))
@@ -2400,6 +2445,7 @@ async fn main() {
                 let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
                 let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
                 let _resolved_remote = resolve_remote(project_config.as_ref());
+                let project_script = resolve_project_script(project_config.as_ref());
 
                 if verbose {
                     println!("Ask: {}", question);
@@ -2408,6 +2454,7 @@ async fn main() {
                 }
 
                 let branch = resolved_base.clone();
+                let script = project_script.clone();
                 let done = std::sync::Arc::new(AtomicBool::new(false));
                 let done_clone = done.clone();
                 let spinner_handle = if !verbose {
@@ -2429,6 +2476,7 @@ async fn main() {
                     let ssh = ssh_key_path.clone();
                     let br = branch.clone();
                     let to = timeout_secs;
+                    let scr = script.clone();
                     async move {
                         dagger_pipeline::run_ask(
                             &conn,
@@ -2438,6 +2486,7 @@ async fn main() {
                             &img,
                             ssh.as_deref(),
                             to,
+                            scr.as_deref(),
                         )
                         .await
                         .map_err(|e| eyre::eyre!("{}", e))
@@ -2494,6 +2543,7 @@ async fn main() {
                 let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
                 let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
                 let _resolved_remote = resolve_remote(project_config.as_ref());
+                let project_script = resolve_project_script(project_config.as_ref());
 
                 if verbose {
                     println!("Dev: {}", task);
@@ -2505,6 +2555,7 @@ async fn main() {
                 let resolved_repo_pr = resolved_repo.clone();
                 let base_pr = resolved_base.clone();
                 let task_pr = task.clone();
+                let script = project_script.clone();
                 let done = std::sync::Arc::new(AtomicBool::new(false));
                 let done_clone = done.clone();
                 let spinner_handle = if !verbose {
@@ -2529,6 +2580,7 @@ async fn main() {
                     let base_br = resolved_base.clone();
                     let _rem = _resolved_remote.clone();
                     let to = timeout_secs;
+                    let scr = script.clone();
                     async move {
                         dagger_pipeline::run_dev(
                             &conn,
@@ -2540,6 +2592,7 @@ async fn main() {
                             ssh.as_deref(),
                             verb_for_closure,
                             to,
+                            scr.as_deref(),
                         )
                         .await
                         .map_err(|e| eyre::eyre!("{}", e))
@@ -2644,6 +2697,7 @@ async fn main() {
                 let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
                 let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
                 let _resolved_remote = resolve_remote(project_config.as_ref());
+                let project_script = resolve_project_script(project_config.as_ref());
 
                 if verbose {
                     println!("Review: {}", branch);
@@ -2651,6 +2705,7 @@ async fn main() {
                     println!("  Agent image: {}", agent_image);
                 }
 
+                let script = project_script.clone();
                 let done = std::sync::Arc::new(AtomicBool::new(false));
                 let done_clone = done.clone();
                 let spinner_handle = if !verbose {
@@ -2673,6 +2728,7 @@ async fn main() {
                     let img = agent_image.clone();
                     let ssh = ssh_key_path.clone();
                     let to = timeout_secs;
+                    let scr = script.clone();
                     async move {
                         dagger_pipeline::run_review(
                             &conn,
@@ -2682,6 +2738,7 @@ async fn main() {
                             &img,
                             ssh.as_deref(),
                             to,
+                            scr.as_deref(),
                         )
                         .await
                         .map_err(|e| eyre::eyre!("{}", e))
