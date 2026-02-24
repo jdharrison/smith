@@ -201,7 +201,7 @@ enum AgentCommands {
         /// Docker image (e.g. ghcr.io/anomalyco/opencode); default: official OpenCode image
         #[arg(long)]
         image: Option<String>,
-        /// Model to use (e.g. "anthropic/claude-sonnet-4-5", "openrouter/google/gemini-2.0-flash")
+        /// Model to use (e.g. "anthropic/claude-sonnet-4-5", "openrouter/google/gemini-2.0-flash", "qwen3:8b")
         #[arg(long)]
         model: Option<String>,
         /// Smaller model for internal operations (reduces API costs)
@@ -216,6 +216,12 @@ enum AgentCommands {
         /// Roles for this agent (comma-separated, e.g. "builder,analyst")
         #[arg(long, value_delimiter = ',')]
         roles: Option<Vec<String>>,
+        /// Use local Ollama container instead of cloud API
+        #[arg(long)]
+        local: bool,
+        /// Enable GPU passthrough for local Ollama
+        #[arg(long)]
+        gpu: bool,
     },
     /// Show status of all configured agents (systemctl-style, compact table per agent)
     Status,
@@ -256,6 +262,12 @@ enum AgentCommands {
         /// Roles for this agent (comma-separated, e.g. "builder,analyst")
         #[arg(long, value_delimiter = ',')]
         roles: Option<Vec<String>>,
+        /// Use local Ollama container instead of cloud API
+        #[arg(long)]
+        local: Option<bool>,
+        /// Enable GPU passthrough for local Ollama
+        #[arg(long)]
+        gpu: Option<bool>,
     },
     /// Remove an agent
     Remove {
@@ -501,6 +513,23 @@ struct AgentProperties {
     port: Option<u16>,
 }
 
+/// Local model configuration (Ollama container on host).
+#[derive(Serialize, Deserialize, Clone, Default)]
+struct AgentLocalConfig {
+    /// Enable local Ollama container for this agent
+    #[serde(skip_serializing_if = "Option::is_none")]
+    enabled: Option<bool>,
+    /// Model to run in Ollama (e.g. "qwen3:8b", "llama3.2")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    model: Option<String>,
+    /// Enable GPU passthrough for Ollama (requires NVIDIA GPU)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    gpu: Option<bool>,
+    /// Port for Ollama API (default: 11434)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    port: Option<u16>,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 struct AgentEntry {
     /// Unique id/name for the agent
@@ -519,6 +548,9 @@ struct AgentEntry {
     /// Optional properties (port, etc.). Port used in Dockerfile EXPOSE and at start.
     #[serde(skip_serializing_if = "Option::is_none")]
     properties: Option<AgentProperties>,
+    /// Local model configuration (Ollama container on host)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    local: Option<AgentLocalConfig>,
     /// Roles this agent can fulfill (e.g. ["builder", "analyst"]). If empty, agent can do all.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     roles: Vec<String>,
@@ -748,6 +780,8 @@ fn add_agent_to_config(
     provider: Option<String>,
     base_url: Option<String>,
     roles: Vec<String>,
+    local: bool,
+    gpu: bool,
 ) -> Result<(), String> {
     if cfg
         .agents
@@ -768,6 +802,16 @@ fn add_agent_to_config(
     } else {
         None
     };
+    let local_config = if local {
+        Some(AgentLocalConfig {
+            enabled: Some(true),
+            model: model.clone(),
+            gpu: Some(gpu),
+            port: Some(11434),
+        })
+    } else {
+        None
+    };
     let agents = cfg.agents.get_or_insert_with(Vec::new);
     let port = docker::OPENCODE_SERVER_PORT + agents.len() as u16;
     agents.push(AgentEntry {
@@ -777,6 +821,7 @@ fn add_agent_to_config(
         small_model,
         provider: provider_config,
         properties: Some(AgentProperties { port: Some(port) }),
+        local: local_config,
         roles,
     });
     if cfg.current_agent.is_none() {
@@ -1461,6 +1506,12 @@ async fn main() {
                     } else {
                         roles_in.split(',').map(|s| s.trim().to_string()).collect()
                     };
+                    let local = prompt_yn("  Use local Ollama container instead of cloud?", false);
+                    let gpu = if local {
+                        prompt_yn("  Enable GPU passthrough for Ollama?", true)
+                    } else {
+                        false
+                    };
                     match add_agent_to_config(
                         &mut cfg,
                         name.clone(),
@@ -1470,6 +1521,8 @@ async fn main() {
                         provider,
                         base_url,
                         roles,
+                        local,
+                        gpu,
                     ) {
                         Ok(()) => println!("  {} Added agent '{}'", BULLET_GREEN, name),
                         Err(e) => eprintln!("  {} {}", BULLET_RED, e),
@@ -1596,6 +1649,8 @@ async fn main() {
                 provider,
                 base_url,
                 roles,
+                local,
+                gpu,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -1610,6 +1665,8 @@ async fn main() {
                     provider,
                     base_url,
                     roles.unwrap_or_default(),
+                    local,
+                    gpu,
                 ) {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -1636,12 +1693,14 @@ async fn main() {
                     Option<String>,
                     Option<String>,
                     Option<AgentProviderConfig>,
+                    Option<AgentLocalConfig>,
                     Vec<String>,
                     u16,
                 )> = if list.is_empty() {
                     vec![(
                         DEFAULT_AGENT_NAME.to_string(),
                         DEFAULT_AGENT_IMAGE.to_string(),
+                        None,
                         None,
                         None,
                         None,
@@ -1658,13 +1717,14 @@ async fn main() {
                                 e.model.clone(),
                                 e.small_model.clone(),
                                 e.provider.clone(),
+                                e.local.clone(),
                                 e.roles.clone(),
                                 agent_port(e, i),
                             )
                         })
                         .collect()
                 };
-                for (name, image, model, small_model, provider, roles, port) in &agents {
+                for (name, image, model, small_model, provider, local, roles, port) in &agents {
                     let active = running.contains(name);
                     let reachable = if active {
                         Some(docker::check_agent_reachable(*port))
@@ -1700,13 +1760,23 @@ async fn main() {
                     println!("      Image:    {}", image_line);
                     let model_str = model.as_deref().unwrap_or("default");
                     let small_model_str = small_model.as_deref().unwrap_or("-");
-                    let provider_str = provider
-                        .as_ref()
-                        .map(|p| p.provider.as_deref().unwrap_or("-"))
-                        .unwrap_or("-");
+                    let is_local = local.as_ref().is_some_and(|l| l.enabled == Some(true));
+                    let (provider_str, mode_str) = if is_local {
+                        let local_model = local
+                            .as_ref()
+                            .and_then(|l| l.model.clone())
+                            .unwrap_or_else(|| model_str.to_string());
+                        (local_model, "local".to_string())
+                    } else {
+                        let p = provider
+                            .as_ref()
+                            .map(|p| p.provider.as_deref().unwrap_or("-"))
+                            .unwrap_or("-");
+                        (p.to_string(), "cloud".to_string())
+                    };
                     println!(
-                        "      Model:    {}  Small: {}  Provider: {}",
-                        model_str, small_model_str, provider_str
+                        "      Model:    {}  Small: {}  Provider: {}  Mode: {}",
+                        model_str, small_model_str, provider_str, mode_str
                     );
                     let roles_str = if roles.is_empty() {
                         "-".to_string()
@@ -1729,6 +1799,8 @@ async fn main() {
                 provider,
                 base_url,
                 roles,
+                local,
+                gpu,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -1774,6 +1846,18 @@ async fn main() {
                         }
                         if let Some(ref r) = roles {
                             entry.roles = if r.is_empty() { vec![] } else { r.clone() };
+                        }
+                        if let Some(local_enabled) = local {
+                            if local_enabled {
+                                entry.local = Some(AgentLocalConfig {
+                                    enabled: Some(true),
+                                    model: entry.model.clone(),
+                                    gpu,
+                                    port: Some(11434),
+                                });
+                            } else {
+                                entry.local = None;
+                            }
                         }
                         save_config(&cfg).unwrap_or_else(|e| {
                             eprintln!("Error: {}", e);
@@ -1966,20 +2050,47 @@ async fn main() {
                     std::process::exit(1);
                 });
                 let agents = cfg.agents.as_deref().unwrap_or(&[]);
-                // Only cloud agents for now (1 agent : 1 container). Local agents skipped until implemented.
-                // Prefer built image (smith/<name>:latest) when it exists.
-                let cloud_agents: Vec<_> = if agents.is_empty() {
-                    let image =
-                        if docker::image_exists(&docker::agent_built_image_tag(DEFAULT_AGENT_NAME))
-                            .unwrap_or(false)
-                        {
-                            docker::agent_built_image_tag(DEFAULT_AGENT_NAME)
-                        } else {
-                            DEFAULT_AGENT_IMAGE.to_string()
-                        };
+
+                // Check if any agent uses local - get model from agent.model, gpu from local config
+                let local_agent = agents
+                    .iter()
+                    .find(|e| e.local.as_ref().is_some_and(|l| l.enabled == Some(true)));
+                let (local_model, local_gpu) = if let Some(agent) = local_agent {
+                    if let Some(local_config) = &agent.local {
+                        let model = agent
+                            .model
+                            .clone()
+                            .unwrap_or_else(|| "qwen3:8b".to_string());
+                        let gpu = local_config.gpu.unwrap_or(false);
+                        (model, gpu)
+                    } else {
+                        (String::new(), false)
+                    }
+                } else {
+                    (String::new(), false)
+                };
+
+                // Start Ollama if any agent uses local
+                if !local_model.is_empty() {
+                    if docker::is_ollama_running() {
+                        println!("  Ollama already running");
+                    } else {
+                        match docker::start_ollama_container(&local_model, local_gpu) {
+                            Ok(_) => {}
+                            Err(e) => {
+                                eprintln!("Error starting Ollama: {}", e);
+                                std::process::exit(1);
+                            }
+                        }
+                    }
+                }
+
+                // Build agent list (1 agent : 1 container)
+                let all_agents: Vec<_> = if agents.is_empty() {
                     vec![(
                         DEFAULT_AGENT_NAME.to_string(),
-                        image,
+                        DEFAULT_AGENT_IMAGE.to_string(),
+                        None,
                         None,
                         docker::OPENCODE_SERVER_PORT,
                     )]
@@ -1996,10 +2107,18 @@ async fn main() {
                                 } else {
                                     e.image.clone()
                                 };
+                            // Determine provider: local uses Ollama, otherwise cloud provider
+                            let provider =
+                                if e.local.as_ref().is_some_and(|l| l.enabled == Some(true)) {
+                                    Some("ollama".to_string())
+                                } else {
+                                    e.provider.as_ref().and_then(|p| p.provider.clone())
+                                };
                             (
                                 e.name.clone(),
                                 image,
-                                e.provider.as_ref().and_then(|p| p.provider.clone()),
+                                provider,
+                                e.local.clone(),
                                 agent_port(e, i),
                             )
                         })
@@ -2007,20 +2126,22 @@ async fn main() {
                 };
                 let running = docker::list_running_agent_containers().unwrap_or_default();
                 if verbose {
-                    println!("Cloud agents: {}", cloud_agents.len());
-                    for (name, image, provider, port) in &cloud_agents {
+                    println!("Agents: {}", all_agents.len());
+                    for (name, image, provider, local, port) in &all_agents {
                         let status = if running.contains(name) {
                             "already running"
                         } else {
                             "will start"
                         };
                         let provider_str = provider.as_deref().unwrap_or("-");
+                        let mode = if local.is_some() { "local" } else { "cloud" };
                         println!(
-                            "  {} -> {} port={} provider={} {} [{}]",
+                            "  {} -> {} port={} provider={} mode={} {} [{}]",
                             name,
                             image,
                             port,
                             provider_str,
+                            mode,
                             clickable_agent_url(*port),
                             status
                         );
@@ -2031,7 +2152,7 @@ async fn main() {
                 }
                 let mut ok = 0usize;
                 let mut failed = Vec::new();
-                for (name, image, provider, port) in &cloud_agents {
+                for (name, image, provider, local, port) in &all_agents {
                     if running.contains(name) {
                         println!(
                             "  {}: already running (port {} {})",
@@ -2042,18 +2163,41 @@ async fn main() {
                         ok += 1;
                         continue;
                     }
+                    // For local agents, use host.docker.internal as base URL
+                    let resolved_provider = if local.is_some() {
+                        Some("ollama".to_string())
+                    } else {
+                        provider.clone()
+                    };
+                    let base_url = if let Some(ref local_config) = local {
+                        let ollama_port = local_config.port.unwrap_or(docker::OLLAMA_PORT);
+                        Some(format!("http://host.docker.internal:{}", ollama_port))
+                    } else {
+                        None
+                    };
                     if verbose {
                         let container_name = docker::agent_container_name(name);
-                        let env_flag = provider
-                            .as_ref()
-                            .map(|p| format!(" -e {}_API_KEY", p.to_uppercase()))
-                            .unwrap_or_default();
+                        let env_vars = if let Some(ref p) = resolved_provider {
+                            let mut vars = format!(" -e {}_API_KEY={}", p.to_uppercase(), "dummy");
+                            if let Some(ref url) = base_url {
+                                vars.push_str(&format!(" -e OPENCODE_BASE_URL={}", url));
+                            }
+                            vars
+                        } else {
+                            String::new()
+                        };
                         println!(
                                 "  {}: docker run -d --name {} -p {}:{}{} --entrypoint opencode {} serve --hostname 0.0.0.0 --port {}",
-                                name, container_name, port, port, env_flag, image, port
+                                name, container_name, port, port, env_vars, image, port
                             );
                     }
-                    match docker::start_agent_container(name, image, *port, provider.as_deref()) {
+                    match docker::start_agent_container(
+                        name,
+                        image,
+                        *port,
+                        resolved_provider.as_deref(),
+                        base_url.as_deref(),
+                    ) {
                         Ok(()) => {
                             println!(
                                 "  {}: started (port {} {})",
@@ -2111,6 +2255,14 @@ async fn main() {
                     Err(e) => {
                         eprintln!("Error: {}", e);
                         std::process::exit(1);
+                    }
+                }
+                // Also stop Ollama if it's running
+                if docker::is_ollama_running() {
+                    if let Err(e) = docker::stop_ollama_container() {
+                        eprintln!("Warning: failed to stop Ollama: {}", e);
+                    } else {
+                        println!("  Ollama: stopped");
                     }
                 }
             }
