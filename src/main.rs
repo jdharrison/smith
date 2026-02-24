@@ -201,27 +201,30 @@ enum AgentCommands {
         /// Docker image (e.g. ghcr.io/anomalyco/opencode); default: official OpenCode image
         #[arg(long)]
         image: Option<String>,
-        /// Model to use (e.g. "anthropic/claude-sonnet-4-5", "openrouter/google/gemini-2.0-flash", "qwen3:8b")
+        /// Agent type: "local" or "cloud" (default: cloud)
+        #[arg(long)]
+        agent_type: Option<String>,
+        /// Model to use (e.g. "anthropic/claude-sonnet-4-5", "qwen3:8b")
         #[arg(long)]
         model: Option<String>,
         /// Smaller model for internal operations (reduces API costs)
         #[arg(long)]
         small_model: Option<String>,
-        /// Provider name (e.g. "anthropic", "openai", "openrouter")
+        /// Provider name (e.g. "ollama", "anthropic", "openai", "openrouter")
         #[arg(long)]
         provider: Option<String>,
         /// Custom base URL for provider (for proxies/custom endpoints)
         #[arg(long)]
         base_url: Option<String>,
+        /// Port for opencode serve (default: 4096 + index)
+        #[arg(long)]
+        port: Option<u16>,
+        /// Whether this agent is enabled (default: true)
+        #[arg(long)]
+        enabled: Option<bool>,
         /// Roles for this agent (comma-separated, e.g. "builder,analyst")
         #[arg(long, value_delimiter = ',')]
         roles: Option<Vec<String>>,
-        /// Use local Ollama container instead of cloud API
-        #[arg(long)]
-        local: bool,
-        /// Enable GPU passthrough for local Ollama
-        #[arg(long)]
-        gpu: bool,
     },
     /// Show status of all configured agents (systemctl-style, compact table per agent)
     Status,
@@ -247,6 +250,9 @@ enum AgentCommands {
         /// Docker image (pass empty to clear)
         #[arg(long)]
         image: Option<String>,
+        /// Agent type: "local" or "cloud" (pass empty to clear)
+        #[arg(long)]
+        agent_type: Option<String>,
         /// Model (pass empty to clear = use container default)
         #[arg(long)]
         model: Option<String>,
@@ -259,15 +265,15 @@ enum AgentCommands {
         /// Base URL (pass empty to clear)
         #[arg(long)]
         base_url: Option<String>,
+        /// Port for opencode serve (pass empty to clear)
+        #[arg(long)]
+        port: Option<u16>,
+        /// Whether this agent is enabled (pass empty to clear)
+        #[arg(long)]
+        enabled: Option<bool>,
         /// Roles for this agent (comma-separated, e.g. "builder,analyst")
         #[arg(long, value_delimiter = ',')]
         roles: Option<Vec<String>>,
-        /// Use local Ollama container instead of cloud API
-        #[arg(long)]
-        local: Option<bool>,
-        /// Enable GPU passthrough for local Ollama
-        #[arg(long)]
-        gpu: Option<bool>,
     },
     /// Remove an agent
     Remove {
@@ -494,74 +500,42 @@ struct AgentConfig {
     image: Option<String>,
 }
 
-/// Provider configuration for an agent (baked into container).
-#[derive(Serialize, Deserialize, Clone, Default)]
-struct AgentProviderConfig {
-    /// Provider name: "anthropic", "openai", "openrouter", etc.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    provider: Option<String>,
-    /// Custom base URL (for proxies/custom endpoints)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    base_url: Option<String>,
-}
-
-/// Per-agent properties (e.g. port). Loaded by Dockerfile and at runtime.
-#[derive(Serialize, Deserialize, Clone, Default)]
-struct AgentProperties {
-    /// Port for opencode serve (default: 4096 + index among agents)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    port: Option<u16>,
-}
-
-/// Local model configuration (Ollama container on host).
-#[derive(Serialize, Deserialize, Clone, Default)]
-struct AgentLocalConfig {
-    /// Enable local Ollama container for this agent
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enabled: Option<bool>,
-    /// Model to run in Ollama (e.g. "qwen3:8b", "llama3.2")
-    #[serde(skip_serializing_if = "Option::is_none")]
-    model: Option<String>,
-    /// Enable GPU passthrough for Ollama (requires NVIDIA GPU)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    gpu: Option<bool>,
-    /// Port for Ollama API (default: 11434)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    port: Option<u16>,
-}
-
 #[derive(Serialize, Deserialize, Clone)]
 struct AgentEntry {
     /// Unique id/name for the agent
     name: String,
     /// Docker image (e.g. ghcr.io/anomalyco/opencode); custom images allowed
     image: String,
-    /// Model to use (e.g. "anthropic/claude-sonnet-4-5", "openrouter/google/gemini-2.0-flash")
+    /// Agent type: "local" or "cloud" (default: "cloud")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    agent_type: Option<String>,
+    /// Model to use (e.g. "anthropic/claude-sonnet-4-5", "qwen3:8b")
     #[serde(skip_serializing_if = "Option::is_none")]
     model: Option<String>,
     /// Smaller model for internal operations (reduces API costs)
     #[serde(skip_serializing_if = "Option::is_none")]
     small_model: Option<String>,
-    /// Provider configuration (baked into container)
+    /// Provider name: "ollama", "anthropic", "openai", "openrouter", etc.
     #[serde(skip_serializing_if = "Option::is_none")]
-    provider: Option<AgentProviderConfig>,
-    /// Optional properties (port, etc.). Port used in Dockerfile EXPOSE and at start.
+    provider: Option<String>,
+    /// Custom base URL (for proxies/custom endpoints)
     #[serde(skip_serializing_if = "Option::is_none")]
-    properties: Option<AgentProperties>,
-    /// Local model configuration (Ollama container on host)
+    base_url: Option<String>,
+    /// Port for opencode serve (default: 4096 + index)
     #[serde(skip_serializing_if = "Option::is_none")]
-    local: Option<AgentLocalConfig>,
+    port: Option<u16>,
+    /// Whether this agent is enabled (default: true)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    enabled: Option<bool>,
     /// Roles this agent can fulfill (e.g. ["builder", "analyst"]). If empty, agent can do all.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     roles: Vec<String>,
 }
 
-/// Resolve port for an agent: properties.port if set, else OPENCODE_SERVER_PORT + index.
+/// Resolve port for an agent: port if set, else OPENCODE_SERVER_PORT + index.
 fn agent_port(entry: &AgentEntry, index: usize) -> u16 {
     entry
-        .properties
-        .as_ref()
-        .and_then(|p| p.port)
+        .port
         .unwrap_or_else(|| docker::OPENCODE_SERVER_PORT + index as u16)
 }
 
@@ -600,7 +574,7 @@ fn config_dir() -> Result<PathBuf, String> {
 }
 
 /// Build the Docker image for one agent: ensure agent dir and Dockerfile exist, then run docker build.
-/// `port` is written into the Dockerfile (EXPOSE and CMD) and should match the agent's properties.port or default.
+/// `port` is written into the Dockerfile (EXPOSE and CMD) and should match the agent's port or default.
 #[allow(clippy::too_many_arguments)]
 fn build_agent_image(
     config_dir: &Path,
@@ -609,7 +583,7 @@ fn build_agent_image(
     port: u16,
     model: Option<&str>,
     small_model: Option<&str>,
-    provider: Option<&AgentProviderConfig>,
+    _provider: Option<&str>,
     force: bool,
 ) -> Result<(), String> {
     let agent_dir = config_dir.join("agents").join(name);
@@ -630,24 +604,7 @@ fn build_agent_image(
         env_lines.push_str(&format!("ENV OPENCODE_SMALL_MODEL=\"{}\"\n", sm));
     }
 
-    let mut config_json = String::new();
-    if let Some(p) = provider {
-        if let Some(ref prov) = p.provider {
-            if !config_json.is_empty() {
-                config_json.push_str(",\n");
-            }
-            config_json.push_str(&format!(
-                "  \"provider\": {{\n    \"{}\": {{\n      \"options\": {{\n",
-                prov
-            ));
-            if let Some(ref url) = p.base_url {
-                config_json.push_str(&format!("        \"baseURL\": \"{}\"\n", url));
-            }
-            config_json.push_str("      }}\n    }\n  }");
-        }
-    }
-
-    let opencode_config = if !config_json.is_empty() || model.is_some() || small_model.is_some() {
+    let opencode_config = if model.is_some() || small_model.is_some() {
         let mut cfg = String::from("{\n");
         if let Some(m) = model {
             cfg.push_str(&format!("  \"model\": \"{}\",\n", m));
@@ -655,7 +612,6 @@ fn build_agent_image(
         if let Some(sm) = small_model {
             cfg.push_str(&format!("  \"small_model\": \"{}\",\n", sm));
         }
-        cfg.push_str(&config_json);
         cfg.push_str("\n}\n");
         Some(cfg)
     } else {
@@ -775,13 +731,14 @@ fn add_agent_to_config(
     cfg: &mut SmithConfig,
     name: String,
     image: Option<String>,
+    agent_type: Option<String>,
     model: Option<String>,
     small_model: Option<String>,
     provider: Option<String>,
     base_url: Option<String>,
+    port: Option<u16>,
+    enabled: Option<bool>,
     roles: Vec<String>,
-    local: bool,
-    gpu: bool,
 ) -> Result<(), String> {
     if cfg
         .agents
@@ -793,35 +750,24 @@ fn add_agent_to_config(
     let image = image
         .filter(|s| !s.is_empty())
         .unwrap_or_else(|| DEFAULT_AGENT_IMAGE.to_string());
+    let agent_type = agent_type.filter(|s| !s.is_empty());
     let model = model.filter(|s| !s.is_empty());
     let small_model = small_model.filter(|s| !s.is_empty());
     let provider = provider.filter(|s| !s.is_empty());
     let base_url = base_url.filter(|s| !s.is_empty());
-    let provider_config = if provider.is_some() || base_url.is_some() {
-        Some(AgentProviderConfig { provider, base_url })
-    } else {
-        None
-    };
-    let local_config = if local {
-        Some(AgentLocalConfig {
-            enabled: Some(true),
-            model: model.clone(),
-            gpu: Some(gpu),
-            port: Some(11434),
-        })
-    } else {
-        None
-    };
     let agents = cfg.agents.get_or_insert_with(Vec::new);
-    let port = docker::OPENCODE_SERVER_PORT + agents.len() as u16;
+    let port = port.or_else(|| Some(docker::OPENCODE_SERVER_PORT + agents.len() as u16));
+    let enabled = enabled.or(Some(true));
     agents.push(AgentEntry {
         name: name.clone(),
         image,
+        agent_type,
         model,
         small_model,
-        provider: provider_config,
-        properties: Some(AgentProperties { port: Some(port) }),
-        local: local_config,
+        provider,
+        base_url,
+        port,
+        enabled,
         roles,
     });
     if cfg.current_agent.is_none() {
@@ -1484,7 +1430,7 @@ async fn main() {
                         Some(small_model_in)
                     };
                     let provider_in = prompt_line(
-                        "  Provider (e.g. anthropic, openai, openrouter, Enter to skip): ",
+                        "  Provider (e.g. ollama, anthropic, openai, Enter for cloud default): ",
                     );
                     let provider = if provider_in.is_empty() {
                         None
@@ -1498,6 +1444,20 @@ async fn main() {
                     } else {
                         Some(base_url_in)
                     };
+                    let type_in = prompt_line("  Type (local or cloud, Enter for cloud): ");
+                    let agent_type = if type_in.is_empty() {
+                        None
+                    } else {
+                        Some(type_in)
+                    };
+                    let port_in =
+                        prompt_line("  Port for opencode serve (Enter for default 4096): ");
+                    let port = if port_in.is_empty() {
+                        None
+                    } else {
+                        port_in.parse().ok()
+                    };
+                    let enabled = Some(true);
                     let roles_in = prompt_line(
                         "  Roles (comma-separated, e.g. builder,analyst, Enter for none): ",
                     );
@@ -1506,23 +1466,18 @@ async fn main() {
                     } else {
                         roles_in.split(',').map(|s| s.trim().to_string()).collect()
                     };
-                    let local = prompt_yn("  Use local Ollama container instead of cloud?", false);
-                    let gpu = if local {
-                        prompt_yn("  Enable GPU passthrough for Ollama?", true)
-                    } else {
-                        false
-                    };
                     match add_agent_to_config(
                         &mut cfg,
                         name.clone(),
                         image,
+                        agent_type,
                         model,
                         small_model,
                         provider,
                         base_url,
+                        port,
+                        enabled,
                         roles,
-                        local,
-                        gpu,
                     ) {
                         Ok(()) => println!("  {} Added agent '{}'", BULLET_GREEN, name),
                         Err(e) => eprintln!("  {} {}", BULLET_RED, e),
@@ -1644,13 +1599,14 @@ async fn main() {
             AgentCommands::Add {
                 name,
                 image,
+                agent_type,
                 model,
                 small_model,
                 provider,
                 base_url,
+                port,
+                enabled,
                 roles,
-                local,
-                gpu,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -1660,13 +1616,14 @@ async fn main() {
                     &mut cfg,
                     name.clone(),
                     image,
+                    agent_type,
                     model,
                     small_model,
                     provider,
                     base_url,
+                    port,
+                    enabled,
                     roles.unwrap_or_default(),
-                    local,
-                    gpu,
                 ) {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -1692,8 +1649,10 @@ async fn main() {
                     String,
                     Option<String>,
                     Option<String>,
-                    Option<AgentProviderConfig>,
-                    Option<AgentLocalConfig>,
+                    Option<String>,
+                    Option<String>,
+                    Option<String>,
+                    Option<bool>,
                     Vec<String>,
                     u16,
                 )> = if list.is_empty() {
@@ -1704,6 +1663,8 @@ async fn main() {
                         None,
                         None,
                         None,
+                        None,
+                        Some(true),
                         vec![],
                         base,
                     )]
@@ -1714,17 +1675,31 @@ async fn main() {
                             (
                                 e.name.clone(),
                                 e.image.clone(),
+                                e.agent_type.clone(),
                                 e.model.clone(),
                                 e.small_model.clone(),
                                 e.provider.clone(),
-                                e.local.clone(),
+                                e.base_url.clone(),
+                                e.enabled,
                                 e.roles.clone(),
                                 agent_port(e, i),
                             )
                         })
                         .collect()
                 };
-                for (name, image, model, small_model, provider, local, roles, port) in &agents {
+                for (
+                    name,
+                    image,
+                    agent_type,
+                    model,
+                    small_model,
+                    provider,
+                    _base_url,
+                    enabled,
+                    roles,
+                    port,
+                ) in &agents
+                {
                     let active = running.contains(name);
                     let reachable = if active {
                         Some(docker::check_agent_reachable(*port))
@@ -1749,7 +1724,14 @@ async fn main() {
                             println!("      Port:     {} {}", port, clickable_agent_url(*port));
                         }
                     } else {
-                        println!("      Active:   inactive");
+                        println!(
+                            "      Active:   {}",
+                            if enabled.unwrap_or(true) {
+                                "inactive"
+                            } else {
+                                "disabled"
+                            }
+                        );
                     }
                     let built_tag = docker::agent_built_image_tag(name);
                     let image_line = if built {
@@ -1760,22 +1742,11 @@ async fn main() {
                     println!("      Image:    {}", image_line);
                     let model_str = model.as_deref().unwrap_or("default");
                     let small_model_str = small_model.as_deref().unwrap_or("-");
-                    let is_local = local.as_ref().is_some_and(|l| l.enabled == Some(true));
-                    let (provider_str, mode_str) = if is_local {
-                        let local_model = local
-                            .as_ref()
-                            .and_then(|l| l.model.clone())
-                            .unwrap_or_else(|| model_str.to_string());
-                        (local_model, "local".to_string())
-                    } else {
-                        let p = provider
-                            .as_ref()
-                            .map(|p| p.provider.as_deref().unwrap_or("-"))
-                            .unwrap_or("-");
-                        (p.to_string(), "cloud".to_string())
-                    };
+                    let is_local = agent_type.as_deref() == Some("local");
+                    let provider_str = provider.as_deref().unwrap_or("-");
+                    let mode_str = if is_local { "local" } else { "cloud" };
                     println!(
-                        "      Model:    {}  Small: {}  Provider: {}  Mode: {}",
+                        "      Model:    {}  Small: {}  Provider: {}  Type: {}",
                         model_str, small_model_str, provider_str, mode_str
                     );
                     let roles_str = if roles.is_empty() {
@@ -1794,13 +1765,14 @@ async fn main() {
             AgentCommands::Update {
                 name,
                 image,
+                agent_type,
                 model,
                 small_model,
                 provider,
                 base_url,
+                port,
+                enabled,
                 roles,
-                local,
-                gpu,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -1816,6 +1788,9 @@ async fn main() {
                                 s.clone()
                             };
                         }
+                        if let Some(ref s) = agent_type {
+                            entry.agent_type = if s.is_empty() { None } else { Some(s.clone()) };
+                        }
                         if let Some(ref s) = model {
                             entry.model = if s.is_empty() { None } else { Some(s.clone()) };
                         }
@@ -1823,41 +1798,19 @@ async fn main() {
                             entry.small_model = if s.is_empty() { None } else { Some(s.clone()) };
                         }
                         if let Some(ref s) = provider {
-                            let provider_name = if s.is_empty() { None } else { Some(s.clone()) };
-                            if let Some(ref mut p) = entry.provider {
-                                p.provider = provider_name;
-                            } else if provider_name.is_some() {
-                                entry.provider = Some(AgentProviderConfig {
-                                    provider: provider_name,
-                                    base_url: None,
-                                });
-                            }
+                            entry.provider = if s.is_empty() { None } else { Some(s.clone()) };
                         }
                         if let Some(ref s) = base_url {
-                            let url = if s.is_empty() { None } else { Some(s.clone()) };
-                            if let Some(ref mut p) = entry.provider {
-                                p.base_url = url;
-                            } else if url.is_some() {
-                                entry.provider = Some(AgentProviderConfig {
-                                    provider: None,
-                                    base_url: url,
-                                });
-                            }
+                            entry.base_url = if s.is_empty() { None } else { Some(s.clone()) };
+                        }
+                        if let Some(p) = port {
+                            entry.port = Some(p);
+                        }
+                        if let Some(e) = enabled {
+                            entry.enabled = Some(e);
                         }
                         if let Some(ref r) = roles {
                             entry.roles = if r.is_empty() { vec![] } else { r.clone() };
-                        }
-                        if let Some(local_enabled) = local {
-                            if local_enabled {
-                                entry.local = Some(AgentLocalConfig {
-                                    enabled: Some(true),
-                                    model: entry.model.clone(),
-                                    gpu,
-                                    port: Some(11434),
-                                });
-                            } else {
-                                entry.local = None;
-                            }
                         }
                         save_config(&cfg).unwrap_or_else(|e| {
                             eprintln!("Error: {}", e);
@@ -1917,7 +1870,7 @@ async fn main() {
                     String,
                     Option<String>,
                     Option<String>,
-                    Option<AgentProviderConfig>,
+                    Option<String>,
                     u16,
                 )> = if all || name.is_none() {
                     match cfg.agents.as_deref() {
@@ -2011,7 +1964,7 @@ async fn main() {
                         *port,
                         model.as_deref(),
                         small_model.as_deref(),
-                        provider.as_ref(),
+                        provider.as_deref(),
                         force,
                     ) {
                         Ok(()) => {
@@ -2051,31 +2004,20 @@ async fn main() {
                 });
                 let agents = cfg.agents.as_deref().unwrap_or(&[]);
 
-                // Check if any agent uses local - get model from agent.model, gpu from local config
+                // Check if any agent uses local - get model from agent.model
                 let local_agent = agents
                     .iter()
-                    .find(|e| e.local.as_ref().is_some_and(|l| l.enabled == Some(true)));
-                let (local_model, local_gpu) = if let Some(agent) = local_agent {
-                    if let Some(local_config) = &agent.local {
-                        let model = agent
-                            .model
-                            .clone()
-                            .unwrap_or_else(|| "qwen3:8b".to_string());
-                        let gpu = local_config.gpu.unwrap_or(false);
-                        (model, gpu)
-                    } else {
-                        (String::new(), false)
-                    }
-                } else {
-                    (String::new(), false)
-                };
+                    .find(|e| e.agent_type.as_deref() == Some("local"));
+                let local_model = local_agent
+                    .and_then(|a| a.model.clone())
+                    .unwrap_or_else(|| "qwen3:8b".to_string());
 
                 // Start Ollama if any agent uses local
                 if !local_model.is_empty() {
                     if docker::is_ollama_running() {
                         println!("  Ollama already running");
                     } else {
-                        match docker::start_ollama_container(&local_model, local_gpu) {
+                        match docker::start_ollama_container(&local_model, true) {
                             Ok(_) => {}
                             Err(e) => {
                                 eprintln!("Error starting Ollama: {}", e);
@@ -2085,18 +2027,20 @@ async fn main() {
                     }
                 }
 
-                // Build agent list (1 agent : 1 container)
-                let all_agents: Vec<_> = if agents.is_empty() {
+                // Build agent list (1 agent : 1 container) - only enabled agents
+                let enabled_agents: Vec<_> = if agents.is_empty() {
                     vec![(
                         DEFAULT_AGENT_NAME.to_string(),
                         DEFAULT_AGENT_IMAGE.to_string(),
                         None,
                         None,
+                        true,
                         docker::OPENCODE_SERVER_PORT,
                     )]
                 } else {
                     agents
                         .iter()
+                        .filter(|e| e.enabled.unwrap_or(true))
                         .enumerate()
                         .map(|(i, e)| {
                             let image =
@@ -2107,18 +2051,26 @@ async fn main() {
                                 } else {
                                     e.image.clone()
                                 };
-                            // Determine provider: local uses Ollama, otherwise cloud provider
-                            let provider =
-                                if e.local.as_ref().is_some_and(|l| l.enabled == Some(true)) {
-                                    Some("ollama".to_string())
-                                } else {
-                                    e.provider.as_ref().and_then(|p| p.provider.clone())
-                                };
+                            let is_local = e.agent_type.as_deref() == Some("local");
+                            let provider = if is_local {
+                                Some("ollama".to_string())
+                            } else {
+                                e.provider.clone()
+                            };
+                            let base_url = if is_local {
+                                Some(format!(
+                                    "http://host.docker.internal:{}",
+                                    docker::OLLAMA_PORT
+                                ))
+                            } else {
+                                e.base_url.clone()
+                            };
                             (
                                 e.name.clone(),
                                 image,
                                 provider,
-                                e.local.clone(),
+                                base_url,
+                                e.enabled.unwrap_or(true),
                                 agent_port(e, i),
                             )
                         })
@@ -2126,15 +2078,15 @@ async fn main() {
                 };
                 let running = docker::list_running_agent_containers().unwrap_or_default();
                 if verbose {
-                    println!("Agents: {}", all_agents.len());
-                    for (name, image, provider, local, port) in &all_agents {
+                    println!("Agents: {}", enabled_agents.len());
+                    for (name, image, provider, base_url, _enabled, port) in &enabled_agents {
                         let status = if running.contains(name) {
                             "already running"
                         } else {
                             "will start"
                         };
                         let provider_str = provider.as_deref().unwrap_or("-");
-                        let mode = if local.is_some() { "local" } else { "cloud" };
+                        let mode = if base_url.is_some() { "local" } else { "cloud" };
                         println!(
                             "  {} -> {} port={} provider={} mode={} {} [{}]",
                             name,
@@ -2152,7 +2104,7 @@ async fn main() {
                 }
                 let mut ok = 0usize;
                 let mut failed = Vec::new();
-                for (name, image, provider, local, port) in &all_agents {
+                for (name, image, provider, base_url, _enabled, port) in &enabled_agents {
                     if running.contains(name) {
                         println!(
                             "  {}: already running (port {} {})",
@@ -2163,21 +2115,9 @@ async fn main() {
                         ok += 1;
                         continue;
                     }
-                    // For local agents, use host.docker.internal as base URL
-                    let resolved_provider = if local.is_some() {
-                        Some("ollama".to_string())
-                    } else {
-                        provider.clone()
-                    };
-                    let base_url = if let Some(ref local_config) = local {
-                        let ollama_port = local_config.port.unwrap_or(docker::OLLAMA_PORT);
-                        Some(format!("http://host.docker.internal:{}", ollama_port))
-                    } else {
-                        None
-                    };
                     if verbose {
                         let container_name = docker::agent_container_name(name);
-                        let env_vars = if let Some(ref p) = resolved_provider {
+                        let env_vars = if let Some(ref p) = provider {
                             let mut vars = format!(" -e {}_API_KEY={}", p.to_uppercase(), "dummy");
                             if let Some(ref url) = base_url {
                                 vars.push_str(&format!(" -e OPENCODE_BASE_URL={}", url));
@@ -2195,7 +2135,7 @@ async fn main() {
                         name,
                         image,
                         *port,
-                        resolved_provider.as_deref(),
+                        provider.as_deref(),
                         base_url.as_deref(),
                     ) {
                         Ok(()) => {
