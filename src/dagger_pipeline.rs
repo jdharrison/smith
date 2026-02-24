@@ -524,6 +524,8 @@ pub async fn run_dev(
     _verbose: bool,
     timeout_secs: u64,
     script: Option<&str>,
+    commit_name: Option<&str>,
+    commit_email: Option<&str>,
 ) -> PipelineResult<String> {
     let clone_branch = base.unwrap_or("main");
     let c = build_setup_container(
@@ -537,11 +539,29 @@ pub async fn run_dev(
     )?;
     let c = run_setup_loop(c, Some(branch)).await?;
 
+    // Configure git user if commit_name/commit_email are provided
+    let git_user_config = match (commit_name, commit_email) {
+        (Some(name), Some(email)) => format!(
+            "git config user.name '{}' && git config user.email '{}' && ",
+            name.replace('\'', "'\"'\"'"),
+            email.replace('\'', "'\"'\"'")
+        ),
+        (Some(name), None) => format!(
+            "git config user.name '{}' && ",
+            name.replace('\'', "'\"'\"'")
+        ),
+        (None, Some(email)) => format!(
+            "git config user.email '{}' && ",
+            email.replace('\'', "'\"'\"'")
+        ),
+        (None, None) => String::new(),
+    };
+
     // Run opencode normally - model/provider is configured in the container image
     let escaped = task.replace('\'', "'\"'\"'");
     let exec_cmd = format!(
-        "cd /workspace && git config user.name 'Agent Smith' && git config user.email 'smith@agentsmith.dev' && timeout {} opencode run '{}' 2>&1",
-        timeout_secs, escaped
+        "cd /workspace && {} timeout {} opencode run '{}' 2>&1",
+        git_user_config, timeout_secs, escaped
     );
     let c = c.with_exec(vec!["sh", "-c", &exec_cmd]);
     let _ = c.stdout().await.map_err(|e| e.to_string())?;
@@ -549,8 +569,25 @@ pub async fn run_dev(
     let c = run_execute_check_loop(c, task).await?;
     let c = run_assurance_loop(c, task).await?;
     // Commit and push (requires SSH for push)
+    let commit_git_user_config = match (commit_name, commit_email) {
+        (Some(name), Some(email)) => format!(
+            "git config user.name '{}' && git config user.email '{}' && ",
+            name.replace('\'', "'\"'\"'"),
+            email.replace('\'', "'\"'\"'")
+        ),
+        (Some(name), None) => format!(
+            "git config user.name '{}' && ",
+            name.replace('\'', "'\"'\"'")
+        ),
+        (None, Some(email)) => format!(
+            "git config user.email '{}' && ",
+            email.replace('\'', "'\"'\"'")
+        ),
+        (None, None) => String::new(),
+    };
     let commit_cmd = format!(
-        "cd /workspace && git add -A && git status --porcelain | head -1 && git commit -m '{}' 2>&1 || echo 'no-commit'",
+        "cd /workspace && {} git add -A && git status --porcelain | head -1 && git commit -m '{}' 2>&1 || echo 'no-commit'",
+        commit_git_user_config,
         task.replace('\'', "'\"'\"'").replace('\n', " ")
     );
     let c = c.with_exec(vec!["sh", "-c", &commit_cmd]);

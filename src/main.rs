@@ -328,6 +328,12 @@ enum ProjectCommands {
         /// Script to run in container before pipeline (optional, e.g., install OpenCode)
         #[arg(long)]
         script: Option<String>,
+        /// Git author name (optional, overrides local git config)
+        #[arg(long)]
+        commit_name: Option<String>,
+        /// Git author email (optional, overrides local git config)
+        #[arg(long)]
+        commit_email: Option<String>,
     },
     /// List all registered projects
     List,
@@ -365,6 +371,12 @@ enum ProjectCommands {
         /// Script to run in container before pipeline (pass empty to clear)
         #[arg(long)]
         script: Option<String>,
+        /// Git author name (pass empty to clear)
+        #[arg(long)]
+        commit_name: Option<String>,
+        /// Git author email (pass empty to clear)
+        #[arg(long)]
+        commit_email: Option<String>,
     },
     /// Remove a project
     Remove {
@@ -565,6 +577,12 @@ struct ProjectConfig {
     /// Example: "curl -fsSL https://opencode.ai/install.sh | sh"
     #[serde(skip_serializing_if = "Option::is_none")]
     script: Option<String>,
+    /// Commit author name (overrides local git config)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    commit_name: Option<String>,
+    /// Commit author email (overrides local git config)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    commit_email: Option<String>,
 }
 
 fn config_dir() -> Result<PathBuf, String> {
@@ -1054,6 +1072,15 @@ fn resolve_remote(project_config: Option<&ProjectConfig>) -> String {
     project_config
         .and_then(|p| p.remote.clone())
         .unwrap_or_else(|| "origin".to_string())
+}
+
+/// Resolve commit name/email from project config (returns None if not set = use local git)
+fn resolve_commit_author(
+    project_config: Option<&ProjectConfig>,
+) -> (Option<String>, Option<String>) {
+    let commit_name = project_config.and_then(|p| p.commit_name.clone());
+    let commit_email = project_config.and_then(|p| p.commit_email.clone());
+    (commit_name, commit_email)
 }
 
 /// Column width for subcommand names so descriptions align (clap-style).
@@ -1561,6 +1588,8 @@ async fn main() {
                         remote,
                         github_token,
                         script,
+                        commit_name: None,
+                        commit_email: None,
                     };
                     match add_project_to_config(&mut cfg, project) {
                         Ok(()) => {
@@ -2263,6 +2292,8 @@ async fn main() {
                 remote,
                 github_token,
                 script,
+                commit_name,
+                commit_email,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -2273,6 +2304,8 @@ async fn main() {
                 let remote = remote.filter(|s| !s.is_empty());
                 let github_token = github_token.filter(|s| !s.is_empty());
                 let script = script.filter(|s| !s.is_empty());
+                let commit_name = commit_name.filter(|s| !s.is_empty());
+                let commit_email = commit_email.filter(|s| !s.is_empty());
                 let project = ProjectConfig {
                     name: name.clone(),
                     repo,
@@ -2282,6 +2315,8 @@ async fn main() {
                     remote,
                     github_token,
                     script,
+                    commit_name,
+                    commit_email,
                 };
                 if let Err(e) = add_project_to_config(&mut cfg, project) {
                     eprintln!("Error: {}", e);
@@ -2447,6 +2482,8 @@ async fn main() {
                 remote,
                 github_token,
                 script,
+                commit_name,
+                commit_email,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -2496,6 +2533,20 @@ async fn main() {
                                 None
                             } else {
                                 Some(new_script)
+                            };
+                        }
+                        if let Some(new_commit_name) = commit_name {
+                            proj.commit_name = if new_commit_name.is_empty() {
+                                None
+                            } else {
+                                Some(new_commit_name)
+                            };
+                        }
+                        if let Some(new_commit_email) = commit_email {
+                            proj.commit_email = if new_commit_email.is_empty() {
+                                None
+                            } else {
+                                Some(new_commit_email)
                             };
                         }
                         save_config(&cfg).unwrap_or_else(|e| {
@@ -2674,6 +2725,7 @@ async fn main() {
                 let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
                 let _resolved_remote = resolve_remote(project_config.as_ref());
                 let project_script = resolve_project_script(project_config.as_ref());
+                let (commit_name, commit_email) = resolve_commit_author(project_config.as_ref());
 
                 if verbose {
                     println!("Dev: {}", task);
@@ -2711,6 +2763,8 @@ async fn main() {
                     let _rem = _resolved_remote.clone();
                     let to = timeout_secs;
                     let scr = script.clone();
+                    let c_name = commit_name.clone();
+                    let c_email = commit_email.clone();
                     async move {
                         dagger_pipeline::run_dev(
                             &conn,
@@ -2723,6 +2777,8 @@ async fn main() {
                             verb_for_closure,
                             to,
                             scr.as_deref(),
+                            c_name.as_deref(),
+                            c_email.as_deref(),
                         )
                         .await
                         .map_err(|e| eyre::eyre!("{}", e))
@@ -2926,6 +2982,8 @@ mod tests {
             remote: None,
             github_token: None,
             script: None,
+            commit_name: None,
+            commit_email: None,
         });
         let serialized = toml::to_string(&cfg).unwrap();
         let deserialized: SmithConfig = toml::from_str(&serialized).unwrap();
