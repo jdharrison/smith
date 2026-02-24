@@ -231,11 +231,7 @@ fi"#,
 
     // Run project script if provided (e.g., install OpenCode) - runs after repo clone so codebase is available
     if let Some(script) = script {
-        c = c.with_exec(vec![
-            "sh",
-            "-c",
-            script,
-        ]);
+        c = c.with_exec(vec!["sh", "-c", script]);
     }
 
     // Install Rust (rustup + default toolchain) when the project has Cargo.toml; need build-base/build-essential for native deps
@@ -471,6 +467,7 @@ async fn run_ask_assurance(c: Container, raw_answer: String) -> String {
 
 /// Run the Ask pipeline: setup → setup loop → opencode run (read-only) → ask assurance (cleanup filter). Returns the agent's answer.
 /// OpenCode runs locally in the container - model/provider is configured in the container image.
+#[allow(clippy::too_many_arguments)]
 pub async fn run_ask(
     conn: &Query,
     repo_url: &str,
@@ -482,8 +479,16 @@ pub async fn run_ask(
     script: Option<&str>,
 ) -> PipelineResult<String> {
     let branch = branch.unwrap_or("main");
-    let c = build_setup_container(conn, repo_url, branch, None, base_image, ssh_key_path, script)
-        .map_err(|e| map_branch_not_found_err(e, branch))?;
+    let c = build_setup_container(
+        conn,
+        repo_url,
+        branch,
+        None,
+        base_image,
+        ssh_key_path,
+        script,
+    )
+    .map_err(|e| map_branch_not_found_err(e, branch))?;
     let c = run_setup_loop(c, None)
         .await
         .map_err(|e| map_branch_not_found_err(e, branch))?;
@@ -590,6 +595,7 @@ pub async fn run_dev(
 /// Run the Review pipeline: setup → setup loop → opencode analysis. Returns the review text.
 /// Clones the base branch first, then checks out the feature branch so git diff can compare them.
 /// OpenCode runs locally in the container - model/provider is configured in the container image.
+#[allow(clippy::too_many_arguments)]
 pub async fn run_review(
     conn: &Query,
     repo_url: &str,
@@ -602,8 +608,16 @@ pub async fn run_review(
 ) -> PipelineResult<String> {
     let base_branch = base.unwrap_or("main");
     // Clone base branch first, then checkout feature branch for comparison
-    let c = build_setup_container(conn, repo_url, base_branch, None, base_image, ssh_key_path, script)
-        .map_err(|e| map_branch_not_found_err(e, base_branch))?;
+    let c = build_setup_container(
+        conn,
+        repo_url,
+        base_branch,
+        None,
+        base_image,
+        ssh_key_path,
+        script,
+    )
+    .map_err(|e| map_branch_not_found_err(e, base_branch))?;
     // Fetch all refs and checkout the feature branch to compare against base
     let branch_escaped = branch.replace('\'', "'\"'\"'");
     let remote_ref = format!("refs/remotes/origin/{}", branch);
@@ -650,7 +664,15 @@ pub async fn run_project_status(
     ssh_key_path: Option<&std::path::Path>,
     script: Option<&str>,
 ) -> PipelineResult<String> {
-    let c = build_setup_container(conn, repo_url, branch, None, base_image, ssh_key_path, script)?;
+    let c = build_setup_container(
+        conn,
+        repo_url,
+        branch,
+        None,
+        base_image,
+        ssh_key_path,
+        script,
+    )?;
     let out: String = c
         .with_exec(vec![
             "sh",

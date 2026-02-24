@@ -253,6 +253,9 @@ enum AgentCommands {
         /// Base URL (pass empty to clear)
         #[arg(long)]
         base_url: Option<String>,
+        /// Roles for this agent (comma-separated, e.g. "builder,analyst")
+        #[arg(long, value_delimiter = ',')]
+        roles: Option<Vec<String>>,
     },
     /// Remove an agent
     Remove {
@@ -341,6 +344,9 @@ enum ProjectCommands {
         /// GitHub token for PR creation (pass empty to clear)
         #[arg(long)]
         github_token: Option<String>,
+        /// Script to run in container before pipeline (pass empty to clear)
+        #[arg(long)]
+        script: Option<String>,
     },
     /// Remove a project
     Remove {
@@ -732,6 +738,7 @@ fn prompt_yn_skip(prompt: &str) -> Option<bool> {
 }
 
 /// Add an agent to config (used by CLI `agent add` and install wizard). Does not save.
+#[allow(clippy::too_many_arguments)]
 fn add_agent_to_config(
     cfg: &mut SmithConfig,
     name: String,
@@ -1446,7 +1453,9 @@ async fn main() {
                     } else {
                         Some(base_url_in)
                     };
-                    let roles_in = prompt_line("  Roles (comma-separated, e.g. builder,analyst, Enter for none): ");
+                    let roles_in = prompt_line(
+                        "  Roles (comma-separated, e.g. builder,analyst, Enter for none): ",
+                    );
                     let roles: Vec<String> = if roles_in.is_empty() {
                         vec![]
                     } else {
@@ -1627,6 +1636,7 @@ async fn main() {
                     Option<String>,
                     Option<String>,
                     Option<AgentProviderConfig>,
+                    Vec<String>,
                     u16,
                 )> = if list.is_empty() {
                     vec![(
@@ -1635,6 +1645,7 @@ async fn main() {
                         None,
                         None,
                         None,
+                        vec![],
                         base,
                     )]
                 } else {
@@ -1647,12 +1658,13 @@ async fn main() {
                                 e.model.clone(),
                                 e.small_model.clone(),
                                 e.provider.clone(),
+                                e.roles.clone(),
                                 agent_port(e, i),
                             )
                         })
                         .collect()
                 };
-                for (name, image, model, small_model, provider, port) in &agents {
+                for (name, image, model, small_model, provider, roles, port) in &agents {
                     let active = running.contains(name);
                     let reachable = if active {
                         Some(docker::check_agent_reachable(*port))
@@ -1696,6 +1708,12 @@ async fn main() {
                         "      Model:    {}  Small: {}  Provider: {}",
                         model_str, small_model_str, provider_str
                     );
+                    let roles_str = if roles.is_empty() {
+                        "-".to_string()
+                    } else {
+                        roles.join(", ")
+                    };
+                    println!("      Roles:    {}", roles_str);
                 }
                 if agents.is_empty() {
                     println!("\n  (no cloud agents configured)");
@@ -1710,6 +1728,7 @@ async fn main() {
                 small_model,
                 provider,
                 base_url,
+                roles,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -1752,6 +1771,9 @@ async fn main() {
                                     base_url: url,
                                 });
                             }
+                        }
+                        if let Some(ref r) = roles {
+                            entry.roles = if r.is_empty() { vec![] } else { r.clone() };
                         }
                         save_config(&cfg).unwrap_or_else(|e| {
                             eprintln!("Error: {}", e);
@@ -2204,6 +2226,14 @@ async fn main() {
                         if proj.github_token.is_some() {
                             parts.push_str(" (github-token: set)");
                         }
+                        if let Some(ref script) = proj.script {
+                            let truncated = if script.len() > 40 {
+                                format!("{}...", &script[..40])
+                            } else {
+                                script.clone()
+                            };
+                            parts.push_str(&format!(" (script: {})", truncated));
+                        }
                         println!("{}", parts);
                     }
                 }
@@ -2324,6 +2354,7 @@ async fn main() {
                 base_branch,
                 remote,
                 github_token,
+                script,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -2366,6 +2397,13 @@ async fn main() {
                                 None
                             } else {
                                 Some(new_gt)
+                            };
+                        }
+                        if let Some(new_script) = script {
+                            proj.script = if new_script.is_empty() {
+                                None
+                            } else {
+                                Some(new_script)
                             };
                         }
                         save_config(&cfg).unwrap_or_else(|e| {
@@ -2795,6 +2833,7 @@ mod tests {
             base_branch: None,
             remote: None,
             github_token: None,
+            script: None,
         });
         let serialized = toml::to_string(&cfg).unwrap();
         let deserialized: SmithConfig = toml::from_str(&serialized).unwrap();
