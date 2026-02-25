@@ -6,6 +6,7 @@ use clap::{CommandFactory, Parser, Subcommand};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Write};
 use std::os::fd::AsRawFd;
@@ -222,9 +223,6 @@ enum AgentCommands {
         /// Whether this agent is enabled (default: true)
         #[arg(long)]
         enabled: Option<bool>,
-        /// Roles for this agent (comma-separated, e.g. "builder,analyst")
-        #[arg(long, value_delimiter = ',')]
-        roles: Option<Vec<String>>,
     },
     /// Show status of all configured agents (systemctl-style, compact table per agent)
     Status,
@@ -271,9 +269,6 @@ enum AgentCommands {
         /// Whether this agent is enabled (pass empty to clear)
         #[arg(long)]
         enabled: Option<bool>,
-        /// Roles for this agent (comma-separated, e.g. "builder,analyst")
-        #[arg(long, value_delimiter = ',')]
-        roles: Option<Vec<String>>,
     },
     /// Remove an agent
     Remove {
@@ -377,6 +372,39 @@ enum ProjectCommands {
         /// Git author email (pass empty to clear)
         #[arg(long)]
         commit_email: Option<String>,
+        /// Agent name to use for this project (pass empty to clear)
+        #[arg(long)]
+        agent: Option<String>,
+        /// Ask pipeline: setup_run and setup_check roles (e.g., "installer" or "installer analyst")
+        #[arg(long, value_delimiter = ' ', num_args = 1..=2)]
+        ask_setup: Option<Vec<String>>,
+        /// Ask pipeline: execute_run and execute_check roles (e.g., "engineer" or "engineer analyst")
+        #[arg(long, value_delimiter = ' ', num_args = 1..=2)]
+        ask_execute: Option<Vec<String>>,
+        /// Ask pipeline: validate_run and validate_check roles (e.g., "validator" or "validator reviewer")
+        #[arg(long, value_delimiter = ' ', num_args = 1..=2)]
+        ask_validate: Option<Vec<String>>,
+        /// Dev pipeline: setup_run and setup_check roles
+        #[arg(long, value_delimiter = ' ', num_args = 1..=2)]
+        dev_setup: Option<Vec<String>>,
+        /// Dev pipeline: execute_run and execute_check roles
+        #[arg(long, value_delimiter = ' ', num_args = 1..=2)]
+        dev_execute: Option<Vec<String>>,
+        /// Dev pipeline: validate_run and validate_check roles
+        #[arg(long, value_delimiter = ' ', num_args = 1..=2)]
+        dev_validate: Option<Vec<String>>,
+        /// Dev pipeline: commit_run and commit_check roles
+        #[arg(long, value_delimiter = ' ', num_args = 1..=2)]
+        dev_commit: Option<Vec<String>>,
+        /// Review pipeline: setup_run and setup_check roles
+        #[arg(long, value_delimiter = ' ', num_args = 1..=2)]
+        review_setup: Option<Vec<String>>,
+        /// Review pipeline: execute_run and execute_check roles
+        #[arg(long, value_delimiter = ' ', num_args = 1..=2)]
+        review_execute: Option<Vec<String>>,
+        /// Review pipeline: validate_run and validate_check roles
+        #[arg(long, value_delimiter = ' ', num_args = 1..=2)]
+        review_validate: Option<Vec<String>>,
     },
     /// Remove a project
     Remove {
@@ -512,6 +540,19 @@ struct AgentConfig {
     image: Option<String>,
 }
 
+#[derive(Serialize, Deserialize, Clone, Default)]
+struct AgentRole {
+    /// Mode for this role (e.g., "build", "plan", "ask", "review", "edit")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mode: Option<String>,
+    /// Model override for this role (optional)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    model: Option<String>,
+    /// Prompt prefix for this role
+    #[serde(skip_serializing_if = "Option::is_none")]
+    prompt: Option<String>,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 struct AgentEntry {
     /// Unique id/name for the agent
@@ -539,9 +580,12 @@ struct AgentEntry {
     /// Whether this agent is enabled (default: true)
     #[serde(skip_serializing_if = "Option::is_none")]
     enabled: Option<bool>,
-    /// Roles this agent can fulfill (e.g. ["builder", "analyst"]). If empty, agent can do all.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    roles: Vec<String>,
+    /// Default role name for this agent
+    #[serde(skip_serializing_if = "Option::is_none")]
+    default_role: Option<String>,
+    /// Roles defined for this agent (keyed by role name)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    roles: Option<HashMap<String, AgentRole>>,
 }
 
 /// Resolve port for an agent: port if set, else OPENCODE_SERVER_PORT + index.
@@ -583,6 +627,69 @@ struct ProjectConfig {
     /// Commit author email (overrides local git config)
     #[serde(skip_serializing_if = "Option::is_none")]
     commit_email: Option<String>,
+    /// Agent name to use for this project (overrides current_agent)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    agent: Option<String>,
+    /// Pipeline step: ask.setup.run
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ask_setup_run: Option<String>,
+    /// Pipeline step: ask.setup.check
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ask_setup_check: Option<String>,
+    /// Pipeline step: ask.execute.run
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ask_execute_run: Option<String>,
+    /// Pipeline step: ask.execute.check
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ask_execute_check: Option<String>,
+    /// Pipeline step: ask.validate.run
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ask_validate_run: Option<String>,
+    /// Pipeline step: ask.validate.check
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ask_validate_check: Option<String>,
+    /// Pipeline step: dev.setup.run
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dev_setup_run: Option<String>,
+    /// Pipeline step: dev.setup.check
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dev_setup_check: Option<String>,
+    /// Pipeline step: dev.execute.run
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dev_execute_run: Option<String>,
+    /// Pipeline step: dev.execute.check
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dev_execute_check: Option<String>,
+    /// Pipeline step: dev.validate.run
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dev_validate_run: Option<String>,
+    /// Pipeline step: dev.validate.check
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dev_validate_check: Option<String>,
+    /// Pipeline step: dev.commit.run
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dev_commit_run: Option<String>,
+    /// Pipeline step: dev.commit.check
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dev_commit_check: Option<String>,
+    /// Pipeline step: review.setup.run
+    #[serde(skip_serializing_if = "Option::is_none")]
+    review_setup_run: Option<String>,
+    /// Pipeline step: review.setup.check
+    #[serde(skip_serializing_if = "Option::is_none")]
+    review_setup_check: Option<String>,
+    /// Pipeline step: review.execute.run
+    #[serde(skip_serializing_if = "Option::is_none")]
+    review_execute_run: Option<String>,
+    /// Pipeline step: review.execute.check
+    #[serde(skip_serializing_if = "Option::is_none")]
+    review_execute_check: Option<String>,
+    /// Pipeline step: review.validate.run
+    #[serde(skip_serializing_if = "Option::is_none")]
+    review_validate_run: Option<String>,
+    /// Pipeline step: review.validate.check
+    #[serde(skip_serializing_if = "Option::is_none")]
+    review_validate_check: Option<String>,
 }
 
 fn config_dir() -> Result<PathBuf, String> {
@@ -756,7 +863,8 @@ fn add_agent_to_config(
     base_url: Option<String>,
     port: Option<u16>,
     enabled: Option<bool>,
-    roles: Vec<String>,
+    default_role: Option<String>,
+    roles: Option<HashMap<String, AgentRole>>,
 ) -> Result<(), String> {
     if cfg
         .agents
@@ -774,10 +882,35 @@ fn add_agent_to_config(
     let provider = provider.filter(|s| !s.is_empty());
     let base_url = base_url.filter(|s| !s.is_empty());
     let agents = cfg.agents.get_or_insert_with(Vec::new);
+
+    // First agent becomes "default" if no name specified
+    let agent_name = if name.is_empty() && agents.is_empty() {
+        "default".to_string()
+    } else {
+        name
+    };
+
+    // If no roles provided, create default "*" role
+    let roles = if roles.is_none() {
+        let mut default_roles = HashMap::new();
+        default_roles.insert(
+            "*".to_string(),
+            AgentRole {
+                mode: None,
+                model: model.clone(),
+                prompt: None,
+            },
+        );
+        Some(default_roles)
+    } else {
+        roles
+    };
+
+    let default_role = default_role.or_else(|| Some("*".to_string()));
     let port = port.or_else(|| Some(docker::OPENCODE_SERVER_PORT + agents.len() as u16));
     let enabled = enabled.or(Some(true));
     agents.push(AgentEntry {
-        name: name.clone(),
+        name: agent_name.clone(),
         image,
         agent_type,
         model,
@@ -786,10 +919,11 @@ fn add_agent_to_config(
         base_url,
         port,
         enabled,
+        default_role,
         roles,
     });
     if cfg.current_agent.is_none() {
-        cfg.current_agent = Some(name);
+        cfg.current_agent = Some(agent_name);
     }
     Ok(())
 }
@@ -1081,6 +1215,130 @@ fn resolve_commit_author(
     let commit_name = project_config.and_then(|p| p.commit_name.clone());
     let commit_email = project_config.and_then(|p| p.commit_email.clone());
     (commit_name, commit_email)
+}
+
+/// Resolve pipeline step role: returns (agent_name, role_name, mode, model, prompt)
+/// Looks up step in project config, parses "agent:role", resolves role from agent config
+fn resolve_pipeline_role(
+    project_config: Option<&ProjectConfig>,
+    step: &str,
+    current_agent: Option<&str>,
+) -> Option<(
+    String,
+    String,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+)> {
+    let cfg = match load_config() {
+        Ok(c) => c,
+        Err(_) => return None,
+    };
+
+    // Get agent name from project or current_agent
+    let agent_name = project_config
+        .and_then(|p| p.agent.clone())
+        .or_else(|| current_agent.map(String::from))?;
+
+    // Get step mapping from project config
+    let step_mapping = match step {
+        "ask_setup_run" => project_config?.ask_setup_run.clone(),
+        "ask_setup_check" => project_config?.ask_setup_check.clone(),
+        "ask_execute_run" => project_config?.ask_execute_run.clone(),
+        "ask_execute_check" => project_config?.ask_execute_check.clone(),
+        "ask_validate_run" => project_config?.ask_validate_run.clone(),
+        "ask_validate_check" => project_config?.ask_validate_check.clone(),
+        "dev_setup_run" => project_config?.dev_setup_run.clone(),
+        "dev_setup_check" => project_config?.dev_setup_check.clone(),
+        "dev_execute_run" => project_config?.dev_execute_run.clone(),
+        "dev_execute_check" => project_config?.dev_execute_check.clone(),
+        "dev_validate_run" => project_config?.dev_validate_run.clone(),
+        "dev_validate_check" => project_config?.dev_validate_check.clone(),
+        "dev_commit_run" => project_config?.dev_commit_run.clone(),
+        "dev_commit_check" => project_config?.dev_commit_check.clone(),
+        "review_setup_run" => project_config?.review_setup_run.clone(),
+        "review_setup_check" => project_config?.review_setup_check.clone(),
+        "review_execute_run" => project_config?.review_execute_run.clone(),
+        "review_execute_check" => project_config?.review_execute_check.clone(),
+        "review_validate_run" => project_config?.review_validate_run.clone(),
+        "review_validate_check" => project_config?.review_validate_check.clone(),
+        _ => None,
+    };
+
+    // Parse "agent:role" or just "role" (use project agent)
+    let (resolved_agent, role_name) = if let Some(ref mapping) = step_mapping {
+        if mapping.contains(':') {
+            let parts: Vec<&str> = mapping.split(':').collect();
+            (parts[0].to_string(), parts[1].to_string())
+        } else {
+            (agent_name.clone(), mapping.clone())
+        }
+    } else {
+        // Fall back to agent's default_role
+        let agents = cfg.agents.as_ref()?;
+        let agent = agents.iter().find(|a| a.name == agent_name)?;
+        let default_role = agent.default_role.as_ref()?.clone();
+        (agent_name, default_role)
+    };
+
+    // Get role config from agent, with * fallback
+    let agents = cfg.agents.as_ref()?;
+    let agent = agents.iter().find(|a| a.name == resolved_agent)?;
+    let roles = agent.roles.as_ref()?;
+
+    // Try the specified role first, then fall back to "*"
+    let role = roles.get(&role_name).or_else(|| roles.get("*"))?;
+
+    Some((
+        resolved_agent,
+        role_name,
+        role.mode.clone(),
+        role.model.clone(),
+        role.prompt.clone(),
+    ))
+}
+
+fn resolve_pipeline_roles(
+    project_config: Option<&ProjectConfig>,
+    pipeline_type: &str,
+) -> dagger_pipeline::PipelineRoles {
+    use dagger_pipeline::{PipelineRoles as PR, RoleInfo as RI};
+    let mut roles = PR::default();
+
+    let steps = [
+        ("setup_run", format!("{}_setup_run", pipeline_type)),
+        ("setup_check", format!("{}_setup_check", pipeline_type)),
+        ("execute_run", format!("{}_execute_run", pipeline_type)),
+        ("execute_check", format!("{}_execute_check", pipeline_type)),
+        ("validate_run", format!("{}_validate_run", pipeline_type)),
+        (
+            "validate_check",
+            format!("{}_validate_check", pipeline_type),
+        ),
+        ("commit_run", format!("{}_commit_run", pipeline_type)),
+        ("commit_check", format!("{}_commit_check", pipeline_type)),
+    ];
+
+    for (step_key, step_name) in steps {
+        if let Some((agent, role, _, model, prompt)) =
+            resolve_pipeline_role(project_config, &step_name, None)
+        {
+            let role_info = RI::new(agent, role, model, prompt);
+            match step_key {
+                "setup_run" => roles.setup_run = Some(role_info),
+                "setup_check" => roles.setup_check = Some(role_info),
+                "execute_run" => roles.execute_run = Some(role_info),
+                "execute_check" => roles.execute_check = Some(role_info),
+                "validate_run" => roles.validate_run = Some(role_info),
+                "validate_check" => roles.validate_check = Some(role_info),
+                "commit_run" => roles.commit_run = Some(role_info),
+                "commit_check" => roles.commit_check = Some(role_info),
+                _ => {}
+            }
+        }
+    }
+
+    roles
 }
 
 /// Column width for subcommand names so descriptions align (clap-style).
@@ -1485,14 +1743,6 @@ async fn main() {
                         port_in.parse().ok()
                     };
                     let enabled = Some(true);
-                    let roles_in = prompt_line(
-                        "  Roles (comma-separated, e.g. builder,analyst, Enter for none): ",
-                    );
-                    let roles: Vec<String> = if roles_in.is_empty() {
-                        vec![]
-                    } else {
-                        roles_in.split(',').map(|s| s.trim().to_string()).collect()
-                    };
                     match add_agent_to_config(
                         &mut cfg,
                         name.clone(),
@@ -1504,7 +1754,8 @@ async fn main() {
                         base_url,
                         port,
                         enabled,
-                        roles,
+                        None,
+                        None,
                     ) {
                         Ok(()) => println!("  {} Added agent '{}'", BULLET_GREEN, name),
                         Err(e) => eprintln!("  {} {}", BULLET_RED, e),
@@ -1590,6 +1841,27 @@ async fn main() {
                         script,
                         commit_name: None,
                         commit_email: None,
+                        agent: None,
+                        ask_setup_run: None,
+                        ask_setup_check: None,
+                        ask_execute_run: None,
+                        ask_execute_check: None,
+                        ask_validate_run: None,
+                        ask_validate_check: None,
+                        dev_setup_run: None,
+                        dev_setup_check: None,
+                        dev_execute_run: None,
+                        dev_execute_check: None,
+                        dev_validate_run: None,
+                        dev_validate_check: None,
+                        dev_commit_run: None,
+                        dev_commit_check: None,
+                        review_setup_run: None,
+                        review_setup_check: None,
+                        review_execute_run: None,
+                        review_execute_check: None,
+                        review_validate_run: None,
+                        review_validate_check: None,
                     };
                     match add_project_to_config(&mut cfg, project) {
                         Ok(()) => {
@@ -1635,7 +1907,6 @@ async fn main() {
                 base_url,
                 port,
                 enabled,
-                roles,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -1652,7 +1923,8 @@ async fn main() {
                     base_url,
                     port,
                     enabled,
-                    roles.unwrap_or_default(),
+                    None,
+                    None,
                 ) {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -1682,7 +1954,7 @@ async fn main() {
                     Option<String>,
                     Option<String>,
                     Option<bool>,
-                    Vec<String>,
+                    Option<HashMap<String, AgentRole>>,
                     u16,
                 )> = if list.is_empty() {
                     vec![(
@@ -1694,7 +1966,7 @@ async fn main() {
                         None,
                         None,
                         Some(true),
-                        vec![],
+                        None,
                         base,
                     )]
                 } else {
@@ -1778,10 +2050,11 @@ async fn main() {
                         "      Model:    {}  Small: {}  Provider: {}  Type: {}",
                         model_str, small_model_str, provider_str, mode_str
                     );
-                    let roles_str = if roles.is_empty() {
-                        "-".to_string()
-                    } else {
-                        roles.join(", ")
+                    let roles_str = match roles.as_ref() {
+                        Some(r) if !r.is_empty() => {
+                            r.keys().cloned().collect::<Vec<_>>().join(", ")
+                        }
+                        _ => "-".to_string(),
                     };
                     println!("      Roles:    {}", roles_str);
                 }
@@ -1801,7 +2074,6 @@ async fn main() {
                 base_url,
                 port,
                 enabled,
-                roles,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -1837,9 +2109,6 @@ async fn main() {
                         }
                         if let Some(e) = enabled {
                             entry.enabled = Some(e);
-                        }
-                        if let Some(ref r) = roles {
-                            entry.roles = if r.is_empty() { vec![] } else { r.clone() };
                         }
                         save_config(&cfg).unwrap_or_else(|e| {
                             eprintln!("Error: {}", e);
@@ -2317,6 +2586,27 @@ async fn main() {
                     script,
                     commit_name,
                     commit_email,
+                    agent: None,
+                    ask_setup_run: None,
+                    ask_setup_check: None,
+                    ask_execute_run: None,
+                    ask_execute_check: None,
+                    ask_validate_run: None,
+                    ask_validate_check: None,
+                    dev_setup_run: None,
+                    dev_setup_check: None,
+                    dev_execute_run: None,
+                    dev_execute_check: None,
+                    dev_validate_run: None,
+                    dev_validate_check: None,
+                    dev_commit_run: None,
+                    dev_commit_check: None,
+                    review_setup_run: None,
+                    review_setup_check: None,
+                    review_execute_run: None,
+                    review_execute_check: None,
+                    review_validate_run: None,
+                    review_validate_check: None,
                 };
                 if let Err(e) = add_project_to_config(&mut cfg, project) {
                     eprintln!("Error: {}", e);
@@ -2484,6 +2774,17 @@ async fn main() {
                 script,
                 commit_name,
                 commit_email,
+                agent,
+                ask_setup,
+                ask_execute,
+                ask_validate,
+                dev_setup,
+                dev_execute,
+                dev_validate,
+                dev_commit,
+                review_setup,
+                review_execute,
+                review_validate,
             } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
@@ -2548,6 +2849,63 @@ async fn main() {
                             } else {
                                 Some(new_commit_email)
                             };
+                        }
+                        if let Some(new_agent) = agent {
+                            proj.agent = if new_agent.is_empty() {
+                                None
+                            } else {
+                                Some(new_agent)
+                            };
+                        }
+                        // Parse role pairs: first is run, second is check (if provided)
+                        if let Some(roles) = ask_setup {
+                            proj.ask_setup_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.ask_setup_check = roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(roles) = ask_execute {
+                            proj.ask_execute_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.ask_execute_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(roles) = ask_validate {
+                            proj.ask_validate_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.ask_validate_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(roles) = dev_setup {
+                            proj.dev_setup_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.dev_setup_check = roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(roles) = dev_execute {
+                            proj.dev_execute_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.dev_execute_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(roles) = dev_validate {
+                            proj.dev_validate_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.dev_validate_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(roles) = dev_commit {
+                            proj.dev_commit_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.dev_commit_check = roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(roles) = review_setup {
+                            proj.review_setup_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.review_setup_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(roles) = review_execute {
+                            proj.review_execute_run =
+                                roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.review_execute_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(roles) = review_validate {
+                            proj.review_validate_run =
+                                roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.review_validate_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
                         }
                         save_config(&cfg).unwrap_or_else(|e| {
                             eprintln!("Error: {}", e);
@@ -2627,6 +2985,7 @@ async fn main() {
                 let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
                 let _resolved_remote = resolve_remote(project_config.as_ref());
                 let project_script = resolve_project_script(project_config.as_ref());
+                let pipeline_roles = resolve_pipeline_roles(project_config.as_ref(), "ask");
 
                 if verbose {
                     println!("Ask: {}", question);
@@ -2650,6 +3009,7 @@ async fn main() {
                 };
 
                 let timeout_secs = timeout.unwrap_or(300);
+                let roles = pipeline_roles.clone();
                 let result = dagger_pipeline::with_connection(move |conn| {
                     let repo = resolved_repo.clone();
                     let q = question.clone();
@@ -2658,6 +3018,7 @@ async fn main() {
                     let br = branch.clone();
                     let to = timeout_secs;
                     let scr = script.clone();
+                    let r = roles.clone();
                     async move {
                         dagger_pipeline::run_ask(
                             &conn,
@@ -2668,6 +3029,7 @@ async fn main() {
                             ssh.as_deref(),
                             to,
                             scr.as_deref(),
+                            &r,
                         )
                         .await
                         .map_err(|e| eyre::eyre!("{}", e))
@@ -2726,6 +3088,7 @@ async fn main() {
                 let _resolved_remote = resolve_remote(project_config.as_ref());
                 let project_script = resolve_project_script(project_config.as_ref());
                 let (commit_name, commit_email) = resolve_commit_author(project_config.as_ref());
+                let pipeline_roles = resolve_pipeline_roles(project_config.as_ref(), "dev");
 
                 if verbose {
                     println!("Dev: {}", task);
@@ -2753,6 +3116,7 @@ async fn main() {
 
                 let verb_for_closure = verbose;
                 let timeout_secs = timeout.unwrap_or(300);
+                let roles = pipeline_roles.clone();
                 let dev_result = dagger_pipeline::with_connection(move |conn| {
                     let repo = resolved_repo.clone();
                     let t = task.clone();
@@ -2765,6 +3129,7 @@ async fn main() {
                     let scr = script.clone();
                     let c_name = commit_name.clone();
                     let c_email = commit_email.clone();
+                    let r = roles.clone();
                     async move {
                         dagger_pipeline::run_dev(
                             &conn,
@@ -2779,6 +3144,7 @@ async fn main() {
                             scr.as_deref(),
                             c_name.as_deref(),
                             c_email.as_deref(),
+                            &r,
                         )
                         .await
                         .map_err(|e| eyre::eyre!("{}", e))
@@ -2884,6 +3250,7 @@ async fn main() {
                 let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
                 let _resolved_remote = resolve_remote(project_config.as_ref());
                 let project_script = resolve_project_script(project_config.as_ref());
+                let pipeline_roles = resolve_pipeline_roles(project_config.as_ref(), "review");
 
                 if verbose {
                     println!("Review: {}", branch);
@@ -2906,6 +3273,7 @@ async fn main() {
                 };
 
                 let timeout_secs = timeout.unwrap_or(300);
+                let roles = pipeline_roles.clone();
                 let result = dagger_pipeline::with_connection(move |conn| {
                     let repo = resolved_repo.clone();
                     let br = branch.clone();
@@ -2915,6 +3283,7 @@ async fn main() {
                     let ssh = ssh_key_path.clone();
                     let to = timeout_secs;
                     let scr = script.clone();
+                    let r = roles.clone();
                     async move {
                         dagger_pipeline::run_review(
                             &conn,
@@ -2925,6 +3294,7 @@ async fn main() {
                             ssh.as_deref(),
                             to,
                             scr.as_deref(),
+                            &r,
                         )
                         .await
                         .map_err(|e| eyre::eyre!("{}", e))

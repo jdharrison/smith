@@ -6,6 +6,67 @@ use dagger_sdk::{Container, Query};
 use std::sync::Arc;
 use std::sync::Mutex;
 
+#[derive(Clone, Default)]
+pub struct PipelineRoles {
+    pub setup_run: Option<RoleInfo>,
+    pub setup_check: Option<RoleInfo>,
+    pub execute_run: Option<RoleInfo>,
+    pub execute_check: Option<RoleInfo>,
+    pub validate_run: Option<RoleInfo>,
+    pub validate_check: Option<RoleInfo>,
+    pub commit_run: Option<RoleInfo>,
+    pub commit_check: Option<RoleInfo>,
+}
+
+#[derive(Clone)]
+pub struct RoleInfo {
+    pub agent: String,
+    pub role: String,
+    pub model: Option<String>,
+    pub prompt: Option<String>,
+}
+
+impl RoleInfo {
+    pub fn new(agent: String, role: String, model: Option<String>, prompt: Option<String>) -> Self {
+        Self {
+            agent,
+            role,
+            model,
+            prompt,
+        }
+    }
+
+    pub fn model_arg(&self) -> String {
+        self.model
+            .as_ref()
+            .map(|m| format!(" -m '{}'", m.replace('\'', "'\"'\"'")))
+            .unwrap_or_default()
+    }
+
+    pub fn prompt_arg(&self) -> String {
+        self.prompt
+            .as_ref()
+            .map(|p| format!(" --prompt '{}'", p.replace('\'', "'\"'\"'")))
+            .unwrap_or_default()
+    }
+}
+
+impl PipelineRoles {
+    pub fn get_for_step(&self, step: &str) -> Option<&RoleInfo> {
+        match step {
+            "setup_run" => self.setup_run.as_ref(),
+            "setup_check" => self.setup_check.as_ref(),
+            "execute_run" => self.execute_run.as_ref(),
+            "execute_check" => self.execute_check.as_ref(),
+            "validate_run" => self.validate_run.as_ref(),
+            "validate_check" => self.validate_check.as_ref(),
+            "commit_run" => self.commit_run.as_ref(),
+            "commit_check" => self.commit_check.as_ref(),
+            _ => None,
+        }
+    }
+}
+
 const MAX_SETUP_LOOP_RETRIES: u32 = 3;
 const MAX_EXEC_CHECK_LOOP_RETRIES: u32 = 3;
 const MAX_ASSURANCE_LOOP_RETRIES: u32 = 3;
@@ -312,7 +373,11 @@ fn parse_exec_check_exit(stdout: &str) -> u32 {
 
 /// Setup check feedback loop: run setup check; if it fails, run opencode with the error, re-install, retry.
 /// When branch_sync is Some(branch), we first verify HEAD is at origin/branch (when that ref exists); we never pass setup if not in sync.
-async fn run_setup_loop(mut c: Container, branch_sync: Option<&str>) -> PipelineResult<Container> {
+async fn run_setup_loop(
+    mut c: Container,
+    branch_sync: Option<&str>,
+    setup_role: Option<&RoleInfo>,
+) -> PipelineResult<Container> {
     if let Some(branch) = branch_sync {
         let sync_script = branch_sync_check_script(branch);
         let _ = c
@@ -350,9 +415,11 @@ async fn run_setup_loop(mut c: Container, branch_sync: Option<&str>) -> Pipeline
             out.lines().take(80).collect::<Vec<_>>().join("\n")
         );
         let fix_escaped = fix_prompt.replace('\'', "'\"'\"'");
+        let model_arg = setup_role.map(|r| r.model_arg()).unwrap_or_default();
+        let prompt_arg = setup_role.map(|r| r.prompt_arg()).unwrap_or_default();
         let fix_cmd = format!(
-            "cd /workspace && timeout 300 opencode run '{}' 2>&1",
-            fix_escaped
+            "cd /workspace && timeout 300 opencode run{} {} '{}' 2>&1",
+            model_arg, prompt_arg, fix_escaped
         );
         c = c.with_exec(vec!["sh", "-c", &fix_cmd]);
         let _ = c.stdout().await.map_err(|e| e.to_string())?;
@@ -363,7 +430,11 @@ async fn run_setup_loop(mut c: Container, branch_sync: Option<&str>) -> Pipeline
 }
 
 /// Execute check feedback loop: run execute check; if it fails, run opencode with the error, retry.
-async fn run_execute_check_loop(mut c: Container, task_summary: &str) -> PipelineResult<Container> {
+async fn run_execute_check_loop(
+    mut c: Container,
+    task_summary: &str,
+    check_role: Option<&RoleInfo>,
+) -> PipelineResult<Container> {
     for attempt in 0..MAX_EXEC_CHECK_LOOP_RETRIES {
         let out: String = c
             .with_exec(vec!["sh", "-c", EXEC_CHECK_CAPTURE_SCRIPT])
@@ -387,9 +458,11 @@ async fn run_execute_check_loop(mut c: Container, task_summary: &str) -> Pipelin
             out.lines().take(80).collect::<Vec<_>>().join("\n")
         );
         let fix_escaped = fix_prompt.replace('\'', "'\"'\"'");
+        let model_arg = check_role.map(|r| r.model_arg()).unwrap_or_default();
+        let prompt_arg = check_role.map(|r| r.prompt_arg()).unwrap_or_default();
         let fix_cmd = format!(
-            "cd /workspace && timeout 300 opencode run '{}' 2>&1",
-            fix_escaped
+            "cd /workspace && timeout 300 opencode run{} {} '{}' 2>&1",
+            model_arg, prompt_arg, fix_escaped
         );
         c = c.with_exec(vec!["sh", "-c", &fix_cmd]);
         let _ = c.stdout().await.map_err(|e| e.to_string())?;
@@ -398,12 +471,19 @@ async fn run_execute_check_loop(mut c: Container, task_summary: &str) -> Pipelin
 }
 
 /// Assurance feedback loop: run review; if issues reported, run opencode to address them, re-run execute check, then re-run assurance.
-async fn run_assurance_loop(mut c: Container, task_summary: &str) -> PipelineResult<Container> {
+async fn run_assurance_loop(
+    mut c: Container,
+    task_summary: &str,
+    validate_role: Option<&RoleInfo>,
+    check_role: Option<&RoleInfo>,
+) -> PipelineResult<Container> {
     let assurance_escaped = ASSURANCE_PROMPT.replace('\'', "'\"'\"'");
+    let model_arg = validate_role.map(|r| r.model_arg()).unwrap_or_default();
+    let prompt_arg = validate_role.map(|r| r.prompt_arg()).unwrap_or_default();
     for attempt in 0..MAX_ASSURANCE_LOOP_RETRIES {
         let assurance_cmd = format!(
-            "cd /workspace && timeout 90 opencode run '{}' 2>&1",
-            assurance_escaped
+            "cd /workspace && timeout 90 opencode run{} {} '{}' 2>&1",
+            model_arg, prompt_arg, assurance_escaped
         );
         let out: String = c
             .with_exec(vec!["sh", "-c", &assurance_cmd])
@@ -423,13 +503,15 @@ async fn run_assurance_loop(mut c: Container, task_summary: &str) -> PipelineRes
             out.lines().take(60).collect::<Vec<_>>().join("\n")
         );
         let fix_escaped = fix_prompt.replace('\'', "'\"'\"'");
+        let fix_model_arg = validate_role.map(|r| r.model_arg()).unwrap_or_default();
+        let fix_prompt_arg = validate_role.map(|r| r.prompt_arg()).unwrap_or_default();
         let fix_cmd = format!(
-            "cd /workspace && timeout 180 opencode run '{}' 2>&1",
-            fix_escaped
+            "cd /workspace && timeout 180 opencode run{} {} '{}' 2>&1",
+            fix_model_arg, fix_prompt_arg, fix_escaped
         );
         c = c.with_exec(vec!["sh", "-c", &fix_cmd]);
         let _ = c.stdout().await.map_err(|e| e.to_string())?;
-        c = run_execute_check_loop(c, "assurance fixes").await?;
+        c = run_execute_check_loop(c, "assurance fixes", check_role).await?;
     }
     Ok(c)
 }
@@ -477,6 +559,7 @@ pub async fn run_ask(
     ssh_key_path: Option<&std::path::Path>,
     timeout_secs: u64,
     script: Option<&str>,
+    roles: &PipelineRoles,
 ) -> PipelineResult<String> {
     let branch = branch.unwrap_or("main");
     let c = build_setup_container(
@@ -489,15 +572,18 @@ pub async fn run_ask(
         script,
     )
     .map_err(|e| map_branch_not_found_err(e, branch))?;
-    let c = run_setup_loop(c, None)
+    let c = run_setup_loop(c, None, roles.setup_run.as_ref())
         .await
         .map_err(|e| map_branch_not_found_err(e, branch))?;
 
-    // Run opencode normally - model/provider is configured in the container image
+    // Run opencode for the question
     let escaped = question.replace('\'', "'\"'\"'");
+    let role = roles.execute_run.as_ref();
+    let model_arg = role.map(|r| r.model_arg()).unwrap_or_default();
+    let prompt_arg = role.map(|r| r.prompt_arg()).unwrap_or_default();
     let cmd = format!(
-        "cd /workspace && timeout {} opencode run '{}' 2>&1",
-        timeout_secs, escaped
+        "cd /workspace && timeout {} opencode run{} {} '{}' 2>&1",
+        timeout_secs, model_arg, prompt_arg, escaped
     );
     let raw = c
         .with_exec(vec!["sh", "-c", &cmd])
@@ -526,6 +612,7 @@ pub async fn run_dev(
     script: Option<&str>,
     commit_name: Option<&str>,
     commit_email: Option<&str>,
+    roles: &PipelineRoles,
 ) -> PipelineResult<String> {
     let clone_branch = base.unwrap_or("main");
     let c = build_setup_container(
@@ -537,7 +624,7 @@ pub async fn run_dev(
         ssh_key_path,
         script,
     )?;
-    let c = run_setup_loop(c, Some(branch)).await?;
+    let c = run_setup_loop(c, Some(branch), roles.setup_run.as_ref()).await?;
 
     // Configure git user if commit_name/commit_email are provided
     let git_user_config = match (commit_name, commit_email) {
@@ -557,17 +644,26 @@ pub async fn run_dev(
         (None, None) => String::new(),
     };
 
-    // Run opencode normally - model/provider is configured in the container image
+    // Run opencode for the task
     let escaped = task.replace('\'', "'\"'\"'");
+    let role = roles.execute_run.as_ref();
+    let model_arg = role.map(|r| r.model_arg()).unwrap_or_default();
+    let prompt_arg = role.map(|r| r.prompt_arg()).unwrap_or_default();
     let exec_cmd = format!(
-        "cd /workspace && {} timeout {} opencode run '{}' 2>&1",
-        git_user_config, timeout_secs, escaped
+        "cd /workspace && {} timeout {} opencode run{} {} '{}' 2>&1",
+        git_user_config, timeout_secs, model_arg, prompt_arg, escaped
     );
     let c = c.with_exec(vec!["sh", "-c", &exec_cmd]);
     let _ = c.stdout().await.map_err(|e| e.to_string())?;
 
-    let c = run_execute_check_loop(c, task).await?;
-    let c = run_assurance_loop(c, task).await?;
+    let c = run_execute_check_loop(c, task, roles.execute_check.as_ref()).await?;
+    let c = run_assurance_loop(
+        c,
+        task,
+        roles.validate_run.as_ref(),
+        roles.execute_check.as_ref(),
+    )
+    .await?;
     // Commit and push (requires SSH for push)
     let commit_git_user_config = match (commit_name, commit_email) {
         (Some(name), Some(email)) => format!(
@@ -642,6 +738,7 @@ pub async fn run_review(
     ssh_key_path: Option<&std::path::Path>,
     timeout_secs: u64,
     script: Option<&str>,
+    roles: &PipelineRoles,
 ) -> PipelineResult<String> {
     let base_branch = base.unwrap_or("main");
     // Clone base branch first, then checkout feature branch for comparison
@@ -670,7 +767,7 @@ fi"#,
     );
     let c = c.with_exec(vec!["sh", "-c", &checkout_cmd]);
     let _ = c.stdout().await.map_err(|e| e.to_string())?;
-    let c = run_setup_loop(c, None)
+    let c = run_setup_loop(c, None, roles.setup_run.as_ref())
         .await
         .map_err(|e| map_branch_not_found_err(e, branch))?;
     let review_prompt = format!(
@@ -678,11 +775,14 @@ fi"#,
         branch, base_branch
     );
 
-    // Run opencode normally - model/provider is configured in the container image
+    // Run opencode for review
     let escaped = review_prompt.replace('\'', "'\"'\"'");
+    let role = roles.execute_run.as_ref();
+    let model_arg = role.map(|r| r.model_arg()).unwrap_or_default();
+    let prompt_arg = role.map(|r| r.prompt_arg()).unwrap_or_default();
     let cmd = format!(
-        "cd /workspace && timeout {} opencode run '{}' 2>&1",
-        timeout_secs, escaped
+        "cd /workspace && timeout {} opencode run{} {} '{}' 2>&1",
+        timeout_secs, model_arg, prompt_arg, escaped
     );
     let out = c
         .with_exec(vec!["sh", "-c", &cmd])
