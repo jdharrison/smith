@@ -276,6 +276,8 @@ enum AgentCommands {
         /// Agent name
         name: String,
     },
+    /// Sync agent config to host opencode (writes ~/.config/opencode/opencode.json)
+    Sync,
     /// Build Docker image for local agents (generate Dockerfile if missing, then docker build)
     Build {
         /// Agent name to build (e.g. opencode); omit to build all
@@ -2418,6 +2420,116 @@ async fn main() {
                     std::process::exit(1);
                 });
                 println!("Agent '{}' removed successfully", name);
+            }
+            AgentCommands::Sync => {
+                use serde_json::{json, Map, Value};
+
+                let cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+
+                let agents = cfg.agents.as_deref().unwrap_or(&[]);
+                let enabled_agents: Vec<_> = agents
+                    .iter()
+                    .filter(|e| e.enabled.unwrap_or(true))
+                    .collect();
+
+                if enabled_agents.is_empty() {
+                    eprintln!("No enabled agents to sync.");
+                    std::process::exit(1);
+                }
+
+                // Build provider config for each agent
+                let mut providers: Map<String, Value> = Map::new();
+                let mut default_model: Option<String> = None;
+                let mut default_small_model: Option<String> = None;
+
+                for agent in &enabled_agents {
+                    let is_local = agent.agent_type.as_deref() == Some("local");
+                    
+                    // Build provider options
+                    let mut options: Map<String, Value> = Map::new();
+                    
+                    if is_local {
+                        // Local agent: set baseURL to localhost
+                        options.insert(
+                            "baseURL".to_string(),
+                            json!("http://localhost:11434"),
+                        );
+                    }
+                    // Cloud agent: no baseURL (uses provider default)
+
+                    // Use agent name as provider identifier
+                    let provider_name = agent.name.clone();
+                    providers.insert(
+                        provider_name.clone(),
+                        json!({ "options": options }),
+                    );
+
+                    // Set default model from first agent
+                    // For cloud agents: only set if model is explicitly configured (provider is needed)
+                    // For local agents: use agent-name/model format
+                    if default_model.is_none() {
+                        if let Some(ref model) = agent.model {
+                            if is_local {
+                                default_model = Some(format!("{}/{}", agent.name, model));
+                            } else {
+                                default_model = Some(model.clone());
+                            }
+                        }
+                        // Don't default cloud agents - they need explicit provider
+                    }
+                    if default_small_model.is_none() {
+                        if let Some(ref small_model) = agent.small_model {
+                            if is_local {
+                                default_small_model = Some(format!("{}/{}", agent.name, small_model));
+                            } else {
+                                default_small_model = Some(small_model.clone());
+                            }
+                        }
+                    }
+                }
+
+                // Build opencode config JSON
+                let mut opencode_config: Map<String, Value> = Map::new();
+                opencode_config.insert(
+                    "$schema".to_string(),
+                    json!("https://opencode.ai/config.json"),
+                );
+
+                if let Some(ref model) = default_model {
+                    opencode_config.insert("model".to_string(), json!(model));
+                }
+                if let Some(ref small_model) = default_small_model {
+                    opencode_config.insert("small_model".to_string(), json!(small_model));
+                }
+
+                if !providers.is_empty() {
+                    opencode_config.insert("provider".to_string(), json!(providers));
+                }
+
+                let json_str = serde_json::to_string_pretty(&opencode_config)
+                    .unwrap_or_else(|e| format!("{{\"error\": \"{}\"}}", e));
+
+                // Ensure directory exists
+                let config_dir = dirs::config_dir()
+                    .map(|p| p.join("opencode"))
+                    .expect("Could not find config directory");
+                
+                std::fs::create_dir_all(&config_dir).unwrap_or_else(|e| {
+                    eprintln!("Error creating config directory: {}", e);
+                    std::process::exit(1);
+                });
+
+                let config_path = config_dir.join("opencode.json");
+                std::fs::write(&config_path, &json_str).unwrap_or_else(|e| {
+                    eprintln!("Error writing config: {}", e);
+                    std::process::exit(1);
+                });
+
+                println!("  {} Synced {} agent(s) to {}", BULLET_GREEN, enabled_agents.len(), config_path.display());
+                println!("  Edit ~/.config/opencode/opencode.json to select model with \"model\": \"agent-name/model\"");
             }
             AgentCommands::Build {
                 name,
