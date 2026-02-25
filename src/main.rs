@@ -31,16 +31,20 @@ const BULLET_YELLOW: &str = "\x1b[33m●\x1b[0m";
 
 /// OSC 8 hyperlink so the URL is clickable in supported terminals (e.g. VS Code, iTerm2, Windows Terminal).
 fn clickable_agent_url(port: u16) -> String {
-    let url = format!("http://host.docker.internal:{}", port);
+    let url = format!("http://localhost:{}", port);
     format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", url, url)
 }
 
 /// active = container running, reachable = health endpoint responds (only meaningful when active).
-fn status_circle(active: bool, reachable: Option<bool>, built: bool) -> String {
+/// is_cloud = cloud agents are always green (no build needed).
+/// Local agents: red (none) -> blue (built) -> green (online).
+fn status_circle(active: bool, reachable: Option<bool>, built: bool, is_cloud: bool) -> String {
     let bullet = "●";
     let color = if active && reachable == Some(false) {
         ANSI_YELLOW
     } else if active {
+        ANSI_GREEN
+    } else if is_cloud {
         ANSI_GREEN
     } else if built {
         ANSI_BLUE
@@ -167,6 +171,18 @@ enum Commands {
     },
     /// Docker, config dir, optional Dagger
     Install,
+    /// Remove all data, containers, and optionally, smith entirely.
+    Uninstall {
+        /// Skip confirmation prompt (still prompts for config removal unless --remove-config)
+        #[arg(short, long)]
+        force: bool,
+        /// Also remove the config directory (~/.config/smith)
+        #[arg(long)]
+        remove_config: bool,
+        /// Also remove Docker images built by smith
+        #[arg(long)]
+        remove_images: bool,
+    },
     /// Print help
     Help,
     /// Print version
@@ -195,6 +211,8 @@ const DEFAULT_AGENT_IMAGE: &str = "ghcr.io/anomalyco/opencode";
 
 #[derive(Subcommand)]
 enum AgentCommands {
+    /// Show status of all configured agents
+    Status,
     /// Add an agent
     Add {
         /// Agent name (id)
@@ -223,23 +241,6 @@ enum AgentCommands {
         /// Whether this agent is enabled (default: true)
         #[arg(long)]
         enabled: Option<bool>,
-    },
-    /// Show status of all configured agents (systemctl-style, compact table per agent)
-    Status,
-    /// Build Docker image for one agent or all (generate Dockerfile if missing, then docker build)
-    Build {
-        /// Agent name to build (e.g. opencode); omit to build all
-        #[arg()]
-        name: Option<String>,
-        /// Build all configured agents
-        #[arg(short = 'a', long = "all", alias = "A")]
-        all: bool,
-        /// Remove existing image and build with --no-cache (clean build)
-        #[arg(long)]
-        force: bool,
-        /// Print Dockerfile path and docker build command per agent
-        #[arg(long)]
-        verbose: bool,
     },
     /// Update an existing agent
     Update {
@@ -275,24 +276,33 @@ enum AgentCommands {
         /// Agent name
         name: String,
     },
-    /// Start cloud agents (opencode serve; 1 agent -> 1 container). Idempotent: skips if already running.
+    /// Build Docker image for local agents (generate Dockerfile if missing, then docker build)
+    Build {
+        /// Agent name to build (e.g. opencode); omit to build all
+        #[arg()]
+        name: Option<String>,
+        /// Build all configured agents
+        #[arg(short = 'a', long = "all", alias = "A")]
+        all: bool,
+        /// Remove existing image and build with --no-cache (clean build)
+        #[arg(long)]
+        force: bool,
+        /// Print Dockerfile path and docker build command per agent
+        #[arg(long)]
+        verbose: bool,
+    },
+    /// Start local agent containers (1 agent -> 1 container). Idempotent: skips if already running.
     Start {
         /// Print docker command and health-check details
         #[arg(short, long)]
         verbose: bool,
     },
-    /// Stop all running agent containers
+    /// Stop local agent containers
     Stop,
     /// Stream live logs from an agent container (docker logs -f)
     Logs {
         /// Agent name (e.g. opencode)
         name: String,
-    },
-    /// Reset all agents to default (opencode only). Prompts for confirmation unless --force.
-    Reset {
-        /// Skip confirmation prompt
-        #[arg(short, long)]
-        force: bool,
     },
 }
 
@@ -410,12 +420,6 @@ enum ProjectCommands {
     Remove {
         /// Project name
         name: String,
-    },
-    /// Remove all projects. Prompts for confirmation unless --force.
-    Reset {
-        /// Skip confirmation prompt
-        #[arg(short, long)]
-        force: bool,
     },
 }
 
@@ -1350,7 +1354,7 @@ fn print_smith_help() {
         println!("{}\n", about);
     }
     println!("Usage: smith [COMMAND]");
-    const SYSTEM: &[&str] = &["status", "install", "help", "version"];
+    const SYSTEM: &[&str] = &["status", "install", "uninstall", "help", "version"];
     const COMMANDS: &[&str] = &["agent", "project", "run"];
     println!("\nCommands:");
     for sub in c.get_subcommands() {
@@ -1401,14 +1405,8 @@ async fn main() {
             });
             let running = docker::list_running_agent_containers().unwrap_or_default();
             let list = cfg.agents.as_deref().unwrap_or(&[]);
-            let agents: Vec<String> = if list.is_empty() {
-                vec![DEFAULT_AGENT_NAME.to_string()]
-            } else {
-                list.iter().map(|e| e.name.clone()).collect()
-            };
-            let any_running = agents.iter().any(|n| running.contains(n));
 
-            let smith_bullet = if installed && any_running {
+            let smith_bullet = if installed && docker_ok {
                 BULLET_GREEN
             } else if installed {
                 BULLET_BLUE
@@ -1432,60 +1430,95 @@ async fn main() {
                 g_bullet,
                 if dagger_ok { "running" } else { "not running" }
             );
-            let any_built = agents.iter().any(|name| {
-                docker::image_exists(&docker::agent_built_image_tag(name)).unwrap_or(false)
-            });
-            let agents_bullet = if any_running {
-                BULLET_GREEN
-            } else if any_built {
-                BULLET_BLUE
+            if list.is_empty() {
+                println!("  {} agents", BULLET_BLUE);
+                println!("       (none)");
             } else {
-                BULLET_RED
-            };
-            println!("  {} agents", agents_bullet);
-            for (i, name) in agents.iter().enumerate() {
-                let active = running.contains(name);
-                let built =
-                    docker::image_exists(&docker::agent_built_image_tag(name)).unwrap_or(false);
-                let port = list
-                    .iter()
-                    .find(|e| e.name == *name)
-                    .map(|e| agent_port(e, i))
-                    .unwrap_or_else(|| docker::OPENCODE_SERVER_PORT + i as u16);
-                let reachable = if active {
-                    Some(docker::check_agent_reachable(port))
+                // First pass: determine aggregate status
+                let mut agents_bullet = BULLET_BLUE;
+                let mut has_cloud_or_running = false;
+                for agent_entry in list.iter() {
+                    let active = running.contains(&agent_entry.name);
+                    let built =
+                        docker::image_exists(&docker::agent_built_image_tag(&agent_entry.name)).unwrap_or(false);
+                    let is_cloud = agent_entry
+                        .agent_type
+                        .as_deref()
+                        .map(|t| t != "local")
+                        .unwrap_or(true);
+                    if is_cloud || active {
+                        has_cloud_or_running = true;
+                    } else if !built {
+                        agents_bullet = BULLET_RED;
+                    }
+                }
+                // Print header with aggregate status
+                if agents_bullet == BULLET_RED {
+                    println!("  {} agents", BULLET_RED);
+                } else if has_cloud_or_running {
+                    println!("  {} agents", BULLET_GREEN);
                 } else {
-                    None
-                };
-                let (bullet, state) = if active && reachable == Some(false) {
-                    (BULLET_YELLOW, "running (port unreachable)")
-                } else if active {
-                    (BULLET_GREEN, "running")
-                } else if built {
-                    (BULLET_BLUE, "built")
-                } else {
-                    (BULLET_RED, "not built")
-                };
-                if active {
-                    println!(
-                        "       {} agent/{} - {} {}",
-                        bullet,
-                        name,
-                        state,
-                        clickable_agent_url(port)
-                    );
-                } else {
-                    println!(
-                        "       {} agent/{} - {} (http://host.docker.internal:{})",
-                        bullet, name, state, port
-                    );
+                    println!("  {} agents", BULLET_BLUE);
+                }
+                // Second pass: print each agent
+                for (i, agent_entry) in list.iter().enumerate() {
+                    let name = &agent_entry.name;
+                    let active = running.contains(name);
+                    let built =
+                        docker::image_exists(&docker::agent_built_image_tag(name)).unwrap_or(false);
+                    let is_cloud = agent_entry
+                        .agent_type
+                        .as_deref()
+                        .map(|t| t != "local")
+                        .unwrap_or(true);
+                    let port = agent_port(agent_entry, i);
+                    let reachable = if active {
+                        Some(docker::check_agent_reachable(port))
+                    } else {
+                        None
+                    };
+                    let bullet = if is_cloud {
+                        BULLET_GREEN
+                    } else if active && reachable == Some(false) {
+                        BULLET_YELLOW
+                    } else if active {
+                        BULLET_GREEN
+                    } else if built {
+                        BULLET_BLUE
+                    } else {
+                        BULLET_RED
+                    };
+                    let state = if is_cloud {
+                        "cloud"
+                    } else if active && reachable == Some(false) {
+                        "running (port unreachable)"
+                    } else if active {
+                        "running"
+                    } else if built {
+                        "built"
+                    } else {
+                        "not built"
+                    };
+                    if is_cloud {
+                        println!("       {} {} - {}", bullet, name, state);
+                    } else if active {
+                        println!(
+                            "       {} {} - {} {}",
+                            bullet,
+                            name,
+                            state,
+                            clickable_agent_url(port)
+                        );
+                    } else {
+                        println!(
+                            "       {} {} - {} (http://localhost:{})",
+                            bullet, name, state, port
+                        );
+                    }
                 }
             }
-            if agents.is_empty() {
-                println!("       {} (no cloud agents configured)", BULLET_RED);
-            }
 
-            // projects: workspace check per project, then summary bullet (green=all ok, yellow=some, red=none)
+            // projects:
             let mut project_results: Vec<(String, bool, String)> = Vec::new();
             if !cfg.projects.is_empty() && dagger_ok {
                 for proj in &cfg.projects {
@@ -1548,18 +1581,26 @@ async fn main() {
                     drop(_guard);
                     match result {
                         Ok(output) => {
-                            if output.contains(".git") {
-                                project_results.push((name, true, "workspace OK".to_string()));
+                            let has_git = !output.contains("no-git") && output.len() > 2;
+                            let has_opencode = output.contains('.') && output.chars().filter(|c| *c == '.').count() >= 2;
+                            if has_git && has_opencode {
+                                project_results.push((name, true, "ready".to_string()));
+                            } else if !has_git {
+                                project_results.push((
+                                    name,
+                                    false,
+                                    "clone failed".to_string(),
+                                ));
                             } else {
                                 project_results.push((
                                     name,
                                     false,
-                                    "workspace missing .git".to_string(),
+                                    "opencode not available".to_string(),
                                 ));
                             }
                         }
-                        Err(_) => {
-                            project_results.push((name, false, "clone failed".to_string()));
+                        Err(e) => {
+                            project_results.push((name, false, format!("clone failed: {}", e)));
                         }
                     }
                 }
@@ -1585,7 +1626,7 @@ async fn main() {
             } else {
                 for (name, ok, msg) in &project_results {
                     let bullet = if *ok { BULLET_GREEN } else { BULLET_RED };
-                    println!("       {} project/{} - {}", bullet, name, msg);
+                    println!("       {} {} - {}", bullet, name, msg);
                 }
             }
 
@@ -1676,7 +1717,34 @@ async fn main() {
             });
             let agents_list = cfg.agents.as_deref().unwrap_or(&[]);
             if agents_list.is_empty() {
-                println!("  Current agents: (none — opencode used by default)");
+                println!("  Current agents: (none)");
+                println!();
+                match prompt_yn("Create default opencode agent?", true) {
+                    false => {
+                        println!("  No agent created. Use 'smith agent add' later.");
+                    }
+                    true => {
+                        let new_agent = AgentEntry {
+                            name: DEFAULT_AGENT_NAME.to_string(),
+                            image: DEFAULT_AGENT_IMAGE.to_string(),
+                            agent_type: Some("cloud".to_string()),
+                            model: None,
+                            small_model: None,
+                            provider: None,
+                            base_url: None,
+                            port: None,
+                            enabled: Some(true),
+                            default_role: None,
+                            roles: None,
+                        };
+                        cfg.agents = Some(vec![new_agent]);
+                        if let Err(e) = save_config(&cfg) {
+                            eprintln!("Error saving config: {}", e);
+                        } else {
+                            println!("  {} Created default agent: {}", BULLET_GREEN, DEFAULT_AGENT_NAME);
+                        }
+                    }
+                }
             } else {
                 println!("  Current agents:");
                 for a in agents_list {
@@ -1896,6 +1964,118 @@ async fn main() {
         Some(Commands::Version) => {
             println!("{}", env!("CARGO_PKG_VERSION"));
         }
+        Some(Commands::Uninstall {
+            force,
+            remove_config,
+            remove_images,
+        }) => {
+            let prompt = "This will stop all agent containers and Ollama. Continue? Type 'yes' to confirm: ";
+            if !confirm_reset(prompt, force) {
+                eprintln!("Uninstall cancelled.");
+                std::process::exit(1);
+            }
+
+            println!("{} smith uninstall", BULLET_YELLOW);
+            println!();
+
+            if let Err(e) = docker::check_docker_available() {
+                eprintln!("Warning: Docker not available - skipping container cleanup: {}", e);
+            } else {
+                println!("  Stopping agent containers...");
+                match docker::stop_all_agent_containers() {
+                    Ok(stopped) => {
+                        if stopped.is_empty() {
+                            println!("    (no running agent containers)");
+                        } else {
+                            for name in &stopped {
+                                println!("    {}: stopped", name);
+                            }
+                            println!("    Stopped {} container(s).", stopped.len());
+                        }
+                    }
+                    Err(e) => eprintln!("    Warning: {}", e),
+                }
+
+                if docker::is_ollama_running() {
+                    println!("  Stopping Ollama container...");
+                    if let Err(e) = docker::stop_ollama_container() {
+                        eprintln!("    Warning: {}", e);
+                    } else {
+                        println!("    Ollama: stopped");
+                    }
+                }
+
+                if remove_images {
+                    println!("  Removing Docker images...");
+                    let _ = Command::new("docker")
+                        .args(["rmi", "-f", "smith/unnamed:latest"])
+                        .output();
+                    let cfg = load_config().unwrap_or_default();
+                    if let Some(agents) = cfg.agents {
+                        for agent in &agents {
+                            let tag = docker::agent_built_image_tag(&agent.name);
+                            let _ = Command::new("docker").args(["rmi", "-f", &tag]).output();
+                            println!("    {}: removed", tag);
+                        }
+                    }
+                    if docker::image_exists("ollama/ollama").unwrap_or(false) {
+                        let _ = Command::new("docker").args(["rmi", "-f", "ollama/ollama"]).output();
+                        println!("    ollama/ollama: removed");
+                    }
+                }
+            }
+
+            let remove_config = if remove_config {
+                true
+            } else {
+                let prompt = "Remove all config and profile data (~/.config/smith)? Type 'yes' to confirm: ";
+                confirm_reset(prompt, false)
+            };
+
+            if remove_config {
+                println!("  Removing config directory...");
+                match config_dir() {
+                    Ok(dir) => {
+                        if dir.exists() {
+                            if let Err(e) = fs::remove_dir_all(&dir) {
+                                eprintln!("    Failed to remove config: {}", e);
+                            } else {
+                                println!("    {}: removed", dir.display());
+                            }
+                        } else {
+                            println!("    (config directory does not exist)");
+                        }
+                    }
+                    Err(e) => eprintln!("    Warning: {}", e),
+                }
+            }
+
+            println!();
+            println!("  {} Uninstalled successfully", BULLET_GREEN);
+            if !remove_config {
+                println!("     (config preserved - run with --remove-config to delete)");
+            }
+            if !remove_images {
+                println!("     (images preserved - run with --remove-images to delete)");
+            }
+
+            let prompt = "Remove the smith binary? Type 'yes' to run 'cargo uninstall smith': ";
+            if confirm_reset(prompt, force) {
+                println!("  Running cargo uninstall smith...");
+                let status = Command::new("cargo")
+                    .args(["uninstall", "smith"])
+                    .status();
+                match status {
+                    Ok(s) if s.success() => {
+                        println!("    smith binary removed");
+                    }
+                    _ => {
+                        eprintln!("    Warning: cargo uninstall failed");
+                        println!("    To remove manually, run: which smith");
+                    }
+                }
+            }
+        }
         Some(Commands::Agent { cmd }) => match cmd {
             AgentCommands::Add {
                 name,
@@ -1941,7 +2121,7 @@ async fn main() {
                     std::process::exit(1);
                 });
                 let running = docker::list_running_agent_containers().unwrap_or_default();
-                let current = cfg.current_agent.as_deref().unwrap_or(DEFAULT_AGENT_NAME);
+                let _current = cfg.current_agent.as_deref().unwrap_or(DEFAULT_AGENT_NAME);
                 let base = docker::OPENCODE_SERVER_PORT;
                 let list = cfg.agents.as_deref().unwrap_or(&[]);
                 #[allow(clippy::type_complexity)]
@@ -2009,9 +2189,9 @@ async fn main() {
                     };
                     let built =
                         docker::image_exists(&docker::agent_built_image_tag(name)).unwrap_or(false);
-                    let circle = status_circle(active, reachable, built);
-                    let current_mark = if *name == current { " (current)" } else { "" };
-                    println!("\n  {} agent/{} - {}{}", circle, name, image, current_mark);
+                    let is_cloud = agent_type.as_deref() != Some("local");
+                    let circle = status_circle(active, reachable, built, is_cloud);
+                    println!("\n  {} {}", circle, name);
                     if active {
                         if reachable == Some(false) {
                             println!("      Active:   active (running)");
@@ -2024,6 +2204,8 @@ async fn main() {
                             println!("      Active:   active (running)");
                             println!("      Port:     {} {}", port, clickable_agent_url(*port));
                         }
+                    } else if is_cloud {
+                        println!("      Active:   cloud (config only)");
                     } else {
                         println!(
                             "      Active:   {}",
@@ -2034,13 +2216,15 @@ async fn main() {
                             }
                         );
                     }
-                    let built_tag = docker::agent_built_image_tag(name);
-                    let image_line = if built {
-                        built_tag
-                    } else {
-                        format!("not built (uses {})", image)
-                    };
-                    println!("      Image:    {}", image_line);
+                    if !is_cloud {
+                        let built_tag = docker::agent_built_image_tag(name);
+                        let image_line = if built {
+                            built_tag
+                        } else {
+                            format!("not built (uses {})", image)
+                        };
+                        println!("      Image:    {}", image_line);
+                    }
                     let model_str = model.as_deref().unwrap_or("default");
                     let small_model_str = small_model.as_deref().unwrap_or("-");
                     let is_local = agent_type.as_deref() == Some("local");
@@ -2082,39 +2266,126 @@ async fn main() {
                 let agents = cfg.agents.get_or_insert_with(Vec::new);
                 match agents.iter_mut().find(|a| a.name == name) {
                     Some(entry) => {
-                        if let Some(ref s) = image {
-                            entry.image = if s.is_empty() {
-                                DEFAULT_AGENT_IMAGE.to_string()
-                            } else {
-                                s.clone()
-                            };
+                        let is_wizard = image.is_none()
+                            && agent_type.is_none()
+                            && model.is_none()
+                            && small_model.is_none()
+                            && provider.is_none()
+                            && base_url.is_none()
+                            && port.is_none()
+                            && enabled.is_none();
+                        if is_wizard {
+                            println!("  Updating agent '{}'", entry.name);
+                            let image_in = prompt_line(&format!(
+                                "  Image [{}]: ",
+                                entry.image
+                            ));
+                            if !image_in.is_empty() {
+                                entry.image = image_in;
+                            }
+                            let type_in = prompt_line(&format!(
+                                "  Type (local/cloud) [{}]: ",
+                                entry.agent_type.as_deref().unwrap_or("cloud")
+                            ));
+                            if !type_in.is_empty() {
+                                entry.agent_type = Some(type_in);
+                            } else if entry.agent_type.is_some() && type_in.is_empty() {
+                                entry.agent_type = None;
+                            }
+                            let model_in = prompt_line(&format!(
+                                "  Model [{}]: ",
+                                entry.model.as_deref().unwrap_or("(none)")
+                            ));
+                            if !model_in.is_empty() {
+                                entry.model = Some(model_in);
+                            } else if entry.model.is_some() && model_in.is_empty() {
+                                entry.model = None;
+                            }
+                            let small_model_in = prompt_line(&format!(
+                                "  Small model [{}]: ",
+                                entry.small_model.as_deref().unwrap_or("(none)")
+                            ));
+                            if !small_model_in.is_empty() {
+                                entry.small_model = Some(small_model_in);
+                            } else if entry.small_model.is_some() && small_model_in.is_empty() {
+                                entry.small_model = None;
+                            }
+                            let provider_in = prompt_line(&format!(
+                                "  Provider [{}]: ",
+                                entry.provider.as_deref().unwrap_or("(none)")
+                            ));
+                            if !provider_in.is_empty() {
+                                entry.provider = Some(provider_in);
+                            } else if entry.provider.is_some() && provider_in.is_empty() {
+                                entry.provider = None;
+                            }
+                            let base_url_in = prompt_line(&format!(
+                                "  Base URL [{}]: ",
+                                entry.base_url.as_deref().unwrap_or("(none)")
+                            ));
+                            if !base_url_in.is_empty() {
+                                entry.base_url = Some(base_url_in);
+                            } else if entry.base_url.is_some() && base_url_in.is_empty() {
+                                entry.base_url = None;
+                            }
+                            let port_in = prompt_line(&format!(
+                                "  Port [{}]: ",
+                                entry.port.map(|p| p.to_string()).unwrap_or_else(|| "4096".to_string())
+                            ));
+                            if !port_in.is_empty() {
+                                if let Ok(p) = port_in.parse() {
+                                    entry.port = Some(p);
+                                }
+                            } else if entry.port.is_some() && port_in.is_empty() {
+                                entry.port = None;
+                            }
+                            let enabled_in = prompt_line(&format!(
+                                "  Enabled (true/false) [{}]: ",
+                                entry.enabled.unwrap_or(true)
+                            ));
+                            if !enabled_in.is_empty() {
+                                entry.enabled = Some(enabled_in == "true");
+                            }
+                            save_config(&cfg).unwrap_or_else(|e| {
+                                eprintln!("Error: {}", e);
+                                std::process::exit(1);
+                            });
+                            println!("  {} Agent '{}' updated", BULLET_GREEN, name);
+                        } else {
+                            if let Some(ref s) = image {
+                                entry.image = if s.is_empty() {
+                                    DEFAULT_AGENT_IMAGE.to_string()
+                                } else {
+                                    s.clone()
+                                };
+                            }
+                            if let Some(ref s) = agent_type {
+                                entry.agent_type = if s.is_empty() { None } else { Some(s.clone()) };
+                            }
+                            if let Some(ref s) = model {
+                                entry.model = if s.is_empty() { None } else { Some(s.clone()) };
+                            }
+                            if let Some(ref s) = small_model {
+                                entry.small_model = if s.is_empty() { None } else { Some(s.clone()) };
+                            }
+                            if let Some(ref s) = provider {
+                                entry.provider = if s.is_empty() { None } else { Some(s.clone()) };
+                            }
+                            if let Some(ref s) = base_url {
+                                entry.base_url = if s.is_empty() { None } else { Some(s.clone()) };
+                            }
+                            if let Some(p) = port {
+                                entry.port = Some(p);
+                            }
+                            if let Some(e) = enabled {
+                                entry.enabled = Some(e);
+                            }
+                            save_config(&cfg).unwrap_or_else(|e| {
+                                eprintln!("Error: {}", e);
+                                std::process::exit(1);
+                            });
+                            println!("Agent '{}' updated successfully", name);
                         }
-                        if let Some(ref s) = agent_type {
-                            entry.agent_type = if s.is_empty() { None } else { Some(s.clone()) };
-                        }
-                        if let Some(ref s) = model {
-                            entry.model = if s.is_empty() { None } else { Some(s.clone()) };
-                        }
-                        if let Some(ref s) = small_model {
-                            entry.small_model = if s.is_empty() { None } else { Some(s.clone()) };
-                        }
-                        if let Some(ref s) = provider {
-                            entry.provider = if s.is_empty() { None } else { Some(s.clone()) };
-                        }
-                        if let Some(ref s) = base_url {
-                            entry.base_url = if s.is_empty() { None } else { Some(s.clone()) };
-                        }
-                        if let Some(p) = port {
-                            entry.port = Some(p);
-                        }
-                        if let Some(e) = enabled {
-                            entry.enabled = Some(e);
-                        }
-                        save_config(&cfg).unwrap_or_else(|e| {
-                            eprintln!("Error: {}", e);
-                            std::process::exit(1);
-                        });
-                        println!("Agent '{}' updated successfully", name);
                     }
                     None => {
                         eprintln!("Error: Agent '{}' not found", name);
@@ -2169,6 +2440,7 @@ async fn main() {
                     Option<String>,
                     Option<String>,
                     Option<String>,
+                    Option<String>,
                     u16,
                 )> = if all || name.is_none() {
                     match cfg.agents.as_deref() {
@@ -2179,6 +2451,7 @@ async fn main() {
                                 (
                                     e.name.clone(),
                                     e.image.clone(),
+                                    e.agent_type.clone(),
                                     e.model.clone(),
                                     e.small_model.clone(),
                                     e.provider.clone(),
@@ -2189,6 +2462,7 @@ async fn main() {
                         _ => vec![(
                             DEFAULT_AGENT_NAME.to_string(),
                             DEFAULT_AGENT_IMAGE.to_string(),
+                            Some("cloud".to_string()),
                             None,
                             None,
                             None,
@@ -2197,7 +2471,7 @@ async fn main() {
                     }
                 } else {
                     let n = name.as_deref().unwrap_or(DEFAULT_AGENT_NAME);
-                    let (base_image, model, small_model, provider, port) = cfg
+                    let (base_image, agent_type, model, small_model, provider, port) = cfg
                         .agents
                         .as_deref()
                         .and_then(|a| {
@@ -2205,6 +2479,7 @@ async fn main() {
                                 let e = &a[idx];
                                 (
                                     e.image.clone(),
+                                    e.agent_type.clone(),
                                     e.model.clone(),
                                     e.small_model.clone(),
                                     e.provider.clone(),
@@ -2216,6 +2491,7 @@ async fn main() {
                             if n == DEFAULT_AGENT_NAME {
                                 (
                                     DEFAULT_AGENT_IMAGE.to_string(),
+                                    Some("cloud".to_string()),
                                     None,
                                     None,
                                     None,
@@ -2229,6 +2505,7 @@ async fn main() {
                     vec![(
                         n.to_string(),
                         base_image,
+                        agent_type,
                         model,
                         small_model,
                         provider,
@@ -2241,7 +2518,12 @@ async fn main() {
                 });
                 let mut ok = 0usize;
                 let mut failed = Vec::new();
-                for (agent_name, base_image, model, small_model, provider, port) in &agents {
+                for (agent_name, base_image, agent_type, model, small_model, provider, port) in &agents {
+                    let is_cloud = agent_type.as_deref() != Some("local");
+                    if is_cloud {
+                        println!("  {} Skipping cloud agent '{}'", BULLET_BLUE, agent_name);
+                        continue;
+                    }
                     if verbose {
                         let agent_dir = dir.join("agents").join(agent_name);
                         let dockerfile = agent_dir.join("Dockerfile");
@@ -2302,16 +2584,16 @@ async fn main() {
                 });
                 let agents = cfg.agents.as_deref().unwrap_or(&[]);
 
-                // Check if any agent uses local - get model from agent.model
-                let local_agent = agents
+                // Start Ollama for each local agent (each gets its own container with its model)
+                let local_agents: Vec<_> = agents
                     .iter()
-                    .find(|e| e.agent_type.as_deref() == Some("local"));
-                let local_model = local_agent
-                    .and_then(|a| a.model.clone())
-                    .unwrap_or_else(|| "qwen3:8b".to_string());
-
-                // Start Ollama if any agent uses local
-                if !local_model.is_empty() {
+                    .filter(|e| e.agent_type.as_deref() == Some("local"))
+                    .collect();
+                for local in &local_agents {
+                    let local_model = local
+                        .model
+                        .clone()
+                        .unwrap_or_else(|| "qwen3:8b".to_string());
                     if docker::is_ollama_running() {
                         println!("  Ollama already running");
                     } else {
@@ -2325,20 +2607,18 @@ async fn main() {
                     }
                 }
 
-                // Build agent list (1 agent : 1 container) - only enabled agents
+                // Build agent list (1 agent : 1 container) - only enabled local agents (skip cloud)
                 let enabled_agents: Vec<_> = if agents.is_empty() {
-                    vec![(
-                        DEFAULT_AGENT_NAME.to_string(),
-                        DEFAULT_AGENT_IMAGE.to_string(),
-                        None,
-                        None,
-                        true,
-                        docker::OPENCODE_SERVER_PORT,
-                    )]
+                    // Default agent is cloud, so no containers to start
+                    vec![]
                 } else {
                     agents
                         .iter()
-                        .filter(|e| e.enabled.unwrap_or(true))
+                        .filter(|e| {
+                            let is_enabled = e.enabled.unwrap_or(true);
+                            let is_local = e.agent_type.as_deref() == Some("local");
+                            is_enabled && is_local
+                        })
                         .enumerate()
                         .map(|(i, e)| {
                             let image =
@@ -2374,6 +2654,15 @@ async fn main() {
                         })
                         .collect()
                 };
+                // Print skipping messages for cloud agents
+                if !agents.is_empty() {
+                    for agent in agents.iter() {
+                        let is_local = agent.agent_type.as_deref() == Some("local");
+                        if !is_local {
+                            println!("  {} Skipping cloud agent '{}'", BULLET_BLUE, agent.name);
+                        }
+                    }
+                }
                 let running = docker::list_running_agent_containers().unwrap_or_default();
                 if verbose {
                     println!("Agents: {}", enabled_agents.len());
@@ -2468,7 +2757,11 @@ async fn main() {
                     }
                 }
                 if failed.is_empty() {
-                    println!("All {} cloud agent(s) started and tested successfully.", ok);
+                    if ok == 0 {
+                        println!("No local agents to start.");
+                    } else {
+                        println!("All {} local agent(s) started and tested successfully.", ok);
+                    }
                 } else {
                     println!("Started {}; {} failed.", ok, failed.len());
                     std::process::exit(1);
@@ -2479,21 +2772,43 @@ async fn main() {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
                 }
-                match docker::stop_all_agent_containers() {
-                    Ok(stopped) => {
-                        if stopped.is_empty() {
-                            println!("No running agent containers.");
-                        } else {
-                            for name in &stopped {
-                                println!("  {}: stopped", name);
-                            }
-                            println!("Stopped {} container(s).", stopped.len());
-                        }
+                let cfg = load_config().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                // Print skipping messages for cloud agents
+                let all_agents = cfg.agents.as_deref().unwrap_or(&[]);
+                for agent in all_agents.iter() {
+                    let is_local = agent.agent_type.as_deref() == Some("local");
+                    if !is_local {
+                        println!("  {} Skipping cloud agent '{}'", BULLET_BLUE, agent.name);
                     }
-                    Err(e) => {
-                        eprintln!("Error: {}", e);
-                        std::process::exit(1);
+                }
+                // Only stop local agent containers (skip cloud)
+                let running = docker::list_running_agent_containers().unwrap_or_default();
+                let agents = cfg.agents.as_deref().unwrap_or(&[]);
+                let local_agent_names: std::collections::HashSet<_> = agents
+                    .iter()
+                    .filter(|e| e.agent_type.as_deref() == Some("local"))
+                    .map(|e| e.name.clone())
+                    .collect();
+                let to_stop: Vec<_> = running
+                    .into_iter()
+                    .filter(|name| local_agent_names.contains(name))
+                    .collect();
+                let mut stopped = Vec::new();
+                for name in &to_stop {
+                    if docker::stop_agent_container(name).is_ok() {
+                        stopped.push(name.clone());
                     }
+                }
+                if stopped.is_empty() {
+                    println!("No running local agent containers.");
+                } else {
+                    for name in &stopped {
+                        println!("  {}: stopped", name);
+                    }
+                    println!("Stopped {} container(s).", stopped.len());
                 }
                 // Also stop Ollama if it's running
                 if docker::is_ollama_running() {
@@ -2528,27 +2843,6 @@ async fn main() {
                     std::process::exit(code);
                 }
                 std::process::exit(1);
-            }
-            AgentCommands::Reset { force } => {
-                if !confirm_reset(
-                    "Reset all agents to default (opencode only)? Type 'yes' to confirm: ",
-                    force,
-                ) {
-                    eprintln!("Reset cancelled.");
-                    std::process::exit(1);
-                }
-                let mut cfg = load_config().unwrap_or_else(|e| {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                });
-                cfg.agents = None;
-                cfg.agent = None;
-                cfg.current_agent = None;
-                save_config(&cfg).unwrap_or_else(|e| {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                });
-                println!("Agents reset to default (opencode).");
             }
         },
         Some(Commands::Project { cmd }) => match cmd {
@@ -2735,17 +3029,25 @@ async fn main() {
                     drop(_guard);
                     match result {
                         Ok(output) => {
-                            if output.contains(".git") {
-                                println!("\n  {} {} - workspace OK", BULLET_GREEN, proj.name);
+                            let has_git = !output.contains("no-git") && output.len() > 2;
+                            let has_opencode = output.contains('.') && output.chars().filter(|c| *c == '.').count() >= 2;
+                            if has_git && has_opencode {
+                                println!("\n  {} {} - ready", BULLET_GREEN, proj.name);
                                 if verbose {
                                     println!("  ---");
                                     for line in output.lines() {
                                         println!("    {}", line);
                                     }
                                 }
+                            } else if !has_git {
+                                eprintln!(
+                                    "  {} {} - failed: clone failed",
+                                    BULLET_RED, proj.name
+                                );
+                                std::process::exit(1);
                             } else {
                                 eprintln!(
-                                    "  {} {} - failed: workspace missing .git (clone may have failed)",
+                                    "  {} {} - failed: opencode not available",
                                     BULLET_RED, proj.name
                                 );
                                 std::process::exit(1);
@@ -2793,6 +3095,217 @@ async fn main() {
                 let project = cfg.projects.iter_mut().find(|p| p.name == name);
                 match project {
                     Some(proj) => {
+                        let is_wizard = repo.is_none()
+                            && image.is_none()
+                            && ssh_key.is_none()
+                            && base_branch.is_none()
+                            && remote.is_none()
+                            && github_token.is_none()
+                            && script.is_none()
+                            && commit_name.is_none()
+                            && commit_email.is_none()
+                            && agent.is_none()
+                            && ask_setup.is_none()
+                            && ask_execute.is_none()
+                            && ask_validate.is_none()
+                            && dev_setup.is_none()
+                            && dev_execute.is_none()
+                            && dev_validate.is_none()
+                            && dev_commit.is_none()
+                            && review_setup.is_none()
+                            && review_execute.is_none()
+                            && review_validate.is_none();
+                        if is_wizard {
+                            println!("  Updating project '{}'", proj.name);
+                            let repo_in = prompt_line(&format!("  Repository [{}]: ", proj.repo));
+                            if !repo_in.is_empty() {
+                                proj.repo = repo_in;
+                            }
+                            let image_in = prompt_line(&format!(
+                                "  Image [{}]: ",
+                                proj.image.as_deref().unwrap_or("opencode")
+                            ));
+                            if !image_in.is_empty() {
+                                proj.image = Some(image_in);
+                            } else if proj.image.is_some() && image_in.is_empty() {
+                                proj.image = None;
+                            }
+                            let ssh_in = prompt_line(&format!(
+                                "  SSH key [{}]: ",
+                                proj.ssh_key.as_deref().unwrap_or("(none)")
+                            ));
+                            if !ssh_in.is_empty() {
+                                proj.ssh_key = Some(ssh_in);
+                            } else if proj.ssh_key.is_some() && ssh_in.is_empty() {
+                                proj.ssh_key = None;
+                            }
+                            let base_branch_in = prompt_line(&format!(
+                                "  Base branch [{}]: ",
+                                proj.base_branch.as_deref().unwrap_or("main")
+                            ));
+                            if !base_branch_in.is_empty() {
+                                proj.base_branch = Some(base_branch_in);
+                            } else if proj.base_branch.is_some() && base_branch_in.is_empty() {
+                                proj.base_branch = None;
+                            }
+                            let remote_in = prompt_line(&format!(
+                                "  Remote [{}]: ",
+                                proj.remote.as_deref().unwrap_or("origin")
+                            ));
+                            if !remote_in.is_empty() {
+                                proj.remote = Some(remote_in);
+                            } else if proj.remote.is_some() && remote_in.is_empty() {
+                                proj.remote = None;
+                            }
+                            let github_in = prompt_line("  GitHub token [******]: ");
+                            if !github_in.is_empty() {
+                                proj.github_token = Some(github_in);
+                            } else if proj.github_token.is_some() && github_in.is_empty() {
+                                proj.github_token = None;
+                            }
+                            let script_in = prompt_line(&format!(
+                                "  Script [{}]: ",
+                                proj.script.as_deref().unwrap_or("(none)")
+                            ));
+                            if !script_in.is_empty() {
+                                proj.script = Some(script_in);
+                            } else if proj.script.is_some() && script_in.is_empty() {
+                                proj.script = None;
+                            }
+                            let commit_name_in = prompt_line(&format!(
+                                "  Commit name [{}]: ",
+                                proj.commit_name.as_deref().unwrap_or("(none)")
+                            ));
+                            if !commit_name_in.is_empty() {
+                                proj.commit_name = Some(commit_name_in);
+                            } else if proj.commit_name.is_some() && commit_name_in.is_empty() {
+                                proj.commit_name = None;
+                            }
+                            let commit_email_in = prompt_line(&format!(
+                                "  Commit email [{}]: ",
+                                proj.commit_email.as_deref().unwrap_or("(none)")
+                            ));
+                            if !commit_email_in.is_empty() {
+                                proj.commit_email = Some(commit_email_in);
+                            } else if proj.commit_email.is_some() && commit_email_in.is_empty() {
+                                proj.commit_email = None;
+                            }
+                            let agent_in = prompt_line(&format!(
+                                "  Agent [{}]: ",
+                                proj.agent.as_deref().unwrap_or("(none)")
+                            ));
+                            if !agent_in.is_empty() {
+                                proj.agent = Some(agent_in);
+                            } else if proj.agent.is_some() && agent_in.is_empty() {
+                                proj.agent = None;
+                            }
+                            println!("  Roles (Enter to keep current):");
+                           let ask_setup_in = prompt_line(&format!(
+                                "    ask.setup [{} {}]: ",
+                                proj.ask_setup_run.as_deref().unwrap_or("-"),
+                                proj.ask_setup_check.as_deref().unwrap_or("-")
+                            ));
+                            if !ask_setup_in.is_empty() {
+                                let parts: Vec<_> = ask_setup_in.split_whitespace().collect();
+                                proj.ask_setup_run = parts.first().map(|s| s.to_string());
+                                proj.ask_setup_check = parts.get(1).map(|s| s.to_string());
+                            }
+                            let ask_execute_in = prompt_line(&format!(
+                                "    ask.execute [{} {}]: ",
+                                proj.ask_execute_run.as_deref().unwrap_or("-"),
+                                proj.ask_execute_check.as_deref().unwrap_or("-")
+                            ));
+                            if !ask_execute_in.is_empty() {
+                                let parts: Vec<_> = ask_execute_in.split_whitespace().collect();
+                                proj.ask_execute_run = parts.first().map(|s| s.to_string());
+                                proj.ask_execute_check = parts.get(1).map(|s| s.to_string());
+                            }
+                            let ask_validate_in = prompt_line(&format!(
+                                "    ask.validate [{} {}]: ",
+                                proj.ask_validate_run.as_deref().unwrap_or("-"),
+                                proj.ask_validate_check.as_deref().unwrap_or("-")
+                            ));
+                            if !ask_validate_in.is_empty() {
+                                let parts: Vec<_> = ask_validate_in.split_whitespace().collect();
+                                proj.ask_validate_run = parts.first().map(|s| s.to_string());
+                                proj.ask_validate_check = parts.get(1).map(|s| s.to_string());
+                            }
+                            let dev_setup_in = prompt_line(&format!(
+                                "    dev.setup [{} {}]: ",
+                                proj.dev_setup_run.as_deref().unwrap_or("-"),
+                                proj.dev_setup_check.as_deref().unwrap_or("-")
+                            ));
+                            if !dev_setup_in.is_empty() {
+                                let parts: Vec<_> = dev_setup_in.split_whitespace().collect();
+                                proj.dev_setup_run = parts.first().map(|s| s.to_string());
+                                proj.dev_setup_check = parts.get(1).map(|s| s.to_string());
+                            }
+                            let dev_execute_in = prompt_line(&format!(
+                                "    dev.execute [{} {}]: ",
+                                proj.dev_execute_run.as_deref().unwrap_or("-"),
+                                proj.dev_execute_check.as_deref().unwrap_or("-")
+                            ));
+                            if !dev_execute_in.is_empty() {
+                                let parts: Vec<_> = dev_execute_in.split_whitespace().collect();
+                                proj.dev_execute_run = parts.first().map(|s| s.to_string());
+                                proj.dev_execute_check = parts.get(1).map(|s| s.to_string());
+                            }
+                            let dev_validate_in = prompt_line(&format!(
+                                "    dev.validate [{} {}]: ",
+                                proj.dev_validate_run.as_deref().unwrap_or("-"),
+                                proj.dev_validate_check.as_deref().unwrap_or("-")
+                            ));
+                            if !dev_validate_in.is_empty() {
+                                let parts: Vec<_> = dev_validate_in.split_whitespace().collect();
+                                proj.dev_validate_run = parts.first().map(|s| s.to_string());
+                                proj.dev_validate_check = parts.get(1).map(|s| s.to_string());
+                            }
+                            let dev_commit_in = prompt_line(&format!(
+                                "    dev.commit [{} {}]: ",
+                                proj.dev_commit_run.as_deref().unwrap_or("-"),
+                                proj.dev_commit_check.as_deref().unwrap_or("-")
+                            ));
+                            if !dev_commit_in.is_empty() {
+                                let parts: Vec<_> = dev_commit_in.split_whitespace().collect();
+                                proj.dev_commit_run = parts.first().map(|s| s.to_string());
+                                proj.dev_commit_check = parts.get(1).map(|s| s.to_string());
+                            }
+                            let review_setup_in = prompt_line(&format!(
+                                "    review.setup [{} {}]: ",
+                                proj.review_setup_run.as_deref().unwrap_or("-"),
+                                proj.review_setup_check.as_deref().unwrap_or("-")
+                            ));
+                            if !review_setup_in.is_empty() {
+                                let parts: Vec<_> = review_setup_in.split_whitespace().collect();
+                                proj.review_setup_run = parts.first().map(|s| s.to_string());
+                                proj.review_setup_check = parts.get(1).map(|s| s.to_string());
+                            }
+                            let review_execute_in = prompt_line(&format!(
+                                "    review.execute [{} {}]: ",
+                                proj.review_execute_run.as_deref().unwrap_or("-"),
+                                proj.review_execute_check.as_deref().unwrap_or("-")
+                            ));
+                            if !review_execute_in.is_empty() {
+                                let parts: Vec<_> = review_execute_in.split_whitespace().collect();
+                                proj.review_execute_run = parts.first().map(|s| s.to_string());
+                                proj.review_execute_check = parts.get(1).map(|s| s.to_string());
+                            }
+                            let review_validate_in = prompt_line(&format!(
+                                "    review.validate [{} {}]: ",
+                                proj.review_validate_run.as_deref().unwrap_or("-"),
+                                proj.review_validate_check.as_deref().unwrap_or("-")
+                            ));
+                            if !review_validate_in.is_empty() {
+                                let parts: Vec<_> = review_validate_in.split_whitespace().collect();
+                                proj.review_validate_run = parts.first().map(|s| s.to_string());
+                                proj.review_validate_check = parts.get(1).map(|s| s.to_string());
+                            }
+                            save_config(&cfg).unwrap_or_else(|e| {
+                                eprintln!("Error: {}", e);
+                                std::process::exit(1);
+                            });
+                            println!("  {} Project '{}' updated", BULLET_GREEN, name);
+                        } else {
                         if let Some(new_repo) = repo {
                             proj.repo = new_repo;
                         }
@@ -2963,6 +3476,7 @@ async fn main() {
                             std::process::exit(1);
                         });
                         println!("Project '{}' updated successfully", name);
+                        }
                     }
                     None => {
                         eprintln!("Error: Project '{}' not found", name);
@@ -2986,22 +3500,6 @@ async fn main() {
                     std::process::exit(1);
                 });
                 println!("Project removed successfully");
-            }
-            ProjectCommands::Reset { force } => {
-                if !confirm_reset("Remove all projects? Type 'yes' to confirm: ", force) {
-                    eprintln!("Reset cancelled.");
-                    std::process::exit(1);
-                }
-                let mut cfg = load_config().unwrap_or_else(|e| {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                });
-                cfg.projects.clear();
-                save_config(&cfg).unwrap_or_else(|e| {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                });
-                println!("All projects removed.");
             }
         },
         Some(Commands::Run { cmd }) => match cmd {

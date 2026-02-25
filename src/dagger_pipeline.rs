@@ -788,11 +788,7 @@ pub async fn run_project_status(
         script,
     )?;
     let out: String = c
-        .with_exec(vec![
-            "sh",
-            "-c",
-            "ls -la /workspace && echo '---' && find /workspace -maxdepth 2 -type f 2>/dev/null | head -40",
-        ])
+        .with_exec(vec!["sh", "-c", "if ls -la /workspace/.git >/dev/null 2>&1; then opencode --version 2>&1; else echo 'no-git'; fi"])
         .stdout()
         .await
         .map_err(|e| e.to_string())?;
