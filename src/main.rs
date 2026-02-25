@@ -1320,10 +1320,10 @@ fn resolve_pipeline_roles(
     ];
 
     for (step_key, step_name) in steps {
-        if let Some((agent, role, _, model, prompt)) =
+        if let Some((_, _, _, model, prompt)) =
             resolve_pipeline_role(project_config, &step_name, None)
         {
-            let role_info = RI::new(agent, role, model, prompt);
+            let role_info = RI::new(model, prompt);
             match step_key {
                 "setup_run" => roles.setup_run = Some(role_info),
                 "setup_check" => roles.setup_check = Some(role_info),
@@ -2858,52 +2858,103 @@ async fn main() {
                             };
                         }
                         // Parse role pairs: first is run, second is check (if provided)
-                        if let Some(roles) = ask_setup {
-                            proj.ask_setup_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                        if let Some(ref roles) = ask_setup {
+                            proj.ask_setup_run = roles.first().cloned().filter(|s| !s.is_empty());
                             proj.ask_setup_check = roles.get(1).cloned().filter(|s| !s.is_empty());
                         }
+                        if let Some(ref roles) = ask_execute {
+                            proj.ask_execute_run = roles.first().cloned().filter(|s| !s.is_empty());
+                            proj.ask_execute_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(ref roles) = ask_validate {
+                            proj.ask_validate_run =
+                                roles.first().cloned().filter(|s| !s.is_empty());
+                            proj.ask_validate_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(ref roles) = dev_setup {
+                            proj.dev_setup_run = roles.first().cloned().filter(|s| !s.is_empty());
+                            proj.dev_setup_check = roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(ref roles) = dev_execute {
+                            proj.dev_execute_run = roles.first().cloned().filter(|s| !s.is_empty());
+                            proj.dev_execute_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(ref roles) = dev_validate {
+                            proj.dev_validate_run =
+                                roles.first().cloned().filter(|s| !s.is_empty());
+                            proj.dev_validate_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(ref roles) = dev_commit {
+                            proj.dev_commit_run = roles.first().cloned().filter(|s| !s.is_empty());
+                            proj.dev_commit_check = roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(ref roles) = review_setup {
+                            proj.review_setup_run =
+                                roles.first().cloned().filter(|s| !s.is_empty());
+                            proj.review_setup_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(ref roles) = review_execute {
+                            proj.review_execute_run =
+                                roles.first().cloned().filter(|s| !s.is_empty());
+                            proj.review_execute_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
+                        if let Some(ref roles) = review_validate {
+                            proj.review_validate_run =
+                                roles.first().cloned().filter(|s| !s.is_empty());
+                            proj.review_validate_check =
+                                roles.get(1).cloned().filter(|s| !s.is_empty());
+                        }
                         if let Some(roles) = ask_execute {
-                            proj.ask_execute_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.ask_execute_run = roles.first().cloned().filter(|s| !s.is_empty());
                             proj.ask_execute_check =
                                 roles.get(1).cloned().filter(|s| !s.is_empty());
                         }
                         if let Some(roles) = ask_validate {
-                            proj.ask_validate_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.ask_validate_run =
+                                roles.first().cloned().filter(|s| !s.is_empty());
                             proj.ask_validate_check =
                                 roles.get(1).cloned().filter(|s| !s.is_empty());
                         }
                         if let Some(roles) = dev_setup {
-                            proj.dev_setup_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.dev_setup_run = roles.first().cloned().filter(|s| !s.is_empty());
                             proj.dev_setup_check = roles.get(1).cloned().filter(|s| !s.is_empty());
                         }
                         if let Some(roles) = dev_execute {
-                            proj.dev_execute_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.dev_execute_run = roles.first().cloned().filter(|s| !s.is_empty());
                             proj.dev_execute_check =
                                 roles.get(1).cloned().filter(|s| !s.is_empty());
                         }
                         if let Some(roles) = dev_validate {
-                            proj.dev_validate_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.dev_validate_run =
+                                roles.first().cloned().filter(|s| !s.is_empty());
                             proj.dev_validate_check =
                                 roles.get(1).cloned().filter(|s| !s.is_empty());
                         }
                         if let Some(roles) = dev_commit {
-                            proj.dev_commit_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.dev_commit_run = roles.first().cloned().filter(|s| !s.is_empty());
                             proj.dev_commit_check = roles.get(1).cloned().filter(|s| !s.is_empty());
                         }
                         if let Some(roles) = review_setup {
-                            proj.review_setup_run = roles.get(0).cloned().filter(|s| !s.is_empty());
+                            proj.review_setup_run =
+                                roles.first().cloned().filter(|s| !s.is_empty());
                             proj.review_setup_check =
                                 roles.get(1).cloned().filter(|s| !s.is_empty());
                         }
                         if let Some(roles) = review_execute {
                             proj.review_execute_run =
-                                roles.get(0).cloned().filter(|s| !s.is_empty());
+                                roles.first().cloned().filter(|s| !s.is_empty());
                             proj.review_execute_check =
                                 roles.get(1).cloned().filter(|s| !s.is_empty());
                         }
                         if let Some(roles) = review_validate {
                             proj.review_validate_run =
-                                roles.get(0).cloned().filter(|s| !s.is_empty());
+                                roles.first().cloned().filter(|s| !s.is_empty());
                             proj.review_validate_check =
                                 roles.get(1).cloned().filter(|s| !s.is_empty());
                         }
@@ -3354,6 +3405,27 @@ mod tests {
             script: None,
             commit_name: None,
             commit_email: None,
+            agent: None,
+            ask_setup_run: None,
+            ask_setup_check: None,
+            ask_execute_run: None,
+            ask_execute_check: None,
+            ask_validate_run: None,
+            ask_validate_check: None,
+            dev_setup_run: None,
+            dev_setup_check: None,
+            dev_execute_run: None,
+            dev_execute_check: None,
+            dev_validate_run: None,
+            dev_validate_check: None,
+            dev_commit_run: None,
+            dev_commit_check: None,
+            review_setup_run: None,
+            review_setup_check: None,
+            review_execute_run: None,
+            review_execute_check: None,
+            review_validate_run: None,
+            review_validate_check: None,
         });
         let serialized = toml::to_string(&cfg).unwrap();
         let deserialized: SmithConfig = toml::from_str(&serialized).unwrap();

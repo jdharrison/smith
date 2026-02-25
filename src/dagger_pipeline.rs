@@ -20,20 +20,13 @@ pub struct PipelineRoles {
 
 #[derive(Clone)]
 pub struct RoleInfo {
-    pub agent: String,
-    pub role: String,
     pub model: Option<String>,
     pub prompt: Option<String>,
 }
 
 impl RoleInfo {
-    pub fn new(agent: String, role: String, model: Option<String>, prompt: Option<String>) -> Self {
-        Self {
-            agent,
-            role,
-            model,
-            prompt,
-        }
+    pub fn new(model: Option<String>, prompt: Option<String>) -> Self {
+        Self { model, prompt }
     }
 
     pub fn model_arg(&self) -> String {
@@ -48,22 +41,6 @@ impl RoleInfo {
             .as_ref()
             .map(|p| format!(" --prompt '{}'", p.replace('\'', "'\"'\"'")))
             .unwrap_or_default()
-    }
-}
-
-impl PipelineRoles {
-    pub fn get_for_step(&self, step: &str) -> Option<&RoleInfo> {
-        match step {
-            "setup_run" => self.setup_run.as_ref(),
-            "setup_check" => self.setup_check.as_ref(),
-            "execute_run" => self.execute_run.as_ref(),
-            "execute_check" => self.execute_check.as_ref(),
-            "validate_run" => self.validate_run.as_ref(),
-            "validate_check" => self.validate_check.as_ref(),
-            "commit_run" => self.commit_run.as_ref(),
-            "commit_check" => self.commit_check.as_ref(),
-            _ => None,
-        }
     }
 }
 
