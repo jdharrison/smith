@@ -157,6 +157,7 @@ pub async fn run_doctor(conn: &Query) -> eyre::Result<()> {
 /// - clone_branch: branch to clone from remote (must exist).
 /// - work_branch: if Some(b), after clone run `git checkout -b b` (for dev on a new branch); if None, stay on clone_branch (for ask/review on existing branch).
 /// - script: optional script to run in container (e.g., install OpenCode)
+/// - cache_buster: when Some, injects a unique token into git operations so Dagger cache is invalidated for this run (e.g. when caching is disabled).
 fn build_setup_container(
     conn: &Query,
     repo_url: &str,
@@ -165,6 +166,7 @@ fn build_setup_container(
     base_image: &str,
     ssh_key_path: Option<&std::path::Path>,
     script: Option<&str>,
+    cache_buster: Option<u128>,
 ) -> PipelineResult<Container> {
     let key_content = ssh_key_path
         .map(|p| std::fs::read_to_string(p).map_err(|e| e.to_string()))
@@ -244,10 +246,17 @@ fn build_setup_container(
 
     let clone_branch_escaped = clone_branch.replace('\'', "'\"'\"'");
     let repo_escaped = repo_url.replace('\'', "'\"'\"'");
-    let clone_cmd = format!(
-        "git clone --depth 1 --branch '{}' '{}' /workspace",
-        clone_branch_escaped, repo_escaped
-    );
+    let clone_cmd = if let Some(bust) = cache_buster {
+        format!(
+            ": run_{} && git clone --depth 1 --branch '{}' '{}' /workspace",
+            bust, clone_branch_escaped, repo_escaped
+        )
+    } else {
+        format!(
+            "git clone --depth 1 --branch '{}' '{}' /workspace",
+            clone_branch_escaped, repo_escaped
+        )
+    };
     c = c.with_exec(vec!["sh", "-c", &clone_cmd]);
     c = c.with_workdir("/workspace");
     // When dev specifies a work branch: fetch origin, then create branch from origin/<branch> if it exists so HEAD is based off origin; else create new branch from current HEAD.
@@ -255,7 +264,7 @@ fn build_setup_container(
         let wb_escaped = wb.replace('\'', "'\"'\"'");
         let remote_ref = format!("refs/remotes/origin/{}", wb);
         let remote_ref_escaped = remote_ref.replace('\'', "'\"'\"'");
-        let branch_setup_cmd = format!(
+        let branch_setup_cmd_base = format!(
             r#"git fetch origin 2>&1 || {{ echo 'Setup failed: could not fetch from origin. Aborting.'; exit 1; }}
 if git rev-parse --verify "{}" >/dev/null 2>&1; then
   git checkout -b '{}' "{}" 2>&1 || {{ echo 'Setup failed: could not checkout branch from origin. Aborting.'; exit 1; }}
@@ -264,6 +273,11 @@ else
 fi"#,
             remote_ref_escaped, wb_escaped, remote_ref_escaped, wb_escaped
         );
+        let branch_setup_cmd = if let Some(bust) = cache_buster {
+            format!(": run_{} && {}", bust, branch_setup_cmd_base)
+        } else {
+            branch_setup_cmd_base
+        };
         c = c.with_exec(vec!["sh", "-c", &branch_setup_cmd]);
     }
 
@@ -395,7 +409,7 @@ async fn run_setup_loop(
         let model_arg = setup_role.map(|r| r.model_arg()).unwrap_or_default();
         let prompt_arg = setup_role.map(|r| r.prompt_arg()).unwrap_or_default();
         let fix_cmd = format!(
-            "cd /workspace && timeout 300 opencode run{} {} '{}' 2>&1",
+            "cd /workspace && opencode run{} {} '{}' 2>&1",
             model_arg, prompt_arg, fix_escaped
         );
         c = c.with_exec(vec!["sh", "-c", &fix_cmd]);
@@ -438,7 +452,7 @@ async fn run_execute_check_loop(
         let model_arg = check_role.map(|r| r.model_arg()).unwrap_or_default();
         let prompt_arg = check_role.map(|r| r.prompt_arg()).unwrap_or_default();
         let fix_cmd = format!(
-            "cd /workspace && timeout 300 opencode run{} {} '{}' 2>&1",
+            "cd /workspace && opencode run{} {} '{}' 2>&1",
             model_arg, prompt_arg, fix_escaped
         );
         c = c.with_exec(vec!["sh", "-c", &fix_cmd]);
@@ -459,7 +473,7 @@ async fn run_assurance_loop(
     let prompt_arg = validate_role.map(|r| r.prompt_arg()).unwrap_or_default();
     for attempt in 0..MAX_ASSURANCE_LOOP_RETRIES {
         let assurance_cmd = format!(
-            "cd /workspace && timeout 90 opencode run{} {} '{}' 2>&1",
+            "cd /workspace && opencode run{} {} '{}' 2>&1",
             model_arg, prompt_arg, assurance_escaped
         );
         let out: String = c
@@ -483,7 +497,7 @@ async fn run_assurance_loop(
         let fix_model_arg = validate_role.map(|r| r.model_arg()).unwrap_or_default();
         let fix_prompt_arg = validate_role.map(|r| r.prompt_arg()).unwrap_or_default();
         let fix_cmd = format!(
-            "cd /workspace && timeout 180 opencode run{} {} '{}' 2>&1",
+            "cd /workspace && opencode run{} {} '{}' 2>&1",
             fix_model_arg, fix_prompt_arg, fix_escaped
         );
         c = c.with_exec(vec!["sh", "-c", &fix_cmd]);
@@ -499,7 +513,7 @@ async fn run_ask_assurance_pass(c: &Container, text: &str) -> Option<String> {
     let full_prompt = format!("{}{}", ASK_CLEANUP_PROMPT_PREFIX, truncated);
     let escaped = full_prompt.replace('\'', "'\"'\"'");
     let cmd = format!(
-        "cd /workspace && timeout 120 opencode run '{}' 2>&1",
+        "cd /workspace && opencode run '{}' 2>&1",
         escaped
     );
     let out: String = c.with_exec(vec!["sh", "-c", &cmd]).stdout().await.ok()?;
@@ -534,11 +548,19 @@ pub async fn run_ask(
     question: &str,
     base_image: &str,
     ssh_key_path: Option<&std::path::Path>,
-    timeout_secs: u64,
+    _timeout_secs: u64,
     script: Option<&str>,
     roles: &PipelineRoles,
+    watch: bool,
+    no_cache: bool,
 ) -> PipelineResult<String> {
     let branch = branch.unwrap_or("main");
+    let cache_buster = no_cache.then(|| {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+    });
     let c = build_setup_container(
         conn,
         repo_url,
@@ -547,6 +569,7 @@ pub async fn run_ask(
         base_image,
         ssh_key_path,
         script,
+        cache_buster,
     )
     .map_err(|e| map_branch_not_found_err(e, branch))?;
     let c = run_setup_loop(c, None, roles.setup_run.as_ref())
@@ -558,15 +581,28 @@ pub async fn run_ask(
     let role = roles.execute_run.as_ref();
     let model_arg = role.map(|r| r.model_arg()).unwrap_or_default();
     let prompt_arg = role.map(|r| r.prompt_arg()).unwrap_or_default();
-    let cmd = format!(
-        "cd /workspace && timeout {} opencode run{} {} '{}' 2>&1",
-        timeout_secs, model_arg, prompt_arg, escaped
-    );
+
+    let cmd = if watch {
+        format!(
+            "cd /workspace && opencode run{} {} '{}' --print-logs 2>&1",
+            model_arg, prompt_arg, escaped
+        )
+    } else {
+        format!(
+            "cd /workspace && opencode run{} {} '{}' 2>&1",
+            model_arg, prompt_arg, escaped
+        )
+    };
+
     let raw = c
         .with_exec(vec!["sh", "-c", &cmd])
         .stdout()
         .await
         .map_err(|e| e.to_string())?;
+
+    if watch {
+        println!("{}", raw);
+    }
 
     let answer = run_ask_assurance(c, raw.trim().to_string()).await;
     Ok(answer)
@@ -585,13 +621,21 @@ pub async fn run_dev(
     base_image: &str,
     ssh_key_path: Option<&std::path::Path>,
     _verbose: bool,
-    timeout_secs: u64,
+    _timeout_secs: u64,
     script: Option<&str>,
     commit_name: Option<&str>,
     commit_email: Option<&str>,
     roles: &PipelineRoles,
+    watch: bool,
+    no_cache: bool,
 ) -> PipelineResult<String> {
     let clone_branch = base.unwrap_or("main");
+    let cache_buster = no_cache.then(|| {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+    });
     let c = build_setup_container(
         conn,
         repo_url,
@@ -600,6 +644,7 @@ pub async fn run_dev(
         base_image,
         ssh_key_path,
         script,
+        cache_buster,
     )?;
     let c = run_setup_loop(c, Some(branch), roles.setup_run.as_ref()).await?;
 
@@ -626,12 +671,28 @@ pub async fn run_dev(
     let role = roles.execute_run.as_ref();
     let model_arg = role.map(|r| r.model_arg()).unwrap_or_default();
     let prompt_arg = role.map(|r| r.prompt_arg()).unwrap_or_default();
-    let exec_cmd = format!(
-        "cd /workspace && {} timeout {} opencode run{} {} '{}' 2>&1",
-        git_user_config, timeout_secs, model_arg, prompt_arg, escaped
-    );
+
+    let exec_cmd = if watch {
+        format!(
+            "cd /workspace && {} opencode run{} {} '{}' --print-logs 2>&1",
+            git_user_config, model_arg, prompt_arg, escaped
+        )
+    } else {
+        format!(
+            "cd /workspace && {} opencode run{} {} '{}' 2>&1",
+            git_user_config, model_arg, prompt_arg, escaped
+        )
+    };
+
     let c = c.with_exec(vec!["sh", "-c", &exec_cmd]);
-    let _ = c.stdout().await.map_err(|e| e.to_string())?;
+    let raw = c
+        .stdout()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if watch {
+        println!("{}", raw);
+    }
 
     let c = run_execute_check_loop(c, task, roles.execute_check.as_ref()).await?;
     let c = run_assurance_loop(
@@ -641,7 +702,7 @@ pub async fn run_dev(
         roles.execute_check.as_ref(),
     )
     .await?;
-    // Commit and push (requires SSH for push)
+    // Commit and push (requires SSH for push). Always set git identity so commit succeeds in container; use project config when set, else a default.
     let commit_git_user_config = match (commit_name, commit_email) {
         (Some(name), Some(email)) => format!(
             "git config user.name '{}' && git config user.email '{}' && ",
@@ -649,22 +710,17 @@ pub async fn run_dev(
             email.replace('\'', "'\"'\"'")
         ),
         (Some(name), None) => format!(
-            "git config user.name '{}' && ",
+            "git config user.name '{}' && git config user.email 'smith@localhost' && ",
             name.replace('\'', "'\"'\"'")
         ),
         (None, Some(email)) => format!(
-            "git config user.email '{}' && ",
+            "git config user.name 'Smith' && git config user.email '{}' && ",
             email.replace('\'', "'\"'\"'")
         ),
-        (None, None) => String::new(),
+        (None, None) => "git config user.name 'Smith' && git config user.email 'smith@localhost' && ".to_string(),
     };
-    let commit_cmd = format!(
-        "cd /workspace && {} git add -A && git status --porcelain | head -1 && git commit -m '{}' 2>&1 || echo 'no-commit'",
-        commit_git_user_config,
-        task.replace('\'', "'\"'\"'").replace('\n', " ")
-    );
-    let c = c.with_exec(vec!["sh", "-c", &commit_cmd]);
-    let out: String = c
+    // Capture HEAD before commit so we can detect "nothing to commit".
+    let pre_commit_head: String = c
         .with_exec(vec![
             "sh",
             "-c",
@@ -672,11 +728,30 @@ pub async fn run_dev(
         ])
         .stdout()
         .await
-        .map_err(|e| e.to_string())?;
-    let hash = out.trim().to_string();
-    if hash == "no-commit" {
+        .map_err(|e| e.to_string())?
+        .trim()
+        .to_string();
+    let commit_cmd = format!(
+        "cd /workspace && {} git add -A && git status --porcelain | head -1 && git commit -m '{}' 2>&1 || true",
+        commit_git_user_config,
+        task.replace('\'', "'\"'\"'").replace('\n', " ")
+    );
+    let c = c.with_exec(vec!["sh", "-c", &commit_cmd]);
+    let post_commit_head: String = c
+        .with_exec(vec![
+            "sh",
+            "-c",
+            "cd /workspace && git rev-parse HEAD 2>/dev/null || echo 'no-commit'",
+        ])
+        .stdout()
+        .await
+        .map_err(|e| e.to_string())?
+        .trim()
+        .to_string();
+    if post_commit_head == "no-commit" || pre_commit_head == post_commit_head {
         return Err("No changes to commit".to_string());
     }
+    let hash = post_commit_head;
     // Bust cache so we always run fetch+rebase+push (remote state changes; cached result would be stale).
     let run_id = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -692,10 +767,10 @@ pub async fn run_dev(
     );
     let c = c.with_exec(vec!["sh", "-c", &rebase_cmd]);
     let _ = c.stdout().await.map_err(|e| e.to_string())?;
-    // Push; surface failure (e.g. non-fast-forward, permission denied).
+    // Push to the configured branch explicitly (HEAD:refs/heads/<branch>).
     let push_cmd = format!(
-        "cd /workspace && : run_{} && git push origin HEAD 2>&1 || {{ echo 'Push failed: remote rejected (e.g. non-fast-forward) or network/SSH error.'; exit 1; }}",
-        run_id
+        "cd /workspace && : run_{} && git push origin 'HEAD:refs/heads/{}' 2>&1 || {{ echo 'Push failed: remote rejected (e.g. non-fast-forward) or network/SSH error.'; exit 1; }}",
+        run_id, branch_escaped
     );
     let c = c.with_exec(vec!["sh", "-c", &push_cmd]);
     let _ = c.stdout().await.map_err(|e| e.to_string())?;
@@ -703,7 +778,9 @@ pub async fn run_dev(
 }
 
 /// Run the Review pipeline: setup → setup loop → opencode analysis. Returns the review text.
-/// Clones the base branch first, then checks out the feature branch so git diff can compare them.
+/// If local_workspace is provided, mounts the local directory instead of cloning from remote.
+/// This allows reviewing uncommitted local changes. Otherwise clones the base branch first,
+/// then checks out the feature branch so git diff can compare them.
 /// OpenCode runs locally in the container - model/provider is configured in the container image.
 #[allow(clippy::too_many_arguments)]
 pub async fn run_review(
@@ -713,59 +790,202 @@ pub async fn run_review(
     base: Option<&str>,
     base_image: &str,
     ssh_key_path: Option<&std::path::Path>,
-    timeout_secs: u64,
+    _timeout_secs: u64,
     script: Option<&str>,
     roles: &PipelineRoles,
+    watch: bool,
+    no_cache: bool,
+    local_workspace: Option<&std::path::Path>,
 ) -> PipelineResult<String> {
     let base_branch = base.unwrap_or("main");
-    // Clone base branch first, then checkout feature branch for comparison
-    let c = build_setup_container(
-        conn,
-        repo_url,
-        base_branch,
-        None,
-        base_image,
-        ssh_key_path,
-        script,
-    )
-    .map_err(|e| map_branch_not_found_err(e, base_branch))?;
-    // Fetch all refs and checkout the feature branch to compare against base
-    let branch_escaped = branch.replace('\'', "'\"'\"'");
-    let remote_ref = format!("refs/remotes/origin/{}", branch);
-    let remote_ref_escaped = remote_ref.replace('\'', "'\"'\"'");
-    let checkout_cmd = format!(
-        r#"cd /workspace && git fetch origin 2>&1 || {{ echo 'Setup failed: could not fetch from origin. Aborting.'; exit 1; }}
+    let cache_buster = no_cache.then(|| {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+    });
+    
+    let c = if let Some(workspace_path) = local_workspace {
+        // Use local workspace: mount it directly instead of cloning
+        let key_content = ssh_key_path
+            .map(|p| std::fs::read_to_string(p).map_err(|e| e.to_string()))
+            .transpose()?;
+
+        let uses_ssh_url = repo_url.starts_with("git@");
+        let mut c = conn.container().from(base_image);
+        if let Some(bust) = cache_buster {
+            c = c.with_env_variable("SMITH_CACHEBUST", bust.to_string());
+        }
+
+        if let Some(ref key) = key_content {
+            let secret_name = format!(
+                "dk_{}_{}",
+                std::process::id(),
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_nanos()
+            );
+            let secret = conn.set_secret(&secret_name, key.clone());
+            c = c
+                .with_mounted_secret("/root/.ssh/id_ed25519", secret)
+                .with_exec(vec![
+                    "sh",
+                    "-c",
+                    "mkdir -p /root/.ssh && chmod 700 /root/.ssh && chmod 600 /root/.ssh/id_ed25519 || { echo 'Setup failed: could not set SSH key permissions (600). Aborting.'; exit 1; }",
+                ]);
+        } else if uses_ssh_url {
+            let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+            let ssh_dir = format!("{}/.ssh", home);
+            let host_ssh = conn.host().directory(ssh_dir);
+            c = c.with_mounted_directory("/root/.ssh", host_ssh);
+            if let Ok(sock) = std::env::var("SSH_AUTH_SOCK") {
+                let host_socket = conn.host().unix_socket(&sock);
+                c = c
+                    .with_unix_socket("/ssh-agent", host_socket)
+                    .with_env_variable("SSH_AUTH_SOCK", "/ssh-agent");
+            }
+        }
+
+        c = c.with_exec(vec![
+            "sh",
+            "-c",
+            "apk add --no-cache git openssh-client curl ca-certificates tar bash 2>/dev/null || (apt-get update && apt-get install -y git openssh-client curl ca-certificates tar bash) 2>/dev/null || true",
+        ]);
+        c = c.with_env_variable(
+            "PATH",
+            "/root/.cargo/bin:/usr/local/cargo/bin:/root/.opencode/bin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        );
+
+        if key_content.is_some() || !uses_ssh_url {
+            c = c.with_exec(vec![
+                "sh",
+                "-c",
+                "mkdir -p /root/.ssh && chmod 700 /root/.ssh",
+            ]);
+            c = c.with_exec(vec![
+                "sh",
+                "-c",
+                "ssh-keyscan github.com >> /root/.ssh/known_hosts 2>/dev/null || true",
+            ]);
+        }
+
+        // Mount local workspace
+        let host_workspace = conn.host().directory(workspace_path.to_string_lossy().as_ref());
+        c = c.with_mounted_directory("/workspace", host_workspace);
+        c = c.with_workdir("/workspace");
+
+        // Fetch from origin to ensure we have the latest base branch for comparison
+        c = c.with_exec(vec![
+            "sh",
+            "-c",
+            "cd /workspace && git fetch origin 2>&1 || true",
+        ]);
+
+        // Run project script if provided
+        if let Some(script) = script {
+            c = c.with_exec(vec!["sh", "-c", script]);
+        }
+
+        // Install Rust when the project has Cargo.toml
+        c = c.with_exec(vec![
+            "sh",
+            "-c",
+            "[ -f /workspace/Cargo.toml ] && (apk add --no-cache build-base 2>/dev/null || (apt-get update && apt-get install -y build-essential) 2>/dev/null) && (curl -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable) || true",
+        ]);
+        // Install Node/npm only when the project has package.json
+        c = c.with_exec(vec![
+            "sh",
+            "-c",
+            "[ -f /workspace/package.json ] && (apk add --no-cache nodejs npm 2>/dev/null || (apt-get update && apt-get install -y nodejs npm) 2>/dev/null) || true",
+        ]);
+        // Install dependencies by project type
+        c = c.with_exec(vec!["sh", "-c", INSTALL_SCRIPT]);
+
+        // Bootstrap OpenCode
+        c = c.with_exec(vec![
+            "sh",
+            "-c",
+            "opencode --version 2>&1 || { echo 'Setup failed: opencode could not be run. Aborting.'; exit 1; }",
+        ]);
+
+        c
+    } else {
+        // Clone base branch first, then checkout feature branch for comparison
+        let c = build_setup_container(
+            conn,
+            repo_url,
+            base_branch,
+            None,
+            base_image,
+            ssh_key_path,
+            script,
+            cache_buster,
+        )
+        .map_err(|e| map_branch_not_found_err(e, base_branch))?;
+        // Fetch all refs and checkout the feature branch to compare against base
+        let branch_escaped = branch.replace('\'', "'\"'\"'");
+        let remote_ref = format!("refs/remotes/origin/{}", branch);
+        let remote_ref_escaped = remote_ref.replace('\'', "'\"'\"'");
+        let checkout_cmd = format!(
+            r#"cd /workspace && git fetch origin 2>&1 || {{ echo 'Setup failed: could not fetch from origin. Aborting.'; exit 1; }}
 if git rev-parse --verify "{}" >/dev/null 2>&1; then
   git checkout -b '{}' "{}" 2>&1 || {{ echo 'Setup failed: could not checkout branch from origin. Aborting.'; exit 1; }}
 else
   git checkout -b '{}' 2>&1 || {{ echo 'Setup failed: could not create branch. Aborting.'; exit 1; }}
 fi"#,
-        remote_ref_escaped, branch_escaped, remote_ref_escaped, branch_escaped
-    );
-    let c = c.with_exec(vec!["sh", "-c", &checkout_cmd]);
-    let _ = c.stdout().await.map_err(|e| e.to_string())?;
+            remote_ref_escaped, branch_escaped, remote_ref_escaped, branch_escaped
+        );
+        let c = c.with_exec(vec!["sh", "-c", &checkout_cmd]);
+        let _ = c.stdout().await.map_err(|e| e.to_string())?;
+        c
+    };
+    
     let c = run_setup_loop(c, None, roles.setup_run.as_ref())
         .await
         .map_err(|e| map_branch_not_found_err(e, branch))?;
-    let review_prompt = format!(
-        "Analyze the changes in branch '{}' compared to base branch '{}'. Report any issues, security concerns, or suggested improvements.",
-        branch, base_branch
-    );
+    
+    // Update review prompt to handle both local and remote scenarios
+    let review_prompt = if local_workspace.is_some() {
+        format!(
+            "Analyze the changes in the current working directory compared to base branch '{}'. Include both committed changes on the current branch and any uncommitted local changes. Report any issues, security concerns, or suggested improvements.",
+            base_branch
+        )
+    } else {
+        format!(
+            "Analyze the changes in branch '{}' compared to base branch '{}'. Report any issues, security concerns, or suggested improvements.",
+            branch, base_branch
+        )
+    };
 
     // Run opencode for review
     let escaped = review_prompt.replace('\'', "'\"'\"'");
     let role = roles.execute_run.as_ref();
     let model_arg = role.map(|r| r.model_arg()).unwrap_or_default();
     let prompt_arg = role.map(|r| r.prompt_arg()).unwrap_or_default();
-    let cmd = format!(
-        "cd /workspace && timeout {} opencode run{} {} '{}' 2>&1",
-        timeout_secs, model_arg, prompt_arg, escaped
-    );
+
+    let cmd = if watch {
+        format!(
+            "cd /workspace && opencode run{} {} '{}' --print-logs 2>&1",
+            model_arg, prompt_arg, escaped
+        )
+    } else {
+        format!(
+            "cd /workspace && opencode run{} {} '{}' 2>&1",
+            model_arg, prompt_arg, escaped
+        )
+    };
+
     let out = c
         .with_exec(vec!["sh", "-c", &cmd])
         .stdout()
         .await
         .map_err(|e| e.to_string())?;
+
+    if watch {
+        println!("{}", out);
+    }
+
     Ok(out.trim().to_string())
 }
 
@@ -786,6 +1006,7 @@ pub async fn run_project_status(
         base_image,
         ssh_key_path,
         script,
+        None,
     )?;
     let out: String = c
         .with_exec(vec!["sh", "-c", "if ls -la /workspace/.git >/dev/null 2>&1; then opencode --version 2>&1; else echo 'no-git'; fi"])

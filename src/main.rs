@@ -42,9 +42,7 @@ fn status_circle(active: bool, reachable: Option<bool>, built: bool, is_cloud: b
     let bullet = "●";
     let color = if active && reachable == Some(false) {
         ANSI_YELLOW
-    } else if active {
-        ANSI_GREEN
-    } else if is_cloud {
+    } else if active || is_cloud {
         ANSI_GREEN
     } else if built {
         ANSI_BLUE
@@ -161,6 +159,7 @@ struct Cli {
 }
 
 #[derive(Subcommand)]
+#[allow(clippy::large_enum_variant)]
 enum Commands {
     /// Dependencies, agents, projects
     #[command(next_help_heading = "System")]
@@ -200,6 +199,9 @@ enum Commands {
     },
     /// Run a pipeline (agent + project scoped)
     Run {
+        /// Enable Dagger cache for this run (may reuse previous pipeline steps; default is a fresh run)
+        #[arg(long)]
+        cache: bool,
         #[command(subcommand)]
         cmd: RunCommands,
     },
@@ -309,6 +311,7 @@ enum AgentCommands {
 }
 
 #[derive(Subcommand)]
+#[allow(clippy::large_enum_variant)]
 enum ProjectCommands {
     /// Add a new project
     Add {
@@ -450,12 +453,15 @@ enum RunCommands {
         /// Keep container alive after answering (for debugging/inspection)
         #[arg(long)]
         keep_alive: bool,
-        /// Timeout in seconds for the agent run (default: 300)
+        /// Timeout in seconds for the agent run (default: 600)
         #[arg(long)]
         timeout: Option<u64>,
         /// Show full Dagger and pipeline output
         #[arg(long)]
         verbose: bool,
+        /// Watch the agent work in real-time with full TUI
+        #[arg(long)]
+        watch: bool,
     },
     /// Execute a development action (read/write) with validation and commit
     Dev {
@@ -485,12 +491,15 @@ enum RunCommands {
         /// Create or update a pull request after pushing (requires GitHub token configured)
         #[arg(long)]
         pr: bool,
-        /// Timeout in seconds for the agent run (default: 300)
+        /// Timeout in seconds for the agent run (default: 900)
         #[arg(long)]
         timeout: Option<u64>,
         /// Show verbose output from OpenCode agent
         #[arg(long)]
         verbose: bool,
+        /// Watch the agent work in real-time with full TUI
+        #[arg(long)]
+        watch: bool,
     },
     /// Review changes in a feature branch
     Review {
@@ -514,12 +523,15 @@ enum RunCommands {
         /// Keep container alive after review (for debugging/inspection)
         #[arg(long)]
         keep_alive: bool,
-        /// Timeout in seconds for the agent run (default: 300)
+        /// Timeout in seconds for the agent run (default: 900)
         #[arg(long)]
         timeout: Option<u64>,
         /// Show full Dagger and pipeline output
         #[arg(long)]
         verbose: bool,
+        /// Watch the agent work in real-time with full TUI
+        #[arg(long)]
+        watch: bool,
     },
 }
 
@@ -1129,6 +1141,133 @@ fn run_install_finish() -> Result<(), String> {
     Ok(())
 }
 
+/// Get the remote URL for "origin" from the git repo containing the current directory, if any.
+fn git_remote_origin_url() -> Option<String> {
+    let out = Command::new("git")
+        .args(["remote", "get-url", "origin"])
+        .output()
+        .ok()?;
+    if out.status.success() {
+        let url = String::from_utf8_lossy(&out.stdout).trim().to_string();
+        if url.is_empty() {
+            None
+        } else {
+            Some(url)
+        }
+    } else {
+        None
+    }
+}
+
+/// Get the canonical repo root path for the git repo containing the current directory, if any.
+fn git_repo_root_path() -> Option<PathBuf> {
+    let out = Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    let root = String::from_utf8_lossy(&out.stdout).trim().to_string();
+    if root.is_empty() {
+        return None;
+    }
+    std::fs::canonicalize(root).ok()
+}
+
+/// Normalize a repo string (URL or path) to a comparable form for matching.
+/// - GitHub URLs -> "github.com/owner/name"
+/// - Other URLs -> "host/path" (strip .git, lowercase host)
+/// - Paths -> canonical absolute path if it exists
+fn normalize_repo_for_match(repo: &str) -> Option<String> {
+    let repo = repo.trim();
+    if repo.is_empty() {
+        return None;
+    }
+    // URL: has protocol or SSH form
+    if repo.contains("://") || repo.starts_with("git@") {
+        // Only use GitHub parser for GitHub URLs
+        if repo.contains("github.com") {
+            if let Ok(info) = github::extract_repo_info(repo) {
+                return Some(format!("github.com/{}/{}", info.owner, info.name));
+            }
+        }
+        // Non-GitHub URL: normalize to host/path
+        let s = repo.trim_end_matches(".git");
+        let (host, path) = if s.starts_with("git@") {
+            let colon = s.find(':')?;
+            let host = s[4..colon].to_lowercase();
+            let path = s[colon + 1..].trim_start_matches('/');
+            (host, path)
+        } else if let Some(after) = s.strip_prefix("https://").or_else(|| s.strip_prefix("http://")) {
+            let rest = after.splitn(2, '/').collect::<Vec<_>>();
+            let host = rest.first()?.to_string().to_lowercase();
+            let path = rest.get(1).copied().unwrap_or("").trim_start_matches('/');
+            (host, path)
+        } else {
+            return None;
+        };
+        let path = path.trim_end_matches('/');
+        if path.is_empty() {
+            Some(host)
+        } else {
+            Some(format!("{}/{}", host, path))
+        }
+    } else {
+        // Treat as filesystem path
+        let p = Path::new(repo);
+        if p.exists() {
+            std::fs::canonicalize(p).ok().map(|pb| pb.to_string_lossy().into_owned())
+        } else {
+            Some(repo.to_string())
+        }
+    }
+}
+
+/// If cwd is inside a git repo and exactly one configured project's repo matches
+/// (by remote URL or repo root path), return that project name. Otherwise None.
+/// Explicit --project / --repo should be used when zero or multiple matches.
+fn detect_project_from_cwd() -> Result<Option<String>, String> {
+    let cfg = match load_config() {
+        Ok(c) => c,
+        Err(_) => return Ok(None),
+    };
+    if cfg.projects.is_empty() {
+        return Ok(None);
+    }
+
+    let remote_url = git_remote_origin_url();
+    let repo_root = git_repo_root_path();
+
+    let current_normalized_url = remote_url.as_deref().and_then(normalize_repo_for_match);
+    let current_normalized_path = repo_root.as_ref().map(|p| p.to_string_lossy().into_owned());
+
+    let mut matches: Vec<&str> = Vec::new();
+    for proj in &cfg.projects {
+        let normalized = match normalize_repo_for_match(proj.repo.as_str()) {
+            Some(n) => n,
+            None => continue,
+        };
+        let url_match = current_normalized_url.as_ref() == Some(&normalized);
+        let path_match = current_normalized_path.as_ref() == Some(&normalized);
+        if url_match || path_match {
+            matches.push(proj.name.as_str());
+        }
+    }
+
+    if matches.len() == 1 {
+        Ok(Some(matches[0].to_string()))
+    } else {
+        if matches.len() > 1 {
+            eprintln!(
+                "Multiple projects match this repo ({}); use --project to choose.",
+                matches.join(", ")
+            );
+        }
+        Ok(None)
+    }
+}
+
 fn resolve_repo(repo: Option<String>, project: Option<String>) -> Result<String, String> {
     if let Some(r) = repo {
         return Ok(r);
@@ -1225,6 +1364,7 @@ fn resolve_commit_author(
 
 /// Resolve pipeline step role: returns (agent_name, role_name, mode, model, prompt)
 /// Looks up step in project config, parses "agent:role", resolves role from agent config
+#[allow(clippy::type_complexity)]
 fn resolve_pipeline_role(
     project_config: Option<&ProjectConfig>,
     step: &str,
@@ -1442,7 +1582,8 @@ async fn main() {
                 for agent_entry in list.iter() {
                     let active = running.contains(&agent_entry.name);
                     let built =
-                        docker::image_exists(&docker::agent_built_image_tag(&agent_entry.name)).unwrap_or(false);
+                        docker::image_exists(&docker::agent_built_image_tag(&agent_entry.name))
+                            .unwrap_or(false);
                     let is_cloud = agent_entry
                         .agent_type
                         .as_deref()
@@ -1584,15 +1725,12 @@ async fn main() {
                     match result {
                         Ok(output) => {
                             let has_git = !output.contains("no-git") && output.len() > 2;
-                            let has_opencode = output.contains('.') && output.chars().filter(|c| *c == '.').count() >= 2;
+                            let has_opencode = output.contains('.')
+                                && output.chars().filter(|c| *c == '.').count() >= 2;
                             if has_git && has_opencode {
                                 project_results.push((name, true, "ready".to_string()));
                             } else if !has_git {
-                                project_results.push((
-                                    name,
-                                    false,
-                                    "clone failed".to_string(),
-                                ));
+                                project_results.push((name, false, "clone failed".to_string()));
                             } else {
                                 project_results.push((
                                     name,
@@ -1743,7 +1881,10 @@ async fn main() {
                         if let Err(e) = save_config(&cfg) {
                             eprintln!("Error saving config: {}", e);
                         } else {
-                            println!("  {} Created default agent: {}", BULLET_GREEN, DEFAULT_AGENT_NAME);
+                            println!(
+                                "  {} Created default agent: {}",
+                                BULLET_GREEN, DEFAULT_AGENT_NAME
+                            );
                         }
                     }
                 }
@@ -1971,7 +2112,8 @@ async fn main() {
             remove_config,
             remove_images,
         }) => {
-            let prompt = "This will stop all agent containers and Ollama. Continue? Type 'yes' to confirm: ";
+            let prompt =
+                "This will stop all agent containers and Ollama. Continue? Type 'yes' to confirm: ";
             if !confirm_reset(prompt, force) {
                 eprintln!("Uninstall cancelled.");
                 std::process::exit(1);
@@ -1981,7 +2123,10 @@ async fn main() {
             println!();
 
             if let Err(e) = docker::check_docker_available() {
-                eprintln!("Warning: Docker not available - skipping container cleanup: {}", e);
+                eprintln!(
+                    "Warning: Docker not available - skipping container cleanup: {}",
+                    e
+                );
             } else {
                 println!("  Stopping agent containers...");
                 match docker::stop_all_agent_containers() {
@@ -2021,7 +2166,9 @@ async fn main() {
                         }
                     }
                     if docker::image_exists("ollama/ollama").unwrap_or(false) {
-                        let _ = Command::new("docker").args(["rmi", "-f", "ollama/ollama"]).output();
+                        let _ = Command::new("docker")
+                            .args(["rmi", "-f", "ollama/ollama"])
+                            .output();
                         println!("    ollama/ollama: removed");
                     }
                 }
@@ -2030,7 +2177,8 @@ async fn main() {
             let remove_config = if remove_config {
                 true
             } else {
-                let prompt = "Remove all config and profile data (~/.config/smith)? Type 'yes' to confirm: ";
+                let prompt =
+                    "Remove all config and profile data (~/.config/smith)? Type 'yes' to confirm: ";
                 confirm_reset(prompt, false)
             };
 
@@ -2064,9 +2212,7 @@ async fn main() {
             let prompt = "Remove the smith binary? Type 'yes' to run 'cargo uninstall smith': ";
             if confirm_reset(prompt, force) {
                 println!("  Running cargo uninstall smith...");
-                let status = Command::new("cargo")
-                    .args(["uninstall", "smith"])
-                    .status();
+                let status = Command::new("cargo").args(["uninstall", "smith"]).status();
                 match status {
                     Ok(s) if s.success() => {
                         println!("    smith binary removed");
@@ -2278,10 +2424,7 @@ async fn main() {
                             && enabled.is_none();
                         if is_wizard {
                             println!("  Updating agent '{}'", entry.name);
-                            let image_in = prompt_line(&format!(
-                                "  Image [{}]: ",
-                                entry.image
-                            ));
+                            let image_in = prompt_line(&format!("  Image [{}]: ", entry.image));
                             if !image_in.is_empty() {
                                 entry.image = image_in;
                             }
@@ -2332,7 +2475,10 @@ async fn main() {
                             }
                             let port_in = prompt_line(&format!(
                                 "  Port [{}]: ",
-                                entry.port.map(|p| p.to_string()).unwrap_or_else(|| "4096".to_string())
+                                entry
+                                    .port
+                                    .map(|p| p.to_string())
+                                    .unwrap_or_else(|| "4096".to_string())
                             ));
                             if !port_in.is_empty() {
                                 if let Ok(p) = port_in.parse() {
@@ -2362,13 +2508,15 @@ async fn main() {
                                 };
                             }
                             if let Some(ref s) = agent_type {
-                                entry.agent_type = if s.is_empty() { None } else { Some(s.clone()) };
+                                entry.agent_type =
+                                    if s.is_empty() { None } else { Some(s.clone()) };
                             }
                             if let Some(ref s) = model {
                                 entry.model = if s.is_empty() { None } else { Some(s.clone()) };
                             }
                             if let Some(ref s) = small_model {
-                                entry.small_model = if s.is_empty() { None } else { Some(s.clone()) };
+                                entry.small_model =
+                                    if s.is_empty() { None } else { Some(s.clone()) };
                             }
                             if let Some(ref s) = provider {
                                 entry.provider = if s.is_empty() { None } else { Some(s.clone()) };
@@ -2447,25 +2595,19 @@ async fn main() {
 
                 for agent in &enabled_agents {
                     let is_local = agent.agent_type.as_deref() == Some("local");
-                    
+
                     // Build provider options
                     let mut options: Map<String, Value> = Map::new();
-                    
+
                     if is_local {
                         // Local agent: set baseURL to localhost
-                        options.insert(
-                            "baseURL".to_string(),
-                            json!("http://localhost:11434"),
-                        );
+                        options.insert("baseURL".to_string(), json!("http://localhost:11434"));
                     }
                     // Cloud agent: no baseURL (uses provider default)
 
                     // Use agent name as provider identifier
                     let provider_name = agent.name.clone();
-                    providers.insert(
-                        provider_name.clone(),
-                        json!({ "options": options }),
-                    );
+                    providers.insert(provider_name.clone(), json!({ "options": options }));
 
                     // Set default model from first agent
                     // For cloud agents: only set if model is explicitly configured (provider is needed)
@@ -2483,7 +2625,8 @@ async fn main() {
                     if default_small_model.is_none() {
                         if let Some(ref small_model) = agent.small_model {
                             if is_local {
-                                default_small_model = Some(format!("{}/{}", agent.name, small_model));
+                                default_small_model =
+                                    Some(format!("{}/{}", agent.name, small_model));
                             } else {
                                 default_small_model = Some(small_model.clone());
                             }
@@ -2516,7 +2659,7 @@ async fn main() {
                 let config_dir = dirs::config_dir()
                     .map(|p| p.join("opencode"))
                     .expect("Could not find config directory");
-                
+
                 std::fs::create_dir_all(&config_dir).unwrap_or_else(|e| {
                     eprintln!("Error creating config directory: {}", e);
                     std::process::exit(1);
@@ -2528,7 +2671,12 @@ async fn main() {
                     std::process::exit(1);
                 });
 
-                println!("  {} Synced {} agent(s) to {}", BULLET_GREEN, enabled_agents.len(), config_path.display());
+                println!(
+                    "  {} Synced {} agent(s) to {}",
+                    BULLET_GREEN,
+                    enabled_agents.len(),
+                    config_path.display()
+                );
                 println!("  Edit ~/.config/opencode/opencode.json to select model with \"model\": \"agent-name/model\"");
             }
             AgentCommands::Build {
@@ -2630,7 +2778,9 @@ async fn main() {
                 });
                 let mut ok = 0usize;
                 let mut failed = Vec::new();
-                for (agent_name, base_image, agent_type, model, small_model, provider, port) in &agents {
+                for (agent_name, base_image, agent_type, model, small_model, provider, port) in
+                    &agents
+                {
                     let is_cloud = agent_type.as_deref() != Some("local");
                     if is_cloud {
                         println!("  {} Skipping cloud agent '{}'", BULLET_BLUE, agent_name);
@@ -3142,7 +3292,8 @@ async fn main() {
                     match result {
                         Ok(output) => {
                             let has_git = !output.contains("no-git") && output.len() > 2;
-                            let has_opencode = output.contains('.') && output.chars().filter(|c| *c == '.').count() >= 2;
+                            let has_opencode = output.contains('.')
+                                && output.chars().filter(|c| *c == '.').count() >= 2;
                             if has_git && has_opencode {
                                 println!("\n  {} {} - ready", BULLET_GREEN, proj.name);
                                 if verbose {
@@ -3152,10 +3303,7 @@ async fn main() {
                                     }
                                 }
                             } else if !has_git {
-                                eprintln!(
-                                    "  {} {} - failed: clone failed",
-                                    BULLET_RED, proj.name
-                                );
+                                eprintln!("  {} {} - failed: clone failed", BULLET_RED, proj.name);
                                 std::process::exit(1);
                             } else {
                                 eprintln!(
@@ -3312,7 +3460,7 @@ async fn main() {
                                 proj.agent = None;
                             }
                             println!("  Roles (Enter to keep current):");
-                           let ask_setup_in = prompt_line(&format!(
+                            let ask_setup_in = prompt_line(&format!(
                                 "    ask.setup [{} {}]: ",
                                 proj.ask_setup_run.as_deref().unwrap_or("-"),
                                 proj.ask_setup_check.as_deref().unwrap_or("-")
@@ -3418,176 +3566,190 @@ async fn main() {
                             });
                             println!("  {} Project '{}' updated", BULLET_GREEN, name);
                         } else {
-                        if let Some(new_repo) = repo {
-                            proj.repo = new_repo;
-                        }
-                        if let Some(new_image) = image {
-                            proj.image = Some(new_image);
-                        } else if image.is_some() {
-                            // Explicitly set to None if --image flag was provided with empty value
-                        }
-                        if let Some(new_ssh) = ssh_key {
-                            proj.ssh_key = if new_ssh.is_empty() {
-                                None
-                            } else {
-                                Some(new_ssh)
-                            };
-                        }
-                        if let Some(new_bb) = base_branch {
-                            proj.base_branch = if new_bb.is_empty() {
-                                None
-                            } else {
-                                Some(new_bb)
-                            };
-                        }
-                        if let Some(new_remote) = remote {
-                            proj.remote = if new_remote.is_empty() {
-                                None
-                            } else {
-                                Some(new_remote)
-                            };
-                        }
-                        if let Some(new_gt) = github_token {
-                            proj.github_token = if new_gt.is_empty() {
-                                None
-                            } else {
-                                Some(new_gt)
-                            };
-                        }
-                        if let Some(new_script) = script {
-                            proj.script = if new_script.is_empty() {
-                                None
-                            } else {
-                                Some(new_script)
-                            };
-                        }
-                        if let Some(new_commit_name) = commit_name {
-                            proj.commit_name = if new_commit_name.is_empty() {
-                                None
-                            } else {
-                                Some(new_commit_name)
-                            };
-                        }
-                        if let Some(new_commit_email) = commit_email {
-                            proj.commit_email = if new_commit_email.is_empty() {
-                                None
-                            } else {
-                                Some(new_commit_email)
-                            };
-                        }
-                        if let Some(new_agent) = agent {
-                            proj.agent = if new_agent.is_empty() {
-                                None
-                            } else {
-                                Some(new_agent)
-                            };
-                        }
-                        // Parse role pairs: first is run, second is check (if provided)
-                        if let Some(ref roles) = ask_setup {
-                            proj.ask_setup_run = roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.ask_setup_check = roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(ref roles) = ask_execute {
-                            proj.ask_execute_run = roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.ask_execute_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(ref roles) = ask_validate {
-                            proj.ask_validate_run =
-                                roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.ask_validate_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(ref roles) = dev_setup {
-                            proj.dev_setup_run = roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.dev_setup_check = roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(ref roles) = dev_execute {
-                            proj.dev_execute_run = roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.dev_execute_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(ref roles) = dev_validate {
-                            proj.dev_validate_run =
-                                roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.dev_validate_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(ref roles) = dev_commit {
-                            proj.dev_commit_run = roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.dev_commit_check = roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(ref roles) = review_setup {
-                            proj.review_setup_run =
-                                roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.review_setup_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(ref roles) = review_execute {
-                            proj.review_execute_run =
-                                roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.review_execute_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(ref roles) = review_validate {
-                            proj.review_validate_run =
-                                roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.review_validate_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(roles) = ask_execute {
-                            proj.ask_execute_run = roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.ask_execute_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(roles) = ask_validate {
-                            proj.ask_validate_run =
-                                roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.ask_validate_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(roles) = dev_setup {
-                            proj.dev_setup_run = roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.dev_setup_check = roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(roles) = dev_execute {
-                            proj.dev_execute_run = roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.dev_execute_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(roles) = dev_validate {
-                            proj.dev_validate_run =
-                                roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.dev_validate_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(roles) = dev_commit {
-                            proj.dev_commit_run = roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.dev_commit_check = roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(roles) = review_setup {
-                            proj.review_setup_run =
-                                roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.review_setup_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(roles) = review_execute {
-                            proj.review_execute_run =
-                                roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.review_execute_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        if let Some(roles) = review_validate {
-                            proj.review_validate_run =
-                                roles.first().cloned().filter(|s| !s.is_empty());
-                            proj.review_validate_check =
-                                roles.get(1).cloned().filter(|s| !s.is_empty());
-                        }
-                        save_config(&cfg).unwrap_or_else(|e| {
-                            eprintln!("Error: {}", e);
-                            std::process::exit(1);
-                        });
-                        println!("Project '{}' updated successfully", name);
+                            if let Some(new_repo) = repo {
+                                proj.repo = new_repo;
+                            }
+                            if let Some(new_image) = image {
+                                proj.image = Some(new_image);
+                            } else if image.is_some() {
+                                // Explicitly set to None if --image flag was provided with empty value
+                            }
+                            if let Some(new_ssh) = ssh_key {
+                                proj.ssh_key = if new_ssh.is_empty() {
+                                    None
+                                } else {
+                                    Some(new_ssh)
+                                };
+                            }
+                            if let Some(new_bb) = base_branch {
+                                proj.base_branch = if new_bb.is_empty() {
+                                    None
+                                } else {
+                                    Some(new_bb)
+                                };
+                            }
+                            if let Some(new_remote) = remote {
+                                proj.remote = if new_remote.is_empty() {
+                                    None
+                                } else {
+                                    Some(new_remote)
+                                };
+                            }
+                            if let Some(new_gt) = github_token {
+                                proj.github_token = if new_gt.is_empty() {
+                                    None
+                                } else {
+                                    Some(new_gt)
+                                };
+                            }
+                            if let Some(new_script) = script {
+                                proj.script = if new_script.is_empty() {
+                                    None
+                                } else {
+                                    Some(new_script)
+                                };
+                            }
+                            if let Some(new_commit_name) = commit_name {
+                                proj.commit_name = if new_commit_name.is_empty() {
+                                    None
+                                } else {
+                                    Some(new_commit_name)
+                                };
+                            }
+                            if let Some(new_commit_email) = commit_email {
+                                proj.commit_email = if new_commit_email.is_empty() {
+                                    None
+                                } else {
+                                    Some(new_commit_email)
+                                };
+                            }
+                            if let Some(new_agent) = agent {
+                                proj.agent = if new_agent.is_empty() {
+                                    None
+                                } else {
+                                    Some(new_agent)
+                                };
+                            }
+                            // Parse role pairs: first is run, second is check (if provided)
+                            if let Some(ref roles) = ask_setup {
+                                proj.ask_setup_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.ask_setup_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(ref roles) = ask_execute {
+                                proj.ask_execute_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.ask_execute_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(ref roles) = ask_validate {
+                                proj.ask_validate_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.ask_validate_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(ref roles) = dev_setup {
+                                proj.dev_setup_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.dev_setup_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(ref roles) = dev_execute {
+                                proj.dev_execute_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.dev_execute_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(ref roles) = dev_validate {
+                                proj.dev_validate_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.dev_validate_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(ref roles) = dev_commit {
+                                proj.dev_commit_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.dev_commit_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(ref roles) = review_setup {
+                                proj.review_setup_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.review_setup_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(ref roles) = review_execute {
+                                proj.review_execute_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.review_execute_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(ref roles) = review_validate {
+                                proj.review_validate_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.review_validate_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(roles) = ask_execute {
+                                proj.ask_execute_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.ask_execute_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(roles) = ask_validate {
+                                proj.ask_validate_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.ask_validate_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(roles) = dev_setup {
+                                proj.dev_setup_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.dev_setup_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(roles) = dev_execute {
+                                proj.dev_execute_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.dev_execute_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(roles) = dev_validate {
+                                proj.dev_validate_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.dev_validate_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(roles) = dev_commit {
+                                proj.dev_commit_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.dev_commit_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(roles) = review_setup {
+                                proj.review_setup_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.review_setup_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(roles) = review_execute {
+                                proj.review_execute_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.review_execute_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            if let Some(roles) = review_validate {
+                                proj.review_validate_run =
+                                    roles.first().cloned().filter(|s| !s.is_empty());
+                                proj.review_validate_check =
+                                    roles.get(1).cloned().filter(|s| !s.is_empty());
+                            }
+                            save_config(&cfg).unwrap_or_else(|e| {
+                                eprintln!("Error: {}", e);
+                                std::process::exit(1);
+                            });
+                            println!("Project '{}' updated successfully", name);
                         }
                     }
                     None => {
@@ -3614,7 +3776,7 @@ async fn main() {
                 println!("Project removed successfully");
             }
         },
-        Some(Commands::Run { cmd }) => match cmd {
+        Some(Commands::Run { cache, cmd }) => match cmd {
             RunCommands::Ask {
                 question,
                 base,
@@ -3625,7 +3787,18 @@ async fn main() {
                 keep_alive: _,
                 timeout,
                 verbose,
+                watch,
             } => {
+                let (project, auto_detected) = if repo.is_none() && project.is_none() {
+                    match detect_project_from_cwd() {
+                        Ok(Some(name)) => (Some(name), true),
+                        _ => (None, false),
+                    }
+                } else {
+                    (project, false)
+                };
+
+                let use_no_cache = !cache;
                 let resolved_repo =
                     resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
                         eprintln!("Error: {}", e);
@@ -3649,6 +3822,9 @@ async fn main() {
                 let pipeline_roles = resolve_pipeline_roles(project_config.as_ref(), "ask");
 
                 if verbose {
+                    if auto_detected {
+                        println!("Using project '{}' (detected from git remote).", project.as_deref().unwrap_or(""));
+                    }
                     println!("Ask: {}", question);
                     println!("  Repository: {}", resolved_repo);
                     println!("  Agent image: {}", agent_image);
@@ -3656,20 +3832,21 @@ async fn main() {
 
                 let branch = resolved_base.clone();
                 let script = project_script.clone();
+                let use_watch = watch || verbose;
                 let done = std::sync::Arc::new(AtomicBool::new(false));
                 let done_clone = done.clone();
-                let spinner_handle = if !verbose {
+                let spinner_handle = if !use_watch {
                     Some(thread::spawn(move || run_spinner_until(&done_clone)))
                 } else {
                     None
                 };
-                let _guard = if !verbose {
+                let _guard = if !use_watch {
                     redirect_stderr_to_null()
                 } else {
                     None
                 };
 
-                let timeout_secs = timeout.unwrap_or(300);
+                let timeout_secs = timeout.unwrap_or(600);
                 let roles = pipeline_roles.clone();
                 let result = dagger_pipeline::with_connection(move |conn| {
                     let repo = resolved_repo.clone();
@@ -3680,6 +3857,7 @@ async fn main() {
                     let to = timeout_secs;
                     let scr = script.clone();
                     let r = roles.clone();
+                    let no_cache = use_no_cache;
                     async move {
                         dagger_pipeline::run_ask(
                             &conn,
@@ -3691,6 +3869,8 @@ async fn main() {
                             to,
                             scr.as_deref(),
                             &r,
+                            watch,
+                            no_cache,
                         )
                         .await
                         .map_err(|e| eyre::eyre!("{}", e))
@@ -3698,7 +3878,7 @@ async fn main() {
                 })
                 .await;
 
-                if !verbose {
+                if !use_watch {
                     done.store(true, Ordering::Relaxed);
                     if let Some(h) = spinner_handle {
                         let _: std::thread::Result<()> = h.join();
@@ -3707,7 +3887,11 @@ async fn main() {
                 drop(_guard);
 
                 match result {
-                    Ok(answer) => println!("\nAnswer: {}", answer),
+                    Ok(answer) => {
+                        if !watch {
+                            println!("\nAnswer: {}", answer);
+                        }
+                    }
                     Err(e) => {
                         let msg = e.to_string();
                         eprintln!("Error: {}", clarify_dagger_error(&msg));
@@ -3727,7 +3911,18 @@ async fn main() {
                 pr,
                 timeout,
                 verbose,
+                watch,
             } => {
+                let (project, auto_detected) = if repo.is_none() && project.is_none() {
+                    match detect_project_from_cwd() {
+                        Ok(Some(name)) => (Some(name), true),
+                        _ => (None, false),
+                    }
+                } else {
+                    (project, false)
+                };
+
+                let no_cache_dev = !cache;
                 let resolved_repo =
                     resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
                         eprintln!("Error: {}", e);
@@ -3752,6 +3947,9 @@ async fn main() {
                 let pipeline_roles = resolve_pipeline_roles(project_config.as_ref(), "dev");
 
                 if verbose {
+                    if auto_detected {
+                        println!("Using project '{}' (detected from git remote).", project.as_deref().unwrap_or(""));
+                    }
                     println!("Dev: {}", task);
                     println!("  Repository: {}", resolved_repo);
                     println!("  Agent image: {}", agent_image);
@@ -3762,21 +3960,22 @@ async fn main() {
                 let base_pr = resolved_base.clone();
                 let task_pr = task.clone();
                 let script = project_script.clone();
+                let use_watch = watch || verbose;
                 let done = std::sync::Arc::new(AtomicBool::new(false));
                 let done_clone = done.clone();
-                let spinner_handle = if !verbose {
+                let spinner_handle = if !use_watch {
                     Some(thread::spawn(move || run_spinner_until(&done_clone)))
                 } else {
                     None
                 };
-                let _guard = if !verbose {
+                let _guard = if !use_watch {
                     redirect_stderr_to_null()
                 } else {
                     None
                 };
 
                 let verb_for_closure = verbose;
-                let timeout_secs = timeout.unwrap_or(300);
+                let timeout_secs = timeout.unwrap_or(900);
                 let roles = pipeline_roles.clone();
                 let dev_result = dagger_pipeline::with_connection(move |conn| {
                     let repo = resolved_repo.clone();
@@ -3791,6 +3990,7 @@ async fn main() {
                     let c_name = commit_name.clone();
                     let c_email = commit_email.clone();
                     let r = roles.clone();
+                    let no_cache = no_cache_dev;
                     async move {
                         dagger_pipeline::run_dev(
                             &conn,
@@ -3806,6 +4006,8 @@ async fn main() {
                             c_name.as_deref(),
                             c_email.as_deref(),
                             &r,
+                            watch,
+                            no_cache,
                         )
                         .await
                         .map_err(|e| eyre::eyre!("{}", e))
@@ -3813,7 +4015,7 @@ async fn main() {
                 })
                 .await;
 
-                if !verbose {
+                if !use_watch {
                     done.store(true, Ordering::Relaxed);
                     if let Some(h) = spinner_handle {
                         let _: std::thread::Result<()> = h.join();
@@ -3823,9 +4025,11 @@ async fn main() {
 
                 match &dev_result {
                     Ok(commit) => {
-                        println!("\n✓ Development action completed and committed");
-                        println!("  Commit: {}", commit);
-                        println!("  Branch: {}", branch_out);
+                        if !watch {
+                            println!("\n✓ Development action completed and committed");
+                            println!("  Commit: {}", commit);
+                            println!("  Branch: {}", branch_out);
+                        }
                     }
                     Err(e) => {
                         if e.contains("No changes to commit") {
@@ -3890,7 +4094,18 @@ async fn main() {
                 keep_alive: _,
                 timeout,
                 verbose,
+                watch,
             } => {
+                let (project, auto_detected) = if repo.is_none() && project.is_none() {
+                    match detect_project_from_cwd() {
+                        Ok(Some(name)) => (Some(name), true),
+                        _ => (None, false),
+                    }
+                } else {
+                    (project, false)
+                };
+
+                let no_cache_review = !cache;
                 let resolved_repo =
                     resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
                         eprintln!("Error: {}", e);
@@ -3914,27 +4129,72 @@ async fn main() {
                 let pipeline_roles = resolve_pipeline_roles(project_config.as_ref(), "review");
 
                 if verbose {
+                    if auto_detected {
+                        println!("Using project '{}' (detected from git remote).", project.as_deref().unwrap_or(""));
+                    }
                     println!("Review: {}", branch);
                     println!("  Repository: {}", resolved_repo);
                     println!("  Agent image: {}", agent_image);
                 }
 
                 let script = project_script.clone();
+                let use_watch = watch || verbose;
                 let done = std::sync::Arc::new(AtomicBool::new(false));
                 let done_clone = done.clone();
-                let spinner_handle = if !verbose {
+                let spinner_handle = if !use_watch {
                     Some(thread::spawn(move || run_spinner_until(&done_clone)))
                 } else {
                     None
                 };
-                let _guard = if !verbose {
+                let _guard = if !use_watch {
                     redirect_stderr_to_null()
                 } else {
                     None
                 };
 
-                let timeout_secs = timeout.unwrap_or(300);
+                let timeout_secs = timeout.unwrap_or(900);
                 let roles = pipeline_roles.clone();
+                
+                // Check if we're in a local git repo and on the branch being reviewed
+                let local_workspace = {
+                    let repo_root = git_repo_root_path();
+                    let current_branch = Command::new("git")
+                        .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                        .output()
+                        .ok()
+                        .and_then(|out| {
+                            if out.status.success() {
+                                Some(String::from_utf8_lossy(&out.stdout).trim().to_string())
+                            } else {
+                                None
+                            }
+                        });
+                    
+                    // Use local workspace if:
+                    // 1. We're in a git repo
+                    // 2. Current branch matches the review branch
+                    // 3. The repo root matches the resolved repo (or we're auto-detecting)
+                    if let Some(root) = repo_root {
+                        if let Some(ref curr_br) = current_branch {
+                            if curr_br == &branch {
+                                Some(root)
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                };
+                
+                if verbose && local_workspace.is_some() {
+                    println!("  Using local workspace: {}", local_workspace.as_ref().unwrap().display());
+                }
+                
+                // Convert PathBuf to String for moving into async closure
+                let local_workspace_str = local_workspace.as_ref().map(|p| p.to_string_lossy().into_owned());
                 let result = dagger_pipeline::with_connection(move |conn| {
                     let repo = resolved_repo.clone();
                     let br = branch.clone();
@@ -3945,7 +4205,10 @@ async fn main() {
                     let to = timeout_secs;
                     let scr = script.clone();
                     let r = roles.clone();
+                    let no_cache = no_cache_review;
+                    let local_ws_str = local_workspace_str.clone();
                     async move {
+                        let local_ws_path = local_ws_str.as_ref().map(|s| std::path::Path::new(s));
                         dagger_pipeline::run_review(
                             &conn,
                             &repo,
@@ -3956,6 +4219,9 @@ async fn main() {
                             to,
                             scr.as_deref(),
                             &r,
+                            watch,
+                            no_cache,
+                            local_ws_path,
                         )
                         .await
                         .map_err(|e| eyre::eyre!("{}", e))
@@ -3963,7 +4229,7 @@ async fn main() {
                 })
                 .await;
 
-                if !verbose {
+                if !use_watch {
                     done.store(true, Ordering::Relaxed);
                     if let Some(h) = spinner_handle {
                         let _: std::thread::Result<()> = h.join();
@@ -3972,7 +4238,11 @@ async fn main() {
                 drop(_guard);
 
                 match result {
-                    Ok(review_output) => println!("\n{}", review_output),
+                    Ok(review_output) => {
+                        if !watch {
+                            println!("\n{}", review_output);
+                        }
+                    }
                     Err(e) => {
                         let msg = e.to_string();
                         eprintln!("Error: {}", clarify_dagger_error(&msg));
@@ -4041,5 +4311,71 @@ mod tests {
         let deserialized: SmithConfig = toml::from_str(&serialized).unwrap();
         assert_eq!(deserialized.projects.len(), 1);
         assert_eq!(deserialized.projects[0].name, "test");
+    }
+
+    #[test]
+    fn normalize_repo_for_match_github_https() {
+        assert_eq!(
+            normalize_repo_for_match("https://github.com/owner/repo.git"),
+            Some("github.com/owner/repo".to_string())
+        );
+        assert_eq!(
+            normalize_repo_for_match("https://github.com/owner/repo"),
+            Some("github.com/owner/repo".to_string())
+        );
+    }
+
+    #[test]
+    fn normalize_repo_for_match_github_ssh() {
+        assert_eq!(
+            normalize_repo_for_match("git@github.com:owner/repo.git"),
+            Some("github.com/owner/repo".to_string())
+        );
+        assert_eq!(
+            normalize_repo_for_match("git@github.com:owner/repo"),
+            Some("github.com/owner/repo".to_string())
+        );
+    }
+
+    #[test]
+    fn normalize_repo_for_match_empty() {
+        assert_eq!(normalize_repo_for_match(""), None);
+        assert_eq!(normalize_repo_for_match("   "), None);
+    }
+
+    #[test]
+    fn normalize_repo_for_match_non_github_url() {
+        assert_eq!(
+            normalize_repo_for_match("https://gitlab.com/group/sub/repo.git"),
+            Some("gitlab.com/group/sub/repo".to_string())
+        );
+        assert_eq!(
+            normalize_repo_for_match("git@gitlab.com:group/repo.git"),
+            Some("gitlab.com/group/repo".to_string())
+        );
+    }
+
+    #[test]
+    fn normalize_repo_for_match_path() {
+        // Path that exists: current dir canonicalizes to something
+        let cwd = std::env::current_dir().unwrap();
+        let cwd_str = cwd.to_string_lossy();
+        let normalized = normalize_repo_for_match(cwd_str.as_ref());
+        assert_eq!(normalized, Some(cwd.canonicalize().unwrap().to_string_lossy().into_owned()));
+        // Path that does not exist: returned as-is
+        let missing = "/nonexistent/path/12345";
+        assert_eq!(normalize_repo_for_match(missing), Some(missing.to_string()));
+    }
+
+    #[test]
+    fn detect_project_from_cwd_no_repo() {
+        // From a temp dir with no .git, detect should return Ok(None)
+        let temp = std::env::temp_dir().join("smith_test_no_git");
+        let _ = std::fs::create_dir_all(&temp);
+        let restorable = std::env::current_dir().unwrap();
+        std::env::set_current_dir(&temp).unwrap();
+        let result = detect_project_from_cwd();
+        std::env::set_current_dir(&restorable).ok();
+        assert!(matches!(result, Ok(None)));
     }
 }
