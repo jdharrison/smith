@@ -567,6 +567,29 @@ enum SpawnCommands {
         #[arg(long, short)]
         all: bool,
     },
+    /// Restart a spawned agent
+    Restart {
+        /// Project name (auto-detected from git repo if not specified)
+        #[arg(long)]
+        project: Option<String>,
+        /// Branch name (auto-detected from current git branch if not specified)
+        #[arg(long)]
+        branch: Option<String>,
+    },
+    /// Run a prompt against a spawned agent and print the response
+    Run {
+        /// Project name (auto-detected from git repo if not specified)
+        #[arg(long)]
+        project: Option<String>,
+        /// Branch name (auto-detected from current git branch if not specified)
+        #[arg(long)]
+        branch: Option<String>,
+        /// Show detailed agent output (enables print-logs and thinking)
+        #[arg(long)]
+        verbose: bool,
+        /// Prompt to send to the spawned agent
+        prompt: String,
+    },
     /// Show logs from a spawned agent
     Logs {
         /// Project name (auto-detected from git repo if not specified)
@@ -4471,6 +4494,103 @@ async fn main() {
                             eprintln!("Error: {}", e);
                             std::process::exit(1);
                         }
+                    }
+                }
+            }
+            SpawnCommands::Restart { project, branch } => {
+                // Auto-detect project and branch if not provided
+                let project = match project {
+                    Some(p) => p,
+                    None => match detect_project_from_cwd() {
+                        Ok(Some(name)) => name,
+                        _ => {
+                            eprintln!("Error: --project required");
+                            std::process::exit(1);
+                        }
+                    },
+                };
+                let branch = match branch {
+                    Some(b) => b,
+                    None => {
+                        let output = Command::new("git")
+                            .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                            .output();
+                        match output {
+                            Ok(out) if out.status.success() => {
+                                String::from_utf8_lossy(&out.stdout).trim().to_string()
+                            }
+                            _ => {
+                                eprintln!("Error: --branch required");
+                                std::process::exit(1);
+                            }
+                        }
+                    }
+                };
+
+                println!(
+                    "  {} Restarting agent for {}{}{}",
+                    BULLET_BLUE,
+                    project,
+                    ANSI_RESET,
+                    format!(":{}", branch)
+                );
+
+                match docker::restart_spawned_container(&project, &branch) {
+                    Ok(()) => {
+                        println!(
+                            "  {} Restarted agent for {}{}{}",
+                            BULLET_GREEN,
+                            project,
+                            ANSI_RESET,
+                            format!(":{}", branch)
+                        );
+                    }
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            }
+            SpawnCommands::Run {
+                project,
+                branch,
+                verbose,
+                prompt,
+            } => {
+                // Auto-detect project and branch if not provided
+                let project = match project {
+                    Some(p) => p,
+                    None => match detect_project_from_cwd() {
+                        Ok(Some(name)) => name,
+                        _ => {
+                            eprintln!("Error: --project required");
+                            std::process::exit(1);
+                        }
+                    },
+                };
+                let branch = match branch {
+                    Some(b) => b,
+                    None => {
+                        let output = Command::new("git")
+                            .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                            .output();
+                        match output {
+                            Ok(out) if out.status.success() => {
+                                String::from_utf8_lossy(&out.stdout).trim().to_string()
+                            }
+                            _ => {
+                                eprintln!("Error: --branch required");
+                                std::process::exit(1);
+                            }
+                        }
+                    }
+                };
+
+                match docker::run_prompt_in_spawned_container(&project, &branch, &prompt, verbose) {
+                    Ok(()) => {}
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
                     }
                 }
             }

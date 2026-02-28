@@ -3,10 +3,14 @@
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{mpsc, Once};
 
 use serde::Deserialize;
+use serde_json::Value;
 
 /// Prefix for agent containers: "smith-agent-<name>". Used by agent start/stop/list.
 pub const AGENT_CONTAINER_PREFIX: &str = "smith-agent-";
@@ -21,6 +25,139 @@ pub const SPAWN_PORT_RANGE: u16 = SPAWN_PORT_MAX - SPAWN_PORT_MIN + 1;
 
 /// Default port for OpenCode server. Additional agents use 4097, 4098, ...
 pub const OPENCODE_SERVER_PORT: u16 = 4096;
+
+static SPAWN_RUN_CANCELLED: AtomicBool = AtomicBool::new(false);
+static SPAWN_RUN_SIGINT_INIT: Once = Once::new();
+
+fn ensure_spawn_run_sigint_handler() {
+    SPAWN_RUN_SIGINT_INIT.call_once(|| {
+        let _ = ctrlc::set_handler(|| {
+            SPAWN_RUN_CANCELLED.store(true, Ordering::SeqCst);
+        });
+    });
+}
+
+#[derive(Clone, Copy)]
+enum StreamSource {
+    Stdout,
+    Stderr,
+}
+
+fn extract_string_field(value: Option<&Value>) -> Option<String> {
+    match value {
+        Some(Value::String(s)) if !s.trim().is_empty() => Some(s.to_string()),
+        Some(Value::Object(map)) => map
+            .get("message")
+            .and_then(Value::as_str)
+            .map(|s| s.to_string()),
+        _ => None,
+    }
+}
+
+fn collect_text_parts(value: &Value, out: &mut Vec<String>) {
+    match value {
+        Value::String(s) => {
+            if !s.is_empty() {
+                out.push(s.to_string());
+            }
+        }
+        Value::Array(arr) => {
+            for item in arr {
+                collect_text_parts(item, out);
+            }
+        }
+        Value::Object(map) => {
+            for key in [
+                "text",
+                "delta",
+                "content",
+                "output_text",
+                "answer",
+                "message",
+            ] {
+                if let Some(v) = map.get(key) {
+                    collect_text_parts(v, out);
+                }
+            }
+            for key in ["data", "result", "response", "choices", "parts"] {
+                if let Some(v) = map.get(key) {
+                    collect_text_parts(v, out);
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+fn extract_retry_after_secs(raw: &str) -> Option<u64> {
+    let lower = raw.to_lowercase();
+    for marker in [
+        "retry-after\":\"",
+        "retry-after\":",
+        "retry-after:",
+        "retry_after\":",
+    ] {
+        if let Some(idx) = lower.find(marker) {
+            let start = idx + marker.len();
+            let rest = &lower[start..];
+            let digits: String = rest
+                .chars()
+                .skip_while(|c| !c.is_ascii_digit())
+                .take_while(|c| c.is_ascii_digit())
+                .collect();
+            if let Ok(val) = digits.parse::<u64>() {
+                return Some(val);
+            }
+        }
+    }
+    None
+}
+
+fn classify_spawn_run_error(raw: &str, exit_code: Option<i32>) -> String {
+    let lower = raw.to_lowercase();
+
+    if lower.contains("no such container") {
+        return "Spawned agent container not found. Start it with `smith spawn start` and try again."
+            .to_string();
+    }
+
+    if lower.contains("freeusagelimiterror")
+        || lower.contains("rate limit exceeded")
+        || lower.contains("statuscode\":429")
+        || lower.contains("status code 429")
+    {
+        if let Some(retry_after) = extract_retry_after_secs(raw) {
+            return format!(
+                "Agent request failed: provider rate limit/quota exceeded. Retry after about {} seconds.",
+                retry_after
+            );
+        }
+        return "Agent request failed: provider rate limit/quota exceeded. Please try again later or switch model/provider.".to_string();
+    }
+
+    if lower.contains("api key")
+        || lower.contains("unauthorized")
+        || lower.contains("authentication")
+    {
+        return "Agent request failed: authentication error from provider. Check API key/provider settings.".to_string();
+    }
+
+    if let Some(code) = exit_code {
+        return format!("Prompt command failed with exit code {}", code);
+    }
+
+    "Prompt command failed".to_string()
+}
+
+fn has_hard_failure_signal(raw: &str) -> bool {
+    let lower = raw.to_lowercase();
+    lower.contains("freeusagelimiterror")
+        || lower.contains("rate limit exceeded")
+        || lower.contains("statuscode\":429")
+        || lower.contains("status code 429")
+        || lower.contains("ai_apicallerror")
+        || lower.contains("error response from daemon")
+}
 
 /// Sanitize agent name for use in container name (Docker allows [a-zA-Z0-9][a-zA-Z0-9_.-]*).
 pub fn agent_container_name(name: &str) -> String {
@@ -341,6 +478,22 @@ pub fn stop_container(container_name: &str) -> Result<(), String> {
     }
 }
 
+/// Restart a container by name.
+pub fn restart_container(container_name: &str) -> Result<(), String> {
+    let output = Command::new("docker")
+        .arg("restart")
+        .arg(container_name)
+        .output()
+        .map_err(|e| format!("Failed to restart container: {}", e))?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        let error = String::from_utf8_lossy(&output.stderr);
+        Err(format!("Failed to restart container: {}", error))
+    }
+}
+
 /// Container name for the Ollama service.
 pub const OLLAMA_CONTAINER_NAME: &str = "smith-ollama";
 
@@ -598,6 +751,221 @@ pub fn stop_spawned_container(project: &str, branch: &str) -> Result<(), String>
     stop_container(&name)
 }
 
+/// Restart a spawned container by project and branch.
+pub fn restart_spawned_container(project: &str, branch: &str) -> Result<(), String> {
+    let name = spawn_container_name(project, branch);
+    restart_container(&name)
+}
+
+/// Run a prompt in a spawned container and stream raw output to the terminal.
+pub fn run_prompt_in_spawned_container(
+    project: &str,
+    branch: &str,
+    prompt: &str,
+    verbose: bool,
+) -> Result<(), String> {
+    let name = spawn_container_name(project, branch);
+    let mut args = vec![
+        "exec".to_string(),
+        "-w".to_string(),
+        "/workspace".to_string(),
+        name,
+        "opencode".to_string(),
+        "run".to_string(),
+        "--format".to_string(),
+        "json".to_string(),
+        "--print-logs".to_string(),
+    ];
+    if verbose {
+        args.push("--thinking".to_string());
+    }
+    args.push(prompt.to_string());
+
+    ensure_spawn_run_sigint_handler();
+    SPAWN_RUN_CANCELLED.store(false, Ordering::SeqCst);
+
+    let mut child = Command::new("docker")
+        .args(&args)
+        .stdin(Stdio::inherit())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Failed to run prompt in spawned container: {}", e))?;
+
+    let stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| "Failed to capture prompt output".to_string())?;
+    let stderr = child
+        .stderr
+        .take()
+        .ok_or_else(|| "Failed to capture prompt errors".to_string())?;
+
+    let (tx, rx) = mpsc::channel::<(StreamSource, String)>();
+
+    let tx_out = tx.clone();
+    let stdout_thread = std::thread::spawn(move || {
+        let reader = BufReader::new(stdout);
+        for line in reader.lines().map_while(Result::ok) {
+            if tx_out.send((StreamSource::Stdout, line)).is_err() {
+                break;
+            }
+        }
+    });
+
+    let tx_err = tx.clone();
+    let stderr_thread = std::thread::spawn(move || {
+        let reader = BufReader::new(stderr);
+        for line in reader.lines().map_while(Result::ok) {
+            if tx_err.send((StreamSource::Stderr, line)).is_err() {
+                break;
+            }
+        }
+    });
+    drop(tx);
+
+    let mut rendered_answer = String::new();
+    let mut fallback_stdout = String::new();
+    let mut error_context = String::new();
+
+    loop {
+        if SPAWN_RUN_CANCELLED.load(Ordering::SeqCst) {
+            let _ = child.kill();
+            let _ = child.wait();
+            let _ = stdout_thread.join();
+            let _ = stderr_thread.join();
+            return Err("Cancelled by user.".to_string());
+        }
+
+        match rx.recv_timeout(std::time::Duration::from_millis(120)) {
+            Ok((source, line)) => {
+                if line.trim().is_empty() {
+                    continue;
+                }
+
+                match source {
+                    StreamSource::Stdout => {
+                        if let Ok(value) = serde_json::from_str::<Value>(&line) {
+                            if let Some(err) = extract_string_field(value.get("error")) {
+                                if !error_context.is_empty() {
+                                    error_context.push('\n');
+                                }
+                                error_context.push_str(&err);
+                            }
+                            if let Some(msg) = extract_string_field(value.get("message")) {
+                                if msg.to_lowercase().contains("error") {
+                                    if !error_context.is_empty() {
+                                        error_context.push('\n');
+                                    }
+                                    error_context.push_str(&msg);
+                                }
+                            }
+
+                            let mut parts = Vec::new();
+                            collect_text_parts(&value, &mut parts);
+                            for part in parts {
+                                rendered_answer.push_str(&part);
+                                if verbose {
+                                    print!("{}", part);
+                                    let _ = std::io::stdout().flush();
+                                }
+                            }
+
+                            if has_hard_failure_signal(&error_context) {
+                                let _ = child.kill();
+                                let _ = child.wait();
+                                let _ = stdout_thread.join();
+                                let _ = stderr_thread.join();
+                                return Err(classify_spawn_run_error(&error_context, Some(1)));
+                            }
+                        } else {
+                            if !fallback_stdout.is_empty() {
+                                fallback_stdout.push('\n');
+                            }
+                            fallback_stdout.push_str(&line);
+                            if verbose {
+                                println!("{}", line);
+                            }
+
+                            if has_hard_failure_signal(&line) {
+                                let _ = child.kill();
+                                let _ = child.wait();
+                                let _ = stdout_thread.join();
+                                let _ = stderr_thread.join();
+                                return Err(classify_spawn_run_error(&line, Some(1)));
+                            }
+                        }
+                    }
+                    StreamSource::Stderr => {
+                        if !error_context.is_empty() {
+                            error_context.push('\n');
+                        }
+                        error_context.push_str(&line);
+                        if verbose {
+                            eprintln!("{}", line);
+                        }
+
+                        if has_hard_failure_signal(&line) {
+                            let _ = child.kill();
+                            let _ = child.wait();
+                            let _ = stdout_thread.join();
+                            let _ = stderr_thread.join();
+                            return Err(classify_spawn_run_error(&error_context, Some(1)));
+                        }
+                    }
+                }
+            }
+            Err(mpsc::RecvTimeoutError::Disconnected) => {
+                if child.try_wait().ok().flatten().is_some() {
+                    break;
+                }
+            }
+            Err(mpsc::RecvTimeoutError::Timeout) => {
+                if child.try_wait().ok().flatten().is_some() {
+                    break;
+                }
+            }
+        }
+    }
+
+    let status = child
+        .wait()
+        .map_err(|e| format!("Failed waiting for prompt command: {}", e))?;
+
+    let _ = stdout_thread.join();
+    let _ = stderr_thread.join();
+
+    if has_hard_failure_signal(&error_context) {
+        return Err(classify_spawn_run_error(&error_context, status.code()));
+    }
+
+    if status.success() {
+        if !rendered_answer.trim().is_empty() {
+            if !verbose {
+                println!("{}", rendered_answer.trim());
+            }
+            return Ok(());
+        }
+        if !fallback_stdout.trim().is_empty() {
+            println!("{}", fallback_stdout.trim());
+        }
+        return Ok(());
+    }
+
+    let mut raw = String::new();
+    if !error_context.trim().is_empty() {
+        raw.push_str(error_context.trim());
+    }
+    if !fallback_stdout.trim().is_empty() {
+        if !raw.is_empty() {
+            raw.push('\n');
+        }
+        raw.push_str(fallback_stdout.trim());
+    }
+
+    Err(classify_spawn_run_error(&raw, status.code()))
+}
+
 /// Prune (remove) all stopped spawned containers.
 pub fn prune_spawned_containers() -> Result<Vec<String>, String> {
     let containers = list_spawned_containers()?;
@@ -704,28 +1072,48 @@ if [ -f /root/.ssh/id_rsa ]; then
     export GIT_SSH_COMMAND="ssh -i /root/.ssh/id_rsa -o StrictHostKeyChecking=no"
 fi
 
-# Create workspace and clone repo (full clone for agentic work)
+# Create workspace and prepare repo (idempotent on container restart)
 mkdir -p /workspace
-cd /workspace
 
-# Clone the repository
-git clone '{repo}' /workspace
-
-# Fetch all refs to get branch info
-git fetch origin 2>/dev/null || true
-
-# Check if branch exists on remote, checkout or create locally
-if git rev-parse --verify 'origin/{branch}' >/dev/null 2>&1; then
-    git checkout -b '{branch}' 'origin/{branch}'
+if [ -d /workspace/.git ]; then
+    cd /workspace
 else
-    # Branch doesn't exist on remote, create local branch from current HEAD
-    git checkout -b '{branch}'
+    if [ -n "$(ls -A /workspace 2>/dev/null)" ]; then
+        # Preserve pre-existing files; avoid failing restart on non-empty workspace
+        cd /workspace
+    else
+        git clone '{repo}' /workspace
+        cd /workspace
+    fi
 fi
 
-# Ensure git config for commits in this session
-# Use project-configured identity, or fallback to default
-{git_name}
-{git_email}
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    # Ensure origin matches configured repo
+    if git remote get-url origin >/dev/null 2>&1; then
+        git remote set-url origin '{repo}' 2>/dev/null || true
+    else
+        git remote add origin '{repo}' 2>/dev/null || true
+    fi
+
+    # Fetch refs when available (non-fatal for restart resilience)
+    git fetch origin 2>/dev/null || true
+
+    # Prefer preserving local branch state; only create when missing
+    if git show-ref --verify --quiet 'refs/heads/{branch}'; then
+        git checkout '{branch}'
+    elif git rev-parse --verify 'origin/{branch}' >/dev/null 2>&1; then
+        git checkout -b '{branch}' 'origin/{branch}'
+    else
+        git checkout -b '{branch}'
+    fi
+
+    # Ensure git config for commits in this session
+    # Use project-configured identity, or fallback to default
+    {git_name}
+    {git_email}
+else
+    echo "Warning: /workspace is not a git repo; skipping git setup"
+fi
 
 # Start opencode serve
 exec opencode serve --hostname 0.0.0.0 --port {port}"#,

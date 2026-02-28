@@ -19,4 +19,4 @@ toml = "0.8"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 tokio = { version = "1", features = ["full"] }
 libc = "0.2"
-
+ctrlc = "3"
