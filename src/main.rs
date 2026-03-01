@@ -189,7 +189,7 @@ fn generate_short_plan_id(attempt: u64) -> String {
     for _ in 0..4 {
         let idx = (n % 36) as usize;
         out.push(ALPHABET[idx] as char);
-        n = n / 36;
+        n /= 36;
         if n == 0 {
             n = n.wrapping_mul(6364136223846793005).wrapping_add(1);
         }
@@ -223,6 +223,87 @@ fn resolve_plan_id_filter(filter: &str, plan_dirs: &[String]) -> Result<String, 
             matches.join(", ")
         )),
     }
+}
+
+const CORE_ROLE_NAMES: &[&str] = &[
+    "producer",
+    "architect",
+    "designer",
+    "planner",
+    "developer",
+    "assurance",
+];
+
+fn normalize_role_name(name: &str) -> String {
+    name.trim().to_lowercase()
+}
+
+fn is_core_role(name: &str) -> bool {
+    let normalized = normalize_role_name(name);
+    CORE_ROLE_NAMES.iter().any(|core| *core == normalized)
+}
+
+fn validate_role_name(name: &str) -> Result<String, String> {
+    let normalized = normalize_role_name(name);
+    if normalized.is_empty() {
+        return Err("Role name cannot be empty".to_string());
+    }
+    if normalized.contains('/') || normalized.contains('\\') {
+        return Err("Role name cannot contain path separators".to_string());
+    }
+    if normalized.contains("..") {
+        return Err("Role name cannot contain '..'".to_string());
+    }
+    if !normalized
+        .chars()
+        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_')
+    {
+        return Err("Role name must use lowercase letters, digits, '-' or '_'".to_string());
+    }
+    Ok(normalized)
+}
+
+fn opencode_roles_dir() -> Result<PathBuf, String> {
+    let base =
+        dirs::config_dir().ok_or_else(|| "Could not determine config directory".to_string())?;
+    Ok(base.join("opencode").join("agents"))
+}
+
+fn role_file_path(name: &str) -> Result<PathBuf, String> {
+    let normalized = validate_role_name(name)?;
+    Ok(opencode_roles_dir()?.join(format!("{}.md", normalized)))
+}
+
+fn role_content_has_subagent_mode(content: &str) -> bool {
+    let lower = content.to_lowercase();
+    lower.contains("mode: subagent")
+}
+
+fn list_role_files() -> Result<Vec<(String, PathBuf)>, String> {
+    let dir = opencode_roles_dir()?;
+    if !dir.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut roles = Vec::new();
+    let entries = fs::read_dir(&dir)
+        .map_err(|e| format!("Failed to read roles directory '{}': {}", dir.display(), e))?;
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("Failed reading roles directory entry: {}", e))?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) != Some("md") {
+            continue;
+        }
+        let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
+            continue;
+        };
+        let name = normalize_role_name(stem);
+        if !name.is_empty() {
+            roles.push((name, path));
+        }
+    }
+    roles.sort_by(|a, b| a.0.cmp(&b.0));
+    Ok(roles)
 }
 
 fn now_unix() -> u64 {
@@ -415,6 +496,7 @@ struct DevRunManifest {
 }
 
 impl DevRunManifest {
+    #[allow(clippy::too_many_arguments)]
     fn new(
         dev_run_id: String,
         project: String,
@@ -635,6 +717,270 @@ Rules:
         develop_artifact_path = develop_artifact_path,
         assurance_artifact_path = assurance_artifact_path,
     )
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct ReleaseIssue {
+    id: String,
+    severity: String,
+    title: String,
+    detail: String,
+    #[serde(default)]
+    related_ids: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct ReleaseReviewReport {
+    schema_version: u8,
+    release_ready: bool,
+    #[serde(default)]
+    summary: Vec<String>,
+    #[serde(default)]
+    blocking_issues: Vec<ReleaseIssue>,
+    #[serde(default)]
+    non_blocking_issues: Vec<ReleaseIssue>,
+    #[serde(default)]
+    evidence: Vec<String>,
+    generated_at: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct ReleaseRunManifest {
+    release_run_id: String,
+    version: u8,
+    project: String,
+    branch: String,
+    base: String,
+    plan_id: String,
+    short_plan_id: String,
+    dev_run_id: String,
+    state: String,
+    phase: String,
+    created_at_unix: u64,
+    updated_at_unix: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    completed_at_unix: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    review_ready: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    integration_status: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    merge_strategy: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    merge_commit: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    non_blocking_issues: Vec<ReleaseIssue>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    errors: Vec<String>,
+}
+
+impl ReleaseRunManifest {
+    fn new(
+        release_run_id: String,
+        project: String,
+        branch: String,
+        base: String,
+        plan_id: String,
+        short_plan_id: String,
+        dev_run_id: String,
+    ) -> Self {
+        let now = now_unix();
+        Self {
+            release_run_id,
+            version: 1,
+            project,
+            branch,
+            base,
+            plan_id,
+            short_plan_id,
+            dev_run_id,
+            state: "in_progress".to_string(),
+            phase: "init".to_string(),
+            created_at_unix: now,
+            updated_at_unix: now,
+            completed_at_unix: None,
+            review_ready: None,
+            integration_status: None,
+            merge_strategy: None,
+            merge_commit: None,
+            non_blocking_issues: Vec::new(),
+            errors: Vec::new(),
+        }
+    }
+
+    fn set_phase(&mut self, phase: &str) {
+        self.phase = phase.to_string();
+        self.updated_at_unix = now_unix();
+    }
+
+    fn set_state(&mut self, state: &str, phase: &str) {
+        self.state = state.to_string();
+        self.phase = phase.to_string();
+        self.updated_at_unix = now_unix();
+        if state == "completed" || state == "failed" {
+            self.completed_at_unix = Some(self.updated_at_unix);
+        }
+    }
+}
+
+fn write_release_manifest(
+    project: &str,
+    branch: &str,
+    run_dir: &str,
+    manifest: &ReleaseRunManifest,
+) -> Result<(), String> {
+    let manifest_path = format!("{}/manifest.json", run_dir);
+    let body = serde_json::to_string_pretty(manifest)
+        .map_err(|e| format!("Failed to serialize release manifest: {}", e))?;
+    docker::write_spawn_file(project, branch, &manifest_path, &body)
+}
+
+fn parse_release_review_report(raw: &str) -> Result<ReleaseReviewReport, String> {
+    let report = serde_json::from_str::<ReleaseReviewReport>(raw)
+        .map_err(|e| format!("Invalid release review JSON: {}", e))?;
+
+    if report.schema_version != 1 {
+        return Err(format!(
+            "Unsupported release review schema_version '{}', expected 1",
+            report.schema_version
+        ));
+    }
+    if report.generated_at.trim().is_empty() {
+        return Err("Release review report missing generated_at".to_string());
+    }
+    if report.release_ready && !report.blocking_issues.is_empty() {
+        return Err(
+            "Release review report is inconsistent: release_ready=true but blocking_issues not empty"
+                .to_string(),
+        );
+    }
+    Ok(report)
+}
+
+fn build_spawn_release_review_prompt(
+    task: &str,
+    plan_dir: &str,
+    dev_run_dir: &str,
+    develop_artifact_path: &str,
+    assurance_artifact_path: &str,
+    review_artifact_path: &str,
+) -> String {
+    let escaped_task = task.replace('"', "\\\"");
+    format!(
+        r#"Run a release readiness review as @producer.
+
+Task: \"{task}\"
+Plan directory: {plan_dir}
+Development run directory: {dev_run_dir}
+Developer artifact: {develop_artifact_path}
+Assurance artifact: {assurance_artifact_path}
+
+Write STRICT JSON to {review_artifact_path} with this exact shape:
+{{
+  "schema_version": 1,
+  "release_ready": true,
+  "summary": ["2-4 bullets"],
+  "blocking_issues": [{{"id": "RB-001", "severity": "critical|high", "title": "...", "detail": "...", "related_ids": ["REQ-001"]}}],
+  "non_blocking_issues": [{{"id": "RN-001", "severity": "medium|low", "title": "...", "detail": "...", "related_ids": ["AC-001"]}}],
+  "evidence": ["..."],
+  "generated_at": "ISO-8601"
+}}
+
+Rules:
+1) release_ready must be false whenever blocking_issues is non-empty.
+2) Only include critical/high in blocking_issues.
+3) Include specific evidence for every blocking issue.
+4) Do not print markdown output outside the JSON artifact.
+"#,
+        task = escaped_task,
+        plan_dir = plan_dir,
+        dev_run_dir = dev_run_dir,
+        develop_artifact_path = develop_artifact_path,
+        assurance_artifact_path = assurance_artifact_path,
+        review_artifact_path = review_artifact_path,
+    )
+}
+
+fn build_spawn_release_sync_prompt(
+    plan_dir: &str,
+    review_artifact_path: &str,
+    integrate_artifact_path: &str,
+    sync_artifact_path: &str,
+) -> String {
+    format!(
+        r#"Run final release sync as @planner.
+
+Plan directory: {plan_dir}
+Release review artifact: {review_artifact_path}
+Integration artifact: {integrate_artifact_path}
+
+Write STRICT JSON to {sync_artifact_path} with this shape:
+{{
+  "schema_version": 1,
+  "status": "released|blocked|failed",
+  "summary": ["2-4 bullets"],
+  "updated_plan_state": "released|release_blocked|release_failed",
+  "followups": ["..."],
+  "generated_at": "ISO-8601"
+}}
+
+Rules:
+1) status must reflect integration outcome accurately.
+2) If integration failed/conflicted, status must be failed.
+3) Keep summary concise and specific.
+4) Do not print markdown output outside the JSON artifact.
+"#,
+        plan_dir = plan_dir,
+        review_artifact_path = review_artifact_path,
+        integrate_artifact_path = integrate_artifact_path,
+        sync_artifact_path = sync_artifact_path,
+    )
+}
+
+fn find_latest_completed_dev_run_for_plan(
+    project: &str,
+    branch: &str,
+    selected_plan: &str,
+) -> Result<(String, DevRunManifest), String> {
+    let dirs_raw = docker::run_spawn_shell(
+        project,
+        branch,
+        "for d in /state/dev-*; do [ -d \"$d\" ] && basename \"$d\"; done; true",
+    )?;
+
+    let mut matches: Vec<(String, DevRunManifest)> = Vec::new();
+    for dir_name in dirs_raw.lines().map(str::trim).filter(|s| !s.is_empty()) {
+        let manifest_path = format!("/state/{}/manifest.json", dir_name);
+        let raw = match docker::read_spawn_file(project, branch, &manifest_path) {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        let manifest = match serde_json::from_str::<DevRunManifest>(&raw) {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        if manifest.plan_id == selected_plan && manifest.state == "completed" {
+            matches.push((dir_name.to_string(), manifest));
+        }
+    }
+
+    if matches.is_empty() {
+        return Err(format!(
+            "No completed develop run found for plan '{}'",
+            selected_plan
+        ));
+    }
+
+    matches.sort_by(|(_, a), (_, b)| b.created_at_unix.cmp(&a.created_at_unix));
+    Ok(matches.remove(0))
+}
+
+fn extract_kv_line<'a>(raw: &'a str, key: &str) -> Option<&'a str> {
+    raw.lines().find_map(|line| {
+        let line = line.trim();
+        line.strip_prefix(key)
+            .and_then(|rest| rest.strip_prefix('='))
+    })
 }
 
 fn write_plan_manifest(
@@ -1004,6 +1350,11 @@ enum Commands {
         #[command(subcommand)]
         cmd: ProjectCommands,
     },
+    /// Manage OpenCode subagent roles
+    Role {
+        #[command(subcommand)]
+        cmd: RoleCommands,
+    },
     /// Run a pipeline (agent + project scoped)
     Run {
         /// Enable Dagger cache for this run (may reuse previous pipeline steps; default is a fresh run)
@@ -1016,6 +1367,36 @@ enum Commands {
     Spawn {
         #[command(subcommand)]
         cmd: SpawnCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum RoleCommands {
+    /// List all available roles
+    List,
+    /// Add a new role from a markdown file
+    Add {
+        /// Role name
+        name: String,
+        /// Source markdown file path
+        #[arg(long)]
+        from: PathBuf,
+    },
+    /// Update an existing role from a markdown file
+    Update {
+        /// Role name
+        name: String,
+        /// Source markdown file path
+        #[arg(long)]
+        from: PathBuf,
+    },
+    /// Remove a role
+    Remove {
+        /// Role name
+        name: String,
+        /// Force removal for protected core roles
+        #[arg(long)]
+        force: bool,
     },
 }
 
@@ -1433,6 +1814,24 @@ enum SpawnCommands {
         verbose: bool,
         /// Development task to execute
         task: String,
+    },
+    /// Run release pipeline for a completed plan (review -> integrate -> sync)
+    Release {
+        /// Project name (auto-detected from git repo if not specified)
+        #[arg(long)]
+        project: Option<String>,
+        /// Branch name (auto-detected from current git branch if not specified)
+        #[arg(long)]
+        branch: Option<String>,
+        /// Base branch for integration (default: project base branch or main)
+        #[arg(long)]
+        base: Option<String>,
+        /// Plan id to release (full id or short id)
+        #[arg(long)]
+        plan: String,
+        /// Show detailed agent output (enables print-logs and thinking)
+        #[arg(long)]
+        verbose: bool,
     },
     /// Review all plan artifacts in a spawned container
     Review {
@@ -2458,7 +2857,7 @@ fn print_smith_help() {
     }
     println!("Usage: smith [COMMAND]");
     const SYSTEM: &[&str] = &["status", "install", "uninstall", "help", "version"];
-    const COMMANDS: &[&str] = &["agent", "project", "run"];
+    const COMMANDS: &[&str] = &["agent", "project", "role", "run", "spawn"];
     println!("\nCommands:");
     for sub in c.get_subcommands() {
         let name = sub.get_name();
@@ -4737,6 +5136,164 @@ async fn main() {
                 println!("Project removed successfully");
             }
         },
+        Some(Commands::Role { cmd }) => match cmd {
+            RoleCommands::List => {
+                let roles = list_role_files().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+
+                if roles.is_empty() {
+                    let dir = opencode_roles_dir().unwrap_or_else(|_| PathBuf::from("(unknown)"));
+                    println!("No roles found in {}", dir.display());
+                    return;
+                }
+
+                println!("Roles:");
+                for (name, path) in roles {
+                    let content = fs::read_to_string(&path).unwrap_or_default();
+                    let mode_marker = if role_content_has_subagent_mode(&content) {
+                        "mode=subagent"
+                    } else {
+                        "mode=missing"
+                    };
+                    let role_kind = if is_core_role(&name) {
+                        "core"
+                    } else {
+                        "custom"
+                    };
+                    println!(
+                        "  - {} [{}] {} ({})",
+                        name,
+                        role_kind,
+                        path.display(),
+                        mode_marker
+                    );
+                }
+            }
+            RoleCommands::Add { name, from } => {
+                let normalized = validate_role_name(&name).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+
+                if is_core_role(&normalized) {
+                    eprintln!(
+                        "Error: '{}' is a reserved core role name and cannot be added",
+                        normalized
+                    );
+                    std::process::exit(1);
+                }
+
+                let existing = list_role_files().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                if existing.iter().any(|(n, _)| n == &normalized) {
+                    eprintln!("Error: role '{}' already exists", normalized);
+                    std::process::exit(1);
+                }
+
+                let content = fs::read_to_string(&from).unwrap_or_else(|e| {
+                    eprintln!("Error: failed reading '{}': {}", from.display(), e);
+                    std::process::exit(1);
+                });
+                if !role_content_has_subagent_mode(&content) {
+                    eprintln!(
+                        "Error: role file '{}' must include 'mode: subagent'",
+                        from.display()
+                    );
+                    std::process::exit(1);
+                }
+
+                let roles_dir = opencode_roles_dir().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                fs::create_dir_all(&roles_dir).unwrap_or_else(|e| {
+                    eprintln!(
+                        "Error: failed creating roles directory '{}': {}",
+                        roles_dir.display(),
+                        e
+                    );
+                    std::process::exit(1);
+                });
+
+                let target = role_file_path(&normalized).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                fs::write(&target, content).unwrap_or_else(|e| {
+                    eprintln!("Error: failed writing '{}': {}", target.display(), e);
+                    std::process::exit(1);
+                });
+
+                println!("Added role '{}' at {}", normalized, target.display());
+            }
+            RoleCommands::Update { name, from } => {
+                let normalized = validate_role_name(&name).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+
+                let target = role_file_path(&normalized).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                if !target.exists() {
+                    eprintln!("Error: role '{}' not found", normalized);
+                    std::process::exit(1);
+                }
+
+                let content = fs::read_to_string(&from).unwrap_or_else(|e| {
+                    eprintln!("Error: failed reading '{}': {}", from.display(), e);
+                    std::process::exit(1);
+                });
+                if !role_content_has_subagent_mode(&content) {
+                    eprintln!(
+                        "Error: role file '{}' must include 'mode: subagent'",
+                        from.display()
+                    );
+                    std::process::exit(1);
+                }
+
+                fs::write(&target, content).unwrap_or_else(|e| {
+                    eprintln!("Error: failed writing '{}': {}", target.display(), e);
+                    std::process::exit(1);
+                });
+
+                println!("Updated role '{}'", normalized);
+            }
+            RoleCommands::Remove { name, force } => {
+                let normalized = validate_role_name(&name).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+
+                if is_core_role(&normalized) && !force {
+                    eprintln!(
+                        "Error: '{}' is a core role and cannot be removed without --force",
+                        normalized
+                    );
+                    std::process::exit(1);
+                }
+
+                let target = role_file_path(&normalized).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                if !target.exists() {
+                    eprintln!("Error: role '{}' not found", normalized);
+                    std::process::exit(1);
+                }
+
+                fs::remove_file(&target).unwrap_or_else(|e| {
+                    eprintln!("Error: failed removing '{}': {}", target.display(), e);
+                    std::process::exit(1);
+                });
+                println!("Removed role '{}'", normalized);
+            }
+        },
         Some(Commands::Run { cache, cmd }) => match cmd {
             RunCommands::Ask {
                 question,
@@ -6257,6 +6814,508 @@ async fn main() {
                 );
                 println!("  State Dir: {}", dev_run_dir);
             }
+            SpawnCommands::Release {
+                project,
+                branch,
+                base,
+                plan,
+                verbose,
+            } => {
+                let project = match project {
+                    Some(p) => p,
+                    None => match detect_project_from_cwd() {
+                        Ok(Some(name)) => name,
+                        _ => {
+                            eprintln!("Error: --project required");
+                            std::process::exit(1);
+                        }
+                    },
+                };
+                let branch = match branch {
+                    Some(b) => b,
+                    None => {
+                        let output = Command::new("git")
+                            .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                            .output();
+                        match output {
+                            Ok(out) if out.status.success() => {
+                                String::from_utf8_lossy(&out.stdout).trim().to_string()
+                            }
+                            _ => {
+                                eprintln!("Error: --branch required");
+                                std::process::exit(1);
+                            }
+                        }
+                    }
+                };
+
+                let project_config =
+                    resolve_project_config(Some(project.clone())).unwrap_or_else(|e| {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    });
+                let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
+
+                if let Err(e) = docker::ensure_spawn_state_dir(&project, &branch) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                let plan_dirs = match docker::list_spawn_plan_dirs(&project, &branch) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+                if plan_dirs.is_empty() {
+                    eprintln!(
+                        "Error: no plan runs found in /state for {}:{}; run `smith spawn plan` first",
+                        project, branch
+                    );
+                    std::process::exit(1);
+                }
+
+                let selected_plan = match resolve_plan_id_filter(&plan, &plan_dirs) {
+                    Ok(id) => id,
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+
+                let plan_dir = format!("/state/{}", selected_plan);
+                let plan_manifest_path = format!("{}/manifest.json", plan_dir);
+                let plan_manifest_raw =
+                    match docker::read_spawn_file(&project, &branch, &plan_manifest_path) {
+                        Ok(v) => v,
+                        Err(e) => {
+                            eprintln!("Error: failed to read plan manifest: {}", e);
+                            std::process::exit(1);
+                        }
+                    };
+                let mut plan_manifest =
+                    match serde_json::from_str::<PlanManifest>(&plan_manifest_raw) {
+                        Ok(v) => v,
+                        Err(e) => {
+                            eprintln!("Error: invalid plan manifest '{}': {}", selected_plan, e);
+                            std::process::exit(1);
+                        }
+                    };
+
+                if plan_manifest.project != project || plan_manifest.branch != branch {
+                    eprintln!(
+                        "Error: plan target mismatch; plan is {}:{}, requested {}:{}",
+                        plan_manifest.project, plan_manifest.branch, project, branch
+                    );
+                    std::process::exit(1);
+                }
+                if plan_manifest.state != "completed" && plan_manifest.state != "released" {
+                    eprintln!(
+                        "Error: plan '{}' is in state '{}'; expected completed or released",
+                        selected_plan, plan_manifest.state
+                    );
+                    std::process::exit(1);
+                }
+
+                let (dev_run_id, dev_manifest) =
+                    match find_latest_completed_dev_run_for_plan(&project, &branch, &selected_plan)
+                    {
+                        Ok(v) => v,
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        }
+                    };
+                let dev_run_dir = format!("/state/{}", dev_run_id);
+
+                let latest_attempt = match dev_manifest.attempts.last() {
+                    Some(v) => v,
+                    None => {
+                        eprintln!(
+                            "Error: develop run '{}' has no recorded attempts",
+                            dev_manifest.dev_run_id
+                        );
+                        std::process::exit(1);
+                    }
+                };
+
+                let develop_artifact_path = latest_attempt.develop_artifact.clone();
+                let assurance_artifact_path = latest_attempt.assurance_artifact.clone();
+                for path in [&develop_artifact_path, &assurance_artifact_path] {
+                    match docker::spawn_file_exists(&project, &branch, path) {
+                        Ok(true) => {}
+                        Ok(false) => {
+                            eprintln!("Error: required develop artifact missing: {}", path);
+                            std::process::exit(1);
+                        }
+                        Err(e) => {
+                            eprintln!("Error: failed checking artifact '{}': {}", path, e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+
+                let assurance_raw =
+                    match docker::read_spawn_file(&project, &branch, &assurance_artifact_path) {
+                        Ok(v) => v,
+                        Err(e) => {
+                            eprintln!(
+                                "Error: failed reading assurance artifact '{}': {}",
+                                assurance_artifact_path, e
+                            );
+                            std::process::exit(1);
+                        }
+                    };
+                if let Err(e) = parse_dev_assurance_report(&assurance_raw) {
+                    eprintln!("Error: assurance artifact is invalid: {}", e);
+                    std::process::exit(1);
+                }
+
+                let release_run_id =
+                    format!("release-{}-{}", now_unix(), generate_short_plan_id(0));
+                let release_run_dir = format!("/state/{}", release_run_id);
+                if let Err(e) = docker::ensure_spawn_dir(&project, &branch, &release_run_dir) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                let review_artifact_path = format!("{}/review.json", release_run_dir);
+                let integrate_artifact_path = format!("{}/integrate.json", release_run_dir);
+                let sync_artifact_path = format!("{}/sync.json", release_run_dir);
+
+                let mut release_manifest = ReleaseRunManifest::new(
+                    release_run_id.clone(),
+                    project.clone(),
+                    branch.clone(),
+                    resolved_base.clone(),
+                    selected_plan.clone(),
+                    effective_short_plan_id(&plan_manifest, &selected_plan),
+                    dev_run_id.clone(),
+                );
+                if let Err(e) =
+                    write_release_manifest(&project, &branch, &release_run_dir, &release_manifest)
+                {
+                    eprintln!("Error: failed writing release manifest: {}", e);
+                    std::process::exit(1);
+                }
+
+                release_manifest.set_phase("review");
+                let _ =
+                    write_release_manifest(&project, &branch, &release_run_dir, &release_manifest);
+                let review_prompt = build_spawn_release_review_prompt(
+                    &dev_manifest.task,
+                    &plan_dir,
+                    &dev_run_dir,
+                    &develop_artifact_path,
+                    &assurance_artifact_path,
+                    &review_artifact_path,
+                );
+                if let Err(e) = docker::run_prompt_in_spawned_container(
+                    &project,
+                    &branch,
+                    &review_prompt,
+                    verbose,
+                ) {
+                    release_manifest.errors.push(e.clone());
+                    release_manifest.set_state("failed", "review");
+                    let _ = write_release_manifest(
+                        &project,
+                        &branch,
+                        &release_run_dir,
+                        &release_manifest,
+                    );
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                let review_raw =
+                    match docker::read_spawn_file(&project, &branch, &review_artifact_path) {
+                        Ok(v) => v,
+                        Err(e) => {
+                            release_manifest.errors.push(e.clone());
+                            release_manifest.set_state("failed", "review");
+                            let _ = write_release_manifest(
+                                &project,
+                                &branch,
+                                &release_run_dir,
+                                &release_manifest,
+                            );
+                            eprintln!("Error: review artifact missing: {}", e);
+                            std::process::exit(1);
+                        }
+                    };
+                let review_report = match parse_release_review_report(&review_raw) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        release_manifest.errors.push(e.clone());
+                        release_manifest.set_state("failed", "review");
+                        let _ = write_release_manifest(
+                            &project,
+                            &branch,
+                            &release_run_dir,
+                            &release_manifest,
+                        );
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+                release_manifest.review_ready = Some(review_report.release_ready);
+                release_manifest.non_blocking_issues = review_report.non_blocking_issues.clone();
+                let _ =
+                    write_release_manifest(&project, &branch, &release_run_dir, &release_manifest);
+
+                let mut integration_failed = false;
+                let mut integration_blocked = false;
+
+                if !review_report.release_ready || !review_report.blocking_issues.is_empty() {
+                    integration_blocked = true;
+                    release_manifest.integration_status = Some("blocked".to_string());
+                    let integrate_json = serde_json::json!({
+                        "schema_version": 1,
+                        "status": "blocked",
+                        "reason": "release_review_blocked",
+                        "strategy": Value::Null,
+                        "merge_commit": Value::Null,
+                        "pushed": false,
+                        "generated_at_unix": now_unix(),
+                    });
+                    let integrate_body = serde_json::to_string_pretty(&integrate_json)
+                        .map_err(|e| format!("Failed to serialize integrate artifact: {}", e))
+                        .unwrap_or_else(|e| {
+                            release_manifest.errors.push(e.clone());
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        });
+                    if let Err(e) = docker::write_spawn_file(
+                        &project,
+                        &branch,
+                        &integrate_artifact_path,
+                        &integrate_body,
+                    ) {
+                        release_manifest.errors.push(e.clone());
+                        release_manifest.set_state("failed", "integrate");
+                        let _ = write_release_manifest(
+                            &project,
+                            &branch,
+                            &release_run_dir,
+                            &release_manifest,
+                        );
+                        eprintln!("Error: failed writing integrate artifact: {}", e);
+                        std::process::exit(1);
+                    }
+                } else {
+                    release_manifest.set_phase("integrate");
+                    let _ = write_release_manifest(
+                        &project,
+                        &branch,
+                        &release_run_dir,
+                        &release_manifest,
+                    );
+
+                    let branch_escaped = branch.replace('\'', "'\"'\"'");
+                    let base_escaped = resolved_base.replace('\'', "'\"'\"'");
+                    let merge_msg = format!(
+                        "Merge '{}' into '{}' [plan:{}]",
+                        branch, resolved_base, release_manifest.short_plan_id
+                    )
+                    .replace('\'', "'\"'\"'");
+                    let integrate_script = format!(
+                        r#"cd /workspace && status='ok' && reason='' && strategy='' && merge_commit='' && pushed='false' && git fetch origin 2>&1 || {{ status='failed'; reason='fetch_failed'; }} && if [ "$status" = 'ok' ] && ! git show-ref --verify --quiet 'refs/remotes/origin/{base}'; then status='failed'; reason='missing_base_branch'; fi && if [ "$status" = 'ok' ] && ! git show-ref --verify --quiet 'refs/remotes/origin/{branch}'; then status='failed'; reason='missing_feature_branch'; fi && if [ "$status" = 'ok' ]; then git checkout -B '{base}' 'refs/remotes/origin/{base}' 2>&1 || {{ status='failed'; reason='checkout_base_failed'; }}; fi && if [ "$status" = 'ok' ]; then git reset --hard 'refs/remotes/origin/{base}' 2>&1 || {{ status='failed'; reason='reset_base_failed'; }}; fi && if [ "$status" = 'ok' ]; then if git merge --ff-only 'refs/remotes/origin/{branch}' 2>&1; then strategy='ff_only'; merge_commit=$(git rev-parse HEAD 2>/dev/null || true); else if git merge --no-ff -m '{merge_msg}' 'refs/remotes/origin/{branch}' 2>&1; then strategy='merge_commit'; merge_commit=$(git rev-parse HEAD 2>/dev/null || true); else git merge --abort 2>/dev/null || true; status='conflict'; reason='merge_conflict'; fi; fi; fi && if [ "$status" = 'ok' ]; then if git push origin 'HEAD:refs/heads/{base}' 2>&1; then pushed='true'; else status='failed'; reason='push_failed'; fi; fi && echo "SMITH_RELEASE_STATUS=$status" && echo "SMITH_RELEASE_REASON=$reason" && echo "SMITH_RELEASE_STRATEGY=$strategy" && echo "SMITH_RELEASE_MERGE_COMMIT=$merge_commit" && echo "SMITH_RELEASE_PUSHED=$pushed""#,
+                        base = base_escaped,
+                        branch = branch_escaped,
+                        merge_msg = merge_msg
+                    );
+
+                    let integrate_raw =
+                        match docker::run_spawn_shell(&project, &branch, &integrate_script) {
+                            Ok(v) => v,
+                            Err(e) => {
+                                release_manifest.errors.push(e.clone());
+                                release_manifest.set_state("failed", "integrate");
+                                let _ = write_release_manifest(
+                                    &project,
+                                    &branch,
+                                    &release_run_dir,
+                                    &release_manifest,
+                                );
+                                eprintln!("Error: {}", e);
+                                std::process::exit(1);
+                            }
+                        };
+
+                    let status = extract_kv_line(&integrate_raw, "SMITH_RELEASE_STATUS")
+                        .unwrap_or("failed")
+                        .trim()
+                        .to_string();
+                    let reason = extract_kv_line(&integrate_raw, "SMITH_RELEASE_REASON")
+                        .unwrap_or("")
+                        .trim()
+                        .to_string();
+                    let strategy = extract_kv_line(&integrate_raw, "SMITH_RELEASE_STRATEGY")
+                        .unwrap_or("")
+                        .trim()
+                        .to_string();
+                    let merge_commit =
+                        extract_kv_line(&integrate_raw, "SMITH_RELEASE_MERGE_COMMIT")
+                            .unwrap_or("")
+                            .trim()
+                            .to_string();
+                    let pushed = extract_kv_line(&integrate_raw, "SMITH_RELEASE_PUSHED")
+                        .unwrap_or("false")
+                        .trim()
+                        == "true";
+
+                    release_manifest.integration_status = Some(status.clone());
+                    if !strategy.is_empty() {
+                        release_manifest.merge_strategy = Some(strategy.clone());
+                    }
+                    if !merge_commit.is_empty() {
+                        release_manifest.merge_commit = Some(merge_commit.clone());
+                    }
+
+                    let integrate_json = serde_json::json!({
+                        "schema_version": 1,
+                        "status": status,
+                        "reason": if reason.is_empty() { Value::Null } else { Value::String(reason.clone()) },
+                        "strategy": if strategy.is_empty() { Value::Null } else { Value::String(strategy.clone()) },
+                        "merge_commit": if merge_commit.is_empty() { Value::Null } else { Value::String(merge_commit.clone()) },
+                        "pushed": pushed,
+                        "raw_output": integrate_raw,
+                        "generated_at_unix": now_unix(),
+                    });
+                    let integrate_body = serde_json::to_string_pretty(&integrate_json)
+                        .map_err(|e| format!("Failed to serialize integrate artifact: {}", e))
+                        .unwrap_or_else(|e| {
+                            release_manifest.errors.push(e.clone());
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        });
+                    if let Err(e) = docker::write_spawn_file(
+                        &project,
+                        &branch,
+                        &integrate_artifact_path,
+                        &integrate_body,
+                    ) {
+                        release_manifest.errors.push(e.clone());
+                        release_manifest.set_state("failed", "integrate");
+                        let _ = write_release_manifest(
+                            &project,
+                            &branch,
+                            &release_run_dir,
+                            &release_manifest,
+                        );
+                        eprintln!("Error: failed writing integrate artifact: {}", e);
+                        std::process::exit(1);
+                    }
+
+                    if release_manifest.integration_status.as_deref() != Some("ok") {
+                        integration_failed = true;
+                    }
+                }
+
+                release_manifest.set_phase("sync");
+                let _ =
+                    write_release_manifest(&project, &branch, &release_run_dir, &release_manifest);
+                let sync_prompt = build_spawn_release_sync_prompt(
+                    &plan_dir,
+                    &review_artifact_path,
+                    &integrate_artifact_path,
+                    &sync_artifact_path,
+                );
+                if let Err(e) = docker::run_prompt_in_spawned_container(
+                    &project,
+                    &branch,
+                    &sync_prompt,
+                    verbose,
+                ) {
+                    release_manifest.errors.push(e.clone());
+                    release_manifest.set_state("failed", "sync");
+                    let _ = write_release_manifest(
+                        &project,
+                        &branch,
+                        &release_run_dir,
+                        &release_manifest,
+                    );
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+                if !docker::spawn_file_exists(&project, &branch, &sync_artifact_path)
+                    .unwrap_or(false)
+                {
+                    let msg = "Sync phase did not produce required sync.json artifact".to_string();
+                    release_manifest.errors.push(msg.clone());
+                    release_manifest.set_state("failed", "sync");
+                    let _ = write_release_manifest(
+                        &project,
+                        &branch,
+                        &release_run_dir,
+                        &release_manifest,
+                    );
+                    eprintln!("Error: {}", msg);
+                    std::process::exit(1);
+                }
+
+                let final_failed = integration_failed;
+                let final_blocked = integration_blocked;
+                if final_blocked {
+                    plan_manifest.set_state("release_blocked", "release_review");
+                } else if final_failed {
+                    plan_manifest.set_state("release_failed", "release_sync");
+                } else {
+                    plan_manifest.set_state("released", "release_sync");
+                }
+                if let Err(e) = write_plan_manifest(&project, &branch, &plan_dir, &plan_manifest) {
+                    release_manifest.errors.push(e.clone());
+                    release_manifest.set_state("failed", "sync");
+                    let _ = write_release_manifest(
+                        &project,
+                        &branch,
+                        &release_run_dir,
+                        &release_manifest,
+                    );
+                    eprintln!("Error: failed updating plan manifest: {}", e);
+                    std::process::exit(1);
+                }
+
+                if final_blocked || final_failed {
+                    release_manifest.set_state("failed", "done");
+                } else {
+                    release_manifest.set_state("completed", "done");
+                }
+                let _ =
+                    write_release_manifest(&project, &branch, &release_run_dir, &release_manifest);
+
+                if final_blocked {
+                    eprintln!(
+                        "Release blocked by review findings for plan {} (id: {})",
+                        selected_plan, release_manifest.short_plan_id
+                    );
+                    println!("  State Dir: {}", release_run_dir);
+                    std::process::exit(1);
+                }
+                if final_failed {
+                    eprintln!(
+                        "Release integration failed for plan {} (id: {})",
+                        selected_plan, release_manifest.short_plan_id
+                    );
+                    println!("  State Dir: {}", release_run_dir);
+                    std::process::exit(1);
+                }
+
+                println!("  {} Spawn release completed", BULLET_GREEN);
+                if let Some(strategy) = release_manifest.merge_strategy.as_deref() {
+                    println!("  Merge Strategy: {}", strategy);
+                }
+                if let Some(commit) = release_manifest.merge_commit.as_deref() {
+                    println!("  Merge Commit: {}", commit);
+                }
+                println!(
+                    "  Plan: {} (id: {})",
+                    selected_plan, release_manifest.short_plan_id
+                );
+                println!("  State Dir: {}", release_run_dir);
+            }
             SpawnCommands::List => match docker::list_spawned_containers() {
                 Ok(containers) => {
                     if containers.is_empty() {
@@ -6906,5 +7965,41 @@ mod tests {
         let result = detect_project_from_cwd();
         std::env::set_current_dir(&restorable).ok();
         assert!(matches!(result, Ok(None)));
+    }
+
+    #[test]
+    fn validate_role_name_accepts_safe_values() {
+        assert_eq!(validate_role_name("assurance").unwrap(), "assurance");
+        assert_eq!(
+            validate_role_name("Custom-Role_1").unwrap(),
+            "custom-role_1"
+        );
+    }
+
+    #[test]
+    fn validate_role_name_rejects_unsafe_values() {
+        assert!(validate_role_name("../bad").is_err());
+        assert!(validate_role_name("bad/name").is_err());
+        assert!(validate_role_name("bad name").is_err());
+    }
+
+    #[test]
+    fn parse_release_review_report_rejects_inconsistent_ready_state() {
+        let raw = r#"{
+  "schema_version": 1,
+  "release_ready": true,
+  "summary": ["ok"],
+  "blocking_issues": [{
+    "id": "RB-1",
+    "severity": "high",
+    "title": "blocking",
+    "detail": "must fix",
+    "related_ids": []
+  }],
+  "non_blocking_issues": [],
+  "evidence": ["x"],
+  "generated_at": "2026-01-01T00:00:00Z"
+}"#;
+        assert!(parse_release_review_report(raw).is_err());
     }
 }
