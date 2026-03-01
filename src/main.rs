@@ -232,6 +232,7 @@ const CORE_ROLE_NAMES: &[&str] = &[
     "planner",
     "developer",
     "assurance",
+    "devops",
 ];
 
 fn normalize_role_name(name: &str) -> String {
@@ -302,6 +303,50 @@ fn list_role_files() -> Result<Vec<(String, PathBuf)>, String> {
             roles.push((name, path));
         }
     }
+    roles.sort_by(|a, b| a.0.cmp(&b.0));
+    Ok(roles)
+}
+
+fn list_role_files_in_dir(dir: &Path) -> Result<Vec<(String, PathBuf)>, String> {
+    if !dir.exists() {
+        return Err(format!(
+            "Role source directory does not exist: {}",
+            dir.display()
+        ));
+    }
+    if !dir.is_dir() {
+        return Err(format!(
+            "Role source path is not a directory: {}",
+            dir.display()
+        ));
+    }
+
+    let mut roles = Vec::new();
+    let entries = fs::read_dir(dir).map_err(|e| {
+        format!(
+            "Failed to read roles source directory '{}': {}",
+            dir.display(),
+            e
+        )
+    })?;
+    for entry in entries {
+        let entry =
+            entry.map_err(|e| format!("Failed reading roles source directory entry: {}", e))?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) != Some("md") {
+            continue;
+        }
+        let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
+            continue;
+        };
+        let normalized = validate_role_name(stem)?;
+        roles.push((normalized, path));
+    }
+
+    if roles.is_empty() {
+        return Err(format!("No role markdown files found in {}", dir.display()));
+    }
+
     roles.sort_by(|a, b| a.0.cmp(&b.0));
     Ok(roles)
 }
@@ -1373,7 +1418,11 @@ enum Commands {
 #[derive(Subcommand)]
 enum RoleCommands {
     /// List all available roles
-    List,
+    List {
+        /// Show full role instructions
+        #[arg(long)]
+        verbose: bool,
+    },
     /// Add a new role from a markdown file
     Add {
         /// Role name
@@ -1395,6 +1444,15 @@ enum RoleCommands {
         /// Role name
         name: String,
         /// Force removal for protected core roles
+        #[arg(long)]
+        force: bool,
+    },
+    /// Sync role files from a directory into ~/.config/opencode/agents
+    Sync {
+        /// Source directory containing role markdown files (default: ./roles)
+        #[arg(long)]
+        from: Option<PathBuf>,
+        /// Overwrite existing role files in target directory
         #[arg(long)]
         force: bool,
     },
@@ -5137,7 +5195,7 @@ async fn main() {
             }
         },
         Some(Commands::Role { cmd }) => match cmd {
-            RoleCommands::List => {
+            RoleCommands::List { verbose } => {
                 let roles = list_role_files().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -5169,6 +5227,16 @@ async fn main() {
                         path.display(),
                         mode_marker
                     );
+
+                    if verbose {
+                        println!("    instructions:");
+                        for line in content.lines() {
+                            println!("      {}", line);
+                        }
+                        if content.is_empty() {
+                            println!("      (empty)");
+                        }
+                    }
                 }
             }
             RoleCommands::Add { name, from } => {
@@ -5292,6 +5360,78 @@ async fn main() {
                     std::process::exit(1);
                 });
                 println!("Removed role '{}'", normalized);
+            }
+            RoleCommands::Sync { from, force } => {
+                let source_dir = from.unwrap_or_else(|| PathBuf::from("roles"));
+                let source_roles = list_role_files_in_dir(&source_dir).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+
+                let target_dir = opencode_roles_dir().unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                fs::create_dir_all(&target_dir).unwrap_or_else(|e| {
+                    eprintln!(
+                        "Error: failed creating roles directory '{}': {}",
+                        target_dir.display(),
+                        e
+                    );
+                    std::process::exit(1);
+                });
+
+                let mut copied = 0usize;
+                let mut skipped = 0usize;
+                let mut overwritten = 0usize;
+
+                for (role_name, source_path) in source_roles {
+                    let content = fs::read_to_string(&source_path).unwrap_or_else(|e| {
+                        eprintln!("Error: failed reading '{}': {}", source_path.display(), e);
+                        std::process::exit(1);
+                    });
+                    if !role_content_has_subagent_mode(&content) {
+                        eprintln!(
+                            "Error: role file '{}' must include 'mode: subagent'",
+                            source_path.display()
+                        );
+                        std::process::exit(1);
+                    }
+
+                    let target_path = target_dir.join(format!("{}.md", role_name));
+                    if target_path.exists() {
+                        let existing = fs::read_to_string(&target_path).unwrap_or_default();
+                        if existing == content {
+                            skipped += 1;
+                            continue;
+                        }
+                        if !force {
+                            skipped += 1;
+                            continue;
+                        }
+                        overwritten += 1;
+                    } else {
+                        copied += 1;
+                    }
+
+                    fs::write(&target_path, content).unwrap_or_else(|e| {
+                        eprintln!("Error: failed writing '{}': {}", target_path.display(), e);
+                        std::process::exit(1);
+                    });
+                }
+
+                println!(
+                    "Synced roles from {} -> {}",
+                    source_dir.display(),
+                    target_dir.display()
+                );
+                println!(
+                    "  copied: {} | overwritten: {} | skipped: {}",
+                    copied, overwritten, skipped
+                );
+                if skipped > 0 && !force {
+                    println!("  Note: use --force to overwrite changed existing role files");
+                }
             }
         },
         Some(Commands::Run { cache, cmd }) => match cmd {
@@ -8001,5 +8141,11 @@ mod tests {
   "generated_at": "2026-01-01T00:00:00Z"
 }"#;
         assert!(parse_release_review_report(raw).is_err());
+    }
+
+    #[test]
+    fn core_roles_include_devops() {
+        assert!(is_core_role("devops"));
+        assert!(is_core_role("DevOps"));
     }
 }
