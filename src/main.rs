@@ -4400,6 +4400,25 @@ async fn main() {
                 println!("       Image: {}", image);
                 println!("       Repo: {}", repo);
                 println!("       Port: {}", final_port);
+                match docker::host_opencode_config_dir() {
+                    Some(path) if path.exists() => {
+                        println!(
+                            "       OpenCode config: {} (mounted read-only)",
+                            path.display()
+                        );
+                    }
+                    Some(path) => {
+                        println!(
+                            "       OpenCode config: {} (not found, mount skipped)",
+                            path.display()
+                        );
+                    }
+                    None => {
+                        println!(
+                            "       OpenCode config: unavailable (could not resolve host config dir)"
+                        );
+                    }
+                }
 
                 match docker::start_spawned_container(
                     &project,

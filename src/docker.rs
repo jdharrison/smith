@@ -26,6 +26,10 @@ pub const SPAWN_PORT_RANGE: u16 = SPAWN_PORT_MAX - SPAWN_PORT_MIN + 1;
 /// Default port for OpenCode server. Additional agents use 4097, 4098, ...
 pub const OPENCODE_SERVER_PORT: u16 = 4096;
 
+pub fn host_opencode_config_dir() -> Option<std::path::PathBuf> {
+    dirs::config_dir().map(|p| p.join("opencode"))
+}
+
 static SPAWN_RUN_CANCELLED: AtomicBool = AtomicBool::new(false);
 static SPAWN_RUN_SIGINT_INIT: Once = Once::new();
 
@@ -221,6 +225,13 @@ pub fn start_agent_container(
         format!("{}:{}", port, port),
     ];
 
+    if let Some(cfg_dir) = host_opencode_config_dir().filter(|p| p.exists()) {
+        args.extend([
+            "-v".to_string(),
+            format!("{}:/root/.config/opencode:ro", cfg_dir.to_string_lossy()),
+        ]);
+    }
+
     if let Some(prov) = provider {
         let env_var = provider_api_key_env(prov);
         args.push("-e".to_string());
@@ -264,6 +275,13 @@ pub fn start_agent_container(
             "-p".to_string(),
             format!("{}:{}", port, port),
         ];
+
+        if let Some(cfg_dir) = host_opencode_config_dir().filter(|p| p.exists()) {
+            args2.extend([
+                "-v".to_string(),
+                format!("{}:/root/.config/opencode:ro", cfg_dir.to_string_lossy()),
+            ]);
+        }
 
         if let Some(prov) = provider {
             let env_var = provider_api_key_env(prov);
@@ -1135,6 +1153,13 @@ exec opencode serve --hostname 0.0.0.0 --port {port}"#,
         "-p".to_string(),
         format!("{}:{}", final_port, final_port),
     ];
+
+    if let Some(cfg_dir) = host_opencode_config_dir().filter(|p| p.exists()) {
+        args.extend([
+            "-v".to_string(),
+            format!("{}:/root/.config/opencode:ro", cfg_dir.to_string_lossy()),
+        ]);
+    }
 
     // Forward SSH agent if available
     if let Some(ssh_socket) = std::env::var("SSH_AUTH_SOCK").ok() {
