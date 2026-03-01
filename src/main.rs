@@ -1,4 +1,3 @@
-mod dagger_pipeline;
 mod docker;
 mod github;
 
@@ -53,7 +52,7 @@ fn status_circle(active: bool, reachable: Option<bool>, built: bool, is_cloud: b
     format!("{}{}{}", color, bullet, ANSI_RESET)
 }
 
-/// When dropped, restores stderr. Used for quiet mode to hide Dagger progress. No-op on non-Unix.
+/// When dropped, restores stderr. Used for quiet mode to hide command progress. No-op on non-Unix.
 struct StderrRedirectGuard(Option<std::os::unix::io::RawFd>);
 
 #[cfg(unix)]
@@ -100,52 +99,6 @@ fn run_spinner_until(done: &AtomicBool) {
     }
     print!("\r    \r");
     let _ = std::io::Write::flush(&mut std::io::stdout());
-}
-
-/// When the Dagger SDK fails to parse an error response (e.g. "invalid type: sequence, expected a string"),
-/// the real exec error is still in the response body. Extract and return a clearer message when possible.
-fn clarify_dagger_error(err: &str) -> String {
-    const PREFIX: &str = "The response body is: ";
-    let Some(start) = err.find(PREFIX) else {
-        return err.to_string();
-    };
-    let json_str = &err[start + PREFIX.len()..];
-    let Ok(root): Result<Value, _> = serde_json::from_str(json_str) else {
-        return err.to_string();
-    };
-    let Some(errors) = root.get("errors").and_then(Value::as_array) else {
-        return err.to_string();
-    };
-    let Some(first) = errors.first() else {
-        return err.to_string();
-    };
-    let mut out = String::new();
-    if let Some(msg) = first.get("message").and_then(Value::as_str) {
-        out.push_str(msg);
-    }
-    if let Some(ext) = first.get("extensions") {
-        if let Some(stdout) = ext.get("stdout").and_then(Value::as_str) {
-            if !stdout.trim().is_empty() {
-                if !out.is_empty() {
-                    out.push('\n');
-                }
-                out.push_str(stdout.trim());
-            }
-        }
-        if let Some(stderr) = ext.get("stderr").and_then(Value::as_str) {
-            if !stderr.trim().is_empty() {
-                if !out.is_empty() {
-                    out.push('\n');
-                }
-                out.push_str(stderr.trim());
-            }
-        }
-    }
-    if out.is_empty() {
-        err.to_string()
-    } else {
-        out
-    }
 }
 
 fn is_valid_short_plan_id(value: &str) -> bool {
@@ -234,6 +187,30 @@ const CORE_ROLE_NAMES: &[&str] = &[
     "assurance",
     "devops",
 ];
+
+#[derive(Clone, Default)]
+struct PipelineRoles {
+    setup_run: Option<RoleInfo>,
+    setup_check: Option<RoleInfo>,
+    execute_run: Option<RoleInfo>,
+    execute_check: Option<RoleInfo>,
+    validate_run: Option<RoleInfo>,
+    validate_check: Option<RoleInfo>,
+    commit_run: Option<RoleInfo>,
+    commit_check: Option<RoleInfo>,
+}
+
+#[derive(Clone)]
+struct RoleInfo {
+    model: Option<String>,
+    prompt: Option<String>,
+}
+
+impl RoleInfo {
+    fn new(model: Option<String>, prompt: Option<String>) -> Self {
+        Self { model, prompt }
+    }
+}
 
 fn normalize_role_name(name: &str) -> String {
     name.trim().to_lowercase()
@@ -1366,7 +1343,7 @@ enum Commands {
         #[arg(short, long)]
         verbose: bool,
     },
-    /// Docker, config dir, optional Dagger
+    /// Docker and config setup
     Install,
     /// Remove all data, containers, and optionally, smith entirely.
     Uninstall {
@@ -1385,10 +1362,10 @@ enum Commands {
     /// Print version
     Version,
     #[command(next_help_heading = "Commands")]
-    /// Agent containers (opencode serve)
-    Agent {
+    /// Local model/provider runtimes
+    Model {
         #[command(subcommand)]
-        cmd: AgentCommands,
+        cmd: ModelCommands,
     },
     /// Repos and config for run pipelines
     Project {
@@ -1400,18 +1377,15 @@ enum Commands {
         #[command(subcommand)]
         cmd: RoleCommands,
     },
-    /// Run a pipeline (agent + project scoped)
+    /// Run pipeline workflows (plan/develop/review/release)
     Run {
-        /// Enable Dagger cache for this run (may reuse previous pipeline steps; default is a fresh run)
-        #[arg(long)]
-        cache: bool,
         #[command(subcommand)]
         cmd: RunCommands,
     },
-    /// Long-running agent containers (project + branch scoped)
-    Spawn {
+    /// Project/branch execution agent containers
+    Agent {
         #[command(subcommand)]
-        cmd: SpawnCommands,
+        cmd: AgentCommands,
     },
 }
 
@@ -1463,7 +1437,7 @@ const DEFAULT_AGENT_NAME: &str = "opencode";
 const DEFAULT_AGENT_IMAGE: &str = "ghcr.io/anomalyco/opencode";
 
 #[derive(Subcommand)]
-enum AgentCommands {
+enum ModelCommands {
     /// Show status of all configured agents
     Status,
     /// Add an agent
@@ -1598,12 +1572,12 @@ enum ProjectCommands {
     },
     /// List all registered projects
     List,
-    /// Spin up Dagger, clone project, and list workspace files (validates project is loadable)
+    /// Validate project configuration and connectivity
     Status {
         /// Project name (omit to run status for all projects)
         #[arg(long)]
         project: Option<String>,
-        /// Show full Dagger output
+        /// Show detailed validation output
         #[arg(long)]
         verbose: bool,
     },
@@ -1679,116 +1653,100 @@ enum ProjectCommands {
     },
 }
 
-/// Pipeline commands: agent + project scoped (run via `smith run <cmd>`).
+/// Pipeline commands (run via `smith run <cmd>`).
 #[derive(Subcommand)]
 enum RunCommands {
-    /// Ask a question to an agent about a project
-    Ask {
-        /// The question to ask the agent
-        question: String,
-        /// Base branch to checkout before asking (optional, uses default if not provided)
-        #[arg(long, required = false)]
-        base: Option<String>,
-        /// Repository path or URL (overrides project config if provided)
-        #[arg(long)]
-        repo: Option<String>,
-        /// Project name from config
+    /// Internal pipeline entrypoint (use `smith run plan`)
+    #[command(hide = true)]
+    Plan {
+        /// Project name (auto-detected from git repo if not specified)
         #[arg(long)]
         project: Option<String>,
-        /// Docker image to use (overrides project config if provided)
+        /// Branch name (auto-detected from current git branch if not specified)
         #[arg(long)]
-        image: Option<String>,
-        /// SSH key path for private repositories (optional)
-        #[arg(long)]
-        ssh_key: Option<PathBuf>,
-        /// Keep container alive after answering (for debugging/inspection)
-        #[arg(long)]
-        keep_alive: bool,
-        /// Timeout in seconds for the agent run (default: 600)
-        #[arg(long)]
-        timeout: Option<u64>,
-        /// Show full Dagger and pipeline output
+        branch: Option<String>,
+        /// Show detailed agent output (enables print-logs and thinking)
         #[arg(long)]
         verbose: bool,
-        /// Watch the agent work in real-time with full TUI
-        #[arg(long)]
-        watch: bool,
+        /// Feature/request prompt to plan
+        prompt: String,
     },
-    /// Execute a development action (read/write) with validation and commit
-    Dev {
-        /// The development task/instruction to execute
-        task: String,
-        /// Target branch to create/use and push to (required)
-        #[arg(long)]
-        branch: String,
-        /// Base branch to checkout before starting (optional, uses default if not provided)
-        #[arg(long, required = false)]
-        base: Option<String>,
-        /// Repository path or URL (overrides project config if provided)
-        #[arg(long)]
-        repo: Option<String>,
-        /// Project name from config
+    /// Internal pipeline entrypoint (use `smith run develop`)
+    #[command(hide = true)]
+    Develop {
+        /// Project name (auto-detected from git repo if not specified)
         #[arg(long)]
         project: Option<String>,
-        /// Docker image to use (overrides project config if provided)
+        /// Branch name (auto-detected from current git branch if not specified)
         #[arg(long)]
-        image: Option<String>,
-        /// SSH key path for private repositories (optional)
+        branch: Option<String>,
+        /// Base branch used when target branch does not exist remotely
         #[arg(long)]
-        ssh_key: Option<PathBuf>,
-        /// Keep container alive after completion (for debugging/inspection)
+        base: Option<String>,
+        /// Plan id to execute (full id or short id)
         #[arg(long)]
-        keep_alive: bool,
-        /// Create or update a pull request after pushing (requires GitHub token configured)
+        plan: String,
+        /// Maximum develop/validate passes before failing
+        #[arg(long, default_value_t = 3)]
+        max_validate_passes: u32,
+        /// Show detailed agent output (enables print-logs and thinking)
+        #[arg(long)]
+        verbose: bool,
+        /// Create or update a pull request after successful develop run
         #[arg(long)]
         pr: bool,
-        /// Timeout in seconds for the agent run (default: 900)
-        #[arg(long)]
-        timeout: Option<u64>,
-        /// Show verbose output from OpenCode agent
-        #[arg(long)]
-        verbose: bool,
-        /// Watch the agent work in real-time with full TUI
-        #[arg(long)]
-        watch: bool,
+        /// Development task to execute
+        task: String,
     },
-    /// Review changes in a feature branch
-    Review {
-        /// Feature branch name to review
-        branch: String,
-        /// Base branch to compare against (optional, will auto-detect if not provided)
-        #[arg(long)]
-        base: Option<String>,
-        /// Repository path or URL (overrides project config if provided)
-        #[arg(long)]
-        repo: Option<String>,
-        /// Project name from config
+    /// Internal pipeline entrypoint (use `smith run release`)
+    #[command(hide = true)]
+    Release {
+        /// Project name (auto-detected from git repo if not specified)
         #[arg(long)]
         project: Option<String>,
-        /// Docker image to use (overrides project config if provided)
+        /// Branch name (auto-detected from current git branch if not specified)
         #[arg(long)]
-        image: Option<String>,
-        /// SSH key path for private repositories (optional)
+        branch: Option<String>,
+        /// Base branch for integration (default: project base branch or main)
         #[arg(long)]
-        ssh_key: Option<PathBuf>,
-        /// Keep container alive after review (for debugging/inspection)
+        base: Option<String>,
+        /// Plan id to release (full id or short id)
         #[arg(long)]
-        keep_alive: bool,
-        /// Timeout in seconds for the agent run (default: 900)
-        #[arg(long)]
-        timeout: Option<u64>,
-        /// Show full Dagger and pipeline output
+        plan: String,
+        /// Show detailed agent output (enables print-logs and thinking)
         #[arg(long)]
         verbose: bool,
-        /// Watch the agent work in real-time with full TUI
+        /// Close matching open pull request after successful integration
         #[arg(long)]
-        watch: bool,
+        pr: bool,
+    },
+    /// Internal pipeline entrypoint (use `smith run review`)
+    #[command(hide = true)]
+    Review {
+        /// Project name (auto-detected from git repo if not specified)
+        #[arg(long)]
+        project: Option<String>,
+        /// Branch name (auto-detected from current git branch if not specified)
+        #[arg(long)]
+        branch: Option<String>,
+        /// Limit number of plans shown (newest first)
+        #[arg(long)]
+        limit: Option<usize>,
+        /// Optional state filter (not_started|planning|in_progress|completed|failed)
+        #[arg(long)]
+        state: Option<String>,
+        /// Filter to a specific plan by full id (plan-xxxx) or short id (xxxx)
+        #[arg(long)]
+        plan: Option<String>,
+        /// Submit a user reply for plan issues (requires --plan)
+        #[arg(long)]
+        reply: Option<String>,
     },
 }
 
-/// Spawn commands for persistent project/branch-scoped agent containers.
+/// Commands for persistent project/branch-scoped agent containers.
 #[derive(Subcommand)]
-enum SpawnCommands {
+enum AgentCommands {
     /// Start a persistent agent for project/branch
     Start {
         /// Project name (auto-detected from git repo if not specified)
@@ -2491,57 +2449,6 @@ fn ensure_docker_started_and_enabled() {
 #[allow(dead_code)]
 fn ensure_docker_started_and_enabled() {}
 
-/// If Dagger CLI is not in PATH, try to install it via the official install script (Linux only).
-/// Installs to $HOME/.local/bin. Non-fatal on failure.
-#[cfg(target_os = "linux")]
-fn try_install_dagger() {
-    if Command::new("dagger")
-        .arg("version")
-        .output()
-        .is_ok_and(|o| o.status.success())
-    {
-        println!("  {} dagger - running", BULLET_GREEN);
-        return;
-    }
-    let home = match std::env::var("HOME") {
-        Ok(h) => h,
-        Err(_) => {
-            eprintln!("  {} dagger - install skipped (HOME not set)", BULLET_RED);
-            return;
-        }
-    };
-    let bin_dir = format!("{}/.local/bin", home);
-    if fs::create_dir_all(&bin_dir).is_err() {
-        eprintln!(
-            "  {} dagger - install skipped (could not create {})",
-            BULLET_RED, bin_dir
-        );
-        return;
-    }
-    println!("  {} dagger - installing to {} ...", BULLET_BLUE, bin_dir);
-    let status = Command::new("sh")
-        .arg("-c")
-        .arg("curl -fsSL https://dl.dagger.io/dagger/install.sh | sh")
-        .env("BIN_DIR", &bin_dir)
-        .status();
-    match status {
-        Ok(s) if s.success() => {
-            println!(
-                "  {} dagger - running (ensure {} is in PATH)",
-                BULLET_GREEN,
-                bin_dir
-            );
-        }
-        _ => eprintln!(
-            "  {} dagger - install failed (run manually: curl -fsSL https://dl.dagger.io/dagger/install.sh | BIN_DIR=$HOME/.local/bin sh)",
-            BULLET_RED
-        ),
-    }
-}
-
-#[cfg(not(target_os = "linux"))]
-fn try_install_dagger() {}
-
 /// Write config dir and install marker with current version (called at end of install wizard).
 /// Storing the version allows future migrations to run when upgrading.
 fn run_install_finish() -> Result<(), String> {
@@ -2865,9 +2772,8 @@ fn resolve_pipeline_role(
 fn resolve_pipeline_roles(
     project_config: Option<&ProjectConfig>,
     pipeline_type: &str,
-) -> dagger_pipeline::PipelineRoles {
-    use dagger_pipeline::{PipelineRoles as PR, RoleInfo as RI};
-    let mut roles = PR::default();
+) -> PipelineRoles {
+    let mut roles = PipelineRoles::default();
 
     let steps = [
         ("setup_run", format!("{}_setup_run", pipeline_type)),
@@ -2887,7 +2793,7 @@ fn resolve_pipeline_roles(
         if let Some((_, _, _, model, prompt)) =
             resolve_pipeline_role(project_config, &step_name, None)
         {
-            let role_info = RI::new(model, prompt);
+            let role_info = RoleInfo::new(model, prompt);
             match step_key {
                 "setup_run" => roles.setup_run = Some(role_info),
                 "setup_check" => roles.setup_check = Some(role_info),
@@ -2915,7 +2821,7 @@ fn print_smith_help() {
     }
     println!("Usage: smith [COMMAND]");
     const SYSTEM: &[&str] = &["status", "install", "uninstall", "help", "version"];
-    const COMMANDS: &[&str] = &["agent", "project", "role", "run", "spawn"];
+    const COMMANDS: &[&str] = &["model", "project", "role", "agent", "run"];
     println!("\nCommands:");
     for sub in c.get_subcommands() {
         let name = sub.get_name();
@@ -2945,18 +2851,6 @@ async fn main() {
         }
         Some(Commands::Status { verbose }) => {
             let docker_ok = docker::check_docker_available().is_ok();
-            let dagger_ok = {
-                let _guard = if verbose {
-                    None
-                } else {
-                    redirect_stderr_to_null()
-                };
-                dagger_pipeline::with_connection(|conn| async move {
-                    dagger_pipeline::run_doctor(&conn).await
-                })
-                .await
-                .is_ok()
-            };
             let installed = is_installed();
 
             let cfg = load_config().unwrap_or_else(|e| {
@@ -2983,12 +2877,6 @@ async fn main() {
                 } else {
                     "unavailable"
                 }
-            );
-            let g_bullet = if dagger_ok { BULLET_GREEN } else { BULLET_RED };
-            println!(
-                "     {} dagger - {}",
-                g_bullet,
-                if dagger_ok { "running" } else { "not running" }
             );
             if list.is_empty() {
                 println!("  {} agents", BULLET_BLUE);
@@ -3080,89 +2968,21 @@ async fn main() {
             }
 
             // projects:
-            let mut project_results: Vec<(String, bool, String)> = Vec::new();
-            if !cfg.projects.is_empty() && dagger_ok {
-                for proj in &cfg.projects {
-                    let resolved_repo = &proj.repo;
-                    let name = proj.name.clone();
-                    if resolved_repo.starts_with("https://") {
-                        project_results.push((
-                            name,
+            let project_results: Vec<(String, bool, String)> = cfg
+                .projects
+                .iter()
+                .map(|proj| {
+                    if proj.repo.starts_with("https://") {
+                        (
+                            proj.name.clone(),
                             false,
-                            "skipped (HTTPS not supported)".to_string(),
-                        ));
-                        continue;
-                    }
-                    let base = resolve_base_branch(None, Some(proj));
-                    let agent_image = resolve_agent_image(proj.image.as_deref());
-                    let ssh_key_path = resolve_ssh_key(None, Some(proj));
-                    let project_script = resolve_project_script(Some(proj));
-                    let done = std::sync::Arc::new(AtomicBool::new(false));
-                    let done_clone = done.clone();
-                    let spinner_handle = if !verbose {
-                        Some(thread::spawn(move || run_spinner_until(&done_clone)))
+                            "unsupported repo URL (use SSH)".to_string(),
+                        )
                     } else {
-                        None
-                    };
-                    let _guard = if !verbose {
-                        redirect_stderr_to_null()
-                    } else {
-                        None
-                    };
-                    let repo = resolved_repo.clone();
-                    let branch = base.clone();
-                    let img = agent_image.clone();
-                    let ssh = ssh_key_path.clone();
-                    let scr = project_script.clone();
-                    let result = dagger_pipeline::with_connection(move |conn| {
-                        let repo = repo.clone();
-                        let branch = branch.clone();
-                        let img = img.clone();
-                        let ssh = ssh.clone();
-                        async move {
-                            dagger_pipeline::run_project_status(
-                                &conn,
-                                &repo,
-                                &branch,
-                                &img,
-                                ssh.as_deref(),
-                                scr.as_deref(),
-                            )
-                            .await
-                            .map_err(|e| eyre::eyre!("{}", e))
-                        }
-                    })
-                    .await;
-                    if !verbose {
-                        done.store(true, Ordering::Relaxed);
-                        if let Some(h) = spinner_handle {
-                            let _: std::thread::Result<()> = h.join();
-                        }
+                        (proj.name.clone(), true, "configured".to_string())
                     }
-                    drop(_guard);
-                    match result {
-                        Ok(output) => {
-                            let has_git = !output.contains("no-git") && output.len() > 2;
-                            let has_opencode = output.contains('.')
-                                && output.chars().filter(|c| *c == '.').count() >= 2;
-                            if has_git && has_opencode {
-                                project_results.push((name, true, "ready".to_string()));
-                            } else if !has_git {
-                                project_results.push((name, false, "clone failed".to_string()));
-                            } else {
-                                project_results.push((
-                                    name,
-                                    false,
-                                    "opencode not available".to_string(),
-                                ));
-                            }
-                        }
-                        Err(e) => {
-                            project_results.push((name, false, format!("clone failed: {}", e)));
-                        }
-                    }
-                }
-            }
+                })
+                .collect();
             let project_ok_count = project_results.iter().filter(|(_, ok, _)| *ok).count();
             let project_total = project_results.len();
             let projects_bullet = if project_total == 0 {
@@ -3178,8 +2998,6 @@ async fn main() {
             if project_results.is_empty() {
                 if cfg.projects.is_empty() {
                     println!("       (none)");
-                } else if !dagger_ok {
-                    println!("       (dagger not running)");
                 }
             } else {
                 for (name, ok, msg) in &project_results {
@@ -3253,7 +3071,6 @@ async fn main() {
             // --- Dependencies ---
             println!("  Dependencies:");
             try_install_docker();
-            try_install_dagger();
             println!();
             // --- Docker always run (Linux) ---
             #[cfg(target_os = "linux")]
@@ -3642,8 +3459,8 @@ async fn main() {
                 }
             }
         }
-        Some(Commands::Agent { cmd }) => match cmd {
-            AgentCommands::Add {
+        Some(Commands::Model { cmd }) => match cmd {
+            ModelCommands::Add {
                 name,
                 image,
                 agent_type,
@@ -3681,7 +3498,7 @@ async fn main() {
                 });
                 println!("Agent '{}' added successfully", name);
             }
-            AgentCommands::Status => {
+            ModelCommands::Status => {
                 let cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -3814,7 +3631,7 @@ async fn main() {
                     println!();
                 }
             }
-            AgentCommands::Update {
+            ModelCommands::Update {
                 name,
                 image,
                 agent_type,
@@ -3961,7 +3778,7 @@ async fn main() {
                     }
                 }
             }
-            AgentCommands::Remove { name } => {
+            ModelCommands::Remove { name } => {
                 let mut cfg = load_config().unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -3987,7 +3804,7 @@ async fn main() {
                 });
                 println!("Agent '{}' removed successfully", name);
             }
-            AgentCommands::Sync => {
+            ModelCommands::Sync => {
                 use serde_json::{json, Map, Value};
 
                 let cfg = load_config().unwrap_or_else(|e| {
@@ -4097,7 +3914,7 @@ async fn main() {
                 );
                 println!("  Edit ~/.config/opencode/opencode.json to select model with \"model\": \"agent-name/model\"");
             }
-            AgentCommands::Build {
+            ModelCommands::Build {
                 name,
                 all,
                 force,
@@ -4253,7 +4070,7 @@ async fn main() {
                     std::process::exit(1);
                 }
             }
-            AgentCommands::Start { verbose } => {
+            ModelCommands::Start { verbose } => {
                 if let Err(e) = docker::check_docker_available() {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -4447,7 +4264,7 @@ async fn main() {
                     std::process::exit(1);
                 }
             }
-            AgentCommands::Stop => {
+            ModelCommands::Stop => {
                 if let Err(e) = docker::check_docker_available() {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -4499,7 +4316,7 @@ async fn main() {
                     }
                 }
             }
-            AgentCommands::Logs { name } => {
+            ModelCommands::Logs { name } => {
                 if let Err(e) = docker::check_docker_available() {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
@@ -4657,88 +4474,31 @@ async fn main() {
                         std::process::exit(1);
                     }
                     let base = resolve_base_branch(None, Some(proj));
-                    let agent_image = resolve_agent_image(proj.image.as_deref());
                     let ssh_key_path = resolve_ssh_key(None, Some(proj));
-                    let project_script = resolve_project_script(Some(proj));
                     if verbose {
                         println!("Project: {} -> {}", proj.name, resolved_repo);
-                        println!("  Branch: {}  Image: {}", base, agent_image);
+                        println!("  Branch: {}", base);
                     }
-                    let done = std::sync::Arc::new(AtomicBool::new(false));
-                    let done_clone = done.clone();
-                    let spinner_handle = if !verbose {
-                        Some(thread::spawn(move || run_spinner_until(&done_clone)))
-                    } else {
-                        None
-                    };
-                    let _guard = if !verbose {
-                        redirect_stderr_to_null()
-                    } else {
-                        None
-                    };
-                    let repo = resolved_repo.clone();
-                    let branch = base.clone();
-                    let img = agent_image.clone();
-                    let ssh = ssh_key_path.clone();
-                    let scr = project_script.clone();
-                    let result = dagger_pipeline::with_connection(move |conn| {
-                        let repo = repo.clone();
-                        let branch = branch.clone();
-                        let img = img.clone();
-                        let ssh = ssh.clone();
-                        async move {
-                            dagger_pipeline::run_project_status(
-                                &conn,
-                                &repo,
-                                &branch,
-                                &img,
-                                ssh.as_deref(),
-                                scr.as_deref(),
-                            )
-                            .await
-                            .map_err(|e| eyre::eyre!("{}", e))
-                        }
-                    })
-                    .await;
-                    if !verbose {
-                        done.store(true, Ordering::Relaxed);
-                        if let Some(h) = spinner_handle {
-                            let _: std::thread::Result<()> = h.join();
-                        }
-                    }
-                    drop(_guard);
-                    match result {
-                        Ok(output) => {
-                            let has_git = !output.contains("no-git") && output.len() > 2;
-                            let has_opencode = output.contains('.')
-                                && output.chars().filter(|c| *c == '.').count() >= 2;
-                            if has_git && has_opencode {
-                                println!("\n  {} {} - ready", BULLET_GREEN, proj.name);
-                                if verbose {
-                                    println!("  ---");
-                                    for line in output.lines() {
-                                        println!("    {}", line);
-                                    }
-                                }
-                            } else if !has_git {
-                                eprintln!("  {} {} - failed: clone failed", BULLET_RED, proj.name);
-                                std::process::exit(1);
-                            } else {
-                                eprintln!(
-                                    "  {} {} - failed: opencode not available",
-                                    BULLET_RED, proj.name
-                                );
-                                std::process::exit(1);
-                            }
-                        }
-                        Err(e) => {
+                    if let Some(path) = ssh_key_path.as_ref() {
+                        if !path.exists() {
                             eprintln!(
-                                "  {} {} - failed: {}",
+                                "  {} {} - failed: ssh key not found at {}",
                                 BULLET_RED,
                                 proj.name,
-                                clarify_dagger_error(&e)
+                                path.display()
                             );
                             std::process::exit(1);
+                        }
+                    }
+                    println!("\n  {} {} - ready", BULLET_GREEN, proj.name);
+                    if verbose {
+                        println!("  ---");
+                        println!("    repo: {}", resolved_repo);
+                        println!("    base branch: {}", base);
+                        if let Some(path) = ssh_key_path.as_ref() {
+                            println!("    ssh key: {}", path.display());
+                        } else {
+                            println!("    ssh key: default");
                         }
                     }
                 }
@@ -5434,497 +5194,340 @@ async fn main() {
                 }
             }
         },
-        Some(Commands::Run { cache, cmd }) => match cmd {
-            RunCommands::Ask {
-                question,
-                base,
-                repo,
-                project,
-                image,
-                ssh_key,
-                keep_alive: _,
-                timeout,
-                verbose,
-                watch,
-            } => {
-                let (project, auto_detected) = if repo.is_none() && project.is_none() {
-                    match detect_project_from_cwd() {
-                        Ok(Some(name)) => (Some(name), true),
-                        _ => (None, false),
+        Some(Commands::Run { cmd }) => {
+            let exe = std::env::current_exe().unwrap_or_else(|e| {
+                eprintln!("Error: failed to locate current executable: {}", e);
+                std::process::exit(1);
+            });
+
+            let mut args: Vec<String> = vec!["agent".to_string()];
+            let mut post_pr: Option<(String, String, String, String)> = None;
+            let mut post_release_pr: Option<(Option<String>, String, String, String)> = None;
+            match cmd {
+                RunCommands::Plan {
+                    project,
+                    branch,
+                    verbose,
+                    prompt,
+                } => {
+                    args.push("plan".to_string());
+                    if let Some(project) = project {
+                        args.push("--project".to_string());
+                        args.push(project);
                     }
-                } else {
-                    (project, false)
-                };
-
-                let use_no_cache = !cache;
-                let resolved_repo =
-                    resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
-                        eprintln!("Error: {}", e);
-                        std::process::exit(1);
-                    });
-
-                if resolved_repo.starts_with("https://") {
-                    eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git).");
-                    std::process::exit(1);
+                    if let Some(branch) = branch {
+                        args.push("--branch".to_string());
+                        args.push(branch);
+                    }
+                    if verbose {
+                        args.push("--verbose".to_string());
+                    }
+                    args.push(prompt);
                 }
-
-                let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                });
-                let agent_image = resolve_agent_image(image.as_deref());
-                let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
-                let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
-                let _resolved_remote = resolve_remote(project_config.as_ref());
-                let project_script = resolve_project_script(project_config.as_ref());
-                let pipeline_roles = resolve_pipeline_roles(project_config.as_ref(), "ask");
-
-                if verbose {
-                    if auto_detected {
-                        println!(
-                            "Using project '{}' (detected from git remote).",
-                            project.as_deref().unwrap_or("")
-                        );
+                RunCommands::Develop {
+                    project,
+                    branch,
+                    base,
+                    plan,
+                    max_validate_passes,
+                    verbose,
+                    pr,
+                    task,
+                } => {
+                    let task_for_pr = task.clone();
+                    let project_opt = project.clone();
+                    let branch_opt = branch.clone();
+                    let base_opt = base.clone();
+                    args.push("develop".to_string());
+                    if let Some(project) = project_opt.clone() {
+                        args.push("--project".to_string());
+                        args.push(project);
                     }
-                    println!("Ask: {}", question);
-                    println!("  Repository: {}", resolved_repo);
-                    println!("  Agent image: {}", agent_image);
-                }
-
-                let branch = resolved_base.clone();
-                let script = project_script.clone();
-                let use_watch = watch || verbose;
-                let done = std::sync::Arc::new(AtomicBool::new(false));
-                let done_clone = done.clone();
-                let spinner_handle = if !use_watch {
-                    Some(thread::spawn(move || run_spinner_until(&done_clone)))
-                } else {
-                    None
-                };
-                let _guard = if !use_watch {
-                    redirect_stderr_to_null()
-                } else {
-                    None
-                };
-
-                let timeout_secs = timeout.unwrap_or(600);
-                let roles = pipeline_roles.clone();
-                let result = dagger_pipeline::with_connection(move |conn| {
-                    let repo = resolved_repo.clone();
-                    let q = question.clone();
-                    let img = agent_image.clone();
-                    let ssh = ssh_key_path.clone();
-                    let br = branch.clone();
-                    let to = timeout_secs;
-                    let scr = script.clone();
-                    let r = roles.clone();
-                    let no_cache = use_no_cache;
-                    async move {
-                        dagger_pipeline::run_ask(
-                            &conn,
-                            &repo,
-                            Some(br.as_str()),
-                            &q,
-                            &img,
-                            ssh.as_deref(),
-                            to,
-                            scr.as_deref(),
-                            &r,
-                            watch,
-                            no_cache,
-                        )
-                        .await
-                        .map_err(|e| eyre::eyre!("{}", e))
+                    if let Some(branch) = branch_opt.clone() {
+                        args.push("--branch".to_string());
+                        args.push(branch);
                     }
-                })
-                .await;
-
-                if !use_watch {
-                    done.store(true, Ordering::Relaxed);
-                    if let Some(h) = spinner_handle {
-                        let _: std::thread::Result<()> = h.join();
+                    if let Some(base) = base_opt.clone() {
+                        args.push("--base".to_string());
+                        args.push(base);
                     }
-                }
-                drop(_guard);
-
-                match result {
-                    Ok(answer) => {
-                        if !watch {
-                            println!("\nAnswer: {}", answer);
-                        }
+                    args.push("--plan".to_string());
+                    args.push(plan);
+                    args.push("--max-validate-passes".to_string());
+                    args.push(max_validate_passes.to_string());
+                    if verbose {
+                        args.push("--verbose".to_string());
                     }
-                    Err(e) => {
-                        let msg = e.to_string();
-                        eprintln!("Error: {}", clarify_dagger_error(&msg));
-                        std::process::exit(1);
-                    }
-                }
-            }
-            RunCommands::Dev {
-                task,
-                branch,
-                base,
-                repo,
-                project,
-                image,
-                ssh_key,
-                keep_alive: _,
-                pr,
-                timeout,
-                verbose,
-                watch,
-            } => {
-                let (project, auto_detected) = if repo.is_none() && project.is_none() {
-                    match detect_project_from_cwd() {
-                        Ok(Some(name)) => (Some(name), true),
-                        _ => (None, false),
-                    }
-                } else {
-                    (project, false)
-                };
+                    args.push(task);
 
-                let no_cache_dev = !cache;
-                let resolved_repo =
-                    resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
-                        eprintln!("Error: {}", e);
-                        std::process::exit(1);
-                    });
-
-                if resolved_repo.starts_with("https://") {
-                    eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git) with --ssh-key.");
-                    std::process::exit(1);
-                }
-
-                let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                });
-                let agent_image = resolve_agent_image(image.as_deref());
-                let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
-                let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
-                let _resolved_remote = resolve_remote(project_config.as_ref());
-                let project_script = resolve_project_script(project_config.as_ref());
-                let (commit_name, commit_email) = resolve_commit_author(project_config.as_ref());
-                let pipeline_roles = resolve_pipeline_roles(project_config.as_ref(), "dev");
-
-                if verbose {
-                    if auto_detected {
-                        println!(
-                            "Using project '{}' (detected from git remote).",
-                            project.as_deref().unwrap_or("")
-                        );
-                    }
-                    println!("Dev: {}", task);
-                    println!("  Repository: {}", resolved_repo);
-                    println!("  Agent image: {}", agent_image);
-                }
-
-                let branch_out = branch.clone();
-                let resolved_repo_pr = resolved_repo.clone();
-                let base_pr = resolved_base.clone();
-                let task_pr = task.clone();
-                let script = project_script.clone();
-                let use_watch = watch || verbose;
-                let done = std::sync::Arc::new(AtomicBool::new(false));
-                let done_clone = done.clone();
-                let spinner_handle = if !use_watch {
-                    Some(thread::spawn(move || run_spinner_until(&done_clone)))
-                } else {
-                    None
-                };
-                let _guard = if !use_watch {
-                    redirect_stderr_to_null()
-                } else {
-                    None
-                };
-
-                let verb_for_closure = verbose;
-                let timeout_secs = timeout.unwrap_or(900);
-                let roles = pipeline_roles.clone();
-                let dev_result = dagger_pipeline::with_connection(move |conn| {
-                    let repo = resolved_repo.clone();
-                    let t = task.clone();
-                    let br = branch.clone();
-                    let img = agent_image.clone();
-                    let ssh = ssh_key_path.clone();
-                    let base_br = resolved_base.clone();
-                    let _rem = _resolved_remote.clone();
-                    let to = timeout_secs;
-                    let scr = script.clone();
-                    let c_name = commit_name.clone();
-                    let c_email = commit_email.clone();
-                    let r = roles.clone();
-                    let no_cache = no_cache_dev;
-                    async move {
-                        dagger_pipeline::run_dev(
-                            &conn,
-                            &repo,
-                            &br,
-                            Some(base_br.as_str()),
-                            &t,
-                            &img,
-                            ssh.as_deref(),
-                            verb_for_closure,
-                            to,
-                            scr.as_deref(),
-                            c_name.as_deref(),
-                            c_email.as_deref(),
-                            &r,
-                            watch,
-                            no_cache,
-                        )
-                        .await
-                        .map_err(|e| eyre::eyre!("{}", e))
-                    }
-                })
-                .await;
-
-                if !use_watch {
-                    done.store(true, Ordering::Relaxed);
-                    if let Some(h) = spinner_handle {
-                        let _: std::thread::Result<()> = h.join();
-                    }
-                }
-                drop(_guard);
-
-                match &dev_result {
-                    Ok(commit) => {
-                        if !watch {
-                            println!("\n✓ Development action completed and committed");
-                            println!("  Commit: {}", commit);
-                            println!("  Branch: {}", branch_out);
-                        }
-                    }
-                    Err(e) => {
-                        if e.contains("No changes to commit") {
-                            println!("\n⚠ No changes were made by the development task");
-                        } else {
-                            let msg = e.to_string();
-                            eprintln!("Error: {}", clarify_dagger_error(&msg));
-                            std::process::exit(1);
-                        }
-                    }
-                }
-
-                if pr {
-                    let token = project_config
-                        .as_ref()
-                        .and_then(|p| p.github_token.as_deref());
-                    if let Some(token) = token {
-                        if let Ok(repo_info) = github::extract_repo_info(&resolved_repo_pr) {
-                            let base_branch = base_pr.as_str();
-                            match github::create_or_update_pr(
-                                token,
-                                &repo_info.owner,
-                                &repo_info.name,
-                                &branch_out,
-                                base_branch,
-                                &task_pr,
-                            )
-                            .await
-                            {
-                                Ok(pr_url) => println!("  ✓ Pull request: {}", pr_url),
-                                Err(e) => {
-                                    eprintln!("  ⚠ Failed to create/update PR: {}", e);
-                                    if e.contains("403") || e.contains("Resource not accessible") {
-                                        eprintln!(
-                                            "     Your token may be missing required permissions."
-                                        );
-                                    }
-                                }
+                    if pr {
+                        let detected_project = if project_opt.is_none() {
+                            match detect_project_from_cwd() {
+                                Ok(Some(name)) => Some(name),
+                                _ => None,
                             }
                         } else {
-                            eprintln!(
-                                "  ⚠ Could not extract repository info from URL: {}",
-                                resolved_repo_pr
-                            );
-                        }
-                    } else {
-                        eprintln!("  ⚠ GitHub token not configured for this repository. Use --project with a project that has a token, or add/update the project with --github-token <token>.");
-                    }
-                }
+                            project_opt.clone()
+                        };
 
-                if dev_result.is_err() && !pr {
-                    std::process::exit(1);
-                }
-            }
-            RunCommands::Review {
-                branch,
-                base,
-                repo,
-                project,
-                image,
-                ssh_key,
-                keep_alive: _,
-                timeout,
-                verbose,
-                watch,
-            } => {
-                let (project, auto_detected) = if repo.is_none() && project.is_none() {
-                    match detect_project_from_cwd() {
-                        Ok(Some(name)) => (Some(name), true),
-                        _ => (None, false),
-                    }
-                } else {
-                    (project, false)
-                };
+                        let project_config = resolve_project_config(detected_project.clone())
+                            .unwrap_or_else(|e| {
+                                eprintln!("Error: {}", e);
+                                std::process::exit(1);
+                            });
 
-                let no_cache_review = !cache;
-                let resolved_repo =
-                    resolve_repo(repo.clone(), project.clone()).unwrap_or_else(|e| {
-                        eprintln!("Error: {}", e);
-                        std::process::exit(1);
-                    });
+                        let resolved_repo = resolve_repo(None, detected_project.clone())
+                            .unwrap_or_else(|e| {
+                                eprintln!("Error: {}", e);
+                                std::process::exit(1);
+                            });
 
-                if resolved_repo.starts_with("https://") {
-                    eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git) with --ssh-key.");
-                    std::process::exit(1);
-                }
-
-                let project_config = resolve_project_config(project.clone()).unwrap_or_else(|e| {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                });
-                let agent_image = resolve_agent_image(image.as_deref());
-                let ssh_key_path = resolve_ssh_key(ssh_key.as_ref(), project_config.as_ref());
-                let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
-                let _resolved_remote = resolve_remote(project_config.as_ref());
-                let project_script = resolve_project_script(project_config.as_ref());
-                let pipeline_roles = resolve_pipeline_roles(project_config.as_ref(), "review");
-
-                if verbose {
-                    if auto_detected {
-                        println!(
-                            "Using project '{}' (detected from git remote).",
-                            project.as_deref().unwrap_or("")
-                        );
-                    }
-                    println!("Review: {}", branch);
-                    println!("  Repository: {}", resolved_repo);
-                    println!("  Agent image: {}", agent_image);
-                }
-
-                let script = project_script.clone();
-                let use_watch = watch || verbose;
-                let done = std::sync::Arc::new(AtomicBool::new(false));
-                let done_clone = done.clone();
-                let spinner_handle = if !use_watch {
-                    Some(thread::spawn(move || run_spinner_until(&done_clone)))
-                } else {
-                    None
-                };
-                let _guard = if !use_watch {
-                    redirect_stderr_to_null()
-                } else {
-                    None
-                };
-
-                let timeout_secs = timeout.unwrap_or(900);
-                let roles = pipeline_roles.clone();
-
-                // Check if we're in a local git repo and on the branch being reviewed
-                let local_workspace = {
-                    let repo_root = git_repo_root_path();
-                    let current_branch = Command::new("git")
-                        .args(["rev-parse", "--abbrev-ref", "HEAD"])
-                        .output()
-                        .ok()
-                        .and_then(|out| {
-                            if out.status.success() {
-                                Some(String::from_utf8_lossy(&out.stdout).trim().to_string())
-                            } else {
-                                None
+                        let resolved_branch = branch_opt.clone().unwrap_or_else(|| {
+                            let output = Command::new("git")
+                                .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                                .output();
+                            match output {
+                                Ok(out) if out.status.success() => {
+                                    String::from_utf8_lossy(&out.stdout).trim().to_string()
+                                }
+                                _ => {
+                                    eprintln!(
+                                        "Error: --pr requested but no branch provided and auto-detection failed"
+                                    );
+                                    std::process::exit(1);
+                                }
                             }
                         });
 
-                    // Use local workspace if:
-                    // 1. We're in a git repo
-                    // 2. Current branch matches the review branch
-                    // 3. The repo root matches the resolved repo (or we're auto-detecting)
-                    if let Some(root) = repo_root {
-                        if let Some(ref curr_br) = current_branch {
-                            if curr_br == &branch {
-                                Some(root)
-                            } else {
-                                None
+                        let resolved_base =
+                            resolve_base_branch(base_opt.as_deref(), project_config.as_ref());
+
+                        post_pr =
+                            Some((resolved_repo, resolved_branch, resolved_base, task_for_pr));
+                    }
+                }
+                RunCommands::Release {
+                    project,
+                    branch,
+                    base,
+                    plan,
+                    verbose,
+                    pr,
+                } => {
+                    let project_opt = project.clone();
+                    let branch_opt = branch.clone();
+                    let base_opt = base.clone();
+                    args.push("release".to_string());
+                    if let Some(project) = project_opt.clone() {
+                        args.push("--project".to_string());
+                        args.push(project);
+                    }
+                    if let Some(branch) = branch_opt.clone() {
+                        args.push("--branch".to_string());
+                        args.push(branch);
+                    }
+                    if let Some(base) = base_opt.clone() {
+                        args.push("--base".to_string());
+                        args.push(base);
+                    }
+                    args.push("--plan".to_string());
+                    args.push(plan);
+                    if verbose {
+                        args.push("--verbose".to_string());
+                    }
+
+                    if pr {
+                        let detected_project = if project_opt.is_none() {
+                            match detect_project_from_cwd() {
+                                Ok(Some(name)) => Some(name),
+                                _ => None,
                             }
                         } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
-                };
-
-                if verbose && local_workspace.is_some() {
-                    println!(
-                        "  Using local workspace: {}",
-                        local_workspace.as_ref().unwrap().display()
-                    );
-                }
-
-                // Convert PathBuf to String for moving into async closure
-                let local_workspace_str = local_workspace
-                    .as_ref()
-                    .map(|p| p.to_string_lossy().into_owned());
-                let result = dagger_pipeline::with_connection(move |conn| {
-                    let repo = resolved_repo.clone();
-                    let br = branch.clone();
-                    let base_br = resolved_base.clone();
-                    let _rem = _resolved_remote.clone();
-                    let img = agent_image.clone();
-                    let ssh = ssh_key_path.clone();
-                    let to = timeout_secs;
-                    let scr = script.clone();
-                    let r = roles.clone();
-                    let no_cache = no_cache_review;
-                    let local_ws_str = local_workspace_str.clone();
-                    async move {
-                        let local_ws_path = local_ws_str.as_ref().map(|s| std::path::Path::new(s));
-                        dagger_pipeline::run_review(
-                            &conn,
-                            &repo,
-                            &br,
-                            Some(base_br.as_str()),
-                            &img,
-                            ssh.as_deref(),
-                            to,
-                            scr.as_deref(),
-                            &r,
-                            watch,
-                            no_cache,
-                            local_ws_path,
-                        )
-                        .await
-                        .map_err(|e| eyre::eyre!("{}", e))
-                    }
-                })
-                .await;
-
-                if !use_watch {
-                    done.store(true, Ordering::Relaxed);
-                    if let Some(h) = spinner_handle {
-                        let _: std::thread::Result<()> = h.join();
+                            project_opt.clone()
+                        };
+                        let project_config = resolve_project_config(detected_project.clone())
+                            .unwrap_or_else(|e| {
+                                eprintln!("Error: {}", e);
+                                std::process::exit(1);
+                            });
+                        let resolved_repo = resolve_repo(None, detected_project.clone())
+                            .unwrap_or_else(|e| {
+                                eprintln!("Error: {}", e);
+                                std::process::exit(1);
+                            });
+                        let resolved_branch = branch_opt.clone().unwrap_or_else(|| {
+                            let output = Command::new("git")
+                                .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                                .output();
+                            match output {
+                                Ok(out) if out.status.success() => {
+                                    String::from_utf8_lossy(&out.stdout).trim().to_string()
+                                }
+                                _ => {
+                                    eprintln!(
+                                        "Error: --pr requested but no branch provided and auto-detection failed"
+                                    );
+                                    std::process::exit(1);
+                                }
+                            }
+                        });
+                        let resolved_base =
+                            resolve_base_branch(base_opt.as_deref(), project_config.as_ref());
+                        post_release_pr = Some((
+                            detected_project,
+                            resolved_repo,
+                            resolved_branch,
+                            resolved_base,
+                        ));
                     }
                 }
-                drop(_guard);
-
-                match result {
-                    Ok(review_output) => {
-                        if !watch {
-                            println!("\n{}", review_output);
-                        }
+                RunCommands::Review {
+                    project,
+                    branch,
+                    limit,
+                    state,
+                    plan,
+                    reply,
+                } => {
+                    args.push("review".to_string());
+                    if let Some(project) = project {
+                        args.push("--project".to_string());
+                        args.push(project);
                     }
-                    Err(e) => {
-                        let msg = e.to_string();
-                        eprintln!("Error: {}", clarify_dagger_error(&msg));
-                        std::process::exit(1);
+                    if let Some(branch) = branch {
+                        args.push("--branch".to_string());
+                        args.push(branch);
+                    }
+                    if let Some(limit) = limit {
+                        args.push("--limit".to_string());
+                        args.push(limit.to_string());
+                    }
+                    if let Some(state) = state {
+                        args.push("--state".to_string());
+                        args.push(state);
+                    }
+                    if let Some(plan) = plan {
+                        args.push("--plan".to_string());
+                        args.push(plan);
+                    }
+                    if let Some(reply) = reply {
+                        args.push("--reply".to_string());
+                        args.push(reply);
                     }
                 }
             }
-        },
-        Some(Commands::Spawn { cmd }) => match cmd {
-            SpawnCommands::Start {
+
+            let status = Command::new(exe).args(args).status().unwrap_or_else(|e| {
+                eprintln!("Error: failed running delegated pipeline command: {}", e);
+                std::process::exit(1);
+            });
+
+            if !status.success() {
+                std::process::exit(status.code().unwrap_or(1));
+            }
+
+            if let Some((resolved_repo, branch_out, base_branch, task_pr)) = post_pr {
+                let project = detect_project_from_cwd().ok().flatten();
+                let project_config = resolve_project_config(project).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                let token = project_config
+                    .as_ref()
+                    .and_then(|p| p.github_token.as_deref());
+
+                if let Some(token) = token {
+                    if let Ok(repo_info) = github::extract_repo_info(&resolved_repo) {
+                        match github::create_or_update_pr(
+                            token,
+                            &repo_info.owner,
+                            &repo_info.name,
+                            &branch_out,
+                            &base_branch,
+                            &task_pr,
+                        )
+                        .await
+                        {
+                            Ok(pr_url) => println!("  {} Pull request: {}", BULLET_GREEN, pr_url),
+                            Err(e) => {
+                                eprintln!("  {} Failed to create/update PR: {}", BULLET_YELLOW, e);
+                                if e.contains("403") || e.contains("Resource not accessible") {
+                                    eprintln!(
+                                        "     Your token may be missing required permissions."
+                                    );
+                                }
+                            }
+                        }
+                    } else {
+                        eprintln!(
+                            "  {} Could not extract repository info from URL: {}",
+                            BULLET_YELLOW, resolved_repo
+                        );
+                    }
+                } else {
+                    eprintln!(
+                        "  {} GitHub token not configured for this project; skipping PR creation",
+                        BULLET_YELLOW
+                    );
+                }
+            }
+
+            if let Some((project_for_token, resolved_repo, branch_out, base_branch)) =
+                post_release_pr
+            {
+                let project_config =
+                    resolve_project_config(project_for_token).unwrap_or_else(|e| {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    });
+                let token = project_config
+                    .as_ref()
+                    .and_then(|p| p.github_token.as_deref());
+
+                if let Some(token) = token {
+                    if let Ok(repo_info) = github::extract_repo_info(&resolved_repo) {
+                        match github::close_pr_for_branch(
+                            token,
+                            &repo_info.owner,
+                            &repo_info.name,
+                            &branch_out,
+                            &base_branch,
+                            "Integrated via smith run release",
+                        )
+                        .await
+                        {
+                            Ok(Some(pr_url)) => {
+                                println!("  {} Closed pull request: {}", BULLET_GREEN, pr_url)
+                            }
+                            Ok(None) => {
+                                println!(
+                                    "  {} No open pull request found for branch '{}'",
+                                    BULLET_BLUE, branch_out
+                                );
+                            }
+                            Err(e) => {
+                                eprintln!(
+                                    "  {} Failed to close pull request: {}",
+                                    BULLET_YELLOW, e
+                                );
+                            }
+                        }
+                    } else {
+                        eprintln!(
+                            "  {} Could not extract repository info from URL: {}",
+                            BULLET_YELLOW, resolved_repo
+                        );
+                    }
+                } else {
+                    eprintln!(
+                        "  {} GitHub token not configured for this project; skipping PR close",
+                        BULLET_YELLOW
+                    );
+                }
+            }
+        }
+        Some(Commands::Agent { cmd }) => match cmd {
+            AgentCommands::Start {
                 project,
                 branch,
                 port,
@@ -6042,7 +5645,7 @@ async fn main() {
                     }
                 }
             }
-            SpawnCommands::Stop {
+            AgentCommands::Stop {
                 project,
                 branch,
                 all,
@@ -6132,7 +5735,7 @@ async fn main() {
                     }
                 }
             }
-            SpawnCommands::Restart { project, branch } => {
+            AgentCommands::Restart { project, branch } => {
                 // Auto-detect project and branch if not provided
                 let project = match project {
                     Some(p) => p,
@@ -6186,7 +5789,7 @@ async fn main() {
                     }
                 }
             }
-            SpawnCommands::Run {
+            AgentCommands::Run {
                 project,
                 branch,
                 verbose,
@@ -6229,7 +5832,7 @@ async fn main() {
                     }
                 }
             }
-            SpawnCommands::Plan {
+            AgentCommands::Plan {
                 project,
                 branch,
                 verbose,
@@ -6458,7 +6061,7 @@ async fn main() {
                     }
                 }
             }
-            SpawnCommands::Develop {
+            AgentCommands::Develop {
                 project,
                 branch,
                 base,
@@ -6954,7 +6557,7 @@ async fn main() {
                 );
                 println!("  State Dir: {}", dev_run_dir);
             }
-            SpawnCommands::Release {
+            AgentCommands::Release {
                 project,
                 branch,
                 base,
@@ -7456,7 +7059,7 @@ async fn main() {
                 );
                 println!("  State Dir: {}", release_run_dir);
             }
-            SpawnCommands::List => match docker::list_spawned_containers() {
+            AgentCommands::List => match docker::list_spawned_containers() {
                 Ok(containers) => {
                     if containers.is_empty() {
                         println!("No spawned agents");
@@ -7489,7 +7092,7 @@ async fn main() {
                     std::process::exit(1);
                 }
             },
-            SpawnCommands::Review {
+            AgentCommands::Review {
                 project,
                 branch,
                 limit,
@@ -7743,7 +7346,7 @@ async fn main() {
                     }
                 }
             }
-            SpawnCommands::Clear {
+            AgentCommands::Clear {
                 project,
                 branch,
                 all,
@@ -7873,7 +7476,7 @@ async fn main() {
                     std::process::exit(1);
                 }
             }
-            SpawnCommands::Logs {
+            AgentCommands::Logs {
                 project,
                 branch,
                 follow,
@@ -7959,7 +7562,7 @@ async fn main() {
                     }
                 }
             }
-            SpawnCommands::Prune => match docker::prune_spawned_containers() {
+            AgentCommands::Prune => match docker::prune_spawned_containers() {
                 Ok(removed) => {
                     if removed.is_empty() {
                         println!("No stopped containers to prune");

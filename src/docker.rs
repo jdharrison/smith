@@ -1,5 +1,5 @@
 //! Minimal Docker helpers for Doctor (check_docker_available), agent start/stop, and container list/stop/remove.
-//! Ask/dev/review use the Dagger pipeline; these are for debugging and environment checks.
+//! Shared helpers for model and agent container lifecycle plus runtime checks.
 
 use std::collections::hash_map::DefaultHasher;
 use std::fs;
@@ -455,7 +455,7 @@ pub fn stop_all_agent_containers() -> Result<Vec<String>, String> {
     Ok(running)
 }
 
-/// Check if Docker is available and running (Dagger uses it as container runtime).
+/// Check if Docker is available and running.
 pub fn check_docker_available() -> Result<(), String> {
     let version_output = Command::new("docker")
         .arg("--version")

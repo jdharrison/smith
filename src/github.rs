@@ -120,6 +120,12 @@ struct UpdatePRRequest {
     body: Option<String>,
 }
 
+/// Close PR request payload
+#[derive(Debug, Serialize)]
+struct ClosePRRequest {
+    state: String,
+}
+
 /// Find existing PR for a branch
 async fn find_existing_pr(
     token: &str,
@@ -253,6 +259,43 @@ async fn update_pr(
     Ok(pr.html_url)
 }
 
+/// Close an existing pull request.
+async fn close_pr(token: &str, owner: &str, repo: &str, pr_number: u64) -> Result<String, String> {
+    let client = reqwest::Client::new();
+    let url = format!(
+        "https://api.github.com/repos/{}/{}/pulls/{}",
+        owner, repo, pr_number
+    );
+
+    let payload = ClosePRRequest {
+        state: "closed".to_string(),
+    };
+
+    let response = client
+        .patch(&url)
+        .header("Authorization", format!("token {}", token))
+        .header("Accept", "application/vnd.github.v3+json")
+        .header("User-Agent", "agent-smith")
+        .header("Content-Type", "application/json")
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to close PR: {}", e))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("Failed to close PR ({}): {}", status, error_text));
+    }
+
+    let pr: PullRequest = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse PR response: {}", e))?;
+
+    Ok(pr.html_url)
+}
+
 /// Create or update a pull request
 /// Only creates one PR per branch (updates existing if found).
 /// Uses retry with backoff for rate limits and transient errors.
@@ -304,4 +347,46 @@ pub async fn create_or_update_pr(
             .await
         }
     }
+}
+
+/// Close an open pull request for the given head branch and base branch, if one exists.
+/// Returns Ok(Some(url)) when closed, Ok(None) when no matching open PR exists.
+pub async fn close_pr_for_branch(
+    token: &str,
+    owner: &str,
+    repo: &str,
+    branch: &str,
+    base: &str,
+    close_note: &str,
+) -> Result<Option<String>, String> {
+    let existing =
+        with_retry(|| async move { find_existing_pr(token, owner, repo, branch).await }).await?;
+
+    let Some(existing_pr) = existing else {
+        return Ok(None);
+    };
+
+    if existing_pr.base.ref_name != base {
+        return Err(format!(
+            "Found open PR #{} for '{}' but base is '{}' (expected '{}')",
+            existing_pr.number, branch, existing_pr.base.ref_name, base
+        ));
+    }
+
+    let updated_url = with_retry(|| async move {
+        update_pr(
+            token,
+            owner,
+            repo,
+            existing_pr.number,
+            None,
+            Some(close_note),
+        )
+        .await
+    })
+    .await?;
+
+    let _ = with_retry(|| async move { close_pr(token, owner, repo, existing_pr.number).await })
+        .await?;
+    Ok(Some(updated_url))
 }

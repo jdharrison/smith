@@ -35,8 +35,7 @@ Pre-built binaries for Linux and macOS are available in [GitHub Releases](https:
 ### Prerequisites
 
 - Rust 1.83+
-- **Docker** — container runtime used by Dagger;
-- **Dagger** — pipelines run via the Dagger engine; visit [Dagger](https://docs.dagger.io/install) if you use it separately, or rely on the SDK-managed engine.
+- **Docker** — container runtime used by smith.
 
 ### Build and Run
 
@@ -53,7 +52,7 @@ cargo run -- help
 
 ### Pipeline commands (run ask / dev / review)
 
-Run **ask**, **dev**, or **review** via `smith run <cmd>`. The pipeline runs inside the Dagger engine; by default you see a spinner and then the result. Use **`--verbose`** to see full pipeline output.
+Run pipeline workflows via `smith run <cmd>`.
 
 ```bash
 # Ask a question (read-only); default branch is main, use --base to ask about another branch
@@ -119,12 +118,12 @@ All commands **fetch from the configured remote** and **reset/checkout to the la
 ### System commands
 
 - **`smith status [--verbose]`**  
-  Show status of dependencies, agents, and projects (systemctl-style). Prints bullets for smith (installed/running), docker, dagger, each configured agent (built/running/reachable), and each project (Dagger workspace check). Use **`--verbose`** for raw output (config path, docker version/info, agent details). Dagger validation runs as part of status.
+  Show status of dependencies, models, agents, and projects.
 
 - **`smith install`**  
-  Interactive setup: check/install Docker (Linux: get.docker.com) and Dagger (Linux: install to `$HOME/.local/bin`), optionally enable Docker at boot, create config dir, add agents and projects. Writes an install marker so status shows “installed.” Run once after installing the binary.
+  Interactive setup: check/install Docker (Linux: get.docker.com), optionally enable Docker at boot, create config dir, add models and projects.
 
-### Pipeline commands (Dagger) — `smith run <cmd>`
+### Pipeline commands — `smith run <cmd>`
 
 - **`smith run ask "<question>"`**  
   Ask the agent about the project (read-only).  
@@ -135,7 +134,7 @@ All commands **fetch from the configured remote** and **reset/checkout to the la
   - `--ssh-key <path>` — SSH key path (overrides project config and `SSH_KEY_PATH`).  
   - `--keep-alive` — Keep container alive after run (debugging).  
   - `--timeout <sec>` — Timeout for agent run (default: 300).  
-  - `--verbose` — Show full Dagger and pipeline output (default: spinner then result).
+  - `--verbose` — Show detailed pipeline output.
 
 - **`smith run dev "<task>" --branch <branch>`**  
   Run a development task, validate, commit, and push.  
@@ -164,7 +163,7 @@ All commands **fetch from the configured remote** and **reset/checkout to the la
   List registered projects (shows repo, image, ssh_key, base_branch, remote, and whether github-token is set).
 
 - **`smith project status [--project <name>] [--verbose]`**  
-  Spin up Dagger, clone project(s), and list workspace files (validates project is loadable). Omit `--project` to run for all projects. Use `--verbose` for full Dagger output.
+  Validate project configuration and connectivity.
 
 - **`smith project update <name>`**  
   Update a project.  
