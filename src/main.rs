@@ -6,15 +6,16 @@ use clap::{CommandFactory, Parser, Subcommand};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Write};
 use std::os::fd::AsRawFd;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 /// ANSI color codes for status output (circle: red = not built, blue = built, green = online).
 const ANSI_RED: &str = "\x1b[31m";
@@ -145,6 +146,441 @@ fn clarify_dagger_error(err: &str) -> String {
     } else {
         out
     }
+}
+
+fn is_valid_short_plan_id(value: &str) -> bool {
+    value.len() == 4 && value.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+}
+
+fn short_plan_id_from_dir_name(plan_dir: &str) -> String {
+    if let Some(rest) = plan_dir.strip_prefix("plan-") {
+        if is_valid_short_plan_id(rest) {
+            return rest.to_string();
+        }
+    }
+
+    let mut h = 1469598103934665603u64;
+    for b in plan_dir.as_bytes() {
+        h ^= *b as u64;
+        h = h.wrapping_mul(1099511628211);
+    }
+    const ALPHABET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789";
+    let mut out = String::with_capacity(4);
+    for _ in 0..4 {
+        out.push(ALPHABET[(h % 36) as usize] as char);
+        h /= 36;
+    }
+    out
+}
+
+fn generate_short_plan_id(attempt: u64) -> String {
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos() as u64)
+        .unwrap_or(0);
+    let mut n = nanos
+        ^ ((std::process::id() as u64) << 16)
+        ^ attempt.wrapping_mul(0x9E37_79B9_7F4A_7C15);
+
+    const ALPHABET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789";
+    let mut out = String::with_capacity(4);
+    for _ in 0..4 {
+        let idx = (n % 36) as usize;
+        out.push(ALPHABET[idx] as char);
+        n = n / 36;
+        if n == 0 {
+            n = n.wrapping_mul(6364136223846793005).wrapping_add(1);
+        }
+    }
+    out
+}
+
+fn resolve_plan_id_filter(filter: &str, plan_dirs: &[String]) -> Result<String, String> {
+    if plan_dirs.iter().any(|d| d == filter) {
+        return Ok(filter.to_string());
+    }
+
+    let as_prefixed = format!("plan-{}", filter);
+    if plan_dirs.iter().any(|d| d == &as_prefixed) {
+        return Ok(as_prefixed);
+    }
+
+    let target = filter.to_lowercase();
+    let matches = plan_dirs
+        .iter()
+        .filter(|d| short_plan_id_from_dir_name(d) == target)
+        .cloned()
+        .collect::<Vec<_>>();
+
+    match matches.len() {
+        1 => Ok(matches[0].clone()),
+        0 => Err(format!("No plan found matching '{}'", filter)),
+        _ => Err(format!(
+            "Multiple plans match '{}': {}",
+            filter,
+            matches.join(", ")
+        )),
+    }
+}
+
+fn now_unix() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct PlanArtifacts {
+    producer: String,
+    architect: String,
+    designer: String,
+    planner: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct PlanIssue {
+    id: String,
+    text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    answer: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct PlanReply {
+    submitted_at_unix: u64,
+    text: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct PlanManifest {
+    plan_id: String,
+    #[serde(default)]
+    short_id: String,
+    version: u8,
+    project: String,
+    branch: String,
+    prompt: String,
+    state: String,
+    phase: String,
+    created_at_unix: u64,
+    updated_at_unix: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    completed_at_unix: Option<u64>,
+    artifacts: PlanArtifacts,
+    role_status: HashMap<String, String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    summary: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    issues: Vec<PlanIssue>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    replies: Vec<PlanReply>,
+    errors: Vec<String>,
+}
+
+impl PlanManifest {
+    fn new(plan_id: String, project: String, branch: String, prompt: String) -> Self {
+        let now = now_unix();
+        let short_id = short_plan_id_from_dir_name(&plan_id);
+        let mut role_status = HashMap::new();
+        role_status.insert("producer".to_string(), "not_started".to_string());
+        role_status.insert("architect".to_string(), "not_started".to_string());
+        role_status.insert("designer".to_string(), "not_started".to_string());
+        role_status.insert("planner".to_string(), "not_started".to_string());
+
+        Self {
+            artifacts: PlanArtifacts {
+                producer: "producer.json".to_string(),
+                architect: "architect.json".to_string(),
+                designer: "designer.json".to_string(),
+                planner: "planner.json".to_string(),
+            },
+            plan_id,
+            short_id,
+            version: 1,
+            project,
+            branch,
+            prompt,
+            state: "planning".to_string(),
+            phase: "init".to_string(),
+            created_at_unix: now,
+            updated_at_unix: now,
+            completed_at_unix: None,
+            role_status,
+            summary: Vec::new(),
+            issues: Vec::new(),
+            replies: Vec::new(),
+            errors: Vec::new(),
+        }
+    }
+
+    fn set_state(&mut self, state: &str, phase: &str) {
+        self.state = state.to_string();
+        self.phase = phase.to_string();
+        self.updated_at_unix = now_unix();
+        if state == "completed" || state == "failed" {
+            self.completed_at_unix = Some(self.updated_at_unix);
+        }
+    }
+}
+
+fn write_plan_manifest(
+    project: &str,
+    branch: &str,
+    run_dir: &str,
+    manifest: &PlanManifest,
+) -> Result<(), String> {
+    let manifest_path = format!("{}/manifest.json", run_dir);
+    let body = serde_json::to_string_pretty(manifest)
+        .map_err(|e| format!("Failed to serialize plan manifest: {}", e))?;
+    docker::write_spawn_file(project, branch, &manifest_path, &body)
+}
+
+fn extract_high_level_summary_from_planner(planner_raw: &str) -> Vec<String> {
+    let Ok(value) = serde_json::from_str::<Value>(planner_raw) else {
+        return Vec::new();
+    };
+    let Some(items) = value.get("high_level_summary").and_then(Value::as_array) else {
+        return Vec::new();
+    };
+
+    items
+        .iter()
+        .filter_map(Value::as_str)
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .take(4)
+        .map(ToOwned::to_owned)
+        .collect()
+}
+
+fn extract_plan_issues_from_planner(planner_raw: &str) -> Vec<PlanIssue> {
+    let Ok(value) = serde_json::from_str::<Value>(planner_raw) else {
+        return Vec::new();
+    };
+
+    let mut out = Vec::new();
+
+    if let Some(items) = value.get("issues").and_then(Value::as_array) {
+        for (idx, item) in items.iter().enumerate() {
+            if let Some(text) = item.as_str() {
+                let trimmed = text.trim();
+                if !trimmed.is_empty() {
+                    out.push(PlanIssue {
+                        id: format!("ISSUE-{}", idx + 1),
+                        text: trimmed.to_string(),
+                        answer: None,
+                    });
+                }
+                continue;
+            }
+
+            if let Some(obj) = item.as_object() {
+                let text = obj
+                    .get("text")
+                    .and_then(Value::as_str)
+                    .or_else(|| obj.get("question").and_then(Value::as_str))
+                    .or_else(|| obj.get("issue").and_then(Value::as_str))
+                    .map(str::trim)
+                    .unwrap_or("");
+                if text.is_empty() {
+                    continue;
+                }
+                let id = obj
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                    .unwrap_or("");
+                out.push(PlanIssue {
+                    id: if id.is_empty() {
+                        format!("ISSUE-{}", idx + 1)
+                    } else {
+                        id.to_string()
+                    },
+                    text: text.to_string(),
+                    answer: None,
+                });
+            }
+        }
+    }
+
+    out
+}
+
+fn effective_short_plan_id(manifest: &PlanManifest, plan_id: &str) -> String {
+    if is_valid_short_plan_id(&manifest.short_id) {
+        manifest.short_id.clone()
+    } else {
+        short_plan_id_from_dir_name(plan_id)
+    }
+}
+
+fn print_plan_block(plan_id: &str, manifest: &PlanManifest) {
+    let short_id = effective_short_plan_id(manifest, plan_id);
+    println!("Plan: {} (id: {})", plan_id, short_id);
+    println!("  Active: {} (phase: {})", manifest.state, manifest.phase);
+    println!("  Target: {}:{}", manifest.project, manifest.branch);
+
+    let mut role_line = Vec::new();
+    for role in ["producer", "architect", "designer", "planner"] {
+        let status = manifest
+            .role_status
+            .get(role)
+            .cloned()
+            .unwrap_or_else(|| "unknown".to_string());
+        role_line.push(format!("{}={}", role, status));
+    }
+    println!("  Roles: {}", role_line.join(" "));
+    println!("  Prompt: {}", manifest.prompt);
+
+    println!("  Summary:");
+    if manifest.summary.is_empty() {
+        println!("    - unavailable");
+    } else {
+        for bullet in manifest.summary.iter().take(4) {
+            println!("    - {}", bullet);
+        }
+    }
+
+    if !manifest.errors.is_empty() {
+        println!("  Errors:");
+        for err in manifest.errors.iter().take(4) {
+            println!("    - {}", err);
+        }
+    }
+
+    if !manifest.issues.is_empty() {
+        println!("  Issues:");
+        for issue in manifest.issues.iter().take(8) {
+            if let Some(answer) = &issue.answer {
+                println!("    - {}: {} [reply: {}]", issue.id, issue.text, answer);
+            } else {
+                println!("    - {}: {}", issue.id, issue.text);
+            }
+        }
+    }
+
+    if !manifest.replies.is_empty() {
+        println!("  Replies:");
+        for reply in manifest.replies.iter().rev().take(2) {
+            println!("    - {}", reply.text);
+        }
+    }
+}
+
+fn plan_id_timestamp(plan_id: &str) -> Option<u64> {
+    let mut parts = plan_id.split('-');
+    match (parts.next(), parts.next()) {
+        (Some("plan"), Some(ts)) => ts.parse::<u64>().ok(),
+        _ => None,
+    }
+}
+
+fn format_plan_role_progress(done: bool) -> &'static str {
+    if done {
+        "done"
+    } else {
+        "..."
+    }
+}
+
+fn spawn_plan_progress_tracker(
+    project: String,
+    branch: String,
+    run_dir: String,
+    stop: Arc<AtomicBool>,
+) -> thread::JoinHandle<()> {
+    thread::spawn(move || {
+        let started = Instant::now();
+        loop {
+            if stop.load(Ordering::SeqCst) {
+                break;
+            }
+
+            let producer_done = docker::spawn_file_exists(
+                &project,
+                &branch,
+                &format!("{}/producer.json", run_dir),
+            )
+            .unwrap_or(false);
+            let architect_done = docker::spawn_file_exists(
+                &project,
+                &branch,
+                &format!("{}/architect.json", run_dir),
+            )
+            .unwrap_or(false);
+            let designer_done = docker::spawn_file_exists(
+                &project,
+                &branch,
+                &format!("{}/designer.json", run_dir),
+            )
+            .unwrap_or(false);
+            let planner_done = docker::spawn_file_exists(
+                &project,
+                &branch,
+                &format!("{}/planner.json", run_dir),
+            )
+            .unwrap_or(false);
+
+            let elapsed = started.elapsed().as_secs_f32();
+            print!(
+                "\r\x1b[2K  {} Plan runtime: {:>5.1}s | producer:{} architect:{} designer:{} planner:{}",
+                BULLET_BLUE,
+                elapsed,
+                format_plan_role_progress(producer_done),
+                format_plan_role_progress(architect_done),
+                format_plan_role_progress(designer_done),
+                format_plan_role_progress(planner_done)
+            );
+            let _ = io::stdout().flush();
+
+            thread::sleep(Duration::from_millis(1000));
+        }
+    })
+}
+
+fn build_spawn_plan_prompt(user_prompt: &str, run_dir: &str) -> String {
+    let escaped_prompt = user_prompt.replace('"', "\\\"");
+    format!(
+        r#"You are coordinating planning agents for this request: "{prompt}".
+
+Write all role outputs as JSON files for inter-agent communication.
+Use bash commands to write files under /state (do not use the Write tool for /state paths).
+
+Requirements:
+1) Ensure directory exists: {run_dir}
+1b) Update {run_dir}/manifest.json at phase boundaries with state/phase progress.
+2) Run @producer using the original request and save JSON to {run_dir}/producer.json
+3) Run @architect using the original request and save JSON to {run_dir}/architect.json
+4) Run @designer using the original request and save JSON to {run_dir}/designer.json
+5) Run @planner using the original request + producer/architect/designer outputs and save JSON to {run_dir}/planner.json
+
+JSON shape (simple, same for all files):
+{{
+  "role": "producer|architect|designer|planner",
+  "created_at": "ISO-8601",
+  "source_prompt": "...",
+  "content": "full role output markdown/text",
+  "high_level_summary": ["2-4 short bullets"],
+  "issues": [{{"id": "ISSUE-1", "text": "open question for user/orchestrator"}}],
+  "requirements": [{{"id": "REQ-001", "text": "..."}}],
+  "acceptance_criteria": [{{"id": "AC-001", "text": "..."}}],
+  "handoff": "summary for downstream role"
+}}
+
+Use empty arrays when requirements/acceptance_criteria are not applicable.
+For planner.json, high_level_summary is required and must contain 2-4 bullets.
+For planner.json, include issues as an array of unresolved decisions/questions (can be empty).
+
+Finally print:
+- absolute file paths written
+- a one-line status per role (ok/failed)
+- a final summary for the user.
+"#,
+        prompt = escaped_prompt,
+        run_dir = run_dir
+    )
 }
 
 #[derive(Parser)]
@@ -589,6 +1025,59 @@ enum SpawnCommands {
         verbose: bool,
         /// Prompt to send to the spawned agent
         prompt: String,
+    },
+    /// Run producer/architect/designer/planner and persist JSON artifacts under /state
+    Plan {
+        /// Project name (auto-detected from git repo if not specified)
+        #[arg(long)]
+        project: Option<String>,
+        /// Branch name (auto-detected from current git branch if not specified)
+        #[arg(long)]
+        branch: Option<String>,
+        /// Show detailed agent output (enables print-logs and thinking)
+        #[arg(long)]
+        verbose: bool,
+        /// Feature/request prompt to plan
+        prompt: String,
+    },
+    /// Review all plan artifacts in a spawned container
+    Review {
+        /// Project name (auto-detected from git repo if not specified)
+        #[arg(long)]
+        project: Option<String>,
+        /// Branch name (auto-detected from current git branch if not specified)
+        #[arg(long)]
+        branch: Option<String>,
+        /// Limit number of plans shown (newest first)
+        #[arg(long)]
+        limit: Option<usize>,
+        /// Optional state filter (not_started|planning|in_progress|completed|failed)
+        #[arg(long)]
+        state: Option<String>,
+        /// Filter to a specific plan by full id (plan-xxxx) or short id (xxxx)
+        #[arg(long)]
+        plan: Option<String>,
+        /// Submit a user reply for plan issues (requires --plan)
+        #[arg(long)]
+        reply: Option<String>,
+    },
+    /// Remove plan runs from /state in a spawned container
+    Clear {
+        /// Project name (auto-detected from git repo if not specified)
+        #[arg(long)]
+        project: Option<String>,
+        /// Branch name (auto-detected from current git branch if not specified)
+        #[arg(long)]
+        branch: Option<String>,
+        /// Remove all plan runs
+        #[arg(long, short)]
+        all: bool,
+        /// Remove a specific plan id (e.g. plan-1772346551-112891)
+        #[arg(long)]
+        plan: Option<String>,
+        /// Remove plans by state (not_started|planning|in_progress|completed|failed)
+        #[arg(long)]
+        state: Option<String>,
     },
     /// Show logs from a spawned agent
     Logs {
@@ -4613,6 +5102,215 @@ async fn main() {
                     }
                 }
             }
+            SpawnCommands::Plan {
+                project,
+                branch,
+                verbose,
+                prompt,
+            } => {
+                // Auto-detect project and branch if not provided
+                let project = match project {
+                    Some(p) => p,
+                    None => match detect_project_from_cwd() {
+                        Ok(Some(name)) => name,
+                        _ => {
+                            eprintln!("Error: --project required");
+                            std::process::exit(1);
+                        }
+                    },
+                };
+                let branch = match branch {
+                    Some(b) => b,
+                    None => {
+                        let output = Command::new("git")
+                            .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                            .output();
+                        match output {
+                            Ok(out) if out.status.success() => {
+                                String::from_utf8_lossy(&out.stdout).trim().to_string()
+                            }
+                            _ => {
+                                eprintln!("Error: --branch required");
+                                std::process::exit(1);
+                            }
+                        }
+                    }
+                };
+
+                if let Err(e) = docker::ensure_spawn_state_dir(&project, &branch) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                let existing_plan_dirs = docker::list_spawn_plan_dirs(&project, &branch).unwrap_or_default();
+                let existing_set: HashSet<String> = existing_plan_dirs.into_iter().collect();
+                let mut run_id = String::new();
+                for attempt in 0..256 {
+                    let short = generate_short_plan_id(attempt);
+                    let candidate = format!("plan-{}", short);
+                    if !existing_set.contains(&candidate) {
+                        run_id = candidate;
+                        break;
+                    }
+                }
+                if run_id.is_empty() {
+                    eprintln!("Error: failed to allocate unique short plan id");
+                    std::process::exit(1);
+                }
+                let run_dir = format!("/state/{}", run_id);
+
+                if let Err(e) = docker::ensure_spawn_dir(&project, &branch, &run_dir) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                println!(
+                    "  {} Planning artifacts will be written to {}",
+                    BULLET_BLUE,
+                    run_dir
+                );
+
+                let mut manifest = PlanManifest::new(
+                    run_id.clone(),
+                    project.clone(),
+                    branch.clone(),
+                    prompt.clone(),
+                );
+                if let Err(e) = write_plan_manifest(&project, &branch, &run_dir, &manifest) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                manifest.set_state("in_progress", "planner");
+                if let Err(e) = write_plan_manifest(&project, &branch, &run_dir, &manifest) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                let plan_started = Instant::now();
+                let mut tracker_handle = None;
+                let mut tracker_stop = None;
+                if !verbose && io::stdout().is_terminal() {
+                    let stop = Arc::new(AtomicBool::new(false));
+                    tracker_handle = Some(spawn_plan_progress_tracker(
+                        project.clone(),
+                        branch.clone(),
+                        run_dir.clone(),
+                        stop.clone(),
+                    ));
+                    tracker_stop = Some(stop);
+                }
+
+                let plan_prompt = build_spawn_plan_prompt(&prompt, &run_dir);
+                match docker::run_prompt_in_spawned_container(&project, &branch, &plan_prompt, verbose)
+                {
+                    Ok(()) => {
+                        if let Some(stop) = tracker_stop.take() {
+                            stop.store(true, Ordering::SeqCst);
+                        }
+                        if let Some(handle) = tracker_handle.take() {
+                            let _ = handle.join();
+                        }
+                        if !verbose {
+                            print!("\r\x1b[2K");
+                            let _ = io::stdout().flush();
+                        }
+
+                        let expected = [
+                            ("producer", format!("{}/producer.json", run_dir)),
+                            ("architect", format!("{}/architect.json", run_dir)),
+                            ("designer", format!("{}/designer.json", run_dir)),
+                            ("planner", format!("{}/planner.json", run_dir)),
+                        ];
+
+                        let mut missing = Vec::new();
+                        for (role, path) in expected {
+                            match docker::spawn_file_exists(&project, &branch, &path) {
+                                Ok(true) => {
+                                    manifest
+                                        .role_status
+                                        .insert(role.to_string(), "ok".to_string());
+                                }
+                                Ok(false) => {
+                                    manifest
+                                        .role_status
+                                        .insert(role.to_string(), "failed".to_string());
+                                    missing.push(path);
+                                }
+                                Err(e) => {
+                                    manifest
+                                        .role_status
+                                        .insert(role.to_string(), "failed".to_string());
+                                    missing.push(path.clone());
+                                    manifest.errors.push(e);
+                                }
+                            }
+                        }
+
+                        if missing.is_empty() {
+                            let planner_path = format!("{}/planner.json", run_dir);
+                            match docker::read_spawn_file(&project, &branch, &planner_path) {
+                                Ok(raw) => {
+                                    let summary = extract_high_level_summary_from_planner(&raw);
+                                    if !summary.is_empty() {
+                                        manifest.summary = summary;
+                                    }
+                                    manifest.issues = extract_plan_issues_from_planner(&raw);
+                                }
+                                Err(e) => {
+                                    manifest.errors.push(format!(
+                                        "Unable to read planner summary from '{}': {}",
+                                        planner_path, e
+                                    ));
+                                }
+                            }
+
+                            manifest.set_state("completed", "finalize");
+                            if let Err(e) = write_plan_manifest(&project, &branch, &run_dir, &manifest) {
+                                eprintln!("Error: {}", e);
+                                std::process::exit(1);
+                            }
+                            println!(
+                                "  {} Plan run completed in {:.1}s",
+                                BULLET_GREEN,
+                                plan_started.elapsed().as_secs_f32()
+                            );
+                            print_plan_block(&run_id, &manifest);
+                            println!("  State Dir: {}", run_dir);
+                        } else {
+                            manifest
+                                .errors
+                                .push(format!("Missing required artifacts: {}", missing.join(", ")));
+                            manifest.set_state("failed", "finalize");
+                            let _ = write_plan_manifest(&project, &branch, &run_dir, &manifest);
+                            eprintln!(
+                                "Error: missing required artifacts in {}:\n{}",
+                                run_dir,
+                                missing.join("\n")
+                            );
+                            std::process::exit(1);
+                        }
+                    }
+                    Err(e) => {
+                        if let Some(stop) = tracker_stop.take() {
+                            stop.store(true, Ordering::SeqCst);
+                        }
+                        if let Some(handle) = tracker_handle.take() {
+                            let _ = handle.join();
+                        }
+                        if !verbose {
+                            print!("\r\x1b[2K");
+                            let _ = io::stdout().flush();
+                        }
+
+                        manifest.set_state("failed", "planner");
+                        manifest.errors.push(e.clone());
+                        let _ = write_plan_manifest(&project, &branch, &run_dir, &manifest);
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            }
             SpawnCommands::List => {
                 match docker::list_spawned_containers() {
                     Ok(containers) => {
@@ -4629,11 +5327,13 @@ async fn main() {
                                     ANSI_RED
                                 };
                                 println!(
-                                    "  {} {}::{} - {} (port: {}, image: {})",
+                                    "  {} {}::{} - {} (name: {}, id: {}, port: {}, image: {})",
                                     status_color,
                                     c.project,
                                     c.branch,
                                     c.status,
+                                    c.container_name,
+                                    c.container_id,
                                     c.port,
                                     c.image
                                 );
@@ -4644,6 +5344,384 @@ async fn main() {
                         eprintln!("Error: {}", e);
                         std::process::exit(1);
                     }
+                }
+            }
+            SpawnCommands::Review {
+                project,
+                branch,
+                limit,
+                state,
+                plan,
+                reply,
+            } => {
+                let project = match project {
+                    Some(p) => p,
+                    None => match detect_project_from_cwd() {
+                        Ok(Some(name)) => name,
+                        _ => {
+                            eprintln!("Error: --project required");
+                            std::process::exit(1);
+                        }
+                    },
+                };
+                let branch = match branch {
+                    Some(b) => b,
+                    None => {
+                        let output = Command::new("git")
+                            .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                            .output();
+                        match output {
+                            Ok(out) if out.status.success() => {
+                                String::from_utf8_lossy(&out.stdout).trim().to_string()
+                            }
+                            _ => {
+                                eprintln!("Error: --branch required");
+                                std::process::exit(1);
+                            }
+                        }
+                    }
+                };
+
+                if let Err(e) = docker::ensure_spawn_state_dir(&project, &branch) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                let mut plan_dirs = match docker::list_spawn_plan_dirs(&project, &branch) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+
+                if plan_dirs.is_empty() {
+                    println!("No plan runs found in /state for {}:{}", project, branch);
+                    return;
+                }
+
+                if reply.is_some() && plan.is_none() {
+                    eprintln!("Error: --reply requires --plan <id>");
+                    std::process::exit(1);
+                }
+
+                let resolved_plan = if let Some(plan_filter) = plan.as_ref() {
+                    match resolve_plan_id_filter(plan_filter, &plan_dirs) {
+                        Ok(id) => Some(id),
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                } else {
+                    None
+                };
+
+                if let Some(reply_text) = reply.as_ref() {
+                    let selected_plan = resolved_plan.clone().expect("resolved plan must exist");
+                    let run_dir = format!("/state/{}", selected_plan);
+                    let manifest_path = format!("{}/manifest.json", run_dir);
+                    let raw = match docker::read_spawn_file(&project, &branch, &manifest_path) {
+                        Ok(v) => v,
+                        Err(e) => {
+                            eprintln!(
+                                "Error: cannot load manifest for '{}': {}",
+                                selected_plan, e
+                            );
+                            std::process::exit(1);
+                        }
+                    };
+
+                    let mut manifest = match serde_json::from_str::<PlanManifest>(&raw) {
+                        Ok(m) => m,
+                        Err(e) => {
+                            let mut inferred = PlanManifest::new(
+                                selected_plan.clone(),
+                                project.clone(),
+                                branch.clone(),
+                                "(unknown prompt)".to_string(),
+                            );
+                            inferred
+                                .errors
+                                .push(format!("Invalid manifest recovered during reply: {}", e));
+
+                            let planner_path = format!("{}/planner.json", run_dir);
+                            if let Ok(planner_raw) = docker::read_spawn_file(&project, &branch, &planner_path) {
+                                let summary = extract_high_level_summary_from_planner(&planner_raw);
+                                if !summary.is_empty() {
+                                    inferred.summary = summary;
+                                }
+                                inferred.issues = extract_plan_issues_from_planner(&planner_raw);
+                            }
+
+                            inferred
+                        }
+                    };
+
+                    if !is_valid_short_plan_id(&manifest.short_id) {
+                        manifest.short_id = short_plan_id_from_dir_name(&selected_plan);
+                    }
+
+                    manifest.replies.push(PlanReply {
+                        submitted_at_unix: now_unix(),
+                        text: reply_text.clone(),
+                    });
+                    if !manifest.issues.is_empty() {
+                        for issue in &mut manifest.issues {
+                            if issue.answer.is_none() {
+                                issue.answer = Some(reply_text.clone());
+                            }
+                        }
+                    }
+                    manifest.updated_at_unix = now_unix();
+
+                    if let Err(e) = write_plan_manifest(&project, &branch, &run_dir, &manifest) {
+                        eprintln!("Error: failed to save reply for '{}': {}", selected_plan, e);
+                        std::process::exit(1);
+                    }
+
+                    println!(
+                        "Saved reply for {} (id: {}).",
+                        selected_plan,
+                        effective_short_plan_id(&manifest, &selected_plan)
+                    );
+                }
+
+                plan_dirs.sort_by(|a, b| b.cmp(a));
+
+                if let Some(selected_plan) = resolved_plan.as_ref() {
+                    plan_dirs.retain(|d| d == selected_plan);
+                }
+
+                let mut manifests: Vec<(String, PlanManifest, u64)> = Vec::new();
+                for dir_name in plan_dirs {
+                    let ts_hint = plan_id_timestamp(&dir_name).unwrap_or(0);
+                    let manifest_path = format!("/state/{}/manifest.json", dir_name);
+                    match docker::read_spawn_file(&project, &branch, &manifest_path) {
+                        Ok(raw) => match serde_json::from_str::<PlanManifest>(&raw) {
+                            Ok(m) => {
+                                let sort_key = if m.created_at_unix == 0 {
+                                    ts_hint
+                                } else {
+                                    m.created_at_unix
+                                };
+                                manifests.push((dir_name.clone(), m, sort_key));
+                            }
+                            Err(parse_err) => {
+                                let mut inferred = PlanManifest::new(
+                                    dir_name.clone(),
+                                    project.clone(),
+                                    branch.clone(),
+                                    "(unknown prompt)".to_string(),
+                                );
+                                inferred.created_at_unix = ts_hint;
+                                inferred.updated_at_unix = ts_hint;
+                                inferred.set_state("failed", "finalize");
+                                inferred
+                                    .errors
+                                    .push(format!("Invalid manifest.json: {}", parse_err));
+                                manifests.push((dir_name, inferred, ts_hint));
+                            }
+                        },
+                        Err(_) => {
+                            let mut inferred = PlanManifest::new(
+                                dir_name.clone(),
+                                project.clone(),
+                                branch.clone(),
+                                "(unknown prompt)".to_string(),
+                            );
+                            inferred.created_at_unix = ts_hint;
+                            inferred.updated_at_unix = ts_hint;
+                            inferred.set_state("not_started", "init");
+                            inferred
+                                .errors
+                                .push("Missing manifest.json (inferred entry)".to_string());
+                            manifests.push((dir_name, inferred, ts_hint));
+                        }
+                    }
+                }
+
+                manifests.sort_by(|(_, _, a_key), (_, _, b_key)| b_key.cmp(a_key));
+
+                let desired_state = state.as_ref().map(|s| s.to_lowercase());
+                let mut shown = 0usize;
+                for (dir_name, manifest, _) in manifests {
+                    if let Some(ref desired) = desired_state {
+                        if manifest.state.to_lowercase() != *desired {
+                            continue;
+                        }
+                    }
+                    if let Some(max) = limit {
+                        if shown >= max {
+                            break;
+                        }
+                    }
+
+                    if shown > 0 {
+                        println!("\n------------------------------------------------------------\n");
+                    }
+
+                    let mut manifest = manifest;
+                    if manifest.summary.is_empty() || manifest.issues.is_empty() {
+                        let run_dir = format!("/state/{}", dir_name);
+                        let planner_path = format!("{}/{}", run_dir, manifest.artifacts.planner);
+                        if let Ok(planner_raw) = docker::read_spawn_file(&project, &branch, &planner_path) {
+                            if manifest.summary.is_empty() {
+                                let summary = extract_high_level_summary_from_planner(&planner_raw);
+                                if !summary.is_empty() {
+                                    manifest.summary = summary;
+                                }
+                            }
+                            if manifest.issues.is_empty() {
+                                manifest.issues = extract_plan_issues_from_planner(&planner_raw);
+                            }
+                        }
+                    }
+
+                    print_plan_block(&dir_name, &manifest);
+
+                    shown += 1;
+                }
+
+                if shown == 0 {
+                    if let Some(s) = desired_state {
+                        println!("No plans found matching state '{}'", s);
+                    } else {
+                        println!("No plans found");
+                    }
+                }
+            }
+            SpawnCommands::Clear {
+                project,
+                branch,
+                all,
+                plan,
+                state,
+            } => {
+                let project = match project {
+                    Some(p) => p,
+                    None => match detect_project_from_cwd() {
+                        Ok(Some(name)) => name,
+                        _ => {
+                            eprintln!("Error: --project required");
+                            std::process::exit(1);
+                        }
+                    },
+                };
+                let branch = match branch {
+                    Some(b) => b,
+                    None => {
+                        let output = Command::new("git")
+                            .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                            .output();
+                        match output {
+                            Ok(out) if out.status.success() => {
+                                String::from_utf8_lossy(&out.stdout).trim().to_string()
+                            }
+                            _ => {
+                                eprintln!("Error: --branch required");
+                                std::process::exit(1);
+                            }
+                        }
+                    }
+                };
+
+                if !all && plan.is_none() && state.is_none() {
+                    eprintln!(
+                        "Error: specify at least one filter (--plan/--state) or use --all to clear all plans"
+                    );
+                    std::process::exit(1);
+                }
+
+                if let Err(e) = docker::ensure_spawn_state_dir(&project, &branch) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                let mut plan_dirs = match docker::list_spawn_plan_dirs(&project, &branch) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+
+                if plan_dirs.is_empty() {
+                    println!("No plan runs found in /state for {}:{}", project, branch);
+                    return;
+                }
+
+                plan_dirs.sort();
+                let state_filter = state.as_ref().map(|s| s.to_lowercase());
+                let resolved_plan_filter = match plan.as_ref() {
+                    Some(filter) => match resolve_plan_id_filter(filter, &plan_dirs) {
+                        Ok(v) => Some(v),
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        }
+                    },
+                    None => None,
+                };
+
+                let mut candidates: Vec<String> = Vec::new();
+                for dir_name in plan_dirs {
+                    if !all {
+                        if let Some(target_plan) = resolved_plan_filter.as_ref() {
+                            if &dir_name != target_plan {
+                                continue;
+                            }
+                        }
+
+                        if let Some(ref desired_state) = state_filter {
+                            let manifest_path = format!("/state/{}/manifest.json", dir_name);
+                            let actual_state = match docker::read_spawn_file(
+                                &project,
+                                &branch,
+                                &manifest_path,
+                            ) {
+                                Ok(raw) => serde_json::from_str::<PlanManifest>(&raw)
+                                    .map(|m| m.state.to_lowercase())
+                                    .unwrap_or_else(|_| "unknown".to_string()),
+                                Err(_) => "unknown".to_string(),
+                            };
+                            if actual_state != *desired_state {
+                                continue;
+                            }
+                        }
+                    }
+
+                    candidates.push(dir_name);
+                }
+
+                if candidates.is_empty() {
+                    println!("No matching plan runs to clear");
+                    return;
+                }
+
+                let mut removed = Vec::new();
+                let mut failed = Vec::new();
+                for dir_name in candidates {
+                    let path = format!("/state/{}", dir_name);
+                    match docker::remove_spawn_dir(&project, &branch, &path) {
+                        Ok(()) => removed.push(dir_name),
+                        Err(e) => failed.push(format!("{} ({})", dir_name, e)),
+                    }
+                }
+
+                if !removed.is_empty() {
+                    println!("Cleared {} plan run(s):", removed.len());
+                    for dir_name in removed {
+                        println!("  - {}", dir_name);
+                    }
+                }
+
+                if !failed.is_empty() {
+                    eprintln!("Failed to clear {} plan run(s):", failed.len());
+                    for line in failed {
+                        eprintln!("  - {}", line);
+                    }
+                    std::process::exit(1);
                 }
             }
             SpawnCommands::Logs {

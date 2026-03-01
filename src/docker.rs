@@ -2,12 +2,14 @@
 //! Ask/dev/review use the Dagger pipeline; these are for debugging and environment checks.
 
 use std::collections::hash_map::DefaultHasher;
+use std::fs;
 use std::hash::{Hash, Hasher};
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Once};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::Deserialize;
 use serde_json::Value;
@@ -683,6 +685,7 @@ pub struct SpawnInfo {
     pub project: String,
     pub branch: String,
     pub container_name: String,
+    pub container_id: String,
     pub port: u16,
     pub status: String,
     pub image: String,
@@ -697,7 +700,7 @@ pub fn list_spawned_containers() -> Result<Vec<SpawnInfo>, String> {
             "--filter",
             &format!("name={}", SPAWN_CONTAINER_PREFIX),
             "--format",
-            "{{.Names}}|{{.Status}}|{{.Image}}",
+            "{{.Names}}|{{.ID}}|{{.Status}}|{{.Image}}",
         ])
         .output()
         .map_err(|e| format!("Failed to list containers: {}", e))?;
@@ -710,12 +713,13 @@ pub fn list_spawned_containers() -> Result<Vec<SpawnInfo>, String> {
     let mut results = Vec::new();
     for line in String::from_utf8_lossy(&output.stdout).lines() {
         let parts: Vec<&str> = line.split("|").collect();
-        if parts.len() < 3 {
+        if parts.len() < 4 {
             continue;
         }
         let container_name = parts[0].trim();
-        let status = parts[1].trim();
-        let image = parts[2].trim();
+        let container_id = parts[1].trim();
+        let status = parts[2].trim();
+        let image = parts[3].trim();
 
         // Parse project and branch from name: "agent_{project}_{branch}"
         if let Some(stripped) = container_name.strip_prefix(SPAWN_CONTAINER_PREFIX) {
@@ -731,6 +735,7 @@ pub fn list_spawned_containers() -> Result<Vec<SpawnInfo>, String> {
                     project,
                     branch,
                     container_name: container_name.to_string(),
+                    container_id: container_id.to_string(),
                     port,
                     status: status.to_string(),
                     image: image.to_string(),
@@ -775,6 +780,189 @@ pub fn restart_spawned_container(project: &str, branch: &str) -> Result<(), Stri
     restart_container(&name)
 }
 
+/// Ensure a directory exists in a spawned container.
+pub fn ensure_spawn_dir(project: &str, branch: &str, dir_path: &str) -> Result<(), String> {
+    let name = spawn_container_name(project, branch);
+    let command = format!("mkdir -p '{}'", dir_path.replace('\'', "'\"'\"'"));
+    let output = Command::new("docker")
+        .args(["exec", &name, "sh", "-lc", &command])
+        .output()
+        .map_err(|e| format!("Failed to ensure '{}' in container: {}", dir_path, e))?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        Err(format!(
+            "Failed to ensure '{}' in container '{}': {}",
+            dir_path,
+            name,
+            stderr.trim()
+        ))
+    }
+}
+
+/// Remove a directory tree in a spawned container.
+pub fn remove_spawn_dir(project: &str, branch: &str, dir_path: &str) -> Result<(), String> {
+    let name = spawn_container_name(project, branch);
+    let command = format!("rm -rf '{}'", dir_path.replace('\'', "'\"'\"'"));
+    let output = Command::new("docker")
+        .args(["exec", &name, "sh", "-lc", &command])
+        .output()
+        .map_err(|e| format!("Failed to remove '{}' in container: {}", dir_path, e))?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        Err(format!(
+            "Failed to remove '{}' in container '{}': {}",
+            dir_path,
+            name,
+            stderr.trim()
+        ))
+    }
+}
+
+/// Ensure the shared planning state directory exists in a spawned container.
+pub fn ensure_spawn_state_dir(project: &str, branch: &str) -> Result<(), String> {
+    let name = spawn_container_name(project, branch);
+    let command = "mkdir -p /workspace; if [ -L /state ]; then target=$(readlink /state || true); if [ \"$target\" = \"/workspace/state\" ]; then mkdir -p /workspace/state /state; cp -a /workspace/state/. /state/ 2>/dev/null || true; rm -f /state; mkdir -p /state; fi; fi; mkdir -p /state";
+    let output = Command::new("docker")
+        .args(["exec", &name, "sh", "-lc", command])
+        .output()
+        .map_err(|e| format!("Failed to initialize /state in container: {}", e))?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        Err(format!(
+            "Failed to initialize /state in container '{}': {}",
+            name,
+            stderr.trim()
+        ))
+    }
+}
+
+/// Return true when a file exists in the spawned container.
+pub fn spawn_file_exists(project: &str, branch: &str, file_path: &str) -> Result<bool, String> {
+    let name = spawn_container_name(project, branch);
+    let command = format!("test -f '{}'", file_path.replace('\'', "'\"'\"'"));
+    let output = Command::new("docker")
+        .args(["exec", &name, "sh", "-lc", &command])
+        .output()
+        .map_err(|e| format!("Failed checking file in container: {}", e))?;
+
+    Ok(output.status.success())
+}
+
+/// List plan run directories under /state in a spawned container.
+pub fn list_spawn_plan_dirs(project: &str, branch: &str) -> Result<Vec<String>, String> {
+    let name = spawn_container_name(project, branch);
+    let output = Command::new("docker")
+        .args([
+            "exec",
+            &name,
+            "sh",
+            "-lc",
+            "for d in /state/plan-*; do [ -d \"$d\" ] && basename \"$d\"; done; true",
+        ])
+        .output()
+        .map_err(|e| format!("Failed listing plan directories: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!(
+            "Failed listing plan directories: {}",
+            stderr.trim()
+        ));
+    }
+
+    let mut dirs = Vec::new();
+    for line in String::from_utf8_lossy(&output.stdout).lines() {
+        let trimmed = line.trim();
+        if !trimmed.is_empty() {
+            dirs.push(trimmed.to_string());
+        }
+    }
+    Ok(dirs)
+}
+
+/// Read a UTF-8 file from a spawned container.
+pub fn read_spawn_file(project: &str, branch: &str, file_path: &str) -> Result<String, String> {
+    let name = spawn_container_name(project, branch);
+    let command = format!("cat '{}'", file_path.replace('\'', "'\"'\"'"));
+    let output = Command::new("docker")
+        .args(["exec", &name, "sh", "-lc", &command])
+        .output()
+        .map_err(|e| format!("Failed reading '{}' in container: {}", file_path, e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!(
+            "Failed reading '{}' in container: {}",
+            file_path,
+            stderr.trim()
+        ));
+    }
+
+    String::from_utf8(output.stdout)
+        .map_err(|e| format!("Invalid UTF-8 while reading '{}': {}", file_path, e))
+}
+
+/// Write UTF-8 content into a file in the spawned container using docker cp.
+pub fn write_spawn_file(
+    project: &str,
+    branch: &str,
+    file_path: &str,
+    content: &str,
+) -> Result<(), String> {
+    let name = spawn_container_name(project, branch);
+    let parent = file_path
+        .rsplit_once('/')
+        .map(|(p, _)| p)
+        .filter(|p| !p.is_empty())
+        .unwrap_or("/");
+    ensure_spawn_dir(project, branch, parent)?;
+
+    let mut tmp_path = std::env::temp_dir();
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    tmp_path.push(format!(
+        "smith-spawn-write-{}-{}.tmp",
+        std::process::id(),
+        now
+    ));
+
+    fs::write(&tmp_path, content)
+        .map_err(|e| format!("Failed writing temp file '{}': {}", tmp_path.display(), e))?;
+
+    let destination = format!("{}:{}", name, file_path);
+    let copy_result = Command::new("docker")
+        .arg("cp")
+        .arg(tmp_path.as_os_str())
+        .arg(&destination)
+        .output();
+
+    let _ = fs::remove_file(&tmp_path);
+
+    let output = copy_result.map_err(|e| format!("Failed to copy file into container: {}", e))?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        Err(format!(
+            "Failed writing '{}' in container '{}': {}",
+            file_path,
+            name,
+            stderr.trim()
+        ))
+    }
+}
+
 /// Run a prompt in a spawned container and stream raw output to the terminal.
 pub fn run_prompt_in_spawned_container(
     project: &str,
@@ -786,10 +974,12 @@ pub fn run_prompt_in_spawned_container(
     let mut args = vec![
         "exec".to_string(),
         "-w".to_string(),
-        "/workspace".to_string(),
+        "/".to_string(),
         name,
         "opencode".to_string(),
         "run".to_string(),
+        "--dir".to_string(),
+        "/".to_string(),
         "--format".to_string(),
         "json".to_string(),
         "--print-logs".to_string(),
@@ -1090,8 +1280,17 @@ if [ -f /root/.ssh/id_rsa ]; then
     export GIT_SSH_COMMAND="ssh -i /root/.ssh/id_rsa -o StrictHostKeyChecking=no"
 fi
 
-# Create workspace and prepare repo (idempotent on container restart)
+# Create state/workspace directories and prepare repo (idempotent on container restart)
 mkdir -p /workspace
+if [ -L /state ]; then
+    target=$(readlink /state || true)
+    if [ "$target" = "/workspace/state" ]; then
+        mkdir -p /workspace/state /state
+        cp -a /workspace/state/. /state/ 2>/dev/null || true
+        rm -f /state
+    fi
+fi
+mkdir -p /state
 
 if [ -d /workspace/.git ]; then
     cd /workspace
