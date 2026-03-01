@@ -12,8 +12,8 @@ use std::io::{self, IsTerminal, Write};
 use std::os::fd::AsRawFd;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
@@ -149,7 +149,10 @@ fn clarify_dagger_error(err: &str) -> String {
 }
 
 fn is_valid_short_plan_id(value: &str) -> bool {
-    value.len() == 4 && value.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+    value.len() == 4
+        && value
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
 }
 
 fn short_plan_id_from_dir_name(plan_dir: &str) -> String {
@@ -178,9 +181,8 @@ fn generate_short_plan_id(attempt: u64) -> String {
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_nanos() as u64)
         .unwrap_or(0);
-    let mut n = nanos
-        ^ ((std::process::id() as u64) << 16)
-        ^ attempt.wrapping_mul(0x9E37_79B9_7F4A_7C15);
+    let mut n =
+        nanos ^ ((std::process::id() as u64) << 16) ^ attempt.wrapping_mul(0x9E37_79B9_7F4A_7C15);
 
     const ALPHABET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789";
     let mut out = String::with_capacity(4);
@@ -250,6 +252,14 @@ struct PlanIssue {
 struct PlanReply {
     submitted_at_unix: u64,
     text: String,
+}
+
+#[derive(Clone)]
+struct AssurancePreview {
+    verdict: String,
+    summary: Vec<String>,
+    blocking_findings: usize,
+    total_findings: usize,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -322,6 +332,309 @@ impl PlanManifest {
             self.completed_at_unix = Some(self.updated_at_unix);
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct DevCoverageItem {
+    id: String,
+    status: String,
+    evidence: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default)]
+struct DevCoverageReport {
+    #[serde(default)]
+    requirements: Vec<DevCoverageItem>,
+    #[serde(default)]
+    acceptance_criteria: Vec<DevCoverageItem>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct DevAssuranceIssue {
+    id: String,
+    severity: String,
+    title: String,
+    detail: String,
+    #[serde(default)]
+    related_ids: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct DevAssuranceReport {
+    schema_version: u8,
+    verdict: String,
+    #[serde(default)]
+    summary: Vec<String>,
+    #[serde(default)]
+    coverage: DevCoverageReport,
+    #[serde(default)]
+    blocking_issues: Vec<DevAssuranceIssue>,
+    #[serde(default)]
+    non_blocking_issues: Vec<DevAssuranceIssue>,
+    #[serde(default)]
+    required_remediation: Vec<String>,
+    generated_at: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct DevAttemptRecord {
+    attempt: u32,
+    develop_artifact: String,
+    assurance_artifact: String,
+    verdict: String,
+    blocking_issues: usize,
+    non_blocking_issues: usize,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct DevRunManifest {
+    dev_run_id: String,
+    version: u8,
+    project: String,
+    branch: String,
+    base: String,
+    plan_id: String,
+    short_plan_id: String,
+    task: String,
+    state: String,
+    phase: String,
+    created_at_unix: u64,
+    updated_at_unix: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    completed_at_unix: Option<u64>,
+    max_validate_passes: u32,
+    attempts: Vec<DevAttemptRecord>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    final_verdict: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    final_commit: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    non_blocking_issues: Vec<DevAssuranceIssue>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    errors: Vec<String>,
+}
+
+impl DevRunManifest {
+    fn new(
+        dev_run_id: String,
+        project: String,
+        branch: String,
+        base: String,
+        plan_id: String,
+        short_plan_id: String,
+        task: String,
+        max_validate_passes: u32,
+    ) -> Self {
+        let now = now_unix();
+        Self {
+            dev_run_id,
+            version: 1,
+            project,
+            branch,
+            base,
+            plan_id,
+            short_plan_id,
+            task,
+            state: "in_progress".to_string(),
+            phase: "init".to_string(),
+            created_at_unix: now,
+            updated_at_unix: now,
+            completed_at_unix: None,
+            max_validate_passes,
+            attempts: Vec::new(),
+            final_verdict: None,
+            final_commit: None,
+            non_blocking_issues: Vec::new(),
+            errors: Vec::new(),
+        }
+    }
+
+    fn set_phase(&mut self, phase: &str) {
+        self.phase = phase.to_string();
+        self.updated_at_unix = now_unix();
+    }
+
+    fn set_state(&mut self, state: &str, phase: &str) {
+        self.state = state.to_string();
+        self.phase = phase.to_string();
+        self.updated_at_unix = now_unix();
+        if state == "completed" || state == "failed" {
+            self.completed_at_unix = Some(self.updated_at_unix);
+        }
+    }
+}
+
+fn write_dev_manifest(
+    project: &str,
+    branch: &str,
+    run_dir: &str,
+    manifest: &DevRunManifest,
+) -> Result<(), String> {
+    let manifest_path = format!("{}/manifest.json", run_dir);
+    let body = serde_json::to_string_pretty(manifest)
+        .map_err(|e| format!("Failed to serialize develop manifest: {}", e))?;
+    docker::write_spawn_file(project, branch, &manifest_path, &body)
+}
+
+fn parse_dev_assurance_report(raw: &str) -> Result<DevAssuranceReport, String> {
+    let report = serde_json::from_str::<DevAssuranceReport>(raw)
+        .map_err(|e| format!("Invalid assurance artifact JSON: {}", e))?;
+
+    if report.schema_version != 1 {
+        return Err(format!(
+            "Unsupported assurance schema_version '{}', expected 1",
+            report.schema_version
+        ));
+    }
+    let verdict = report.verdict.trim().to_lowercase();
+    if verdict != "pass" && verdict != "pass_with_risk" && verdict != "fail" {
+        return Err(format!(
+            "Invalid assurance verdict '{}'; expected pass|pass_with_risk|fail",
+            report.verdict
+        ));
+    }
+    if report.generated_at.trim().is_empty() {
+        return Err("Assurance report missing generated_at".to_string());
+    }
+
+    Ok(report)
+}
+
+fn planner_has_actionable_sections(planner_raw: &str) -> Result<(), String> {
+    let value = serde_json::from_str::<Value>(planner_raw)
+        .map_err(|e| format!("Invalid planner artifact JSON: {}", e))?;
+
+    let has_summary = value
+        .get("high_level_summary")
+        .and_then(Value::as_array)
+        .map(|a| !a.is_empty())
+        .unwrap_or(false);
+    if !has_summary {
+        return Err("Planner artifact missing non-empty high_level_summary".to_string());
+    }
+
+    let has_requirements = value
+        .get("requirements")
+        .and_then(Value::as_array)
+        .map(|a| !a.is_empty())
+        .unwrap_or(false);
+    if !has_requirements {
+        return Err("Planner artifact missing non-empty requirements".to_string());
+    }
+
+    let has_acceptance = value
+        .get("acceptance_criteria")
+        .and_then(Value::as_array)
+        .map(|a| !a.is_empty())
+        .unwrap_or(false);
+    if !has_acceptance {
+        return Err("Planner artifact missing non-empty acceptance_criteria".to_string());
+    }
+
+    Ok(())
+}
+
+fn unresolved_plan_issues(manifest: &PlanManifest) -> Vec<String> {
+    manifest
+        .issues
+        .iter()
+        .filter(|issue| {
+            issue
+                .answer
+                .as_deref()
+                .map(str::trim)
+                .unwrap_or("")
+                .is_empty()
+        })
+        .map(|issue| format!("{}: {}", issue.id, issue.text))
+        .collect()
+}
+
+fn build_spawn_develop_prompt(
+    task: &str,
+    plan_dir: &str,
+    execution_brief_path: &str,
+    develop_artifact_path: &str,
+    attempt: u32,
+) -> String {
+    let escaped_task = task.replace('"', "\\\"");
+    format!(
+        r#"Implement this task using the approved plan context: \"{task}\".
+
+Required context files:
+- Plan directory: {plan_dir}
+- Execution brief JSON: {execution_brief_path}
+
+Rules:
+1) Treat the plan and execution brief as authoritative requirements.
+2) Make code changes in /workspace only.
+3) Before finishing, run targeted validation commands relevant to your edits.
+4) Write a JSON artifact to {develop_artifact_path} with this shape:
+{{
+  "schema_version": 1,
+  "attempt": {attempt},
+  "summary": ["2-4 bullets"],
+  "changed_files": ["path"],
+  "validation": [{{"command": "...", "result": "pass|fail", "notes": "..."}}],
+  "residual_risks": ["..."]
+}}
+5) Print a short completion note.
+
+Do not skip writing the JSON artifact.
+"#,
+        task = escaped_task,
+        plan_dir = plan_dir,
+        execution_brief_path = execution_brief_path,
+        develop_artifact_path = develop_artifact_path,
+        attempt = attempt
+    )
+}
+
+fn build_spawn_assurance_prompt(
+    task: &str,
+    plan_dir: &str,
+    execution_brief_path: &str,
+    develop_artifact_path: &str,
+    assurance_artifact_path: &str,
+    attempt: u32,
+) -> String {
+    let escaped_task = task.replace('"', "\\\"");
+    format!(
+        r#"Validate implementation attempt {attempt} against the approved plan.
+
+Task: \"{task}\"
+Plan directory: {plan_dir}
+Execution brief: {execution_brief_path}
+Developer artifact: {develop_artifact_path}
+
+Produce a STRICT JSON artifact at {assurance_artifact_path} using this exact schema:
+{{
+  "schema_version": 1,
+  "verdict": "pass|pass_with_risk|fail",
+  "summary": ["2-4 bullets"],
+  "coverage": {{
+    "requirements": [{{"id": "REQ-001", "status": "covered|partial|not_covered", "evidence": "..."}}],
+    "acceptance_criteria": [{{"id": "AC-001", "status": "met|partial|unmet", "evidence": "..."}}]
+  }},
+  "blocking_issues": [{{"id": "BLK-001", "severity": "critical|high", "title": "...", "detail": "...", "related_ids": ["REQ-001"]}}],
+  "non_blocking_issues": [{{"id": "NB-001", "severity": "medium|low", "title": "...", "detail": "...", "related_ids": ["AC-001"]}}],
+  "required_remediation": ["..."] ,
+  "generated_at": "ISO-8601"
+}}
+
+Rules:
+1) Put ALL release-blocking concerns in blocking_issues.
+2) Put informational/low-risk concerns in non_blocking_issues.
+3) Blocking issues must be empty only when verdict is pass or pass_with_risk.
+4) Do not emit markdown or prose outside the JSON artifact.
+"#,
+        attempt = attempt,
+        task = escaped_task,
+        plan_dir = plan_dir,
+        execution_brief_path = execution_brief_path,
+        develop_artifact_path = develop_artifact_path,
+        assurance_artifact_path = assurance_artifact_path,
+    )
 }
 
 fn write_plan_manifest(
@@ -408,6 +721,59 @@ fn extract_plan_issues_from_planner(planner_raw: &str) -> Vec<PlanIssue> {
     out
 }
 
+fn extract_assurance_preview(assurance_raw: &str) -> Option<AssurancePreview> {
+    let Ok(value) = serde_json::from_str::<Value>(assurance_raw) else {
+        return None;
+    };
+
+    let verdict = value
+        .get("verdict")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .unwrap_or("unknown")
+        .to_string();
+
+    let summary = value
+        .get("summary")
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .take(4)
+                .map(ToOwned::to_owned)
+                .collect::<Vec<String>>()
+        })
+        .unwrap_or_default();
+
+    let mut total_findings = 0usize;
+    let mut blocking_findings = 0usize;
+    if let Some(findings) = value.get("findings").and_then(Value::as_array) {
+        total_findings = findings.len();
+        for finding in findings {
+            let severity = finding
+                .get("severity")
+                .and_then(Value::as_str)
+                .map(str::trim)
+                .unwrap_or("")
+                .to_lowercase();
+            if severity == "critical" || severity == "high" {
+                blocking_findings += 1;
+            }
+        }
+    }
+
+    Some(AssurancePreview {
+        verdict,
+        summary,
+        blocking_findings,
+        total_findings,
+    })
+}
+
 fn effective_short_plan_id(manifest: &PlanManifest, plan_id: &str) -> String {
     if is_valid_short_plan_id(&manifest.short_id) {
         manifest.short_id.clone()
@@ -416,7 +782,7 @@ fn effective_short_plan_id(manifest: &PlanManifest, plan_id: &str) -> String {
     }
 }
 
-fn print_plan_block(plan_id: &str, manifest: &PlanManifest) {
+fn print_plan_block(plan_id: &str, manifest: &PlanManifest, assurance: Option<&AssurancePreview>) {
     let short_id = effective_short_plan_id(manifest, plan_id);
     println!("Plan: {} (id: {})", plan_id, short_id);
     println!("  Active: {} (phase: {})", manifest.state, manifest.phase);
@@ -467,6 +833,20 @@ fn print_plan_block(plan_id: &str, manifest: &PlanManifest) {
             println!("    - {}", reply.text);
         }
     }
+
+    if let Some(assurance) = assurance {
+        println!(
+            "  Assurance: verdict={} findings={} blocking={}",
+            assurance.verdict, assurance.total_findings, assurance.blocking_findings
+        );
+        if assurance.summary.is_empty() {
+            println!("    - summary unavailable");
+        } else {
+            for bullet in assurance.summary.iter().take(4) {
+                println!("    - {}", bullet);
+            }
+        }
+    }
 }
 
 fn plan_id_timestamp(plan_id: &str) -> Option<u64> {
@@ -498,30 +878,21 @@ fn spawn_plan_progress_tracker(
                 break;
             }
 
-            let producer_done = docker::spawn_file_exists(
-                &project,
-                &branch,
-                &format!("{}/producer.json", run_dir),
-            )
-            .unwrap_or(false);
+            let producer_done =
+                docker::spawn_file_exists(&project, &branch, &format!("{}/producer.json", run_dir))
+                    .unwrap_or(false);
             let architect_done = docker::spawn_file_exists(
                 &project,
                 &branch,
                 &format!("{}/architect.json", run_dir),
             )
             .unwrap_or(false);
-            let designer_done = docker::spawn_file_exists(
-                &project,
-                &branch,
-                &format!("{}/designer.json", run_dir),
-            )
-            .unwrap_or(false);
-            let planner_done = docker::spawn_file_exists(
-                &project,
-                &branch,
-                &format!("{}/planner.json", run_dir),
-            )
-            .unwrap_or(false);
+            let designer_done =
+                docker::spawn_file_exists(&project, &branch, &format!("{}/designer.json", run_dir))
+                    .unwrap_or(false);
+            let planner_done =
+                docker::spawn_file_exists(&project, &branch, &format!("{}/planner.json", run_dir))
+                    .unwrap_or(false);
 
             let elapsed = started.elapsed().as_secs_f32();
             print!(
@@ -1039,6 +1410,29 @@ enum SpawnCommands {
         verbose: bool,
         /// Feature/request prompt to plan
         prompt: String,
+    },
+    /// Execute a plan-driven development loop in a spawned container
+    Develop {
+        /// Project name (auto-detected from git repo if not specified)
+        #[arg(long)]
+        project: Option<String>,
+        /// Branch name (auto-detected from current git branch if not specified)
+        #[arg(long)]
+        branch: Option<String>,
+        /// Base branch used when target branch does not exist remotely
+        #[arg(long)]
+        base: Option<String>,
+        /// Plan id to execute (full id or short id)
+        #[arg(long)]
+        plan: String,
+        /// Maximum develop/validate passes before failing
+        #[arg(long, default_value_t = 3)]
+        max_validate_passes: u32,
+        /// Show detailed agent output (enables print-logs and thinking)
+        #[arg(long)]
+        verbose: bool,
+        /// Development task to execute
+        task: String,
     },
     /// Review all plan artifacts in a spawned container
     Review {
@@ -1761,7 +2155,10 @@ fn normalize_repo_for_match(repo: &str) -> Option<String> {
             let host = s[4..colon].to_lowercase();
             let path = s[colon + 1..].trim_start_matches('/');
             (host, path)
-        } else if let Some(after) = s.strip_prefix("https://").or_else(|| s.strip_prefix("http://")) {
+        } else if let Some(after) = s
+            .strip_prefix("https://")
+            .or_else(|| s.strip_prefix("http://"))
+        {
             let rest = after.splitn(2, '/').collect::<Vec<_>>();
             let host = rest.first()?.to_string().to_lowercase();
             let path = rest.get(1).copied().unwrap_or("").trim_start_matches('/');
@@ -1779,7 +2176,9 @@ fn normalize_repo_for_match(repo: &str) -> Option<String> {
         // Treat as filesystem path
         let p = Path::new(repo);
         if p.exists() {
-            std::fs::canonicalize(p).ok().map(|pb| pb.to_string_lossy().into_owned())
+            std::fs::canonicalize(p)
+                .ok()
+                .map(|pb| pb.to_string_lossy().into_owned())
         } else {
             Some(repo.to_string())
         }
@@ -4385,7 +4784,10 @@ async fn main() {
 
                 if verbose {
                     if auto_detected {
-                        println!("Using project '{}' (detected from git remote).", project.as_deref().unwrap_or(""));
+                        println!(
+                            "Using project '{}' (detected from git remote).",
+                            project.as_deref().unwrap_or("")
+                        );
                     }
                     println!("Ask: {}", question);
                     println!("  Repository: {}", resolved_repo);
@@ -4510,7 +4912,10 @@ async fn main() {
 
                 if verbose {
                     if auto_detected {
-                        println!("Using project '{}' (detected from git remote).", project.as_deref().unwrap_or(""));
+                        println!(
+                            "Using project '{}' (detected from git remote).",
+                            project.as_deref().unwrap_or("")
+                        );
                     }
                     println!("Dev: {}", task);
                     println!("  Repository: {}", resolved_repo);
@@ -4692,7 +5097,10 @@ async fn main() {
 
                 if verbose {
                     if auto_detected {
-                        println!("Using project '{}' (detected from git remote).", project.as_deref().unwrap_or(""));
+                        println!(
+                            "Using project '{}' (detected from git remote).",
+                            project.as_deref().unwrap_or("")
+                        );
                     }
                     println!("Review: {}", branch);
                     println!("  Repository: {}", resolved_repo);
@@ -4716,7 +5124,7 @@ async fn main() {
 
                 let timeout_secs = timeout.unwrap_or(900);
                 let roles = pipeline_roles.clone();
-                
+
                 // Check if we're in a local git repo and on the branch being reviewed
                 let local_workspace = {
                     let repo_root = git_repo_root_path();
@@ -4731,7 +5139,7 @@ async fn main() {
                                 None
                             }
                         });
-                    
+
                     // Use local workspace if:
                     // 1. We're in a git repo
                     // 2. Current branch matches the review branch
@@ -4750,13 +5158,18 @@ async fn main() {
                         None
                     }
                 };
-                
+
                 if verbose && local_workspace.is_some() {
-                    println!("  Using local workspace: {}", local_workspace.as_ref().unwrap().display());
+                    println!(
+                        "  Using local workspace: {}",
+                        local_workspace.as_ref().unwrap().display()
+                    );
                 }
-                
+
                 // Convert PathBuf to String for moving into async closure
-                let local_workspace_str = local_workspace.as_ref().map(|p| p.to_string_lossy().into_owned());
+                let local_workspace_str = local_workspace
+                    .as_ref()
+                    .map(|p| p.to_string_lossy().into_owned());
                 let result = dagger_pipeline::with_connection(move |conn| {
                     let repo = resolved_repo.clone();
                     let br = branch.clone();
@@ -4832,7 +5245,7 @@ async fn main() {
                             eprintln!("Error: {}", e);
                             std::process::exit(1);
                         }
-                    }
+                    },
                 };
 
                 // Auto-detect branch from current git branch if not provided
@@ -4867,7 +5280,10 @@ async fn main() {
                     .ok_or_else(|| format!("Project '{}' not found", project))
                     .unwrap();
 
-                let image = proj.image.clone().unwrap_or_else(|| DEFAULT_AGENT_IMAGE.to_string());
+                let image = proj
+                    .image
+                    .clone()
+                    .unwrap_or_else(|| DEFAULT_AGENT_IMAGE.to_string());
                 let repo = proj.repo.clone();
                 let ssh_key = proj.ssh_key.as_ref().map(PathBuf::from);
                 let commit_name = proj.commit_name.clone();
@@ -4921,11 +5337,7 @@ async fn main() {
                 ) {
                     Ok(actual_port) => {
                         let url = clickable_agent_url(actual_port);
-                        println!(
-                            "  {} Agent ready at {}",
-                            BULLET_GREEN,
-                            url
-                        );
+                        println!("  {} Agent ready at {}", BULLET_GREEN, url);
                     }
                     Err(e) => {
                         eprintln!("Error: {}", e);
@@ -4933,12 +5345,17 @@ async fn main() {
                     }
                 }
             }
-            SpawnCommands::Stop { project, branch, all } => {
+            SpawnCommands::Stop {
+                project,
+                branch,
+                all,
+            } => {
                 if all {
                     // Stop all spawned agents
                     match docker::list_spawned_containers() {
                         Ok(containers) => {
-                            let running: Vec<_> = containers.iter()
+                            let running: Vec<_> = containers
+                                .iter()
                                 .filter(|c| c.status.to_lowercase().contains("up"))
                                 .collect();
                             if running.is_empty() {
@@ -4946,10 +5363,21 @@ async fn main() {
                             } else {
                                 println!("Stopping {} spawned agents:", running.len());
                                 for c in &running {
-                                    if let Err(e) = docker::stop_spawned_container(&c.project, &c.branch) {
-                                        eprintln!("Error stopping {}::{}: {}", c.project, c.branch, e);
+                                    if let Err(e) =
+                                        docker::stop_spawned_container(&c.project, &c.branch)
+                                    {
+                                        eprintln!(
+                                            "Error stopping {}::{}: {}",
+                                            c.project, c.branch, e
+                                        );
                                     } else {
-                                        println!("  {} Stopped {}{}{}", BULLET_GREEN, c.project, ANSI_RESET, format!(":{}", c.branch));
+                                        println!(
+                                            "  {} Stopped {}{}{}",
+                                            BULLET_GREEN,
+                                            c.project,
+                                            ANSI_RESET,
+                                            format!(":{}", c.branch)
+                                        );
                                     }
                                 }
                             }
@@ -4969,7 +5397,7 @@ async fn main() {
                                 eprintln!("Error: --project required (or use --all to stop all)");
                                 std::process::exit(1);
                             }
-                        }
+                        },
                     };
                     let branch = match branch {
                         Some(b) => b,
@@ -4982,7 +5410,9 @@ async fn main() {
                                     String::from_utf8_lossy(&out.stdout).trim().to_string()
                                 }
                                 _ => {
-                                    eprintln!("Error: --branch required (or use --all to stop all)");
+                                    eprintln!(
+                                        "Error: --branch required (or use --all to stop all)"
+                                    );
                                     std::process::exit(1);
                                 }
                             }
@@ -5142,7 +5572,8 @@ async fn main() {
                     std::process::exit(1);
                 }
 
-                let existing_plan_dirs = docker::list_spawn_plan_dirs(&project, &branch).unwrap_or_default();
+                let existing_plan_dirs =
+                    docker::list_spawn_plan_dirs(&project, &branch).unwrap_or_default();
                 let existing_set: HashSet<String> = existing_plan_dirs.into_iter().collect();
                 let mut run_id = String::new();
                 for attempt in 0..256 {
@@ -5166,8 +5597,7 @@ async fn main() {
 
                 println!(
                     "  {} Planning artifacts will be written to {}",
-                    BULLET_BLUE,
-                    run_dir
+                    BULLET_BLUE, run_dir
                 );
 
                 let mut manifest = PlanManifest::new(
@@ -5202,8 +5632,12 @@ async fn main() {
                 }
 
                 let plan_prompt = build_spawn_plan_prompt(&prompt, &run_dir);
-                match docker::run_prompt_in_spawned_container(&project, &branch, &plan_prompt, verbose)
-                {
+                match docker::run_prompt_in_spawned_container(
+                    &project,
+                    &branch,
+                    &plan_prompt,
+                    verbose,
+                ) {
                     Ok(()) => {
                         if let Some(stop) = tracker_stop.take() {
                             stop.store(true, Ordering::SeqCst);
@@ -5217,10 +5651,22 @@ async fn main() {
                         }
 
                         let expected = [
-                            ("producer", format!("{}/producer.json", run_dir)),
-                            ("architect", format!("{}/architect.json", run_dir)),
-                            ("designer", format!("{}/designer.json", run_dir)),
-                            ("planner", format!("{}/planner.json", run_dir)),
+                            (
+                                "producer",
+                                format!("{}/{}", run_dir, manifest.artifacts.producer.as_str()),
+                            ),
+                            (
+                                "architect",
+                                format!("{}/{}", run_dir, manifest.artifacts.architect.as_str()),
+                            ),
+                            (
+                                "designer",
+                                format!("{}/{}", run_dir, manifest.artifacts.designer.as_str()),
+                            ),
+                            (
+                                "planner",
+                                format!("{}/{}", run_dir, manifest.artifacts.planner.as_str()),
+                            ),
                         ];
 
                         let mut missing = Vec::new();
@@ -5248,7 +5694,8 @@ async fn main() {
                         }
 
                         if missing.is_empty() {
-                            let planner_path = format!("{}/planner.json", run_dir);
+                            let planner_path =
+                                format!("{}/{}", run_dir, manifest.artifacts.planner.as_str());
                             match docker::read_spawn_file(&project, &branch, &planner_path) {
                                 Ok(raw) => {
                                     let summary = extract_high_level_summary_from_planner(&raw);
@@ -5266,7 +5713,9 @@ async fn main() {
                             }
 
                             manifest.set_state("completed", "finalize");
-                            if let Err(e) = write_plan_manifest(&project, &branch, &run_dir, &manifest) {
+                            if let Err(e) =
+                                write_plan_manifest(&project, &branch, &run_dir, &manifest)
+                            {
                                 eprintln!("Error: {}", e);
                                 std::process::exit(1);
                             }
@@ -5275,12 +5724,13 @@ async fn main() {
                                 BULLET_GREEN,
                                 plan_started.elapsed().as_secs_f32()
                             );
-                            print_plan_block(&run_id, &manifest);
+                            print_plan_block(&run_id, &manifest, None);
                             println!("  State Dir: {}", run_dir);
                         } else {
-                            manifest
-                                .errors
-                                .push(format!("Missing required artifacts: {}", missing.join(", ")));
+                            manifest.errors.push(format!(
+                                "Missing required artifacts: {}",
+                                missing.join(", ")
+                            ));
                             manifest.set_state("failed", "finalize");
                             let _ = write_plan_manifest(&project, &branch, &run_dir, &manifest);
                             eprintln!(
@@ -5311,41 +5761,535 @@ async fn main() {
                     }
                 }
             }
-            SpawnCommands::List => {
-                match docker::list_spawned_containers() {
-                    Ok(containers) => {
-                        if containers.is_empty() {
-                            println!("No spawned agents");
-                        } else {
-                            println!("Spawned agents:");
-                            for c in containers {
-                                let status_color = if c.status.to_lowercase().contains("up") {
-                                    ANSI_GREEN
-                                } else if c.status.to_lowercase().contains("exited") {
-                                    ANSI_YELLOW
-                                } else {
-                                    ANSI_RED
-                                };
-                                println!(
-                                    "  {} {}::{} - {} (name: {}, id: {}, port: {}, image: {})",
-                                    status_color,
-                                    c.project,
-                                    c.branch,
-                                    c.status,
-                                    c.container_name,
-                                    c.container_id,
-                                    c.port,
-                                    c.image
-                                );
+            SpawnCommands::Develop {
+                project,
+                branch,
+                base,
+                plan,
+                max_validate_passes,
+                verbose,
+                task,
+            } => {
+                let project = match project {
+                    Some(p) => p,
+                    None => match detect_project_from_cwd() {
+                        Ok(Some(name)) => name,
+                        _ => {
+                            eprintln!("Error: --project required");
+                            std::process::exit(1);
+                        }
+                    },
+                };
+                let branch = match branch {
+                    Some(b) => b,
+                    None => {
+                        let output = Command::new("git")
+                            .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                            .output();
+                        match output {
+                            Ok(out) if out.status.success() => {
+                                String::from_utf8_lossy(&out.stdout).trim().to_string()
+                            }
+                            _ => {
+                                eprintln!("Error: --branch required");
+                                std::process::exit(1);
                             }
                         }
                     }
+                };
+
+                if max_validate_passes == 0 {
+                    eprintln!("Error: --max-validate-passes must be >= 1");
+                    std::process::exit(1);
+                }
+
+                let project_config =
+                    resolve_project_config(Some(project.clone())).unwrap_or_else(|e| {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    });
+                let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
+                let (commit_name, commit_email) = resolve_commit_author(project_config.as_ref());
+                let pipeline_roles = resolve_pipeline_roles(project_config.as_ref(), "dev");
+
+                if let Err(e) = docker::ensure_spawn_state_dir(&project, &branch) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                let plan_dirs = match docker::list_spawn_plan_dirs(&project, &branch) {
+                    Ok(v) => v,
                     Err(e) => {
                         eprintln!("Error: {}", e);
                         std::process::exit(1);
                     }
+                };
+                if plan_dirs.is_empty() {
+                    eprintln!(
+                        "Error: no plan runs found in /state for {}:{}; run `smith spawn plan` first",
+                        project, branch
+                    );
+                    std::process::exit(1);
                 }
+
+                let selected_plan = match resolve_plan_id_filter(&plan, &plan_dirs) {
+                    Ok(id) => id,
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+                let plan_dir = format!("/state/{}", selected_plan);
+                let manifest_path = format!("{}/manifest.json", plan_dir);
+                let manifest_raw = match docker::read_spawn_file(&project, &branch, &manifest_path)
+                {
+                    Ok(v) => v,
+                    Err(e) => {
+                        eprintln!(
+                            "Error: failed to load plan manifest '{}': {}",
+                            selected_plan, e
+                        );
+                        std::process::exit(1);
+                    }
+                };
+                let manifest = match serde_json::from_str::<PlanManifest>(&manifest_raw) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        eprintln!(
+                            "Error: invalid plan manifest for '{}': {}",
+                            selected_plan, e
+                        );
+                        std::process::exit(1);
+                    }
+                };
+
+                if manifest.state != "completed" {
+                    eprintln!(
+                        "Error: plan '{}' is in state '{}'; expected completed",
+                        selected_plan, manifest.state
+                    );
+                    std::process::exit(1);
+                }
+                if manifest.project != project || manifest.branch != branch {
+                    eprintln!(
+                        "Error: plan target mismatch; plan is {}:{}, requested {}:{}",
+                        manifest.project, manifest.branch, project, branch
+                    );
+                    std::process::exit(1);
+                }
+
+                let unresolved = unresolved_plan_issues(&manifest);
+                if !unresolved.is_empty() {
+                    eprintln!(
+                        "Error: plan '{}' has unresolved issues; reply to all blockers before develop:\n{}",
+                        selected_plan,
+                        unresolved.join("\n")
+                    );
+                    std::process::exit(1);
+                }
+
+                let expected = [
+                    format!("{}/{}", plan_dir, manifest.artifacts.producer),
+                    format!("{}/{}", plan_dir, manifest.artifacts.architect),
+                    format!("{}/{}", plan_dir, manifest.artifacts.designer),
+                    format!("{}/{}", plan_dir, manifest.artifacts.planner),
+                ];
+                for path in &expected {
+                    match docker::spawn_file_exists(&project, &branch, path) {
+                        Ok(true) => {}
+                        Ok(false) => {
+                            eprintln!("Error: required plan artifact missing: {}", path);
+                            std::process::exit(1);
+                        }
+                        Err(e) => {
+                            eprintln!("Error: failed validating plan artifact '{}': {}", path, e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+
+                let planner_path = format!("{}/{}", plan_dir, manifest.artifacts.planner);
+                let planner_raw = match docker::read_spawn_file(&project, &branch, &planner_path) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        eprintln!(
+                            "Error: failed reading planner artifact '{}': {}",
+                            planner_path, e
+                        );
+                        std::process::exit(1);
+                    }
+                };
+                if let Err(e) = planner_has_actionable_sections(&planner_raw) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                let dev_run_id = format!("dev-{}-{}", now_unix(), generate_short_plan_id(0));
+                let dev_run_dir = format!("/state/{}", dev_run_id);
+                if let Err(e) = docker::ensure_spawn_dir(&project, &branch, &dev_run_dir) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                let execution_brief_path = format!("{}/execution-brief.json", dev_run_dir);
+                let execution_brief = serde_json::json!({
+                    "schema_version": 1,
+                    "task": task.clone(),
+                    "plan_id": selected_plan.clone(),
+                    "short_plan_id": effective_short_plan_id(&manifest, &selected_plan),
+                    "project": project.clone(),
+                    "branch": branch.clone(),
+                    "base": resolved_base.clone(),
+                    "plan_prompt": manifest.prompt.clone(),
+                    "plan_summary": manifest.summary.clone(),
+                    "plan_issues": manifest.issues.clone(),
+                    "plan_replies": manifest.replies.clone(),
+                    "artifacts": {
+                        "producer": format!("{}/{}", plan_dir, manifest.artifacts.producer),
+                        "architect": format!("{}/{}", plan_dir, manifest.artifacts.architect),
+                        "designer": format!("{}/{}", plan_dir, manifest.artifacts.designer),
+                        "planner": planner_path,
+                    },
+                });
+                let execution_brief_body = match serde_json::to_string_pretty(&execution_brief) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        eprintln!("Error: failed to serialize execution brief: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+                if let Err(e) = docker::write_spawn_file(
+                    &project,
+                    &branch,
+                    &execution_brief_path,
+                    &execution_brief_body,
+                ) {
+                    eprintln!("Error: failed writing execution brief: {}", e);
+                    std::process::exit(1);
+                }
+
+                let mut dev_manifest = DevRunManifest::new(
+                    dev_run_id.clone(),
+                    project.clone(),
+                    branch.clone(),
+                    resolved_base.clone(),
+                    selected_plan.clone(),
+                    effective_short_plan_id(&manifest, &selected_plan),
+                    task.clone(),
+                    max_validate_passes,
+                );
+                if let Err(e) = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest) {
+                    eprintln!("Error: failed writing develop manifest: {}", e);
+                    std::process::exit(1);
+                }
+
+                let branch_escaped = branch.replace('\'', "'\"'\"'");
+                let base_escaped = resolved_base.replace('\'', "'\"'\"'");
+                let setup_script = format!(
+                    "cd /workspace && git rev-parse --is-inside-work-tree >/dev/null 2>&1 || {{ echo 'Not a git repo at /workspace'; exit 1; }} && git fetch origin 2>&1 && if git show-ref --verify --quiet 'refs/remotes/origin/{branch}'; then git checkout -B '{branch}' 'refs/remotes/origin/{branch}' 2>&1; else git show-ref --verify --quiet 'refs/remotes/origin/{base}' || {{ echo 'Missing remote base branch origin/{base}'; exit 1; }}; git checkout -B '{branch}' 'refs/remotes/origin/{base}' 2>&1; fi && git reset --hard HEAD 2>&1 && git clean -fd 2>&1 && test -z \"$(git status --porcelain)\" || {{ echo 'Workspace is not clean after setup'; exit 1; }}",
+                    branch = branch_escaped,
+                    base = base_escaped
+                );
+                dev_manifest.set_phase("setup");
+                let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                if let Err(e) = docker::run_spawn_shell(&project, &branch, &setup_script) {
+                    dev_manifest.errors.push(e.clone());
+                    dev_manifest.set_state("failed", "setup");
+                    let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+
+                if verbose {
+                    println!(
+                        "  {} Running spawn develop for {}:{} using plan {} (id: {})",
+                        BULLET_BLUE, project, branch, selected_plan, dev_manifest.short_plan_id
+                    );
+                }
+
+                let mut latest_report: Option<DevAssuranceReport> = None;
+                for attempt in 1..=max_validate_passes {
+                    let develop_artifact_path = format!("{}/develop-{}.json", dev_run_dir, attempt);
+                    let assurance_artifact_path =
+                        format!("{}/assurance-{}.json", dev_run_dir, attempt);
+
+                    dev_manifest.set_phase(&format!("develop-{}", attempt));
+                    let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                    let develop_prompt = build_spawn_develop_prompt(
+                        &task,
+                        &plan_dir,
+                        &execution_brief_path,
+                        &develop_artifact_path,
+                        attempt,
+                    );
+                    if let Err(e) = docker::run_prompt_in_spawned_container_with_options(
+                        &project,
+                        &branch,
+                        &develop_prompt,
+                        verbose,
+                        pipeline_roles
+                            .execute_run
+                            .as_ref()
+                            .and_then(|r| r.model.as_deref()),
+                        pipeline_roles
+                            .execute_run
+                            .as_ref()
+                            .and_then(|r| r.prompt.as_deref()),
+                    ) {
+                        dev_manifest.errors.push(e.clone());
+                        dev_manifest.set_state("failed", &format!("develop-{}", attempt));
+                        let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+
+                    if !docker::spawn_file_exists(&project, &branch, &develop_artifact_path)
+                        .unwrap_or(false)
+                    {
+                        let msg = format!(
+                            "Developer pass {} did not produce required artifact {}",
+                            attempt, develop_artifact_path
+                        );
+                        dev_manifest.errors.push(msg.clone());
+                        dev_manifest.set_state("failed", &format!("develop-{}", attempt));
+                        let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                        eprintln!("Error: {}", msg);
+                        std::process::exit(1);
+                    }
+
+                    dev_manifest.set_phase(&format!("validate-{}", attempt));
+                    let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                    let assurance_prompt = build_spawn_assurance_prompt(
+                        &task,
+                        &plan_dir,
+                        &execution_brief_path,
+                        &develop_artifact_path,
+                        &assurance_artifact_path,
+                        attempt,
+                    );
+                    if let Err(e) = docker::run_prompt_in_spawned_container_with_options(
+                        &project,
+                        &branch,
+                        &assurance_prompt,
+                        verbose,
+                        pipeline_roles
+                            .validate_run
+                            .as_ref()
+                            .and_then(|r| r.model.as_deref()),
+                        pipeline_roles
+                            .validate_run
+                            .as_ref()
+                            .and_then(|r| r.prompt.as_deref()),
+                    ) {
+                        dev_manifest.errors.push(e.clone());
+                        dev_manifest.set_state("failed", &format!("validate-{}", attempt));
+                        let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+
+                    let assurance_raw = match docker::read_spawn_file(
+                        &project,
+                        &branch,
+                        &assurance_artifact_path,
+                    ) {
+                        Ok(v) => v,
+                        Err(e) => {
+                            dev_manifest.errors.push(e.clone());
+                            dev_manifest.set_state("failed", &format!("validate-{}", attempt));
+                            let _ =
+                                write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                            eprintln!(
+                                "Error: assurance artifact missing for pass {}: {}",
+                                attempt, e
+                            );
+                            std::process::exit(1);
+                        }
+                    };
+
+                    let report = match parse_dev_assurance_report(&assurance_raw) {
+                        Ok(r) => r,
+                        Err(e) => {
+                            dev_manifest.errors.push(e.clone());
+                            dev_manifest.set_state("failed", &format!("validate-{}", attempt));
+                            let _ =
+                                write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        }
+                    };
+
+                    if verbose {
+                        println!(
+                            "  {} validate pass {} verdict={} blocking={} non_blocking={}",
+                            BULLET_BLUE,
+                            attempt,
+                            report.verdict,
+                            report.blocking_issues.len(),
+                            report.non_blocking_issues.len()
+                        );
+                    }
+
+                    dev_manifest.attempts.push(DevAttemptRecord {
+                        attempt,
+                        develop_artifact: develop_artifact_path,
+                        assurance_artifact: assurance_artifact_path,
+                        verdict: report.verdict.clone(),
+                        blocking_issues: report.blocking_issues.len(),
+                        non_blocking_issues: report.non_blocking_issues.len(),
+                    });
+                    dev_manifest.non_blocking_issues = report.non_blocking_issues.clone();
+                    dev_manifest.final_verdict = Some(report.verdict.clone());
+                    let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+
+                    let blocking = !report.blocking_issues.is_empty() || report.verdict == "fail";
+                    latest_report = Some(report);
+                    if !blocking {
+                        break;
+                    }
+                    if attempt == max_validate_passes {
+                        dev_manifest.errors.push(
+                            "Validation failed: blocking issues remain after max passes"
+                                .to_string(),
+                        );
+                        dev_manifest.set_state("failed", "validate");
+                        let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                        eprintln!(
+                            "Error: blocking issues remain after {} validate passes",
+                            max_validate_passes
+                        );
+                        println!("  State Dir: {}", dev_run_dir);
+                        std::process::exit(1);
+                    }
+                }
+
+                dev_manifest.set_phase("commit");
+                let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+
+                let commit_msg = format!(
+                    "{} [plan:{}]",
+                    task.replace('\n', " "),
+                    dev_manifest.short_plan_id
+                )
+                .replace('\'', "'\"'\"'");
+                let git_name_cmd = match commit_name.as_deref() {
+                    Some(name) if !name.trim().is_empty() => format!(
+                        "git config user.name '{}' && ",
+                        name.replace('\'', "'\"'\"'")
+                    ),
+                    _ => "git config user.name 'Smith' && ".to_string(),
+                };
+                let git_email_cmd = match commit_email.as_deref() {
+                    Some(email) if !email.trim().is_empty() => format!(
+                        "git config user.email '{}' && ",
+                        email.replace('\'', "'\"'\"'")
+                    ),
+                    _ => "git config user.email 'smith@localhost' && ".to_string(),
+                };
+                let commit_script = format!(
+                    "cd /workspace && test -n \"$(git status --porcelain)\" || {{ echo 'SMITH_NO_CHANGES'; exit 3; }} && {git_name}{git_email}git add -A && git commit -m '{msg}' 2>&1 && git fetch origin 2>&1 && if git show-ref --verify --quiet 'refs/remotes/origin/{branch}'; then git rebase 'refs/remotes/origin/{branch}' 2>&1 || {{ echo 'Rebase failed'; exit 1; }}; fi && git push origin 'HEAD:refs/heads/{branch}' 2>&1 && git rev-parse HEAD",
+                    git_name = git_name_cmd,
+                    git_email = git_email_cmd,
+                    msg = commit_msg,
+                    branch = branch_escaped
+                );
+
+                let commit_output = match docker::run_spawn_shell(&project, &branch, &commit_script)
+                {
+                    Ok(v) => v,
+                    Err(e) => {
+                        if e.contains("SMITH_NO_CHANGES") {
+                            dev_manifest.set_state("failed", "commit");
+                            dev_manifest
+                                .errors
+                                .push("No changes to commit after validation".to_string());
+                            let _ =
+                                write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                            println!("\n⚠ No changes were made by the development task");
+                            println!("  State Dir: {}", dev_run_dir);
+                            std::process::exit(1);
+                        }
+                        dev_manifest.errors.push(e.clone());
+                        dev_manifest.set_state("failed", "commit");
+                        let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+
+                let commit_hash = commit_output
+                    .lines()
+                    .rev()
+                    .map(str::trim)
+                    .find(|line| line.len() >= 7 && line.chars().all(|c| c.is_ascii_hexdigit()))
+                    .unwrap_or("")
+                    .to_string();
+
+                if commit_hash.is_empty() {
+                    dev_manifest
+                        .errors
+                        .push("Commit succeeded but hash could not be parsed".to_string());
+                    dev_manifest.set_state("failed", "commit");
+                    let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                    eprintln!("Error: unable to determine commit hash from commit output");
+                    std::process::exit(1);
+                }
+
+                dev_manifest.final_commit = Some(commit_hash.clone());
+                dev_manifest.set_state("completed", "done");
+                let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+
+                if let Some(report) = latest_report {
+                    if !report.non_blocking_issues.is_empty() {
+                        println!(
+                            "  {} Non-blocking assurance issues: {}",
+                            BULLET_YELLOW,
+                            report.non_blocking_issues.len()
+                        );
+                    }
+                }
+
+                println!("  {} Spawn develop completed", BULLET_GREEN);
+                println!("  Commit: {}", commit_hash);
+                println!(
+                    "  Plan: {} (id: {})",
+                    selected_plan, dev_manifest.short_plan_id
+                );
+                println!("  State Dir: {}", dev_run_dir);
             }
+            SpawnCommands::List => match docker::list_spawned_containers() {
+                Ok(containers) => {
+                    if containers.is_empty() {
+                        println!("No spawned agents");
+                    } else {
+                        println!("Spawned agents:");
+                        for c in containers {
+                            let status_color = if c.status.to_lowercase().contains("up") {
+                                ANSI_GREEN
+                            } else if c.status.to_lowercase().contains("exited") {
+                                ANSI_YELLOW
+                            } else {
+                                ANSI_RED
+                            };
+                            println!(
+                                "  {} {}::{} - {} (name: {}, id: {}, port: {}, image: {})",
+                                status_color,
+                                c.project,
+                                c.branch,
+                                c.status,
+                                c.container_name,
+                                c.container_id,
+                                c.port,
+                                c.image
+                            );
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            },
             SpawnCommands::Review {
                 project,
                 branch,
@@ -5424,10 +6368,7 @@ async fn main() {
                     let raw = match docker::read_spawn_file(&project, &branch, &manifest_path) {
                         Ok(v) => v,
                         Err(e) => {
-                            eprintln!(
-                                "Error: cannot load manifest for '{}': {}",
-                                selected_plan, e
-                            );
+                            eprintln!("Error: cannot load manifest for '{}': {}", selected_plan, e);
                             std::process::exit(1);
                         }
                     };
@@ -5446,7 +6387,9 @@ async fn main() {
                                 .push(format!("Invalid manifest recovered during reply: {}", e));
 
                             let planner_path = format!("{}/planner.json", run_dir);
-                            if let Ok(planner_raw) = docker::read_spawn_file(&project, &branch, &planner_path) {
+                            if let Ok(planner_raw) =
+                                docker::read_spawn_file(&project, &branch, &planner_path)
+                            {
                                 let summary = extract_high_level_summary_from_planner(&planner_raw);
                                 if !summary.is_empty() {
                                     inferred.summary = summary;
@@ -5558,14 +6501,18 @@ async fn main() {
                     }
 
                     if shown > 0 {
-                        println!("\n------------------------------------------------------------\n");
+                        println!(
+                            "\n------------------------------------------------------------\n"
+                        );
                     }
 
                     let mut manifest = manifest;
                     if manifest.summary.is_empty() || manifest.issues.is_empty() {
                         let run_dir = format!("/state/{}", dir_name);
                         let planner_path = format!("{}/{}", run_dir, manifest.artifacts.planner);
-                        if let Ok(planner_raw) = docker::read_spawn_file(&project, &branch, &planner_path) {
+                        if let Ok(planner_raw) =
+                            docker::read_spawn_file(&project, &branch, &planner_path)
+                        {
                             if manifest.summary.is_empty() {
                                 let summary = extract_high_level_summary_from_planner(&planner_raw);
                                 if !summary.is_empty() {
@@ -5578,7 +6525,13 @@ async fn main() {
                         }
                     }
 
-                    print_plan_block(&dir_name, &manifest);
+                    let assurance_path = format!("/state/{}/assurance.json", dir_name);
+                    let assurance_preview =
+                        docker::read_spawn_file(&project, &branch, &assurance_path)
+                            .ok()
+                            .and_then(|raw| extract_assurance_preview(&raw));
+
+                    print_plan_block(&dir_name, &manifest, assurance_preview.as_ref());
 
                     shown += 1;
                 }
@@ -5675,16 +6628,13 @@ async fn main() {
 
                         if let Some(ref desired_state) = state_filter {
                             let manifest_path = format!("/state/{}/manifest.json", dir_name);
-                            let actual_state = match docker::read_spawn_file(
-                                &project,
-                                &branch,
-                                &manifest_path,
-                            ) {
-                                Ok(raw) => serde_json::from_str::<PlanManifest>(&raw)
-                                    .map(|m| m.state.to_lowercase())
-                                    .unwrap_or_else(|_| "unknown".to_string()),
-                                Err(_) => "unknown".to_string(),
-                            };
+                            let actual_state =
+                                match docker::read_spawn_file(&project, &branch, &manifest_path) {
+                                    Ok(raw) => serde_json::from_str::<PlanManifest>(&raw)
+                                        .map(|m| m.state.to_lowercase())
+                                        .unwrap_or_else(|_| "unknown".to_string()),
+                                    Err(_) => "unknown".to_string(),
+                                };
                             if actual_state != *desired_state {
                                 continue;
                             }
@@ -5738,7 +6688,7 @@ async fn main() {
                             eprintln!("Error: --project required");
                             std::process::exit(1);
                         }
-                    }
+                    },
                 };
                 let branch = match branch {
                     Some(b) => b,
@@ -5810,24 +6760,22 @@ async fn main() {
                     }
                 }
             }
-            SpawnCommands::Prune => {
-                match docker::prune_spawned_containers() {
-                    Ok(removed) => {
-                        if removed.is_empty() {
-                            println!("No stopped containers to prune");
-                        } else {
-                            println!("Pruned {} containers:", removed.len());
-                            for c in removed {
-                                println!("  - {}", c);
-                            }
+            SpawnCommands::Prune => match docker::prune_spawned_containers() {
+                Ok(removed) => {
+                    if removed.is_empty() {
+                        println!("No stopped containers to prune");
+                    } else {
+                        println!("Pruned {} containers:", removed.len());
+                        for c in removed {
+                            println!("  - {}", c);
                         }
                     }
-                    Err(e) => {
-                        eprintln!("Error: {}", e);
-                        std::process::exit(1);
-                    }
                 }
-            }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            },
         },
     }
 }
@@ -5939,7 +6887,10 @@ mod tests {
         let cwd = std::env::current_dir().unwrap();
         let cwd_str = cwd.to_string_lossy();
         let normalized = normalize_repo_for_match(cwd_str.as_ref());
-        assert_eq!(normalized, Some(cwd.canonicalize().unwrap().to_string_lossy().into_owned()));
+        assert_eq!(
+            normalized,
+            Some(cwd.canonicalize().unwrap().to_string_lossy().into_owned())
+        );
         // Path that does not exist: returned as-is
         let missing = "/nonexistent/path/12345";
         assert_eq!(normalize_repo_for_match(missing), Some(missing.to_string()));

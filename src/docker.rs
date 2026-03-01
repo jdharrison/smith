@@ -963,12 +963,58 @@ pub fn write_spawn_file(
     }
 }
 
+/// Execute a shell command in a spawned container and return stdout.
+pub fn run_spawn_shell(project: &str, branch: &str, script: &str) -> Result<String, String> {
+    let name = spawn_container_name(project, branch);
+    let output = Command::new("docker")
+        .args(["exec", &name, "sh", "-lc", script])
+        .output()
+        .map_err(|e| format!("Failed running command in spawned container: {}", e))?;
+
+    if output.status.success() {
+        String::from_utf8(output.stdout)
+            .map_err(|e| format!("Invalid UTF-8 output from container command: {}", e))
+    } else {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let mut details = String::new();
+        if !stdout.trim().is_empty() {
+            details.push_str(stdout.trim());
+        }
+        if !stderr.trim().is_empty() {
+            if !details.is_empty() {
+                details.push('\n');
+            }
+            details.push_str(stderr.trim());
+        }
+        if details.is_empty() {
+            details = "unknown error".to_string();
+        }
+        Err(format!(
+            "Container command failed in '{}': {}",
+            name, details
+        ))
+    }
+}
+
 /// Run a prompt in a spawned container and stream raw output to the terminal.
 pub fn run_prompt_in_spawned_container(
     project: &str,
     branch: &str,
     prompt: &str,
     verbose: bool,
+) -> Result<(), String> {
+    run_prompt_in_spawned_container_with_options(project, branch, prompt, verbose, None, None)
+}
+
+/// Run a prompt in a spawned container with optional model and prompt-prefix overrides.
+pub fn run_prompt_in_spawned_container_with_options(
+    project: &str,
+    branch: &str,
+    prompt: &str,
+    verbose: bool,
+    model: Option<&str>,
+    prompt_prefix: Option<&str>,
 ) -> Result<(), String> {
     let name = spawn_container_name(project, branch);
     let mut args = vec![
@@ -984,6 +1030,18 @@ pub fn run_prompt_in_spawned_container(
         "json".to_string(),
         "--print-logs".to_string(),
     ];
+    if let Some(model) = model {
+        if !model.trim().is_empty() {
+            args.push("-m".to_string());
+            args.push(model.to_string());
+        }
+    }
+    if let Some(prefix) = prompt_prefix {
+        if !prefix.trim().is_empty() {
+            args.push("--prompt".to_string());
+            args.push(prefix.to_string());
+        }
+    }
     if verbose {
         args.push("--thinking".to_string());
     }
