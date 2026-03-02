@@ -2,6 +2,7 @@ use crate::tui::state::{
     Agent, AgentStatus, Pipeline, PipelineStage, PipelineStatus, Project, ProjectStatus,
     SystemStatus, UserPreferences,
 };
+use crate::tui::validation;
 use crate::tui::panels::{
     agents::render_agents_panel, dashboard::render_dashboard_panel,
     pipelines::render_pipelines_panel, projects::render_projects_panel,
@@ -367,6 +368,23 @@ fn handle_key_event(app: &mut App, key: KeyEvent) {
         }
         Key::Char('d') => {
             handle_d_key(app);
+        }
+        Key::Char('v') => {
+            // Write a development validation artifact to the approved path.
+            let artifact_path = "/state/dev-1772432915-g2o3/develop-1.json";
+            let plan_dir = "/state/plan-l0w3";
+            let exec_brief = "/state/dev-1772432915-g2o3/execution-brief.json";
+            match validation::write_develop_artifact(artifact_path, plan_dir, exec_brief) {
+                Ok(()) => {
+                    app.message = Some(format!(
+                        "Validation artifact written: {}",
+                        artifact_path
+                    ));
+                }
+                Err(e) => {
+                    app.message = Some(format!("Validation artifact failed: {}", e));
+                }
+            }
         }
         _ => {}
     }

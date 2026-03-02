@@ -1,0 +1,9 @@
+[package]
+name = "smith_tui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+crossterm = "0.26"
+anyhow = "1.0"
+libc = "0.2"
