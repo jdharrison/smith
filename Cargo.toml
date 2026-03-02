@@ -18,3 +18,6 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 tokio = { version = "1", features = ["full"] }
 libc = "0.2"
 ctrlc = "3"
+ratatui = "0.26"
+crossterm = "0.27"
+rusqlite = { version = "0.31", features = ["bundled"] }

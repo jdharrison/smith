@@ -1,6 +1,7 @@
 mod commands;
 mod docker;
 mod github;
+mod tui;
 
 use clap::{CommandFactory, Parser, Subcommand};
 use directories::ProjectDirs;
@@ -1312,6 +1313,8 @@ enum Commands {
     Help,
     /// Print version
     Version,
+    /// Open the TUI (Terminal User Interface)
+    Tui,
     #[command(next_help_heading = "Commands")]
     /// Local model/provider runtimes
     Model {
@@ -2775,6 +2778,12 @@ async fn main() {
         }
         Some(Commands::Version) => {
             println!("{}", env!("CARGO_PKG_VERSION"));
+        }
+        Some(Commands::Tui) => {
+            if let Err(e) = tui::run_tui() {
+                eprintln!("TUI error: {}", e);
+                std::process::exit(1);
+            }
         }
         Some(Commands::Uninstall {
             force,
