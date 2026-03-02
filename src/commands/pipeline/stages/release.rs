@@ -1,13 +1,14 @@
 use crate::*;
 
-pub async fn handle(cmd: AgentCommands) {
+pub async fn handle(cmd: RunCommands) {
     match cmd {
-        AgentCommands::Release {
+        RunCommands::Release {
             project,
             branch,
             base,
             plan,
             verbose,
+            ..
         } => {
             let project = match project {
                 Some(p) => p,
@@ -43,6 +44,12 @@ pub async fn handle(cmd: AgentCommands) {
                     std::process::exit(1);
                 });
             let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
+            let model_profile = resolve_project_model_profile(project_config.as_ref())
+                .unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+            let default_model = model_profile.model.as_deref();
 
             if let Err(e) = docker::ensure_spawn_state_dir(&project, &branch) {
                 eprintln!("Error: {}", e);
@@ -166,6 +173,11 @@ pub async fn handle(cmd: AgentCommands) {
             }
 
             let review_artifact_path = format!("{}/review.json", release_run_dir);
+            let review_producer_artifact_path = format!("{}/review-producer.json", release_run_dir);
+            let review_architect_artifact_path =
+                format!("{}/review-architect.json", release_run_dir);
+            let review_designer_artifact_path = format!("{}/review-designer.json", release_run_dir);
+            let review_summary_artifact_path = format!("{}/review-summary.json", release_run_dir);
             let integrate_artifact_path = format!("{}/integrate.json", release_run_dir);
             let sync_artifact_path = format!("{}/sync.json", release_run_dir);
 
@@ -187,44 +199,34 @@ pub async fn handle(cmd: AgentCommands) {
 
             release_manifest.set_phase("review");
             let _ = write_release_manifest(&project, &branch, &release_run_dir, &release_manifest);
-            let review_prompt = build_spawn_release_review_prompt(
-                &dev_manifest.task,
-                &plan_dir,
-                &dev_run_dir,
-                &develop_artifact_path,
-                &assurance_artifact_path,
-                &review_artifact_path,
-            );
-            if let Err(e) =
-                docker::run_prompt_in_spawned_container(&project, &branch, &review_prompt, verbose)
-            {
-                release_manifest.errors.push(e.clone());
-                release_manifest.set_state("failed", "review");
-                let _ =
-                    write_release_manifest(&project, &branch, &release_run_dir, &release_manifest);
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            }
 
-            let review_raw = match docker::read_spawn_file(&project, &branch, &review_artifact_path)
-            {
-                Ok(v) => v,
-                Err(e) => {
-                    release_manifest.errors.push(e.clone());
-                    release_manifest.set_state("failed", "review");
-                    let _ = write_release_manifest(
-                        &project,
-                        &branch,
-                        &release_run_dir,
-                        &release_manifest,
-                    );
-                    eprintln!("Error: review artifact missing: {}", e);
-                    std::process::exit(1);
-                }
-            };
-            let review_report = match parse_release_review_report(&review_raw) {
-                Ok(v) => v,
-                Err(e) => {
+            let reviewer_roles = [
+                ("producer", review_producer_artifact_path.as_str()),
+                ("architect", review_architect_artifact_path.as_str()),
+                ("designer", review_designer_artifact_path.as_str()),
+            ];
+            let mut role_reports: Vec<ReleaseRoleReviewReport> = Vec::new();
+            let mut all_non_blocking: Vec<ReleaseIssue> = Vec::new();
+            let mut blocking_roles: Vec<String> = Vec::new();
+
+            for (role, artifact_path) in reviewer_roles {
+                let review_prompt = build_spawn_release_review_prompt(
+                    role,
+                    &dev_manifest.task,
+                    &plan_dir,
+                    &dev_run_dir,
+                    &develop_artifact_path,
+                    &assurance_artifact_path,
+                    artifact_path,
+                );
+                if let Err(e) = docker::run_prompt_in_spawned_container_with_options(
+                    &project,
+                    &branch,
+                    &review_prompt,
+                    verbose,
+                    default_model,
+                    Some(&format!("@{}", role)),
+                ) {
                     release_manifest.errors.push(e.clone());
                     release_manifest.set_state("failed", "review");
                     let _ = write_release_manifest(
@@ -236,21 +238,110 @@ pub async fn handle(cmd: AgentCommands) {
                     eprintln!("Error: {}", e);
                     std::process::exit(1);
                 }
-            };
-            release_manifest.review_ready = Some(review_report.release_ready);
-            release_manifest.non_blocking_issues = review_report.non_blocking_issues.clone();
+
+                let review_raw = match docker::read_spawn_file(&project, &branch, artifact_path) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        release_manifest.errors.push(e.clone());
+                        release_manifest.set_state("failed", "review");
+                        let _ = write_release_manifest(
+                            &project,
+                            &branch,
+                            &release_run_dir,
+                            &release_manifest,
+                        );
+                        eprintln!("Error: review artifact missing for role '{}': {}", role, e);
+                        std::process::exit(1);
+                    }
+                };
+
+                let report = match parse_release_role_review_report(&review_raw, role) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        release_manifest.errors.push(e.clone());
+                        release_manifest.set_state("failed", "review");
+                        let _ = write_release_manifest(
+                            &project,
+                            &branch,
+                            &release_run_dir,
+                            &release_manifest,
+                        );
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                };
+
+                let signoff = report.signoff.trim().to_lowercase();
+                release_manifest
+                    .review_signoffs
+                    .insert(role.to_string(), signoff.clone());
+                all_non_blocking.extend(report.non_blocking_issues.clone());
+                if signoff != "pass" || !report.blocking_issues.is_empty() {
+                    blocking_roles.push(role.to_string());
+                }
+                role_reports.push(report);
+            }
+
+            release_manifest.blocking_roles = blocking_roles.clone();
+            let review_ready = blocking_roles.is_empty();
+            release_manifest.review_ready = Some(review_ready);
+            release_manifest.non_blocking_issues = all_non_blocking;
             let _ = write_release_manifest(&project, &branch, &release_run_dir, &release_manifest);
+
+            let mut summary_lines: Vec<String> = Vec::new();
+            let mut summary_blocking: Vec<ReleaseIssue> = Vec::new();
+            let mut summary_non_blocking: Vec<ReleaseIssue> = Vec::new();
+            let mut summary_evidence_refs: Vec<String> = Vec::new();
+            for report in &role_reports {
+                summary_lines.push(format!("{} signoff={}", report.role, report.signoff));
+                summary_blocking.extend(report.blocking_issues.clone());
+                summary_non_blocking.extend(report.non_blocking_issues.clone());
+                summary_evidence_refs.extend(report.evidence_refs.clone());
+            }
+            let summary_json = serde_json::json!({
+                "schema_version": 1,
+                "release_ready": review_ready,
+                "summary": summary_lines,
+                "blocking_roles": blocking_roles,
+                "blocking_issues": summary_blocking,
+                "non_blocking_issues": summary_non_blocking,
+                "evidence": summary_evidence_refs,
+                "generated_at_unix": now_unix(),
+            });
+            let summary_body = serde_json::to_string_pretty(&summary_json)
+                .map_err(|e| format!("Failed to serialize review summary artifact: {}", e))
+                .unwrap_or_else(|e| {
+                    release_manifest.errors.push(e.clone());
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+            if let Err(e) = docker::write_spawn_file(
+                &project,
+                &branch,
+                &review_summary_artifact_path,
+                &summary_body,
+            ) {
+                release_manifest.errors.push(e.clone());
+                release_manifest.set_state("failed", "review");
+                let _ =
+                    write_release_manifest(&project, &branch, &release_run_dir, &release_manifest);
+                eprintln!("Error: failed writing review summary artifact: {}", e);
+                std::process::exit(1);
+            }
+            let _ =
+                docker::write_spawn_file(&project, &branch, &review_artifact_path, &summary_body);
 
             let mut integration_failed = false;
             let mut integration_blocked = false;
 
-            if !review_report.release_ready || !review_report.blocking_issues.is_empty() {
+            if !review_ready {
                 integration_blocked = true;
                 release_manifest.integration_status = Some("blocked".to_string());
                 let integrate_json = serde_json::json!({
                     "schema_version": 1,
                     "status": "blocked",
                     "reason": "release_review_blocked",
+                    "blocking_roles": release_manifest.blocking_roles,
                     "strategy": Value::Null,
                     "merge_commit": Value::Null,
                     "pushed": false,
@@ -389,13 +480,18 @@ pub async fn handle(cmd: AgentCommands) {
             let _ = write_release_manifest(&project, &branch, &release_run_dir, &release_manifest);
             let sync_prompt = build_spawn_release_sync_prompt(
                 &plan_dir,
-                &review_artifact_path,
+                &review_summary_artifact_path,
                 &integrate_artifact_path,
                 &sync_artifact_path,
             );
-            if let Err(e) =
-                docker::run_prompt_in_spawned_container(&project, &branch, &sync_prompt, verbose)
-            {
+            if let Err(e) = docker::run_prompt_in_spawned_container_with_options(
+                &project,
+                &branch,
+                &sync_prompt,
+                verbose,
+                default_model,
+                Some("@planner"),
+            ) {
                 release_manifest.errors.push(e.clone());
                 release_manifest.set_state("failed", "sync");
                 let _ =

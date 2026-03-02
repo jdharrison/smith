@@ -1,8 +1,8 @@
 use crate::*;
 
-pub async fn handle(cmd: AgentCommands) {
+pub async fn handle(cmd: RunCommands) {
     match cmd {
-        AgentCommands::Review {
+        RunCommands::Review {
             project,
             branch,
             limit,

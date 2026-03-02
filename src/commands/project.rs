@@ -13,6 +13,7 @@ pub async fn handle(cmd: ProjectCommands) {
             script,
             commit_name,
             commit_email,
+            model,
         } => {
             let mut cfg = load_config().unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
@@ -25,6 +26,7 @@ pub async fn handle(cmd: ProjectCommands) {
             let script = script.filter(|s| !s.is_empty());
             let commit_name = commit_name.filter(|s| !s.is_empty());
             let commit_email = commit_email.filter(|s| !s.is_empty());
+            let model = model.filter(|s| !s.is_empty());
             let project = ProjectConfig {
                 name: name.clone(),
                 repo,
@@ -36,7 +38,7 @@ pub async fn handle(cmd: ProjectCommands) {
                 script,
                 commit_name,
                 commit_email,
-                agent: None,
+                model,
                 ask_setup_run: None,
                 ask_setup_check: None,
                 ask_execute_run: None,
@@ -92,6 +94,9 @@ pub async fn handle(cmd: ProjectCommands) {
                     }
                     if proj.github_token.is_some() {
                         parts.push_str(" (github-token: set)");
+                    }
+                    if let Some(ref model) = proj.model {
+                        parts.push_str(&format!(" (model: {})", model));
                     }
                     if let Some(ref script) = proj.script {
                         let truncated = if script.len() > 40 {
@@ -173,7 +178,7 @@ pub async fn handle(cmd: ProjectCommands) {
             script,
             commit_name,
             commit_email,
-            agent,
+            model,
             ask_setup,
             ask_execute,
             ask_validate,
@@ -201,7 +206,7 @@ pub async fn handle(cmd: ProjectCommands) {
                         && script.is_none()
                         && commit_name.is_none()
                         && commit_email.is_none()
-                        && agent.is_none()
+                        && model.is_none()
                         && ask_setup.is_none()
                         && ask_execute.is_none()
                         && ask_validate.is_none()
@@ -287,14 +292,14 @@ pub async fn handle(cmd: ProjectCommands) {
                         } else if proj.commit_email.is_some() && commit_email_in.is_empty() {
                             proj.commit_email = None;
                         }
-                        let agent_in = prompt_line(&format!(
-                            "  Agent [{}]: ",
-                            proj.agent.as_deref().unwrap_or("(none)")
+                        let model_in = prompt_line(&format!(
+                            "  Model [{}]: ",
+                            proj.model.as_deref().unwrap_or("(none)")
                         ));
-                        if !agent_in.is_empty() {
-                            proj.agent = Some(agent_in);
-                        } else if proj.agent.is_some() && agent_in.is_empty() {
-                            proj.agent = None;
+                        if !model_in.is_empty() {
+                            proj.model = Some(model_in);
+                        } else if proj.model.is_some() && model_in.is_empty() {
+                            proj.model = None;
                         }
                         println!("  Roles (Enter to keep current):");
                         let ask_setup_in = prompt_line(&format!(
@@ -460,11 +465,11 @@ pub async fn handle(cmd: ProjectCommands) {
                                 Some(new_commit_email)
                             };
                         }
-                        if let Some(new_agent) = agent {
-                            proj.agent = if new_agent.is_empty() {
+                        if let Some(new_model) = model {
+                            proj.model = if new_model.is_empty() {
                                 None
                             } else {
-                                Some(new_agent)
+                                Some(new_model)
                             };
                         }
                         // Parse role pairs: first is run, second is check (if provided)

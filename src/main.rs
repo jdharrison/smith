@@ -414,6 +414,30 @@ struct DevAssuranceIssue {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+struct DevSelfCheckIssue {
+    id: String,
+    severity: String,
+    title: String,
+    detail: String,
+    #[serde(default)]
+    related_ids: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct DevSelfCheckReport {
+    schema_version: u8,
+    attempt: u32,
+    pass: bool,
+    #[serde(default)]
+    summary: Vec<String>,
+    #[serde(default)]
+    blocking_issues: Vec<DevSelfCheckIssue>,
+    #[serde(default)]
+    non_blocking_issues: Vec<DevSelfCheckIssue>,
+    generated_at: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 struct DevAssuranceReport {
     schema_version: u8,
     verdict: String,
@@ -425,6 +449,9 @@ struct DevAssuranceReport {
     blocking_issues: Vec<DevAssuranceIssue>,
     #[serde(default)]
     non_blocking_issues: Vec<DevAssuranceIssue>,
+    required_verification_passed: bool,
+    #[serde(default)]
+    required_verification_evidence: Vec<String>,
     #[serde(default)]
     required_remediation: Vec<String>,
     generated_at: String,
@@ -434,6 +461,7 @@ struct DevAssuranceReport {
 struct DevAttemptRecord {
     attempt: u32,
     develop_artifact: String,
+    self_check_artifact: String,
     assurance_artifact: String,
     verdict: String,
     blocking_issues: usize,
@@ -551,6 +579,40 @@ fn parse_dev_assurance_report(raw: &str) -> Result<DevAssuranceReport, String> {
     if report.generated_at.trim().is_empty() {
         return Err("Assurance report missing generated_at".to_string());
     }
+    if (verdict == "pass" || verdict == "pass_with_risk") && !report.required_verification_passed {
+        return Err(
+            "Assurance report is inconsistent: pass/pass_with_risk requires required_verification_passed=true"
+                .to_string(),
+        );
+    }
+    if (verdict == "pass" || verdict == "pass_with_risk")
+        && report.required_verification_evidence.is_empty()
+    {
+        return Err("Assurance report missing required_verification_evidence".to_string());
+    }
+
+    Ok(report)
+}
+
+fn parse_dev_self_check_report(raw: &str) -> Result<DevSelfCheckReport, String> {
+    let report = serde_json::from_str::<DevSelfCheckReport>(raw)
+        .map_err(|e| format!("Invalid self-check artifact JSON: {}", e))?;
+
+    if report.schema_version != 1 {
+        return Err(format!(
+            "Unsupported self-check schema_version '{}', expected 1",
+            report.schema_version
+        ));
+    }
+    if report.generated_at.trim().is_empty() {
+        return Err("Self-check report missing generated_at".to_string());
+    }
+    if report.pass && !report.blocking_issues.is_empty() {
+        return Err(
+            "Self-check report is inconsistent: pass=true but blocking_issues not empty"
+                .to_string(),
+        );
+    }
 
     Ok(report)
 }
@@ -645,11 +707,54 @@ Do not skip writing the JSON artifact.
     )
 }
 
+fn build_spawn_self_check_prompt(
+    task: &str,
+    plan_dir: &str,
+    execution_brief_path: &str,
+    develop_artifact_path: &str,
+    self_check_artifact_path: &str,
+    attempt: u32,
+) -> String {
+    let escaped_task = task.replace('"', "\\\"");
+    format!(
+        r#"Run an internal developer self-check for attempt {attempt}.
+
+Task: \"{task}\"
+Plan directory: {plan_dir}
+Execution brief: {execution_brief_path}
+Developer artifact: {develop_artifact_path}
+
+Write STRICT JSON to {self_check_artifact_path} with this exact shape:
+{{
+  "schema_version": 1,
+  "attempt": {attempt},
+  "pass": true,
+  "summary": ["2-4 bullets"],
+  "blocking_issues": [{{"id": "SCB-001", "severity": "critical|high", "title": "...", "detail": "...", "related_ids": ["REQ-001"]}}],
+  "non_blocking_issues": [{{"id": "SCN-001", "severity": "medium|low", "title": "...", "detail": "...", "related_ids": ["AC-001"]}}],
+  "generated_at": "ISO-8601"
+}}
+
+Rules:
+1) pass must be false whenever blocking_issues is non-empty.
+2) Missing required validation evidence is blocking.
+3) Do not emit markdown or prose outside the JSON artifact.
+"#,
+        task = escaped_task,
+        plan_dir = plan_dir,
+        execution_brief_path = execution_brief_path,
+        develop_artifact_path = develop_artifact_path,
+        self_check_artifact_path = self_check_artifact_path,
+        attempt = attempt,
+    )
+}
+
 fn build_spawn_assurance_prompt(
     task: &str,
     plan_dir: &str,
     execution_brief_path: &str,
     develop_artifact_path: &str,
+    self_check_artifact_path: &str,
     assurance_artifact_path: &str,
     attempt: u32,
 ) -> String {
@@ -661,6 +766,7 @@ Task: \"{task}\"
 Plan directory: {plan_dir}
 Execution brief: {execution_brief_path}
 Developer artifact: {develop_artifact_path}
+Self-check artifact: {self_check_artifact_path}
 
 Produce a STRICT JSON artifact at {assurance_artifact_path} using this exact schema:
 {{
@@ -673,6 +779,8 @@ Produce a STRICT JSON artifact at {assurance_artifact_path} using this exact sch
   }},
   "blocking_issues": [{{"id": "BLK-001", "severity": "critical|high", "title": "...", "detail": "...", "related_ids": ["REQ-001"]}}],
   "non_blocking_issues": [{{"id": "NB-001", "severity": "medium|low", "title": "...", "detail": "...", "related_ids": ["AC-001"]}}],
+  "required_verification_passed": true,
+  "required_verification_evidence": ["path-or-proof"],
   "required_remediation": ["..."] ,
   "generated_at": "ISO-8601"
 }}
@@ -681,13 +789,15 @@ Rules:
 1) Put ALL release-blocking concerns in blocking_issues.
 2) Put informational/low-risk concerns in non_blocking_issues.
 3) Blocking issues must be empty only when verdict is pass or pass_with_risk.
-4) Do not emit markdown or prose outside the JSON artifact.
+4) required_verification_passed must be true for pass or pass_with_risk.
+5) Do not emit markdown or prose outside the JSON artifact.
 "#,
         attempt = attempt,
         task = escaped_task,
         plan_dir = plan_dir,
         execution_brief_path = execution_brief_path,
         develop_artifact_path = develop_artifact_path,
+        self_check_artifact_path = self_check_artifact_path,
         assurance_artifact_path = assurance_artifact_path,
     )
 }
@@ -703,9 +813,10 @@ struct ReleaseIssue {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-struct ReleaseReviewReport {
+struct ReleaseRoleReviewReport {
     schema_version: u8,
-    release_ready: bool,
+    role: String,
+    signoff: String,
     #[serde(default)]
     summary: Vec<String>,
     #[serde(default)]
@@ -713,7 +824,7 @@ struct ReleaseReviewReport {
     #[serde(default)]
     non_blocking_issues: Vec<ReleaseIssue>,
     #[serde(default)]
-    evidence: Vec<String>,
+    evidence_refs: Vec<String>,
     generated_at: String,
 }
 
@@ -735,6 +846,10 @@ struct ReleaseRunManifest {
     completed_at_unix: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     review_ready: Option<bool>,
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
+    review_signoffs: HashMap<String, String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    blocking_roles: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     integration_status: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -773,6 +888,8 @@ impl ReleaseRunManifest {
             updated_at_unix: now,
             completed_at_unix: None,
             review_ready: None,
+            review_signoffs: HashMap::new(),
+            blocking_roles: Vec::new(),
             integration_status: None,
             merge_strategy: None,
             merge_commit: None,
@@ -808,29 +925,45 @@ fn write_release_manifest(
     docker::write_spawn_file(project, branch, &manifest_path, &body)
 }
 
-fn parse_release_review_report(raw: &str) -> Result<ReleaseReviewReport, String> {
-    let report = serde_json::from_str::<ReleaseReviewReport>(raw)
-        .map_err(|e| format!("Invalid release review JSON: {}", e))?;
+fn parse_release_role_review_report(
+    raw: &str,
+    expected_role: &str,
+) -> Result<ReleaseRoleReviewReport, String> {
+    let report = serde_json::from_str::<ReleaseRoleReviewReport>(raw)
+        .map_err(|e| format!("Invalid release role review JSON: {}", e))?;
 
     if report.schema_version != 1 {
         return Err(format!(
-            "Unsupported release review schema_version '{}', expected 1",
+            "Unsupported release role review schema_version '{}', expected 1",
             report.schema_version
         ));
     }
     if report.generated_at.trim().is_empty() {
-        return Err("Release review report missing generated_at".to_string());
+        return Err("Release role review missing generated_at".to_string());
     }
-    if report.release_ready && !report.blocking_issues.is_empty() {
+    if report.role.trim().to_lowercase() != expected_role {
+        return Err(format!(
+            "Release role review role mismatch: expected '{}', got '{}'",
+            expected_role, report.role
+        ));
+    }
+    let signoff = report.signoff.trim().to_lowercase();
+    if signoff != "pass" && signoff != "fail" {
+        return Err(format!(
+            "Invalid role signoff '{}'; expected pass|fail",
+            report.signoff
+        ));
+    }
+    if signoff == "pass" && !report.blocking_issues.is_empty() {
         return Err(
-            "Release review report is inconsistent: release_ready=true but blocking_issues not empty"
-                .to_string(),
+            "Release role review inconsistent: signoff=pass with blocking_issues".to_string(),
         );
     }
     Ok(report)
 }
 
 fn build_spawn_release_review_prompt(
+    role: &str,
     task: &str,
     plan_dir: &str,
     dev_run_dir: &str,
@@ -840,7 +973,7 @@ fn build_spawn_release_review_prompt(
 ) -> String {
     let escaped_task = task.replace('"', "\\\"");
     format!(
-        r#"Run a release readiness review as @producer.
+        r#"Run a release readiness review as @{role}.
 
 Task: \"{task}\"
 Plan directory: {plan_dir}
@@ -851,20 +984,22 @@ Assurance artifact: {assurance_artifact_path}
 Write STRICT JSON to {review_artifact_path} with this exact shape:
 {{
   "schema_version": 1,
-  "release_ready": true,
+  "role": "{role}",
+  "signoff": "pass|fail",
   "summary": ["2-4 bullets"],
   "blocking_issues": [{{"id": "RB-001", "severity": "critical|high", "title": "...", "detail": "...", "related_ids": ["REQ-001"]}}],
   "non_blocking_issues": [{{"id": "RN-001", "severity": "medium|low", "title": "...", "detail": "...", "related_ids": ["AC-001"]}}],
-  "evidence": ["..."],
+  "evidence_refs": ["..."],
   "generated_at": "ISO-8601"
 }}
 
 Rules:
-1) release_ready must be false whenever blocking_issues is non-empty.
+1) signoff must be fail whenever blocking_issues is non-empty.
 2) Only include critical/high in blocking_issues.
 3) Include specific evidence for every blocking issue.
 4) Do not print markdown output outside the JSON artifact.
 "#,
+        role = role,
         task = escaped_task,
         plan_dir = plan_dir,
         dev_run_dir = dev_run_dir,
@@ -1520,6 +1655,9 @@ enum ProjectCommands {
         /// Git author email (optional, overrides local git config)
         #[arg(long)]
         commit_email: Option<String>,
+        /// Model profile name for this project (required for pipeline commands)
+        #[arg(long)]
+        model: Option<String>,
     },
     /// List all registered projects
     List,
@@ -1563,9 +1701,9 @@ enum ProjectCommands {
         /// Git author email (pass empty to clear)
         #[arg(long)]
         commit_email: Option<String>,
-        /// Agent name to use for this project (pass empty to clear)
+        /// Model profile name to use for this project (pass empty to clear)
         #[arg(long)]
-        agent: Option<String>,
+        model: Option<String>,
         /// Ask pipeline: setup_run and setup_check roles (e.g., "installer" or "installer analyst")
         #[arg(long, value_delimiter = ' ', num_args = 1..=2)]
         ask_setup: Option<Vec<String>>,
@@ -1607,8 +1745,7 @@ enum ProjectCommands {
 /// Pipeline commands (run via `smith run <cmd>`).
 #[derive(Subcommand)]
 enum RunCommands {
-    /// Internal pipeline entrypoint (use `smith run plan`)
-    #[command(hide = true)]
+    /// Run producer/architect/designer/planner and persist JSON artifacts under /state
     Plan {
         /// Project name (auto-detected from git repo if not specified)
         #[arg(long)]
@@ -1622,8 +1759,7 @@ enum RunCommands {
         /// Feature/request prompt to plan
         prompt: String,
     },
-    /// Internal pipeline entrypoint (use `smith run develop`)
-    #[command(hide = true)]
+    /// Execute a plan-driven development loop in a spawned container
     Develop {
         /// Project name (auto-detected from git repo if not specified)
         #[arg(long)]
@@ -1649,8 +1785,7 @@ enum RunCommands {
         /// Development task to execute
         task: String,
     },
-    /// Internal pipeline entrypoint (use `smith run release`)
-    #[command(hide = true)]
+    /// Run release pipeline for a completed plan (review -> integrate -> sync)
     Release {
         /// Project name (auto-detected from git repo if not specified)
         #[arg(long)]
@@ -1671,8 +1806,7 @@ enum RunCommands {
         #[arg(long)]
         pr: bool,
     },
-    /// Internal pipeline entrypoint (use `smith run review`)
-    #[command(hide = true)]
+    /// Review all plan artifacts in a spawned container
     Review {
         /// Project name (auto-detected from git repo if not specified)
         #[arg(long)]
@@ -1745,82 +1879,6 @@ enum AgentCommands {
         /// Prompt to send to the spawned agent
         prompt: String,
     },
-    /// Run producer/architect/designer/planner and persist JSON artifacts under /state
-    Plan {
-        /// Project name (auto-detected from git repo if not specified)
-        #[arg(long)]
-        project: Option<String>,
-        /// Branch name (auto-detected from current git branch if not specified)
-        #[arg(long)]
-        branch: Option<String>,
-        /// Show detailed agent output (enables print-logs and thinking)
-        #[arg(long)]
-        verbose: bool,
-        /// Feature/request prompt to plan
-        prompt: String,
-    },
-    /// Execute a plan-driven development loop in a spawned container
-    Develop {
-        /// Project name (auto-detected from git repo if not specified)
-        #[arg(long)]
-        project: Option<String>,
-        /// Branch name (auto-detected from current git branch if not specified)
-        #[arg(long)]
-        branch: Option<String>,
-        /// Base branch used when target branch does not exist remotely
-        #[arg(long)]
-        base: Option<String>,
-        /// Plan id to execute (full id or short id)
-        #[arg(long)]
-        plan: String,
-        /// Maximum develop/validate passes before failing
-        #[arg(long, default_value_t = 3)]
-        max_validate_passes: u32,
-        /// Show detailed agent output (enables print-logs and thinking)
-        #[arg(long)]
-        verbose: bool,
-        /// Development task to execute
-        task: String,
-    },
-    /// Run release pipeline for a completed plan (review -> integrate -> sync)
-    Release {
-        /// Project name (auto-detected from git repo if not specified)
-        #[arg(long)]
-        project: Option<String>,
-        /// Branch name (auto-detected from current git branch if not specified)
-        #[arg(long)]
-        branch: Option<String>,
-        /// Base branch for integration (default: project base branch or main)
-        #[arg(long)]
-        base: Option<String>,
-        /// Plan id to release (full id or short id)
-        #[arg(long)]
-        plan: String,
-        /// Show detailed agent output (enables print-logs and thinking)
-        #[arg(long)]
-        verbose: bool,
-    },
-    /// Review all plan artifacts in a spawned container
-    Review {
-        /// Project name (auto-detected from git repo if not specified)
-        #[arg(long)]
-        project: Option<String>,
-        /// Branch name (auto-detected from current git branch if not specified)
-        #[arg(long)]
-        branch: Option<String>,
-        /// Limit number of plans shown (newest first)
-        #[arg(long)]
-        limit: Option<usize>,
-        /// Optional state filter (not_started|planning|in_progress|completed|failed)
-        #[arg(long)]
-        state: Option<String>,
-        /// Filter to a specific plan by full id (plan-xxxx) or short id (xxxx)
-        #[arg(long)]
-        plan: Option<String>,
-        /// Submit a user reply for plan issues (requires --plan)
-        #[arg(long)]
-        reply: Option<String>,
-    },
     /// Remove plan runs from /state in a spawned container
     Clear {
         /// Project name (auto-detected from git repo if not specified)
@@ -1869,7 +1927,7 @@ struct SmithConfig {
     /// Named agents (e.g. opencode = OpenCode image). When set, used for resolve.
     #[serde(skip_serializing_if = "Option::is_none")]
     agents: Option<Vec<AgentEntry>>,
-    /// Which agent name to use for ask/dev/review (default: "opencode")
+    /// Default model profile name (used by install/model workflows)
     #[serde(skip_serializing_if = "Option::is_none")]
     current_agent: Option<String>,
 }
@@ -1967,9 +2025,9 @@ struct ProjectConfig {
     /// Commit author email (overrides local git config)
     #[serde(skip_serializing_if = "Option::is_none")]
     commit_email: Option<String>,
-    /// Agent name to use for this project (overrides current_agent)
+    /// Model profile name to use for this project
     #[serde(skip_serializing_if = "Option::is_none")]
-    agent: Option<String>,
+    model: Option<String>,
     /// Pipeline step: ask.setup.run
     #[serde(skip_serializing_if = "Option::is_none")]
     ask_setup_run: Option<String>,
@@ -2605,13 +2663,45 @@ fn resolve_commit_author(
     (commit_name, commit_email)
 }
 
-/// Resolve pipeline step role: returns (agent_name, role_name, mode, model, prompt)
-/// Looks up step in project config, parses "agent:role", resolves role from agent config
+fn resolve_project_model_profile(
+    project_config: Option<&ProjectConfig>,
+) -> Result<AgentEntry, String> {
+    let project = project_config.ok_or_else(|| {
+        "Project configuration is required for pipeline model resolution".to_string()
+    })?;
+    let model_profile = project
+        .model
+        .as_deref()
+        .ok_or_else(|| {
+            format!(
+                "Project '{}' is missing `model`; set it via `smith project update {} --model <profile>`",
+                project.name, project.name
+            )
+        })?;
+
+    let cfg = load_config()?;
+    let agents = cfg.agents.as_ref().ok_or_else(|| {
+        "No model profiles configured; add one with `smith model add`".to_string()
+    })?;
+
+    agents
+        .iter()
+        .find(|a| a.name == model_profile)
+        .cloned()
+        .ok_or_else(|| {
+            format!(
+                "Project '{}' references unknown model profile '{}'; add it with `smith model add {}`",
+                project.name, model_profile, model_profile
+            )
+        })
+}
+
+/// Resolve pipeline step role: returns (profile_name, role_name, mode, model, prompt)
+/// Looks up step in project config, parses "profile:role", resolves role from configured model profile
 #[allow(clippy::type_complexity)]
 fn resolve_pipeline_role(
     project_config: Option<&ProjectConfig>,
     step: &str,
-    current_agent: Option<&str>,
 ) -> Option<(
     String,
     String,
@@ -2624,10 +2714,8 @@ fn resolve_pipeline_role(
         Err(_) => return None,
     };
 
-    // Get agent name from project or current_agent
-    let agent_name = project_config
-        .and_then(|p| p.agent.clone())
-        .or_else(|| current_agent.map(String::from))?;
+    // Get model profile name from project
+    let agent_name = project_config.and_then(|p| p.model.clone())?;
 
     // Get step mapping from project config
     let step_mapping = match step {
@@ -2708,9 +2796,7 @@ fn resolve_pipeline_roles(
     ];
 
     for (step_key, step_name) in steps {
-        if let Some((_, _, _, model, prompt)) =
-            resolve_pipeline_role(project_config, &step_name, None)
-        {
+        if let Some((_, _, _, model, prompt)) = resolve_pipeline_role(project_config, &step_name) {
             let role_info = RoleInfo::new(model, prompt);
             match step_key {
                 "setup_run" => roles.setup_run = Some(role_info),
@@ -2820,7 +2906,7 @@ mod tests {
             script: None,
             commit_name: None,
             commit_email: None,
-            agent: None,
+            model: None,
             ask_setup_run: None,
             ask_setup_check: None,
             ask_execute_run: None,
@@ -2934,10 +3020,11 @@ mod tests {
     }
 
     #[test]
-    fn parse_release_review_report_rejects_inconsistent_ready_state() {
+    fn parse_release_role_review_report_rejects_inconsistent_signoff() {
         let raw = r#"{
   "schema_version": 1,
-  "release_ready": true,
+  "role": "producer",
+  "signoff": "pass",
   "summary": ["ok"],
   "blocking_issues": [{
     "id": "RB-1",
@@ -2947,10 +3034,10 @@ mod tests {
     "related_ids": []
   }],
   "non_blocking_issues": [],
-  "evidence": ["x"],
+  "evidence_refs": ["x"],
   "generated_at": "2026-01-01T00:00:00Z"
 }"#;
-        assert!(parse_release_review_report(raw).is_err());
+        assert!(parse_release_role_review_report(raw, "producer").is_err());
     }
 
     #[test]

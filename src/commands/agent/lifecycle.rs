@@ -552,6 +552,5 @@ pub async fn handle(cmd: AgentCommands) {
                 std::process::exit(1);
             }
         },
-        _ => unreachable!("non-lifecycle command routed to lifecycle handler"),
     }
 }

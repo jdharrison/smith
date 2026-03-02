@@ -1,8 +1,10 @@
 use crate::*;
 
-pub async fn handle(cmd: AgentCommands) {
+const MAX_SELF_CHECK_PASSES: u32 = 2;
+
+pub async fn handle(cmd: RunCommands) {
     match cmd {
-        AgentCommands::Develop {
+        RunCommands::Develop {
             project,
             branch,
             base,
@@ -10,6 +12,7 @@ pub async fn handle(cmd: AgentCommands) {
             max_validate_passes,
             verbose,
             task,
+            ..
         } => {
             let project = match project {
                 Some(p) => p,
@@ -52,6 +55,12 @@ pub async fn handle(cmd: AgentCommands) {
             let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
             let (commit_name, commit_email) = resolve_commit_author(project_config.as_ref());
             let pipeline_roles = resolve_pipeline_roles(project_config.as_ref(), "dev");
+            let model_profile = resolve_project_model_profile(project_config.as_ref())
+                .unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+            let default_model = model_profile.model.as_deref();
 
             if let Err(e) = docker::ensure_spawn_state_dir(&project, &branch) {
                 eprintln!("Error: {}", e);
@@ -250,49 +259,151 @@ pub async fn handle(cmd: AgentCommands) {
             let mut latest_report: Option<DevAssuranceReport> = None;
             for attempt in 1..=max_validate_passes {
                 let develop_artifact_path = format!("{}/develop-{}.json", dev_run_dir, attempt);
+                let self_check_artifact_path =
+                    format!("{}/self-check-{}.json", dev_run_dir, attempt);
                 let assurance_artifact_path = format!("{}/assurance-{}.json", dev_run_dir, attempt);
 
-                dev_manifest.set_phase(&format!("develop-{}", attempt));
-                let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
-                let develop_prompt = build_spawn_develop_prompt(
-                    &task,
-                    &plan_dir,
-                    &execution_brief_path,
-                    &develop_artifact_path,
-                    attempt,
-                );
-                if let Err(e) = docker::run_prompt_in_spawned_container_with_options(
-                    &project,
-                    &branch,
-                    &develop_prompt,
-                    verbose,
-                    pipeline_roles
-                        .execute_run
-                        .as_ref()
-                        .and_then(|r| r.model.as_deref()),
-                    pipeline_roles
-                        .execute_run
-                        .as_ref()
-                        .and_then(|r| r.prompt.as_deref()),
-                ) {
-                    dev_manifest.errors.push(e.clone());
-                    dev_manifest.set_state("failed", &format!("develop-{}", attempt));
+                let mut self_check_passed = false;
+                for self_pass in 1..=MAX_SELF_CHECK_PASSES {
+                    dev_manifest.set_phase(&format!("develop-{}-{}", attempt, self_pass));
                     let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
+                    let develop_prompt = build_spawn_develop_prompt(
+                        &task,
+                        &plan_dir,
+                        &execution_brief_path,
+                        &develop_artifact_path,
+                        attempt,
+                    );
+                    if let Err(e) = docker::run_prompt_in_spawned_container_with_options(
+                        &project,
+                        &branch,
+                        &develop_prompt,
+                        verbose,
+                        pipeline_roles
+                            .execute_run
+                            .as_ref()
+                            .and_then(|r| r.model.as_deref())
+                            .or(default_model),
+                        pipeline_roles
+                            .execute_run
+                            .as_ref()
+                            .and_then(|r| r.prompt.as_deref()),
+                    ) {
+                        dev_manifest.errors.push(e.clone());
+                        dev_manifest.set_state("failed", &format!("develop-{}", attempt));
+                        let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+
+                    if !docker::spawn_file_exists(&project, &branch, &develop_artifact_path)
+                        .unwrap_or(false)
+                    {
+                        let msg = format!(
+                            "Developer pass {} did not produce required artifact {}",
+                            attempt, develop_artifact_path
+                        );
+                        dev_manifest.errors.push(msg.clone());
+                        dev_manifest.set_state("failed", &format!("develop-{}", attempt));
+                        let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                        eprintln!("Error: {}", msg);
+                        std::process::exit(1);
+                    }
+
+                    dev_manifest.set_phase(&format!("self-check-{}-{}", attempt, self_pass));
+                    let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                    let self_check_prompt = build_spawn_self_check_prompt(
+                        &task,
+                        &plan_dir,
+                        &execution_brief_path,
+                        &develop_artifact_path,
+                        &self_check_artifact_path,
+                        attempt,
+                    );
+                    if let Err(e) = docker::run_prompt_in_spawned_container_with_options(
+                        &project,
+                        &branch,
+                        &self_check_prompt,
+                        verbose,
+                        pipeline_roles
+                            .execute_check
+                            .as_ref()
+                            .and_then(|r| r.model.as_deref())
+                            .or(default_model),
+                        pipeline_roles
+                            .execute_check
+                            .as_ref()
+                            .and_then(|r| r.prompt.as_deref()),
+                    ) {
+                        dev_manifest.errors.push(e.clone());
+                        dev_manifest.set_state("failed", &format!("self-check-{}", attempt));
+                        let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+
+                    let self_check_raw =
+                        match docker::read_spawn_file(&project, &branch, &self_check_artifact_path)
+                        {
+                            Ok(v) => v,
+                            Err(e) => {
+                                dev_manifest.errors.push(e.clone());
+                                dev_manifest
+                                    .set_state("failed", &format!("self-check-{}", attempt));
+                                let _ = write_dev_manifest(
+                                    &project,
+                                    &branch,
+                                    &dev_run_dir,
+                                    &dev_manifest,
+                                );
+                                eprintln!(
+                                    "Error: self-check artifact missing for pass {}: {}",
+                                    attempt, e
+                                );
+                                std::process::exit(1);
+                            }
+                        };
+
+                    let self_check_report = match parse_dev_self_check_report(&self_check_raw) {
+                        Ok(r) => r,
+                        Err(e) => {
+                            dev_manifest.errors.push(e.clone());
+                            dev_manifest.set_state("failed", &format!("self-check-{}", attempt));
+                            let _ =
+                                write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        }
+                    };
+
+                    if self_check_report.pass {
+                        self_check_passed = true;
+                        break;
+                    }
+
+                    if self_pass == MAX_SELF_CHECK_PASSES {
+                        dev_manifest.errors.push(format!(
+                            "Self-check failed for attempt {} after {} passes",
+                            attempt, MAX_SELF_CHECK_PASSES
+                        ));
+                        dev_manifest.set_state("failed", "self-check");
+                        let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
+                        eprintln!(
+                            "Error: self-check failed for attempt {} after {} passes",
+                            attempt, MAX_SELF_CHECK_PASSES
+                        );
+                        println!("  State Dir: {}", dev_run_dir);
+                        std::process::exit(1);
+                    }
                 }
 
-                if !docker::spawn_file_exists(&project, &branch, &develop_artifact_path)
-                    .unwrap_or(false)
-                {
-                    let msg = format!(
-                        "Developer pass {} did not produce required artifact {}",
-                        attempt, develop_artifact_path
-                    );
-                    dev_manifest.errors.push(msg.clone());
-                    dev_manifest.set_state("failed", &format!("develop-{}", attempt));
+                if !self_check_passed {
+                    dev_manifest
+                        .errors
+                        .push(format!("Self-check did not pass for attempt {}", attempt));
+                    dev_manifest.set_state("failed", "self-check");
                     let _ = write_dev_manifest(&project, &branch, &dev_run_dir, &dev_manifest);
-                    eprintln!("Error: {}", msg);
+                    eprintln!("Error: self-check did not pass for attempt {}", attempt);
                     std::process::exit(1);
                 }
 
@@ -303,6 +414,7 @@ pub async fn handle(cmd: AgentCommands) {
                     &plan_dir,
                     &execution_brief_path,
                     &develop_artifact_path,
+                    &self_check_artifact_path,
                     &assurance_artifact_path,
                     attempt,
                 );
@@ -314,7 +426,8 @@ pub async fn handle(cmd: AgentCommands) {
                     pipeline_roles
                         .validate_run
                         .as_ref()
-                        .and_then(|r| r.model.as_deref()),
+                        .and_then(|r| r.model.as_deref())
+                        .or(default_model),
                     pipeline_roles
                         .validate_run
                         .as_ref()
@@ -368,6 +481,7 @@ pub async fn handle(cmd: AgentCommands) {
                 dev_manifest.attempts.push(DevAttemptRecord {
                     attempt,
                     develop_artifact: develop_artifact_path,
+                    self_check_artifact: self_check_artifact_path,
                     assurance_artifact: assurance_artifact_path,
                     verdict: report.verdict.clone(),
                     blocking_issues: report.blocking_issues.len(),

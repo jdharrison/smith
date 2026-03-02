@@ -2,9 +2,9 @@ use crate::*;
 use std::collections::HashSet;
 use std::io::IsTerminal;
 
-pub async fn handle(cmd: AgentCommands) {
+pub async fn handle(cmd: RunCommands) {
     match cmd {
-        AgentCommands::Plan {
+        RunCommands::Plan {
             project,
             branch,
             verbose,
@@ -38,6 +38,18 @@ pub async fn handle(cmd: AgentCommands) {
                     }
                 }
             };
+
+            let project_config =
+                resolve_project_config(Some(project.clone())).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+            let model_profile = resolve_project_model_profile(project_config.as_ref())
+                .unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+            let default_model = model_profile.model.as_deref();
 
             if let Err(e) = docker::ensure_spawn_state_dir(&project, &branch) {
                 eprintln!("Error: {}", e);
@@ -104,8 +116,14 @@ pub async fn handle(cmd: AgentCommands) {
             }
 
             let plan_prompt = build_spawn_plan_prompt(&prompt, &run_dir);
-            match docker::run_prompt_in_spawned_container(&project, &branch, &plan_prompt, verbose)
-            {
+            match docker::run_prompt_in_spawned_container_with_options(
+                &project,
+                &branch,
+                &plan_prompt,
+                verbose,
+                default_model,
+                None,
+            ) {
                 Ok(()) => {
                     if let Some(stop) = tracker_stop.take() {
                         stop.store(true, Ordering::SeqCst);

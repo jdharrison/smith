@@ -424,6 +424,17 @@ pub async fn handle_install() {
             } else {
                 Some(script_in)
             };
+            let model_in = prompt_line(&format!(
+                "  Model profile for this project [{}]: ",
+                cfg.current_agent.as_deref().unwrap_or(DEFAULT_AGENT_NAME)
+            ));
+            let model = if model_in.is_empty() {
+                cfg.current_agent
+                    .clone()
+                    .or_else(|| Some(DEFAULT_AGENT_NAME.to_string()))
+            } else {
+                Some(model_in)
+            };
             let project = ProjectConfig {
                 name: name.clone(),
                 repo,
@@ -435,7 +446,7 @@ pub async fn handle_install() {
                 script,
                 commit_name: None,
                 commit_email: None,
-                agent: None,
+                model,
                 ask_setup_run: None,
                 ask_setup_check: None,
                 ask_execute_run: None,
@@ -481,7 +492,7 @@ pub async fn handle_install() {
         "  {} You're ready to run agentic pipelines via `smith run`",
         BULLET_GREEN
     );
-    println!("     (e.g. smith run dev, smith run ask, smith run review)");
+    println!("     (e.g. smith run plan, smith run develop, smith run review)");
 }
 
 pub async fn handle_uninstall(force: bool, remove_config: bool, remove_images: bool) {
