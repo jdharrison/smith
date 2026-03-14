@@ -39,6 +39,18 @@ pub async fn handle(cmd: RunCommands) {
                 }
             };
 
+            let auto_started = ensure_spawned_container_for_pipeline(&project, &branch, true)
+                .unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+            if auto_started {
+                println!(
+                    "  {} Started spawned agent for {}:{}",
+                    BULLET_BLUE, project, branch
+                );
+            }
+
             let project_config =
                 resolve_project_config(Some(project.clone())).unwrap_or_else(|e| {
                     eprintln!("Error: {}", e);

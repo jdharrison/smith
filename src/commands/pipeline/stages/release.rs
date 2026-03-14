@@ -8,6 +8,7 @@ pub async fn handle(cmd: RunCommands) {
             base,
             plan,
             verbose,
+            keep_agent,
             ..
         } => {
             let project = match project {
@@ -37,6 +38,11 @@ pub async fn handle(cmd: RunCommands) {
                     }
                 }
             };
+
+            ensure_spawned_container_for_pipeline(&project, &branch, false).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
 
             let project_config =
                 resolve_project_config(Some(project.clone())).unwrap_or_else(|e| {
@@ -549,6 +555,25 @@ pub async fn handle(cmd: RunCommands) {
                 );
                 println!("  State Dir: {}", release_run_dir);
                 std::process::exit(1);
+            }
+
+            if !keep_agent {
+                if let Err(e) = docker::stop_spawned_container(&project, &branch) {
+                    eprintln!(
+                        "  {} Release succeeded, but failed to stop agent {}:{}: {}",
+                        BULLET_YELLOW, project, branch, e
+                    );
+                } else {
+                    println!(
+                        "  {} Stopped spawned agent for {}:{}",
+                        BULLET_BLUE, project, branch
+                    );
+                }
+            } else {
+                println!(
+                    "  {} Keeping spawned agent running for {}:{} (--keep-agent)",
+                    BULLET_BLUE, project, branch
+                );
             }
 
             println!("  {} Spawn release completed", BULLET_GREEN);

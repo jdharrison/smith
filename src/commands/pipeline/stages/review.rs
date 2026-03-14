@@ -38,6 +38,11 @@ pub async fn handle(cmd: RunCommands) {
                 }
             };
 
+            ensure_spawned_container_for_pipeline(&project, &branch, false).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+
             if let Err(e) = docker::ensure_spawn_state_dir(&project, &branch) {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);

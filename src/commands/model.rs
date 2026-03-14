@@ -183,10 +183,8 @@ pub async fn handle(cmd: ModelCommands) {
                 println!("      Roles:    {}", roles_str);
                 let env_str = match env_map.as_ref() {
                     Some(m) if !m.is_empty() => {
-                        let mut parts: Vec<String> = m
-                            .iter()
-                            .map(|(k, v)| format!("{}<-{}", k, v))
-                            .collect();
+                        let mut parts: Vec<String> =
+                            m.iter().map(|(k, v)| format!("{}<-{}", k, v)).collect();
                         parts.sort();
                         parts.join(", ")
                     }
@@ -302,10 +300,8 @@ pub async fn handle(cmd: ModelCommands) {
                         }
                         let env_current = match entry.env.as_ref() {
                             Some(m) if !m.is_empty() => {
-                                let mut parts: Vec<String> = m
-                                    .iter()
-                                    .map(|(k, v)| format!("{}<-{}", k, v))
-                                    .collect();
+                                let mut parts: Vec<String> =
+                                    m.iter().map(|(k, v)| format!("{}<-{}", k, v)).collect();
                                 parts.sort();
                                 parts.join(",")
                             }

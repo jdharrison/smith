@@ -42,6 +42,11 @@ pub async fn handle(cmd: RunCommands) {
                 }
             };
 
+            ensure_spawned_container_for_pipeline(&project, &branch, false).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+
             if max_validate_passes == 0 {
                 eprintln!("Error: --max-validate-passes must be >= 1");
                 std::process::exit(1);

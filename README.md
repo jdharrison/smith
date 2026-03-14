@@ -68,6 +68,17 @@ smith run review feature/login --project myproject
 smith run review feature/login --project myproject --base main --verbose
 ```
 
+### Spawn pipeline lifecycle (v0.3.0)
+
+The plan/develop/release pipeline uses project+branch scoped spawned containers (`agent_<project>_<branch>`).
+
+- `smith run plan` auto-starts the spawned container if needed and leaves it running.
+- `smith run review` fails fast when the spawned container is not running.
+- `smith run develop` fails fast when the spawned container is not running (expects plan-initialized workspace/state).
+- `smith run release` requires the container to be running and only stops it after full successful release.
+- Use `smith run release --keep-agent` to keep the container running after success for debugging.
+- If release is blocked or fails, the container remains running for diagnosis.
+
 Use **SSH repository URLs** (e.g. `git@github.com:user/repo.git`). The pipeline mounts your host `~/.ssh` and forwards `SSH_AUTH_SOCK` when set, so host auth (e.g. `ssh-add`) works. Use `--ssh-key <path>` to supply a specific key. Projects can store an image and SSH key via `smith project add/update`.
 
 ### How does the pipeline choose the container image?

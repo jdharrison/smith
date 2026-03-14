@@ -1811,6 +1811,9 @@ enum RunCommands {
         /// Close matching open pull request after successful integration
         #[arg(long)]
         pr: bool,
+        /// Keep spawned agent container running after successful release
+        #[arg(long)]
+        keep_agent: bool,
     },
     /// Review all plan artifacts in a spawned container
     Review {
@@ -2357,10 +2360,7 @@ fn parse_agent_env_mappings(values: &[String]) -> Result<HashMap<String, String>
                 .chars()
                 .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
         {
-            return Err(format!(
-                "Invalid --env '{}': KEY must use [A-Z0-9_]",
-                raw
-            ));
+            return Err(format!("Invalid --env '{}': KEY must use [A-Z0-9_]", raw));
         }
 
         let host_key = value.strip_prefix('$').ok_or_else(|| {
@@ -2822,6 +2822,82 @@ fn resolve_project_model_profile(
                 project.name, model_profile, model_profile
             )
         })
+}
+
+fn is_spawned_container_running(project: &str, branch: &str) -> Result<bool, String> {
+    let container_name = docker::spawn_container_name(project, branch);
+    if !docker::container_exists(&container_name)? {
+        return Ok(false);
+    }
+
+    let output = Command::new("docker")
+        .args(["inspect", &container_name, "-f", "{{.State.Running}}"])
+        .output()
+        .map_err(|e| format!("Failed to inspect spawned container state: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!(
+            "Failed to inspect spawned container '{}': {}",
+            container_name,
+            stderr.trim()
+        ));
+    }
+
+    Ok(String::from_utf8_lossy(&output.stdout)
+        .trim()
+        .eq_ignore_ascii_case("true"))
+}
+
+fn ensure_spawned_container_for_pipeline(
+    project: &str,
+    branch: &str,
+    auto_start: bool,
+) -> Result<bool, String> {
+    if is_spawned_container_running(project, branch)? {
+        return Ok(false);
+    }
+
+    if !auto_start {
+        return Err(format!(
+            "Spawned agent is not running for {}:{}; run `smith run plan --project {} --branch {} \"<prompt>\"` or `smith agent start --project {} --branch {}` first",
+            project, branch, project, branch, project, branch
+        ));
+    }
+
+    let project_config = resolve_project_config(Some(project.to_string()))?
+        .ok_or_else(|| format!("Project '{}' not found", project))?;
+
+    let injected_env = if project_config.model.is_some() {
+        let model_profile = resolve_project_model_profile(Some(&project_config))?;
+        resolve_agent_env_bindings(model_profile.env.as_ref())?
+    } else {
+        Vec::new()
+    };
+
+    let image = project_config
+        .image
+        .clone()
+        .unwrap_or_else(|| DEFAULT_AGENT_IMAGE.to_string());
+    let repo = project_config.repo.clone();
+    let ssh_key = project_config.ssh_key.as_ref().map(PathBuf::from);
+    let commit_name = project_config.commit_name.clone();
+    let commit_email = project_config.commit_email.clone();
+    let port = docker::spawn_container_port(project, branch);
+
+    let _ = docker::start_spawned_container(
+        project,
+        branch,
+        port,
+        &image,
+        &repo,
+        ssh_key.as_deref(),
+        commit_name.as_deref(),
+        commit_email.as_deref(),
+        &injected_env,
+    )?;
+
+    Ok(true)
 }
 
 /// Resolve pipeline step role: returns (profile_name, role_name, mode, model, prompt)
