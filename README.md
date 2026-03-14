@@ -149,6 +149,23 @@ All commands **fetch from the configured remote** and **reset/checkout to the la
   - `--base <branch>` — Base branch to compare against (optional).  
   - `--repo`, `--project`, `--image`, `--ssh-key`, `--keep-alive`, `--timeout`, `--verbose` — Same as above.
 
+### Model profile env passthrough
+
+Use model profile env mappings to inject host environment variables into spawned project agent containers.
+
+- Add/update mappings with repeatable `--env` flags:
+  ```bash
+  smith model add opencode --provider openai --model gpt-5 --env 'OPENAI_API_KEY=$OPENAI_API_KEY'
+  smith model update opencode --env 'OPENAI_API_KEY=$OPENAI_API_KEY' --env 'OPENROUTER_API_KEY=$OPENROUTER_API_KEY'
+  ```
+- Clear mappings on update by passing an empty env value:
+  ```bash
+  smith model update opencode --env ''
+  ```
+- Always quote the `--env` value so your shell does not expand `$HOST_ENV` before smith parses it.
+- If a mapped host env is missing or empty at runtime, `smith agent start` fails fast with a clear error.
+- Security note: injected values are passed to Docker as container environment variables; treat host access and Docker inspect permissions accordingly.
+
 ### Project commands — `smith project <cmd>`
 
 - **`smith project add <name> --repo <path-or-url>`**  

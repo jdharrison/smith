@@ -55,6 +55,19 @@ pub async fn handle(cmd: AgentCommands) {
                 .ok_or_else(|| format!("Project '{}' not found", project))
                 .unwrap();
 
+            let injected_env = if proj.model.is_some() {
+                let model_profile = resolve_project_model_profile(Some(proj)).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                resolve_agent_env_bindings(model_profile.env.as_ref()).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                })
+            } else {
+                Vec::new()
+            };
+
             let image = proj
                 .image
                 .clone()
@@ -77,6 +90,14 @@ pub async fn handle(cmd: AgentCommands) {
             println!("       Image: {}", image);
             println!("       Repo: {}", repo);
             println!("       Port: {}", final_port);
+            if !injected_env.is_empty() {
+                let keys = injected_env
+                    .iter()
+                    .map(|(k, _)| k.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                println!("       Injected env: {}", keys);
+            }
             match docker::host_opencode_config_dir() {
                 Some(path) if path.exists() => {
                     println!(
@@ -106,6 +127,7 @@ pub async fn handle(cmd: AgentCommands) {
                 ssh_key.as_deref(),
                 commit_name.as_deref(),
                 commit_email.as_deref(),
+                &injected_env,
             ) {
                 Ok(actual_port) => {
                     let url = clickable_agent_url(actual_port);

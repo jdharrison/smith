@@ -638,6 +638,7 @@ pub fn start_spawned_container(
     ssh_key: Option<&Path>,
     commit_name: Option<&str>,
     commit_email: Option<&str>,
+    env_vars: &[(String, String)],
 ) -> Result<u16, String> {
     let container_name = spawn_container_name(project, branch);
 
@@ -787,6 +788,10 @@ exec opencode serve --hostname 0.0.0.0 --port {port}"#,
             "-v".to_string(),
             format!("{}:/root/.config/opencode:ro", cfg_dir.to_string_lossy()),
         ]);
+    }
+
+    for (key, value) in env_vars {
+        args.extend(["-e".to_string(), format!("{}={}", key, value)]);
     }
 
     // Forward SSH agent if available

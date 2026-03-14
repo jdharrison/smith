@@ -12,11 +12,23 @@ pub async fn handle(cmd: ModelCommands) {
             base_url,
             port,
             enabled,
+            env,
         } => {
             let mut cfg = load_config().unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             });
+            let env_map = match env.as_ref() {
+                Some(entries) => match parse_agent_env_mappings(entries) {
+                    Ok(v) if !v.is_empty() => Some(v),
+                    Ok(_) => None,
+                    Err(e) => {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    }
+                },
+                None => None,
+            };
             if let Err(e) = add_agent_to_config(
                 &mut cfg,
                 name.clone(),
@@ -30,6 +42,7 @@ pub async fn handle(cmd: ModelCommands) {
                 enabled,
                 None,
                 None,
+                env_map,
             ) {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
@@ -60,6 +73,7 @@ pub async fn handle(cmd: ModelCommands) {
                 Option<String>,
                 Option<bool>,
                 Option<HashMap<String, AgentRole>>,
+                Option<HashMap<String, String>>,
                 u16,
             )> = if list.is_empty() {
                 vec![(
@@ -71,6 +85,7 @@ pub async fn handle(cmd: ModelCommands) {
                     None,
                     None,
                     Some(true),
+                    None,
                     None,
                     base,
                 )]
@@ -88,6 +103,7 @@ pub async fn handle(cmd: ModelCommands) {
                             e.base_url.clone(),
                             e.enabled,
                             e.roles.clone(),
+                            e.env.clone(),
                             agent_port(e, i),
                         )
                     })
@@ -103,6 +119,7 @@ pub async fn handle(cmd: ModelCommands) {
                 _base_url,
                 enabled,
                 roles,
+                env_map,
                 port,
             ) in &agents
             {
@@ -164,6 +181,18 @@ pub async fn handle(cmd: ModelCommands) {
                     _ => "-".to_string(),
                 };
                 println!("      Roles:    {}", roles_str);
+                let env_str = match env_map.as_ref() {
+                    Some(m) if !m.is_empty() => {
+                        let mut parts: Vec<String> = m
+                            .iter()
+                            .map(|(k, v)| format!("{}<-{}", k, v))
+                            .collect();
+                        parts.sort();
+                        parts.join(", ")
+                    }
+                    _ => "-".to_string(),
+                };
+                println!("      Env:      {}", env_str);
             }
             if agents.is_empty() {
                 println!("\n  (no cloud agents configured)");
@@ -181,6 +210,7 @@ pub async fn handle(cmd: ModelCommands) {
             base_url,
             port,
             enabled,
+            env,
         } => {
             let mut cfg = load_config().unwrap_or_else(|e| {
                 eprintln!("Error: {}", e);
@@ -196,7 +226,8 @@ pub async fn handle(cmd: ModelCommands) {
                         && provider.is_none()
                         && base_url.is_none()
                         && port.is_none()
-                        && enabled.is_none();
+                        && enabled.is_none()
+                        && env.is_none();
                     if is_wizard {
                         println!("  Updating agent '{}'", entry.name);
                         let image_in = prompt_line(&format!("  Image [{}]: ", entry.image));
@@ -269,6 +300,39 @@ pub async fn handle(cmd: ModelCommands) {
                         if !enabled_in.is_empty() {
                             entry.enabled = Some(enabled_in == "true");
                         }
+                        let env_current = match entry.env.as_ref() {
+                            Some(m) if !m.is_empty() => {
+                                let mut parts: Vec<String> = m
+                                    .iter()
+                                    .map(|(k, v)| format!("{}<-{}", k, v))
+                                    .collect();
+                                parts.sort();
+                                parts.join(",")
+                            }
+                            _ => "-".to_string(),
+                        };
+                        let env_in = prompt_line(&format!(
+                            "  Env mappings (KEY=$HOST_ENV, comma-separated, '-' to clear) [{}]: ",
+                            env_current
+                        ));
+                        let env_in_trimmed = env_in.trim();
+                        if env_in_trimmed == "-" {
+                            entry.env = None;
+                        } else if !env_in_trimmed.is_empty() {
+                            let parsed_entries: Vec<String> = env_in_trimmed
+                                .split(',')
+                                .map(|s| s.trim().to_string())
+                                .filter(|s| !s.is_empty())
+                                .collect();
+                            match parse_agent_env_mappings(&parsed_entries) {
+                                Ok(v) if !v.is_empty() => entry.env = Some(v),
+                                Ok(_) => entry.env = None,
+                                Err(e) => {
+                                    eprintln!("Error: {}", e);
+                                    std::process::exit(1);
+                                }
+                            }
+                        }
                         save_config(&cfg).unwrap_or_else(|e| {
                             eprintln!("Error: {}", e);
                             std::process::exit(1);
@@ -302,6 +366,20 @@ pub async fn handle(cmd: ModelCommands) {
                         }
                         if let Some(e) = enabled {
                             entry.enabled = Some(e);
+                        }
+                        if let Some(entries) = env.as_ref() {
+                            if entries.len() == 1 && entries[0].trim().is_empty() {
+                                entry.env = None;
+                            } else {
+                                match parse_agent_env_mappings(entries) {
+                                    Ok(v) if !v.is_empty() => entry.env = Some(v),
+                                    Ok(_) => entry.env = None,
+                                    Err(e) => {
+                                        eprintln!("Error: {}", e);
+                                        std::process::exit(1);
+                                    }
+                                }
+                            }
                         }
                         save_config(&cfg).unwrap_or_else(|e| {
                             eprintln!("Error: {}", e);

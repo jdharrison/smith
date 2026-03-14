@@ -2,7 +2,7 @@ mod commands;
 mod docker;
 mod github;
 
-use clap::{CommandFactory, Parser, Subcommand};
+use clap::{ArgAction, CommandFactory, Parser, Subcommand};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -1554,6 +1554,9 @@ enum ModelCommands {
         /// Whether this agent is enabled (default: true)
         #[arg(long)]
         enabled: Option<bool>,
+        /// Env passthrough mapping (repeatable): KEY=$HOST_ENV (quote to prevent shell expansion)
+        #[arg(long = "env", value_name = "KEY=$HOST_ENV", action = ArgAction::Append)]
+        env: Option<Vec<String>>,
     },
     /// Update an existing agent
     Update {
@@ -1583,6 +1586,9 @@ enum ModelCommands {
         /// Whether this agent is enabled (pass empty to clear)
         #[arg(long)]
         enabled: Option<bool>,
+        /// Env passthrough mapping (repeatable): KEY=$HOST_ENV (quote to prevent shell expansion)
+        #[arg(long = "env", value_name = "KEY=$HOST_ENV", action = ArgAction::Append)]
+        env: Option<Vec<String>>,
     },
     /// Remove an agent
     Remove {
@@ -1984,6 +1990,9 @@ struct AgentEntry {
     /// Roles defined for this agent (keyed by role name)
     #[serde(skip_serializing_if = "Option::is_none")]
     roles: Option<HashMap<String, AgentRole>>,
+    /// Env passthrough mapping for spawned containers: KEY -> "$HOST_ENV"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    env: Option<HashMap<String, String>>,
 }
 
 /// Resolve port for an agent: port if set, else OPENCODE_SERVER_PORT + index.
@@ -2263,6 +2272,7 @@ fn add_agent_to_config(
     enabled: Option<bool>,
     default_role: Option<String>,
     roles: Option<HashMap<String, AgentRole>>,
+    env: Option<HashMap<String, String>>,
 ) -> Result<(), String> {
     if cfg
         .agents
@@ -2319,11 +2329,129 @@ fn add_agent_to_config(
         enabled,
         default_role,
         roles,
+        env,
     });
     if cfg.current_agent.is_none() {
         cfg.current_agent = Some(agent_name);
     }
     Ok(())
+}
+
+fn parse_agent_env_mappings(values: &[String]) -> Result<HashMap<String, String>, String> {
+    let mut out = HashMap::new();
+    for raw in values {
+        let entry = raw.trim();
+        if entry.is_empty() {
+            continue;
+        }
+
+        let (key, value) = entry
+            .split_once('=')
+            .ok_or_else(|| format!("Invalid --env '{}': expected KEY=$HOST_ENV", raw))?;
+
+        let key = key.trim();
+        let value = value.trim();
+
+        if key.is_empty()
+            || !key
+                .chars()
+                .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+        {
+            return Err(format!(
+                "Invalid --env '{}': KEY must use [A-Z0-9_]",
+                raw
+            ));
+        }
+
+        let host_key = value.strip_prefix('$').ok_or_else(|| {
+            format!(
+                "Invalid --env '{}': value must be a host env reference like $OPENAI_API_KEY",
+                raw
+            )
+        })?;
+        if host_key.is_empty() {
+            return Err(format!(
+                "Invalid --env '{}': value must be a host env reference like $OPENAI_API_KEY",
+                raw
+            ));
+        }
+
+        if host_key.starts_with('$') {
+            return Err(format!(
+                "Invalid --env '{}': host env reference must have exactly one leading '$'",
+                raw
+            ));
+        }
+
+        if !host_key
+            .chars()
+            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+        {
+            return Err(format!(
+                "Invalid --env '{}': host env name must use [A-Z0-9_]",
+                raw
+            ));
+        }
+
+        if out
+            .insert(key.to_string(), format!("${}", host_key))
+            .is_some()
+        {
+            return Err(format!(
+                "Invalid --env '{}': duplicate target key '{}'",
+                raw, key
+            ));
+        }
+    }
+    Ok(out)
+}
+
+fn resolve_agent_env_bindings(
+    env_map: Option<&HashMap<String, String>>,
+) -> Result<Vec<(String, String)>, String> {
+    let mut out = Vec::new();
+    if let Some(map) = env_map {
+        for (target, source) in map {
+            let host_key = source
+                .strip_prefix('$')
+                .ok_or_else(|| {
+                    format!(
+                        "Invalid env mapping for '{}': expected host reference like $OPENAI_API_KEY",
+                        target
+                    )
+                })?
+                .trim();
+
+            if host_key.is_empty()
+                || !host_key
+                    .chars()
+                    .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+            {
+                return Err(format!(
+                    "Invalid env mapping for '{}': host env name must use [A-Z0-9_]",
+                    target
+                ));
+            }
+
+            let value = std::env::var(host_key).map_err(|_| {
+                format!(
+                    "Missing required host env '{}' for injected variable '{}'",
+                    host_key, target
+                )
+            })?;
+
+            if value.trim().is_empty() {
+                return Err(format!(
+                    "Host env '{}' for injected variable '{}' is empty",
+                    host_key, target
+                ));
+            }
+
+            out.push((target.clone(), value));
+        }
+    }
+    out.sort_by(|a, b| a.0.cmp(&b.0));
+    Ok(out)
 }
 
 /// Add a project to config (used by CLI `project add` and install wizard). Does not save.

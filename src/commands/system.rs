@@ -261,6 +261,7 @@ pub async fn handle_install() {
                     enabled: Some(true),
                     default_role: None,
                     roles: None,
+                    env: None,
                 };
                 cfg.agents = Some(vec![new_agent]);
                 if let Err(e) = save_config(&cfg) {
@@ -348,6 +349,7 @@ pub async fn handle_install() {
                 base_url,
                 port,
                 enabled,
+                None,
                 None,
                 None,
             ) {
