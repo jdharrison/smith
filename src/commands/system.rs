@@ -486,15 +486,215 @@ pub async fn handle_install() {
         },
     }
     println!();
+    // --- Sealed local brain ---
+    bootstrap_sealed_brain(&mut cfg);
+
+    println!();
     if let Err(e) = run_install_finish() {
         eprintln!("Error: {}", e);
         std::process::exit(1);
     }
-    println!(
-        "  {} You're ready to run agentic pipelines via `smith run`",
-        BULLET_GREEN
+    println!("  {} Install complete", BULLET_GREEN);
+    println!("     Sealed brain:  smith chat | smith think \"…\" | smith brain status");
+    println!("     Pipelines:     smith run plan | develop | review | release");
+}
+
+/// Bootstrap sealed brain: memory, local model profile, network, Ollama, brain, validate.
+fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
+    println!("  Sealed local brain:");
+
+    // 1. Memory layout
+    match brain::ensure_memory_layout() {
+        Ok(path) => println!("  {} memory - {}", BULLET_GREEN, path.display()),
+        Err(e) => {
+            eprintln!("  {} memory - {}", BULLET_RED, e);
+            return;
+        }
+    }
+
+    if docker::check_docker_available().is_err() {
+        eprintln!(
+            "  {} docker unavailable — skipping brain network/containers",
+            BULLET_YELLOW
+        );
+        println!("     Re-run `smith install` after Docker is available.");
+        return;
+    }
+
+    // 2. Ensure a local model profile exists
+    let has_local = cfg
+        .agents
+        .as_deref()
+        .unwrap_or(&[])
+        .iter()
+        .any(|a| a.agent_type.as_deref() == Some("local"));
+
+    if !has_local {
+        let create = prompt_yn(
+            "Create default local model profile (ollama / qwen3:8b) for sealed brain?",
+            false,
+        );
+        if create {
+            match add_agent_to_config(
+                cfg,
+                "local".to_string(),
+                Some(DEFAULT_AGENT_IMAGE.to_string()),
+                Some("local".to_string()),
+                Some("qwen3:8b".to_string()),
+                None,
+                Some("ollama".to_string()),
+                Some(format!("http://localhost:{}", docker::OLLAMA_PORT)),
+                None,
+                Some(true),
+                None,
+                None,
+                None,
+            ) {
+                Ok(()) => {
+                    if cfg.current_agent.is_none() {
+                        cfg.current_agent = Some("local".to_string());
+                    }
+                    if let Err(e) = save_config(cfg) {
+                        eprintln!("  {} failed to save local profile: {}", BULLET_RED, e);
+                    } else {
+                        println!("  {} local model profile 'local' (qwen3:8b)", BULLET_GREEN);
+                    }
+                }
+                Err(e) => eprintln!("  {} {}", BULLET_RED, e),
+            }
+        } else {
+            println!(
+                "  {} no local profile — add later with `smith model add local --agent-type local --model qwen3:8b`",
+                BULLET_YELLOW
+            );
+        }
+    } else {
+        println!("  {} local model profile present", BULLET_GREEN);
+    }
+
+    // 3. Internal network
+    match docker::ensure_brain_network() {
+        Ok(()) => println!(
+            "  {} network {} (internal, no egress)",
+            BULLET_GREEN,
+            docker::BRAIN_NETWORK
+        ),
+        Err(e) => {
+            eprintln!("  {} network - {}", BULLET_RED, e);
+            return;
+        }
+    }
+
+    let start_stack = prompt_yn(
+        "Start Ollama + sealed brain now and validate isolation?",
+        false,
     );
-    println!("     (e.g. smith run plan, smith run develop, smith run review)");
+    if !start_stack {
+        println!("  {} skipped runtime start", BULLET_BLUE);
+        println!("     Later: `smith model start` then `smith chat`");
+        return;
+    }
+
+    // 4. Resolve local model name
+    let local_model = cfg
+        .agents
+        .as_deref()
+        .unwrap_or(&[])
+        .iter()
+        .find(|a| a.agent_type.as_deref() == Some("local"))
+        .and_then(|a| a.model.clone())
+        .unwrap_or_else(|| "qwen3:8b".to_string());
+
+    // 5. Start Ollama
+    if docker::is_ollama_running() {
+        println!("  {} ollama - already running", BULLET_GREEN);
+    } else {
+        println!("  Starting Ollama with model '{}'...", local_model);
+        match docker::start_ollama_container(&local_model, true) {
+            Ok(_) => println!("  {} ollama - started", BULLET_GREEN),
+            Err(e) => {
+                // Retry without GPU
+                match docker::start_ollama_container(&local_model, false) {
+                    Ok(_) => println!("  {} ollama - started (CPU)", BULLET_GREEN),
+                    Err(e2) => {
+                        eprintln!("  {} ollama - {}", BULLET_RED, e2);
+                        eprintln!("     (GPU attempt: {})", e);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    // 6. Ensure brain image present
+    match docker::image_exists(docker::BRAIN_IMAGE) {
+        Ok(true) => println!("  {} image {}", BULLET_GREEN, docker::BRAIN_IMAGE),
+        Ok(false) => {
+            println!("  Pulling {} ...", docker::BRAIN_IMAGE);
+            let pull = Command::new("docker")
+                .args(["pull", docker::BRAIN_IMAGE])
+                .status();
+            match pull {
+                Ok(s) if s.success() => {
+                    println!("  {} image pulled", BULLET_GREEN);
+                }
+                _ => {
+                    eprintln!(
+                        "  {} failed to pull {} — chat may fail until available",
+                        BULLET_YELLOW,
+                        docker::BRAIN_IMAGE
+                    );
+                }
+            }
+        }
+        Err(e) => eprintln!("  {} image check: {}", BULLET_YELLOW, e),
+    }
+
+    // 7. Start sealed brain
+    let mem = match brain::ensure_memory_layout() {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("  {} {}", BULLET_RED, e);
+            return;
+        }
+    };
+    match docker::ensure_brain_ready(&mem, Some(&local_model)) {
+        Ok(()) => println!(
+            "  {} container {} - running",
+            BULLET_GREEN,
+            docker::BRAIN_CONTAINER_NAME
+        ),
+        Err(e) => {
+            eprintln!("  {} brain start - {}", BULLET_RED, e);
+            return;
+        }
+    }
+
+    // 8. Validate
+    let st = docker::brain_status(&mem);
+    let ok_net = st.network_exists && st.ollama_on_network && st.brain_running && st.ollama_running;
+    if ok_net {
+        println!(
+            "  {} connectivity - brain ↔ ollama on internal net",
+            BULLET_GREEN
+        );
+    } else {
+        eprintln!(
+            "  {} connectivity incomplete (brain={} ollama={} ollama_net={})",
+            BULLET_YELLOW, st.brain_running, st.ollama_running, st.ollama_on_network
+        );
+    }
+
+    match docker::verify_no_egress() {
+        Ok(true) => println!("  {} egress - blocked (sealed)", BULLET_GREEN),
+        Ok(false) => eprintln!(
+            "  {} egress - UNEXPECTED public reachability from brain",
+            BULLET_RED
+        ),
+        Err(e) => eprintln!("  {} egress check - {}", BULLET_YELLOW, e),
+    }
+
+    println!("  {} sealed brain ready — try `smith chat`", BULLET_GREEN);
 }
 
 pub async fn handle_uninstall(force: bool, remove_config: bool, remove_images: bool) {
@@ -514,6 +714,12 @@ pub async fn handle_uninstall(force: bool, remove_config: bool, remove_images: b
             e
         );
     } else {
+        println!("  Stopping sealed brain...");
+        match docker::remove_brain_container() {
+            Ok(()) => println!("    {}: removed", docker::BRAIN_CONTAINER_NAME),
+            Err(e) => eprintln!("    Warning: {}", e),
+        }
+
         println!("  Stopping agent containers...");
         match docker::stop_all_agent_containers() {
             Ok(stopped) => {
@@ -538,6 +744,11 @@ pub async fn handle_uninstall(force: bool, remove_config: bool, remove_images: b
             }
         }
 
+        // Drop internal brain network if present
+        let _ = Command::new("docker")
+            .args(["network", "rm", docker::BRAIN_NETWORK])
+            .output();
+
         if remove_images {
             println!("  Removing Docker images...");
             let _ = Command::new("docker")
@@ -556,6 +767,12 @@ pub async fn handle_uninstall(force: bool, remove_config: bool, remove_images: b
                     .args(["rmi", "-f", "ollama/ollama"])
                     .output();
                 println!("    ollama/ollama: removed");
+            }
+            if docker::image_exists(docker::BRAIN_IMAGE).unwrap_or(false) {
+                let _ = Command::new("docker")
+                    .args(["rmi", "-f", docker::BRAIN_IMAGE])
+                    .output();
+                println!("    {}: removed", docker::BRAIN_IMAGE);
             }
         }
     }

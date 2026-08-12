@@ -1,4 +1,6 @@
 pub mod agent;
+pub mod brain;
+pub mod chat;
 pub mod model;
 pub mod pipeline;
 pub mod project;

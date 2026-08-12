@@ -515,6 +515,7 @@ pub fn restart_container(container_name: &str) -> Result<(), String> {
 }
 
 mod agent_runtime;
+mod brain_runtime;
 mod model_runtime;
 
 pub use agent_runtime::{
@@ -524,6 +525,12 @@ pub use agent_runtime::{
     spawn_container_name, spawn_container_port, spawn_file_exists, start_spawned_container,
     stop_spawned_container, write_spawn_file,
 };
+pub use brain_runtime::{
+    brain_status, ensure_brain_network, ensure_brain_ready, remove_brain_container,
+    run_prompt_in_brain, stop_brain_container, verify_no_egress, BRAIN_CONTAINER_NAME, BRAIN_IMAGE,
+    BRAIN_NETWORK,
+};
 pub use model_runtime::{
-    is_ollama_running, start_ollama_container, stop_ollama_container, OLLAMA_PORT,
+    is_ollama_running, start_ollama_container, stop_ollama_container, OLLAMA_CONTAINER_NAME,
+    OLLAMA_PORT,
 };

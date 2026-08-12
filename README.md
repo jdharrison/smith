@@ -41,8 +41,9 @@ Pre-built binaries for Linux and macOS are available in [GitHub Releases](https:
 
 ```bash
 # After installing the binary
-smith install   # one-time setup wizard
+smith install   # bootstrap Docker, local model, sealed brain + validate
 smith status    # monitor smith services/systems
+smith brain status --verify-egress
 smith help
 
 # Development
@@ -50,7 +51,50 @@ cargo build
 cargo run -- help
 ```
 
-### Pipeline commands (run ask / dev / review)
+`smith install` now also:
+- creates durable brain memory (`profile.md`, episodic/working/journal)
+- ensures internal network `smith-brain-net`
+- offers a default local Ollama profile (`qwen3:8b`)
+- optionally starts Ollama + sealed brain and checks egress is blocked
+
+### Sealed local brain (chat / think)
+
+Private, no-egress conversation and solve loop against a local Ollama model. Existing `smith run` / `smith agent` pipelines are unchanged.
+
+**Prerequisites:** Docker, and a local model running (`smith model add … --agent-type local` then `smith model start`).
+
+```bash
+# Interactive sealed chat (text REPL)
+smith chat
+
+# One-shot
+smith chat -m "Summarize my profile preferences"
+
+# Iterate/kill solve loop (writes durable analysis.json)
+smith think "Draft a private research outline on X" --max-steps 8 --reset
+
+# Ops
+smith brain status
+smith brain status --verify-egress   # confirm public HTTPS is blocked from the brain
+smith brain stop                     # stop container; host memory kept
+smith brain stop --remove
+```
+
+**Isolation:** brain + Ollama share Docker network `smith-brain-net` (`--internal`, no external egress). The brain container has no published ports, no SSH mount, and no cloud API keys.
+
+**Host memory** (survives container stop/recreate), under the smith data dir `…/smith/brain/`:
+
+| Path | Purpose |
+|------|---------|
+| `profile.md` | Stable preferences / constraints |
+| `episodic/` | Session notes (chat exit writes a note) |
+| `working/analysis.json` | Think-loop notebook |
+| `journal/` | Per-step attempt logs |
+
+Edit `profile.md` freely; it stays on-host and is injected into chat context only inside the sealed bubble.
+
+### Pipeline commands (run plan / develop / review / release)
+
 
 Run pipeline workflows via `smith run <cmd>`.
 

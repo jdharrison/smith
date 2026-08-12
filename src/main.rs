@@ -1,3 +1,4 @@
+mod brain;
 mod commands;
 mod docker;
 mod github;
@@ -1473,6 +1474,56 @@ enum Commands {
         #[command(subcommand)]
         cmd: AgentCommands,
     },
+    /// Sealed local brain chat (no cloud egress)
+    Chat {
+        /// One-shot message (non-interactive)
+        #[arg(short = 'm', long)]
+        message: Option<String>,
+        /// Local model id (default: first local profile or qwen3:8b)
+        #[arg(long)]
+        model: Option<String>,
+        /// Show verbose OpenCode stream
+        #[arg(long)]
+        verbose: bool,
+    },
+    /// Iterate/kill solve loop against durable analysis.json
+    Think {
+        /// Goal to work toward
+        goal: String,
+        /// Local model id
+        #[arg(long)]
+        model: Option<String>,
+        /// Maximum iteration steps
+        #[arg(long, default_value = "8")]
+        max_steps: u32,
+        /// Reset working/analysis.json for this goal
+        #[arg(long)]
+        reset: bool,
+        /// Show verbose OpenCode stream
+        #[arg(long)]
+        verbose: bool,
+    },
+    /// Sealed brain container ops
+    Brain {
+        #[command(subcommand)]
+        cmd: BrainCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum BrainCommands {
+    /// Show sealed brain / network / memory status
+    Status {
+        /// Probe that public HTTPS is blocked from the brain container
+        #[arg(long)]
+        verify_egress: bool,
+    },
+    /// Stop the sealed brain container (host memory kept)
+    Stop {
+        /// Also remove the container
+        #[arg(long)]
+        remove: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -2566,7 +2617,16 @@ fn try_install_docker() {
 }
 
 #[cfg(not(target_os = "linux"))]
-fn try_install_docker() {}
+fn try_install_docker() {
+    if docker::check_docker_available().is_ok() {
+        println!("  {} docker - available", BULLET_GREEN);
+    } else {
+        eprintln!(
+            "  {} docker - unavailable (install Docker Desktop / Engine, then re-run)",
+            BULLET_RED
+        );
+    }
+}
 
 /// On Linux, ensure Docker service is started and enabled (so it runs on boot). No-op if Docker not available. Non-fatal.
 #[cfg(target_os = "linux")]
@@ -3029,7 +3089,9 @@ fn print_smith_help() {
     }
     println!("Usage: smith [COMMAND]");
     const SYSTEM: &[&str] = &["status", "install", "uninstall", "help", "version"];
-    const COMMANDS: &[&str] = &["model", "project", "role", "agent", "run"];
+    const COMMANDS: &[&str] = &[
+        "model", "project", "role", "agent", "run", "chat", "think", "brain",
+    ];
     println!("\nCommands:");
     for sub in c.get_subcommands() {
         let name = sub.get_name();
@@ -3076,6 +3138,27 @@ async fn main() {
         Some(Commands::Role { cmd }) => commands::role::handle(cmd).await,
         Some(Commands::Run { cmd }) => commands::run::handle(cmd).await,
         Some(Commands::Agent { cmd }) => commands::agent::handle(cmd).await,
+        Some(Commands::Chat {
+            message,
+            model,
+            verbose,
+        }) => commands::chat::handle_chat(message, model, verbose).await,
+        Some(Commands::Think {
+            goal,
+            model,
+            max_steps,
+            reset,
+            verbose,
+        }) => commands::chat::handle_think(goal, model, max_steps, verbose, reset).await,
+        Some(Commands::Brain { cmd }) => {
+            let mapped = match cmd {
+                BrainCommands::Status { verify_egress } => {
+                    commands::brain::BrainCmd::Status { verify_egress }
+                }
+                BrainCommands::Stop { remove } => commands::brain::BrainCmd::Stop { remove },
+            };
+            commands::brain::handle(mapped).await
+        }
     }
 }
 
