@@ -3,6 +3,6 @@
 pub mod memory;
 
 pub use memory::{
-    analysis_path, append_journal, ensure_memory_layout, load_analysis, load_profile,
-    recent_episodic, save_analysis, write_episodic, AnalysisState,
+    append_journal, ensure_memory_layout, load_analysis, load_profile, recent_episodic,
+    save_analysis, write_episodic, AnalysisState,
 };

@@ -700,7 +700,7 @@ pub async fn handle(cmd: ModelCommands) {
                 let local_model = local
                     .model
                     .clone()
-                    .unwrap_or_else(|| "qwen3:8b".to_string());
+                    .unwrap_or_else(|| crate::DEFAULT_LOCAL_MODEL.to_string());
                 if docker::is_ollama_running() {
                     println!("  Ollama already running");
                 } else {

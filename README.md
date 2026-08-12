@@ -43,7 +43,7 @@ Pre-built binaries for Linux and macOS are available in [GitHub Releases](https:
 # After installing the binary
 smith install   # bootstrap Docker, local model, sealed brain + validate
 smith status    # monitor smith services/systems
-smith brain status --verify-egress
+smith brain status
 smith help
 
 # Development
@@ -54,7 +54,7 @@ cargo run -- help
 `smith install` now also:
 - creates durable brain memory (`profile.md`, episodic/working/journal)
 - ensures internal network `smith-brain-net`
-- offers a default local Ollama profile (`qwen3:8b`)
+- offers a default local Ollama profile (`qwen3:14b` — balanced for ~16GB VRAM with desktop headroom)
 - optionally starts Ollama + sealed brain and checks egress is blocked
 
 ### Sealed local brain (chat / think)
@@ -71,13 +71,11 @@ smith chat
 smith chat -m "Summarize my profile preferences"
 
 # Iterate/kill solve loop (writes durable analysis.json)
-smith think "Draft a private research outline on X" --max-steps 8 --reset
+smith think "Draft a private research outline on X" --reset
 
 # Ops
 smith brain status
-smith brain status --verify-egress   # confirm public HTTPS is blocked from the brain
-smith brain stop                     # stop container; host memory kept
-smith brain stop --remove
+smith brain stop
 ```
 
 **Isolation:** brain + Ollama share Docker network `smith-brain-net` (`--internal`, no external egress). The brain container has no published ports, no SSH mount, and no cloud API keys.

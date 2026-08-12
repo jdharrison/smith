@@ -153,7 +153,7 @@ pub fn start_brain_container(memory_host_path: &Path, model: Option<&str>) -> Re
         .unwrap_or_else(|_| memory_host_path.to_path_buf());
     let mem_str = mem.to_string_lossy().replace('\\', "/");
 
-    let model_name = model.unwrap_or("qwen3:8b");
+    let model_name = model.unwrap_or(crate::DEFAULT_LOCAL_MODEL);
 
     let args = vec![
         "run".to_string(),

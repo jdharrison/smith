@@ -5,15 +5,10 @@ use crate::brain::{
     save_analysis, write_episodic, AnalysisState,
 };
 use crate::docker;
+use crate::DEFAULT_LOCAL_MODEL;
 use std::io::{self, BufRead, Write};
 
-fn resolve_local_model(explicit: Option<&str>) -> Option<String> {
-    if let Some(m) = explicit {
-        if !m.trim().is_empty() {
-            return Some(m.to_string());
-        }
-    }
-    // Prefer first local profile model from config if available
+fn resolve_local_model() -> String {
     if let Ok(cfg) = crate::load_config() {
         if let Some(agents) = cfg.agents.as_ref() {
             for a in agents {
@@ -25,14 +20,14 @@ fn resolve_local_model(explicit: Option<&str>) -> Option<String> {
                 if is_local {
                     if let Some(ref m) = a.model {
                         if !m.trim().is_empty() {
-                            return Some(m.clone());
+                            return m.clone();
                         }
                     }
                 }
             }
         }
     }
-    Some("qwen3:8b".to_string())
+    DEFAULT_LOCAL_MODEL.to_string()
 }
 
 fn build_chat_preamble() -> Result<String, String> {
@@ -56,16 +51,16 @@ fn build_chat_preamble() -> Result<String, String> {
     Ok(preamble)
 }
 
-fn ensure_ready(model: Option<&str>) -> Result<(std::path::PathBuf, Option<String>), String> {
+fn ensure_ready() -> Result<(std::path::PathBuf, String), String> {
     let mem = ensure_memory_layout()?;
-    let model = resolve_local_model(model);
-    docker::ensure_brain_ready(&mem, model.as_deref())?;
+    let model = resolve_local_model();
+    docker::ensure_brain_ready(&mem, Some(&model))?;
     Ok((mem, model))
 }
 
 /// `smith chat` — interactive REPL or one-shot `-m`.
-pub async fn handle_chat(message: Option<String>, model: Option<String>, verbose: bool) {
-    let (_mem, model) = match ensure_ready(model.as_deref()) {
+pub async fn handle_chat(message: Option<String>) {
+    let (_mem, model) = match ensure_ready() {
         Ok(v) => v,
         Err(e) => {
             eprintln!("Error: {}", e);
@@ -74,10 +69,8 @@ pub async fn handle_chat(message: Option<String>, model: Option<String>, verbose
     };
 
     if let Some(msg) = message {
-        match run_turn(&msg, model.as_deref(), verbose) {
-            Ok(answer) => {
-                println!("{}", answer.trim());
-            }
+        match run_turn(&msg, &model) {
+            Ok(answer) => println!("{}", answer.trim()),
             Err(e) => {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
@@ -87,7 +80,6 @@ pub async fn handle_chat(message: Option<String>, model: Option<String>, verbose
     }
 
     println!("Sealed brain chat (local only). Type /exit or Ctrl-D to quit.");
-    println!("Memory: {}", _mem.display());
     println!();
 
     let stdin = io::stdin();
@@ -112,25 +104,15 @@ pub async fn handle_chat(message: Option<String>, model: Option<String>, verbose
         if trimmed == "/exit" || trimmed == "/quit" {
             break;
         }
-        if trimmed == "/status" {
-            let st = docker::brain_status(&_mem);
-            println!(
-                "network={} brain={} ollama={} ollama_net={}",
-                st.network_exists, st.brain_running, st.ollama_running, st.ollama_on_network
-            );
-            continue;
-        }
 
-        match run_turn(trimmed, model.as_deref(), verbose) {
+        match run_turn(trimmed, &model) {
             Ok(answer) => {
                 let ans = answer.trim();
                 println!("brain> {}", ans);
                 println!();
                 session_notes.push(format!("User: {}\nBrain: {}\n", trimmed, ans));
             }
-            Err(e) => {
-                eprintln!("Error: {}", e);
-            }
+            Err(e) => eprintln!("Error: {}", e),
         }
     }
 
@@ -143,24 +125,18 @@ pub async fn handle_chat(message: Option<String>, model: Option<String>, verbose
     }
 }
 
-fn run_turn(user_message: &str, model: Option<&str>, verbose: bool) -> Result<String, String> {
+fn run_turn(user_message: &str, model: &str) -> Result<String, String> {
     let preamble = build_chat_preamble()?;
     let prompt = format!(
         "{}\n## Current user message\n{}\n\nRespond helpfully and concisely.",
         preamble, user_message
     );
-    docker::run_prompt_in_brain(&prompt, model, verbose)
+    docker::run_prompt_in_brain(&prompt, Some(model), false)
 }
 
 /// `smith think` — host-orchestrated iterate / save / kill loop.
-pub async fn handle_think(
-    goal: String,
-    model: Option<String>,
-    max_steps: u32,
-    verbose: bool,
-    reset: bool,
-) {
-    let (_mem, model) = match ensure_ready(model.as_deref()) {
+pub async fn handle_think(goal: String, max_steps: u32, reset: bool) {
+    let (_mem, model) = match ensure_ready() {
         Ok(v) => v,
         Err(e) => {
             eprintln!("Error: {}", e);
@@ -186,13 +162,12 @@ pub async fn handle_think(
         std::process::exit(1);
     }
 
-    println!("Think loop — goal: {}", analysis.goal);
-    println!("Max steps: {}", max_steps);
+    println!("Think — goal: {}", analysis.goal);
     println!();
 
     for step in 1..=max_steps {
         if analysis.is_complete() {
-            println!("Complete after prior state (status={}).", analysis.status);
+            println!("Done (status={}).", analysis.status);
             break;
         }
         if analysis.is_blocked() {
@@ -205,16 +180,13 @@ pub async fn handle_think(
         let _ = save_analysis(&analysis);
 
         let prompt = build_think_step_prompt(&analysis, step);
-        match docker::run_prompt_in_brain(&prompt, model.as_deref(), verbose) {
+        match docker::run_prompt_in_brain(&prompt, Some(&model), false) {
             Ok(answer) => {
-                // Prefer reloading analysis if the model wrote /memory/working/analysis.json
                 match load_analysis() {
                     Ok(Some(updated)) => {
-                        // Merge: if model didn't update file, synthesize from answer
                         if updated.last_step.is_empty() && updated.status == "in_progress" {
                             analysis.last_step = truncate(&answer, 500);
                             analysis.evidence.push(truncate(&answer, 1000));
-                            // Heuristic completion signals
                             let lower = answer.to_lowercase();
                             if lower.contains("\"status\": \"done\"")
                                 || lower.contains("status\": \"done\"")
@@ -227,10 +199,6 @@ pub async fn handle_think(
                             {
                                 analysis.status = "blocked".to_string();
                             } else {
-                                // Progress: drop first open item as attempted
-                                if !analysis.open_items.is_empty() && step == max_steps {
-                                    // leave open
-                                }
                                 analysis.status = "in_progress".to_string();
                             }
                             let _ = save_analysis(&analysis);
@@ -247,13 +215,7 @@ pub async fn handle_think(
                 }
 
                 let _ = append_journal(step, &format!("ok: {}", truncate(&answer, 200)));
-                if verbose {
-                    println!("{}", answer.trim());
-                } else {
-                    println!("  last_step: {}", analysis.last_step);
-                    println!("  status: {}", analysis.status);
-                    println!("  open_items: {}", analysis.open_items.len());
-                }
+                println!("  status: {} — {}", analysis.status, analysis.last_step);
             }
             Err(e) => {
                 let _ = append_journal(step, &format!("err: {}", e));
@@ -265,8 +227,6 @@ pub async fn handle_think(
             }
         }
 
-        // Process already exited (kill-between-steps). Continuity is analysis.json only.
-
         if analysis.is_complete() {
             println!("\nDone.");
             break;
@@ -276,15 +236,9 @@ pub async fn handle_think(
             break;
         }
         if step == max_steps {
-            println!("\nReached max steps without completion.");
+            println!("\nReached max steps.");
         }
     }
-
-    println!();
-    println!(
-        "Analysis: {}",
-        crate::brain::analysis_path().unwrap_or_default().display()
-    );
 }
 
 fn truncate(s: &str, max: usize) -> String {

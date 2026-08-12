@@ -1080,7 +1080,7 @@ fn find_latest_completed_dev_run_for_plan(
         ));
     }
 
-    matches.sort_by(|(_, a), (_, b)| b.created_at_unix.cmp(&a.created_at_unix));
+    matches.sort_by_key(|(_, b)| std::cmp::Reverse(b.created_at_unix));
     Ok(matches.remove(0))
 }
 
@@ -1479,29 +1479,17 @@ enum Commands {
         /// One-shot message (non-interactive)
         #[arg(short = 'm', long)]
         message: Option<String>,
-        /// Local model id (default: first local profile or qwen3:8b)
-        #[arg(long)]
-        model: Option<String>,
-        /// Show verbose OpenCode stream
-        #[arg(long)]
-        verbose: bool,
     },
     /// Iterate/kill solve loop against durable analysis.json
     Think {
         /// Goal to work toward
         goal: String,
-        /// Local model id
-        #[arg(long)]
-        model: Option<String>,
         /// Maximum iteration steps
-        #[arg(long, default_value = "8")]
+        #[arg(long, default_value = "5")]
         max_steps: u32,
         /// Reset working/analysis.json for this goal
         #[arg(long)]
         reset: bool,
-        /// Show verbose OpenCode stream
-        #[arg(long)]
-        verbose: bool,
     },
     /// Sealed brain container ops
     Brain {
@@ -1513,17 +1501,9 @@ enum Commands {
 #[derive(Subcommand)]
 enum BrainCommands {
     /// Show sealed brain / network / memory status
-    Status {
-        /// Probe that public HTTPS is blocked from the brain container
-        #[arg(long)]
-        verify_egress: bool,
-    },
+    Status,
     /// Stop the sealed brain container (host memory kept)
-    Stop {
-        /// Also remove the container
-        #[arg(long)]
-        remove: bool,
-    },
+    Stop,
 }
 
 #[derive(Subcommand)]
@@ -1569,6 +1549,10 @@ enum RoleCommands {
     },
 }
 
+/// Default local Ollama model for sealed brain.
+/// qwen3:14b fits ~9–10GB of 16GB VRAM on RX 7900 GRE — usable quality with desktop headroom.
+pub const DEFAULT_LOCAL_MODEL: &str = "qwen3:14b";
+
 /// Built-in agent name and image when no config is set (OpenCode cloud wrapper).
 const DEFAULT_AGENT_NAME: &str = "opencode";
 const DEFAULT_AGENT_IMAGE: &str = "ghcr.io/anomalyco/opencode";
@@ -1587,7 +1571,7 @@ enum ModelCommands {
         /// Agent type: "local" or "cloud" (default: cloud)
         #[arg(long)]
         agent_type: Option<String>,
-        /// Model to use (e.g. "anthropic/claude-sonnet-4-5", "qwen3:8b")
+        /// Model to use (e.g. "anthropic/claude-sonnet-4-5", "qwen3:14b")
         #[arg(long)]
         model: Option<String>,
         /// Smaller model for internal operations (reduces API costs)
@@ -2020,7 +2004,7 @@ struct AgentEntry {
     /// Agent type: "local" or "cloud" (default: "cloud")
     #[serde(skip_serializing_if = "Option::is_none")]
     agent_type: Option<String>,
-    /// Model to use (e.g. "anthropic/claude-sonnet-4-5", "qwen3:8b")
+    /// Model to use (e.g. "anthropic/claude-sonnet-4-5", "qwen3:14b")
     #[serde(skip_serializing_if = "Option::is_none")]
     model: Option<String>,
     /// Smaller model for internal operations (reduces API costs)
@@ -2716,16 +2700,14 @@ fn normalize_repo_for_match(repo: &str) -> Option<String> {
             let host = s[4..colon].to_lowercase();
             let path = s[colon + 1..].trim_start_matches('/');
             (host, path)
-        } else if let Some(after) = s
-            .strip_prefix("https://")
-            .or_else(|| s.strip_prefix("http://"))
-        {
+        } else {
+            let after = s
+                .strip_prefix("https://")
+                .or_else(|| s.strip_prefix("http://"))?;
             let rest = after.splitn(2, '/').collect::<Vec<_>>();
             let host = rest.first()?.to_string().to_lowercase();
             let path = rest.get(1).copied().unwrap_or("").trim_start_matches('/');
             (host, path)
-        } else {
-            return None;
         };
         let path = path.trim_end_matches('/');
         if path.is_empty() {
@@ -3138,24 +3120,16 @@ async fn main() {
         Some(Commands::Role { cmd }) => commands::role::handle(cmd).await,
         Some(Commands::Run { cmd }) => commands::run::handle(cmd).await,
         Some(Commands::Agent { cmd }) => commands::agent::handle(cmd).await,
-        Some(Commands::Chat {
-            message,
-            model,
-            verbose,
-        }) => commands::chat::handle_chat(message, model, verbose).await,
+        Some(Commands::Chat { message }) => commands::chat::handle_chat(message).await,
         Some(Commands::Think {
             goal,
-            model,
             max_steps,
             reset,
-            verbose,
-        }) => commands::chat::handle_think(goal, model, max_steps, verbose, reset).await,
+        }) => commands::chat::handle_think(goal, max_steps, reset).await,
         Some(Commands::Brain { cmd }) => {
             let mapped = match cmd {
-                BrainCommands::Status { verify_egress } => {
-                    commands::brain::BrainCmd::Status { verify_egress }
-                }
-                BrainCommands::Stop { remove } => commands::brain::BrainCmd::Stop { remove },
+                BrainCommands::Status => commands::brain::BrainCmd::Status,
+                BrainCommands::Stop => commands::brain::BrainCmd::Stop,
             };
             commands::brain::handle(mapped).await
         }

@@ -531,7 +531,10 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
 
     if !has_local {
         let create = prompt_yn(
-            "Create default local model profile (ollama / qwen3:8b) for sealed brain?",
+            &format!(
+                "Create default local model profile (ollama / {}) for sealed brain?",
+                DEFAULT_LOCAL_MODEL
+            ),
             false,
         );
         if create {
@@ -540,7 +543,7 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
                 "local".to_string(),
                 Some(DEFAULT_AGENT_IMAGE.to_string()),
                 Some("local".to_string()),
-                Some("qwen3:8b".to_string()),
+                Some(DEFAULT_LOCAL_MODEL.to_string()),
                 None,
                 Some("ollama".to_string()),
                 Some(format!("http://localhost:{}", docker::OLLAMA_PORT)),
@@ -557,15 +560,18 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
                     if let Err(e) = save_config(cfg) {
                         eprintln!("  {} failed to save local profile: {}", BULLET_RED, e);
                     } else {
-                        println!("  {} local model profile 'local' (qwen3:8b)", BULLET_GREEN);
+                        println!(
+                            "  {} local model profile 'local' ({})",
+                            BULLET_GREEN, DEFAULT_LOCAL_MODEL
+                        );
                     }
                 }
                 Err(e) => eprintln!("  {} {}", BULLET_RED, e),
             }
         } else {
             println!(
-                "  {} no local profile — add later with `smith model add local --agent-type local --model qwen3:8b`",
-                BULLET_YELLOW
+                "  {} no local profile — add later with `smith model add local --agent-type local --model {}`",
+                BULLET_YELLOW, DEFAULT_LOCAL_MODEL
             );
         }
     } else {
@@ -603,7 +609,7 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
         .iter()
         .find(|a| a.agent_type.as_deref() == Some("local"))
         .and_then(|a| a.model.clone())
-        .unwrap_or_else(|| "qwen3:8b".to_string());
+        .unwrap_or_else(|| DEFAULT_LOCAL_MODEL.to_string());
 
     // 5. Start Ollama
     if docker::is_ollama_running() {

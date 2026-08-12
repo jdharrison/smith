@@ -5,13 +5,13 @@ use crate::docker;
 
 #[derive(Debug, Clone)]
 pub enum BrainCmd {
-    Status { verify_egress: bool },
-    Stop { remove: bool },
+    Status,
+    Stop,
 }
 
 pub async fn handle(cmd: BrainCmd) {
     match cmd {
-        BrainCmd::Status { verify_egress } => {
+        BrainCmd::Status => {
             let mem = match ensure_memory_layout() {
                 Ok(p) => p,
                 Err(e) => {
@@ -78,44 +78,25 @@ pub async fn handle(cmd: BrainCmd) {
             );
             println!("     memory: {}", st.memory_path);
 
-            if verify_egress {
-                if !st.brain_running {
-                    println!("     egress check: skipped (brain not running)");
-                } else {
-                    match docker::verify_no_egress() {
-                        Ok(true) => {
-                            println!("     {} egress — blocked (good)", crate::BULLET_GREEN)
-                        }
-                        Ok(false) => {
-                            println!(
-                                "     {} egress — UNEXPECTED reachability",
-                                crate::BULLET_RED
-                            );
-                        }
-                        Err(e) => println!("     egress check error: {}", e),
+            if st.brain_running {
+                match docker::verify_no_egress() {
+                    Ok(true) => {
+                        println!("     {} egress — blocked (sealed)", crate::BULLET_GREEN)
                     }
+                    Ok(false) => println!(
+                        "     {} egress — UNEXPECTED reachability",
+                        crate::BULLET_RED
+                    ),
+                    Err(e) => println!("     egress check: {}", e),
                 }
             }
         }
-        BrainCmd::Stop { remove } => {
-            let result = if remove {
-                docker::remove_brain_container()
-            } else {
-                docker::stop_brain_container()
-            };
-            match result {
-                Ok(()) => {
-                    if remove {
-                        println!("Sealed brain container removed (host memory preserved).");
-                    } else {
-                        println!("Sealed brain stopped (host memory preserved).");
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                    std::process::exit(1);
-                }
+        BrainCmd::Stop => match docker::stop_brain_container() {
+            Ok(()) => println!("Sealed brain stopped (host memory preserved)."),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
             }
-        }
+        },
     }
 }

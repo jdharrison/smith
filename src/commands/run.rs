@@ -62,54 +62,51 @@ pub async fn handle(cmd: RunCommands) {
             base,
             pr,
             ..
-        } => {
-            if *pr {
-                let detected_project = if project.is_none() {
-                    match detect_project_from_cwd() {
-                        Ok(Some(name)) => Some(name),
-                        _ => None,
-                    }
-                } else {
-                    project.clone()
-                };
+        } if *pr => {
+            let detected_project = if project.is_none() {
+                match detect_project_from_cwd() {
+                    Ok(Some(name)) => Some(name),
+                    _ => None,
+                }
+            } else {
+                project.clone()
+            };
 
-                let project_config = resolve_project_config(detected_project.clone())
-                    .unwrap_or_else(|e| {
-                        eprintln!("Error: {}", e);
-                        std::process::exit(1);
-                    });
-
-                let resolved_repo =
-                    resolve_repo(None, detected_project.clone()).unwrap_or_else(|e| {
-                        eprintln!("Error: {}", e);
-                        std::process::exit(1);
-                    });
-
-                let resolved_branch = branch.clone().unwrap_or_else(|| {
-                    let output = Command::new("git")
-                        .args(["rev-parse", "--abbrev-ref", "HEAD"])
-                        .output();
-                    match output {
-                        Ok(out) if out.status.success() => {
-                            String::from_utf8_lossy(&out.stdout).trim().to_string()
-                        }
-                        _ => {
-                            eprintln!(
-                                "Error: --pr requested but no branch provided and auto-detection failed"
-                            );
-                            std::process::exit(1);
-                        }
-                    }
+            let project_config =
+                resolve_project_config(detected_project.clone()).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
                 });
 
-                let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
-                post_release_pr = Some((
-                    detected_project,
-                    resolved_repo,
-                    resolved_branch,
-                    resolved_base,
-                ));
-            }
+            let resolved_repo = resolve_repo(None, detected_project.clone()).unwrap_or_else(|e| {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            });
+
+            let resolved_branch = branch.clone().unwrap_or_else(|| {
+                let output = Command::new("git")
+                    .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                    .output();
+                match output {
+                    Ok(out) if out.status.success() => {
+                        String::from_utf8_lossy(&out.stdout).trim().to_string()
+                    }
+                    _ => {
+                        eprintln!(
+                            "Error: --pr requested but no branch provided and auto-detection failed"
+                        );
+                        std::process::exit(1);
+                    }
+                }
+            });
+
+            let resolved_base = resolve_base_branch(base.as_deref(), project_config.as_ref());
+            post_release_pr = Some((
+                detected_project,
+                resolved_repo,
+                resolved_branch,
+                resolved_base,
+            ));
         }
         _ => {}
     }
