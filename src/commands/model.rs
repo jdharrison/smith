@@ -43,6 +43,8 @@ pub async fn handle(cmd: ModelCommands) {
                 None,
                 None,
                 env_map,
+                None,
+                None,
             ) {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
@@ -691,7 +693,7 @@ pub async fn handle(cmd: ModelCommands) {
             });
             let agents = cfg.agents.as_deref().unwrap_or(&[]);
 
-            // Start Ollama for each local agent (each gets its own container with its model)
+            // Start Ollama for local model profiles (does not auto-start smith-agent-* workers).
             let local_agents: Vec<_> = agents
                 .iter()
                 .filter(|e| e.agent_type.as_deref() == Some("local"))
@@ -702,10 +704,16 @@ pub async fn handle(cmd: ModelCommands) {
                     .clone()
                     .unwrap_or_else(|| crate::DEFAULT_LOCAL_MODEL.to_string());
                 if docker::is_ollama_running() {
-                    println!("  Ollama already running");
+                    if let Some(b) = docker::active_ollama_backend() {
+                        println!("  Ollama already running ({:?})", b);
+                    } else {
+                        println!("  Ollama already running");
+                    }
                 } else {
-                    match docker::start_ollama_container(&local_model, true) {
-                        Ok(_) => {}
+                    match docker::start_ollama(&local_model) {
+                        Ok((_, backend)) => {
+                            println!("  Ollama ready ({:?})", backend);
+                        }
                         Err(e) => {
                             eprintln!("Error starting Ollama: {}", e);
                             std::process::exit(1);
@@ -714,163 +722,19 @@ pub async fn handle(cmd: ModelCommands) {
                 }
             }
 
-            // Build agent list (1 agent : 1 container) - only enabled local agents (skip cloud)
-            let enabled_agents: Vec<_> = if agents.is_empty() {
-                // Default agent is cloud, so no containers to start
-                vec![]
+            if local_agents.is_empty() {
+                println!("No local model profiles; nothing to start.");
+                println!("  Tip: `smith agent start <name>` for specialized workers.");
             } else {
-                agents
-                    .iter()
-                    .filter(|e| {
-                        let is_enabled = e.enabled.unwrap_or(true);
-                        let is_local = e.agent_type.as_deref() == Some("local");
-                        is_enabled && is_local
-                    })
-                    .enumerate()
-                    .map(|(i, e)| {
-                        let image = if docker::image_exists(&docker::agent_built_image_tag(&e.name))
-                            .unwrap_or(false)
-                        {
-                            docker::agent_built_image_tag(&e.name)
-                        } else {
-                            e.image.clone()
-                        };
-                        let is_local = e.agent_type.as_deref() == Some("local");
-                        let provider = if is_local {
-                            Some("ollama".to_string())
-                        } else {
-                            e.provider.clone()
-                        };
-                        let base_url = if is_local {
-                            Some(format!(
-                                "http://host.docker.internal:{}",
-                                docker::OLLAMA_PORT
-                            ))
-                        } else {
-                            e.base_url.clone()
-                        };
-                        (
-                            e.name.clone(),
-                            image,
-                            provider,
-                            base_url,
-                            e.enabled.unwrap_or(true),
-                            agent_port(e, i),
-                        )
-                    })
-                    .collect()
-            };
-            // Print skipping messages for cloud agents
-            if !agents.is_empty() {
-                for agent in agents.iter() {
-                    let is_local = agent.agent_type.as_deref() == Some("local");
-                    if !is_local {
-                        println!("  {} Skipping cloud agent '{}'", BULLET_BLUE, agent.name);
-                    }
-                }
+                println!("Ollama ready. Named agent containers are not auto-started.");
+                println!("  Start a worker with: smith agent start <name>");
+                println!("  List agents with:    smith agent list");
             }
-            let running = docker::list_running_agent_containers().unwrap_or_default();
             if verbose {
-                println!("Agents: {}", enabled_agents.len());
-                for (name, image, provider, base_url, _enabled, port) in &enabled_agents {
-                    let status = if running.contains(name) {
-                        "already running"
-                    } else {
-                        "will start"
-                    };
-                    let provider_str = provider.as_deref().unwrap_or("-");
-                    let mode = if base_url.is_some() { "local" } else { "cloud" };
-                    println!(
-                        "  {} -> {} port={} provider={} mode={} {} [{}]",
-                        name,
-                        image,
-                        port,
-                        provider_str,
-                        mode,
-                        clickable_agent_url(*port),
-                        status
-                    );
-                }
+                let running = docker::list_running_agent_containers().unwrap_or_default();
                 if !running.is_empty() {
-                    println!("Already running: {}", running.join(", "));
+                    println!("Already running named agents: {}", running.join(", "));
                 }
-            }
-            let mut ok = 0usize;
-            let mut failed = Vec::new();
-            for (name, image, provider, base_url, _enabled, port) in &enabled_agents {
-                if running.contains(name) {
-                    println!(
-                        "  {}: already running (port {} {})",
-                        name,
-                        port,
-                        clickable_agent_url(*port)
-                    );
-                    ok += 1;
-                    continue;
-                }
-                if verbose {
-                    let container_name = docker::agent_container_name(name);
-                    let env_vars = if let Some(ref p) = provider {
-                        let mut vars = format!(" -e {}_API_KEY={}", p.to_uppercase(), "dummy");
-                        if let Some(ref url) = base_url {
-                            vars.push_str(&format!(" -e OPENCODE_BASE_URL={}", url));
-                        }
-                        vars
-                    } else {
-                        String::new()
-                    };
-                    println!(
-                                "  {}: docker run -d --name {} -p {}:{}{} --entrypoint opencode {} serve --hostname 0.0.0.0 --port {}",
-                                name, container_name, port, port, env_vars, image, port
-                            );
-                }
-                match docker::start_agent_container(
-                    name,
-                    image,
-                    *port,
-                    provider.as_deref(),
-                    base_url.as_deref(),
-                ) {
-                    Ok(()) => {
-                        println!(
-                            "  {}: started (port {} {})",
-                            name,
-                            port,
-                            clickable_agent_url(*port)
-                        );
-                        if verbose {
-                            println!("  {}: waiting 3s before health check...", name);
-                        }
-                        std::thread::sleep(std::time::Duration::from_secs(3));
-                        if verbose {
-                            println!("  {}: GET {}", name, clickable_agent_url(*port));
-                        }
-                        match docker::test_agent_server(*port) {
-                            Ok(()) => {
-                                println!("  {}: health check OK", name);
-                                ok += 1;
-                            }
-                            Err(e) => {
-                                eprintln!("  {}: health check failed - {}", name, e);
-                                failed.push((name.clone(), e));
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("  {}: failed to start - {}", name, e);
-                        failed.push((name.clone(), e));
-                    }
-                }
-            }
-            if failed.is_empty() {
-                if ok == 0 {
-                    println!("No local agents to start.");
-                } else {
-                    println!("All {} local agent(s) started and tested successfully.", ok);
-                }
-            } else {
-                println!("Started {}; {} failed.", ok, failed.len());
-                std::process::exit(1);
             }
         }
         ModelCommands::Stop => {
@@ -916,12 +780,14 @@ pub async fn handle(cmd: ModelCommands) {
                 }
                 println!("Stopped {} container(s).", stopped.len());
             }
-            // Also stop Ollama if it's running
-            if docker::is_ollama_running() {
-                if let Err(e) = docker::stop_ollama_container() {
+            // Also stop Ollama if it's running (container only; host Ollama is user-managed)
+            if docker::is_docker_ollama_running() || docker::is_ollama_running() {
+                if let Err(e) = docker::stop_ollama() {
                     eprintln!("Warning: failed to stop Ollama: {}", e);
+                } else if docker::is_docker_ollama_running() {
+                    // stop_ollama already printed
                 } else {
-                    println!("  Ollama: stopped");
+                    println!("  Ollama: stopped (or host left running)");
                 }
             }
         }

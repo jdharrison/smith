@@ -1,5 +1,75 @@
 use crate::*;
 
+/// Validate local environment (config, Docker, install marker). Always available.
+pub async fn handle_doctor(verbose: bool) {
+    println!("{} smith doctor", BULLET_GREEN);
+    println!();
+
+    let mut ok = true;
+
+    match config_dir() {
+        Ok(dir) => {
+            println!("  {} config - {}", BULLET_GREEN, dir.display());
+            if verbose {
+                let config_path = dir.join("config.toml");
+                println!(
+                    "       config.toml: {}",
+                    if config_path.exists() {
+                        "present"
+                    } else {
+                        "missing"
+                    }
+                );
+            }
+        }
+        Err(e) => {
+            ok = false;
+            println!("  {} config - {}", BULLET_RED, e);
+        }
+    }
+
+    match docker::check_docker_available() {
+        Ok(()) => {
+            println!("  {} docker - available", BULLET_GREEN);
+            if verbose {
+                if let Ok(o) = Command::new("docker").arg("--version").output() {
+                    let v = String::from_utf8_lossy(&o.stdout);
+                    let v = v.trim();
+                    if !v.is_empty() {
+                        println!("       {}", v);
+                    }
+                }
+            }
+        }
+        Err(e) => {
+            ok = false;
+            println!("  {} docker - {}", BULLET_RED, e);
+        }
+    }
+
+    if is_installed() {
+        match installed_version() {
+            Some(v) if !v.is_empty() => {
+                println!("  {} install - {}", BULLET_GREEN, v);
+            }
+            _ => println!("  {} install - marked (legacy)", BULLET_GREEN),
+        }
+    } else {
+        println!(
+            "  {} install - not installed (run `smith install`)",
+            BULLET_YELLOW
+        );
+    }
+
+    println!();
+    if ok {
+        println!("  {} environment OK", BULLET_GREEN);
+    } else {
+        println!("  {} environment has issues", BULLET_RED);
+        std::process::exit(1);
+    }
+}
+
 pub async fn handle_status(verbose: bool) {
     let docker_ok = docker::check_docker_available().is_ok();
     let installed = is_installed();
@@ -262,6 +332,8 @@ pub async fn handle_install() {
                     default_role: None,
                     roles: None,
                     env: None,
+                    prompt: None,
+                    mcp: None,
                 };
                 cfg.agents = Some(vec![new_agent]);
                 if let Err(e) = save_config(&cfg) {
@@ -349,6 +421,8 @@ pub async fn handle_install() {
                 base_url,
                 port,
                 enabled,
+                None,
+                None,
                 None,
                 None,
                 None,
@@ -552,6 +626,8 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
                 None,
                 None,
                 None,
+                None,
+                None,
             ) {
                 Ok(()) => {
                     if cfg.current_agent.is_none() {
@@ -611,23 +687,20 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
         .and_then(|a| a.model.clone())
         .unwrap_or_else(|| DEFAULT_LOCAL_MODEL.to_string());
 
-    // 5. Start Ollama
+    // 5. Start Ollama (host preferred on AMD/Windows; Docker NVIDIA only when available)
     if docker::is_ollama_running() {
-        println!("  {} ollama - already running", BULLET_GREEN);
+        println!(
+            "  {} ollama - already running ({:?})",
+            BULLET_GREEN,
+            docker::active_ollama_backend().unwrap_or(docker::OllamaBackend::Docker)
+        );
     } else {
         println!("  Starting Ollama with model '{}'...", local_model);
-        match docker::start_ollama_container(&local_model, true) {
-            Ok(_) => println!("  {} ollama - started", BULLET_GREEN),
+        match docker::start_ollama(&local_model) {
+            Ok((_, backend)) => println!("  {} ollama - started ({:?})", BULLET_GREEN, backend),
             Err(e) => {
-                // Retry without GPU
-                match docker::start_ollama_container(&local_model, false) {
-                    Ok(_) => println!("  {} ollama - started (CPU)", BULLET_GREEN),
-                    Err(e2) => {
-                        eprintln!("  {} ollama - {}", BULLET_RED, e2);
-                        eprintln!("     (GPU attempt: {})", e);
-                        return;
-                    }
-                }
+                eprintln!("  {} ollama - {}", BULLET_RED, e);
+                return;
             }
         }
     }
@@ -741,12 +814,10 @@ pub async fn handle_uninstall(force: bool, remove_config: bool, remove_images: b
             Err(e) => eprintln!("    Warning: {}", e),
         }
 
-        if docker::is_ollama_running() {
-            println!("  Stopping Ollama container...");
-            if let Err(e) = docker::stop_ollama_container() {
+        if docker::is_docker_ollama_running() || docker::is_host_ollama_api_up() {
+            println!("  Stopping Ollama...");
+            if let Err(e) = docker::stop_ollama() {
                 eprintln!("    Warning: {}", e);
-            } else {
-                println!("    Ollama: stopped");
             }
         }
 

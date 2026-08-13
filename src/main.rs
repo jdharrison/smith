@@ -2,11 +2,12 @@ mod brain;
 mod commands;
 mod docker;
 mod github;
+mod term_md;
 
 use clap::{ArgAction, CommandFactory, Parser, Subcommand};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Write};
@@ -1424,9 +1425,36 @@ struct Cli {
 #[allow(clippy::large_enum_variant)]
 enum Commands {
     /// Dependencies, agents, projects
-    #[command(next_help_heading = "System")]
+    #[command(next_help_heading = "Commands (Service)")]
     Status {
         /// Show raw output (config path, docker version/info, agent details)
+        #[arg(short, long)]
+        verbose: bool,
+    },
+    /// Sealed local brain chat (no cloud egress)
+    Chat {
+        /// One-shot message (non-interactive)
+        #[arg(short = 'm', long)]
+        message: Option<String>,
+        /// Start a fresh brain chat session (forget prior turns)
+        #[arg(long)]
+        new: bool,
+    },
+    /// Iterate/kill solve loop against durable analysis.json
+    Think {
+        /// Goal to work toward
+        goal: String,
+        /// Maximum iteration steps
+        #[arg(long, default_value = "5")]
+        max_steps: u32,
+        /// Reset working/analysis.json for this goal
+        #[arg(long)]
+        reset: bool,
+    },
+    /// Validate the local environment
+    #[command(next_help_heading = "Commands (System)")]
+    Doctor {
+        /// Show detailed check output
         #[arg(short, long)]
         verbose: bool,
     },
@@ -1444,11 +1472,26 @@ enum Commands {
         #[arg(long)]
         remove_images: bool,
     },
+    /// Model, project, role, agent, and brain configuration
+    Settings {
+        #[command(subcommand)]
+        cmd: SettingsCommands,
+    },
     /// Print help
     Help,
     /// Print version
     Version,
-    #[command(next_help_heading = "Commands")]
+    /// Run pipeline workflows (plan/develop/review/release)
+    #[command(hide = true)]
+    Run {
+        #[command(subcommand)]
+        cmd: RunCommands,
+    },
+}
+
+#[derive(Subcommand)]
+#[allow(clippy::large_enum_variant)]
+enum SettingsCommands {
     /// Local model/provider runtimes
     Model {
         #[command(subcommand)]
@@ -1464,32 +1507,10 @@ enum Commands {
         #[command(subcommand)]
         cmd: RoleCommands,
     },
-    /// Run pipeline workflows (plan/develop/review/release)
-    Run {
-        #[command(subcommand)]
-        cmd: RunCommands,
-    },
-    /// Project/branch execution agent containers
+    /// Specialized agents (named workers) and project/branch workspace agents
     Agent {
         #[command(subcommand)]
         cmd: AgentCommands,
-    },
-    /// Sealed local brain chat (no cloud egress)
-    Chat {
-        /// One-shot message (non-interactive)
-        #[arg(short = 'm', long)]
-        message: Option<String>,
-    },
-    /// Iterate/kill solve loop against durable analysis.json
-    Think {
-        /// Goal to work toward
-        goal: String,
-        /// Maximum iteration steps
-        #[arg(long, default_value = "5")]
-        max_steps: u32,
-        /// Reset working/analysis.json for this goal
-        #[arg(long)]
-        reset: bool,
     },
     /// Sealed brain container ops
     Brain {
@@ -1873,11 +1894,47 @@ enum RunCommands {
     },
 }
 
-/// Commands for persistent project/branch-scoped agent containers.
+/// Commands for named specialized agents and project/branch workspace agents.
 #[derive(Subcommand)]
 enum AgentCommands {
-    /// Start a persistent agent for project/branch
+    /// Add a named specialized agent (smith-agent-<name>)
+    Add {
+        /// Agent name (id), e.g. coding, search
+        name: String,
+        /// Docker image (default: official OpenCode image)
+        #[arg(long)]
+        image: Option<String>,
+        /// Agent type: "local" or "cloud" (default: cloud)
+        #[arg(long = "type", visible_alias = "agent-type")]
+        agent_type: Option<String>,
+        /// Model to use (e.g. qwen3:14b, anthropic/claude-sonnet-4-5)
+        #[arg(long)]
+        model: Option<String>,
+        /// Provider name (e.g. ollama, anthropic)
+        #[arg(long)]
+        provider: Option<String>,
+        /// Custom base URL for the provider
+        #[arg(long)]
+        base_url: Option<String>,
+        /// Host port for opencode serve
+        #[arg(long)]
+        port: Option<u16>,
+        /// System prompt / specialization instructions injected at start
+        #[arg(long)]
+        prompt: Option<String>,
+        /// MCP server spec (repeatable): `name`, `name=local:command…`, or `name=cloud:https://…`
+        #[arg(long)]
+        mcp: Vec<String>,
+    },
+    /// Remove a named specialized agent from config (does not stop a running container)
+    Remove {
+        /// Agent name
+        name: String,
+    },
+    /// Start a named agent, or a project/branch workspace agent
     Start {
+        /// Named specialized agent (smith-agent-<name>). Omit to start a workspace agent.
+        name: Option<String>,
         /// Project name (auto-detected from git repo if not specified)
         #[arg(long)]
         project: Option<String>,
@@ -1888,17 +1945,22 @@ enum AgentCommands {
         #[arg(long)]
         port: Option<u16>,
     },
-    /// Stop a spawned agent
+    /// Stop a named agent, or a project/branch workspace agent
     Stop {
+        /// Named specialized agent to stop
+        name: Option<String>,
         /// Project name (auto-detected from git repo if not specified)
         #[arg(long)]
         project: Option<String>,
         /// Branch name (auto-detected from current git branch if not specified)
         #[arg(long)]
         branch: Option<String>,
-        /// Stop all spawned agents
+        /// Stop all workspace (spawned) agents
         #[arg(long, short)]
         all: bool,
+        /// Stop all named specialized agents (smith-agent-*)
+        #[arg(long)]
+        all_named: bool,
     },
     /// Restart a spawned agent
     Restart {
@@ -1953,9 +2015,9 @@ enum AgentCommands {
         #[arg(short, long)]
         follow: bool,
     },
-    /// List all spawned agents
+    /// List named specialized agents and workspace agents
     List,
-    /// Remove all stopped spawned containers
+    /// Remove all stopped spawned workspace containers
     Prune,
 }
 
@@ -1995,6 +2057,21 @@ struct AgentRole {
     prompt: Option<String>,
 }
 
+/// MCP server attachment for a specialized agent (local stdio or cloud/remote URL).
+#[derive(Serialize, Deserialize, Clone, Debug)]
+struct AgentMcp {
+    name: String,
+    /// "local" (command/args) or "cloud" (url)
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    mcp_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    command: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    args: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    url: Option<String>,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 struct AgentEntry {
     /// Unique id/name for the agent
@@ -2031,6 +2108,12 @@ struct AgentEntry {
     /// Env passthrough mapping for spawned containers: KEY -> "$HOST_ENV"
     #[serde(skip_serializing_if = "Option::is_none")]
     env: Option<HashMap<String, String>>,
+    /// Specialization prompt injected into the agent runtime config
+    #[serde(skip_serializing_if = "Option::is_none")]
+    prompt: Option<String>,
+    /// MCP servers available to this agent (local skills / cloud access)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mcp: Option<Vec<AgentMcp>>,
 }
 
 /// Resolve port for an agent: port if set, else OPENCODE_SERVER_PORT + index.
@@ -2295,7 +2378,7 @@ fn prompt_yn_skip(prompt: &str) -> Option<bool> {
     Some(false)
 }
 
-/// Add an agent to config (used by CLI `agent add` and install wizard). Does not save.
+/// Add an agent to config (used by CLI `agent add` / `model add` and install wizard). Does not save.
 #[allow(clippy::too_many_arguments)]
 fn add_agent_to_config(
     cfg: &mut SmithConfig,
@@ -2311,6 +2394,8 @@ fn add_agent_to_config(
     default_role: Option<String>,
     roles: Option<HashMap<String, AgentRole>>,
     env: Option<HashMap<String, String>>,
+    prompt: Option<String>,
+    mcp: Option<Vec<AgentMcp>>,
 ) -> Result<(), String> {
     if cfg
         .agents
@@ -2327,6 +2412,7 @@ fn add_agent_to_config(
     let small_model = small_model.filter(|s| !s.is_empty());
     let provider = provider.filter(|s| !s.is_empty());
     let base_url = base_url.filter(|s| !s.is_empty());
+    let prompt = prompt.filter(|s| !s.trim().is_empty());
     let agents = cfg.agents.get_or_insert_with(Vec::new);
 
     // First agent becomes "default" if no name specified
@@ -2344,7 +2430,7 @@ fn add_agent_to_config(
             AgentRole {
                 mode: None,
                 model: model.clone(),
-                prompt: None,
+                prompt: prompt.clone(),
             },
         );
         Some(default_roles)
@@ -2368,11 +2454,151 @@ fn add_agent_to_config(
         default_role,
         roles,
         env,
+        prompt,
+        mcp,
     });
     if cfg.current_agent.is_none() {
         cfg.current_agent = Some(agent_name);
     }
     Ok(())
+}
+
+/// Parse `--mcp` specs: `name`, `name=local:cmd arg…`, `name=cloud:https://…`, `name:https://…`
+fn parse_agent_mcp_specs(specs: &[String]) -> Result<Vec<AgentMcp>, String> {
+    let mut out = Vec::new();
+    for raw in specs {
+        let spec = raw.trim();
+        if spec.is_empty() {
+            continue;
+        }
+        // name=type:rest  OR  name:rest  OR  name
+        let (name, rest) = if let Some((n, r)) = spec.split_once('=') {
+            (n.trim(), Some(r.trim()))
+        } else if let Some((n, r)) = spec.split_once(':') {
+            // Only treat as name:url when rest looks like a URL
+            if r.starts_with("http://") || r.starts_with("https://") {
+                (n.trim(), Some(r.trim()))
+            } else {
+                (spec, None)
+            }
+        } else {
+            (spec, None)
+        };
+        if name.is_empty() {
+            return Err(format!("Invalid --mcp '{}': empty name", raw));
+        }
+        let mut entry = AgentMcp {
+            name: name.to_string(),
+            mcp_type: None,
+            command: None,
+            args: None,
+            url: None,
+        };
+        if let Some(rest) = rest {
+            if let Some((kind, payload)) = rest.split_once(':') {
+                let kind = kind.trim().to_lowercase();
+                let payload = payload.trim();
+                match kind.as_str() {
+                    "local" => {
+                        entry.mcp_type = Some("local".to_string());
+                        let mut parts = payload.split_whitespace();
+                        entry.command = parts.next().map(|s| s.to_string());
+                        let args: Vec<String> = parts.map(|s| s.to_string()).collect();
+                        if !args.is_empty() {
+                            entry.args = Some(args);
+                        }
+                    }
+                    "cloud" | "remote" | "http" | "sse" => {
+                        entry.mcp_type = Some("cloud".to_string());
+                        entry.url = Some(payload.to_string());
+                    }
+                    _ if rest.starts_with("http://") || rest.starts_with("https://") => {
+                        entry.mcp_type = Some("cloud".to_string());
+                        entry.url = Some(rest.to_string());
+                    }
+                    _ => {
+                        // Treat whole rest as local command line
+                        entry.mcp_type = Some("local".to_string());
+                        let mut parts = rest.split_whitespace();
+                        entry.command = parts.next().map(|s| s.to_string());
+                        let args: Vec<String> = parts.map(|s| s.to_string()).collect();
+                        if !args.is_empty() {
+                            entry.args = Some(args);
+                        }
+                    }
+                }
+            } else if rest.starts_with("http://") || rest.starts_with("https://") {
+                entry.mcp_type = Some("cloud".to_string());
+                entry.url = Some(rest.to_string());
+            } else {
+                entry.mcp_type = Some("local".to_string());
+                entry.command = Some(rest.to_string());
+            }
+        } else {
+            entry.mcp_type = Some("local".to_string());
+        }
+        out.push(entry);
+    }
+    Ok(out)
+}
+
+/// Write per-agent OpenCode config (prompt + mcp stub) under ~/.config/smith/agents/<name>/.
+fn write_named_agent_runtime_config(entry: &AgentEntry) -> Result<PathBuf, String> {
+    let dir = config_dir()?.join("agents").join(&entry.name);
+    std::fs::create_dir_all(&dir).map_err(|e| format!("Failed to create agent dir: {}", e))?;
+
+    if let Some(ref prompt) = entry.prompt {
+        std::fs::write(dir.join("prompt.md"), prompt)
+            .map_err(|e| format!("Failed to write prompt.md: {}", e))?;
+    }
+
+    let mut cfg = serde_json::Map::new();
+    cfg.insert(
+        "$schema".to_string(),
+        json!("https://opencode.ai/config.json"),
+    );
+    if let Some(ref model) = entry.model {
+        let model_ref = if model.contains('/') {
+            model.clone()
+        } else if entry.provider.as_deref() == Some("ollama")
+            || entry.agent_type.as_deref() == Some("local")
+        {
+            format!("ollama/{}", model)
+        } else {
+            model.clone()
+        };
+        cfg.insert("model".to_string(), json!(model_ref));
+    }
+    if entry.prompt.is_some() {
+        cfg.insert("instructions".to_string(), json!(["prompt.md"]));
+    }
+    if let Some(ref mcps) = entry.mcp {
+        if !mcps.is_empty() {
+            let mut mcp_map = serde_json::Map::new();
+            for m in mcps {
+                let mut server = serde_json::Map::new();
+                let kind = m.mcp_type.as_deref().unwrap_or("local");
+                server.insert("type".to_string(), json!(kind));
+                if let Some(ref cmd) = m.command {
+                    server.insert("command".to_string(), json!(cmd));
+                }
+                if let Some(ref args) = m.args {
+                    server.insert("args".to_string(), json!(args));
+                }
+                if let Some(ref url) = m.url {
+                    server.insert("url".to_string(), json!(url));
+                }
+                mcp_map.insert(m.name.clone(), Value::Object(server));
+            }
+            cfg.insert("mcp".to_string(), Value::Object(mcp_map));
+        }
+    }
+
+    let path = dir.join("opencode.json");
+    let body = serde_json::to_string_pretty(&Value::Object(cfg))
+        .map_err(|e| format!("Failed to serialize agent config: {}", e))?;
+    std::fs::write(&path, body).map_err(|e| format!("Failed to write opencode.json: {}", e))?;
+    Ok(dir)
 }
 
 fn parse_agent_env_mappings(values: &[String]) -> Result<HashMap<String, String>, String> {
@@ -3070,22 +3296,31 @@ fn print_smith_help() {
         println!("{}\n", about);
     }
     println!("Usage: smith [COMMAND]");
-    const SYSTEM: &[&str] = &["status", "install", "uninstall", "help", "version"];
-    const COMMANDS: &[&str] = &[
-        "model", "project", "role", "agent", "run", "chat", "think", "brain",
+    const SERVICE: &[&str] = &["status", "chat", "think"];
+    const SYSTEM: &[&str] = &[
+        "doctor",
+        "install",
+        "uninstall",
+        "settings",
+        "help",
+        "version",
     ];
-    println!("\nCommands:");
-    for sub in c.get_subcommands() {
-        let name = sub.get_name();
-        if SYSTEM.contains(&name) {
+    println!("\nCommands (Service):");
+    for name in SERVICE {
+        if let Some(sub) = c.find_subcommand(name) {
+            if sub.is_hide_set() {
+                continue;
+            }
             let short = sub.get_about().unwrap_or_default();
             println!("  {name:<HELP_NAME_WIDTH$}  {short}");
         }
     }
-    println!();
-    for sub in c.get_subcommands() {
-        let name = sub.get_name();
-        if COMMANDS.contains(&name) {
+    println!("\nCommands (System):");
+    for name in SYSTEM {
+        if let Some(sub) = c.find_subcommand(name) {
+            if sub.is_hide_set() {
+                continue;
+            }
             let short = sub.get_about().unwrap_or_default();
             println!("  {name:<HELP_NAME_WIDTH$}  {short}");
         }
@@ -3102,7 +3337,32 @@ async fn main() {
             std::process::exit(0);
         }
         Some(Commands::Status { verbose }) => commands::system::handle_status(verbose).await,
+        Some(Commands::Chat { message, new }) => commands::chat::handle_chat(message, new).await,
+        Some(Commands::Think {
+            goal,
+            max_steps,
+            reset,
+        }) => commands::chat::handle_think(goal, max_steps, reset).await,
+        Some(Commands::Doctor { verbose }) => commands::system::handle_doctor(verbose).await,
         Some(Commands::Install) => commands::system::handle_install().await,
+        Some(Commands::Uninstall {
+            force,
+            remove_config,
+            remove_images,
+        }) => commands::system::handle_uninstall(force, remove_config, remove_images).await,
+        Some(Commands::Settings { cmd }) => match cmd {
+            SettingsCommands::Model { cmd } => commands::model::handle(cmd).await,
+            SettingsCommands::Project { cmd } => commands::project::handle(cmd).await,
+            SettingsCommands::Role { cmd } => commands::role::handle(cmd).await,
+            SettingsCommands::Agent { cmd } => commands::agent::handle(cmd).await,
+            SettingsCommands::Brain { cmd } => {
+                let mapped = match cmd {
+                    BrainCommands::Status => commands::brain::BrainCmd::Status,
+                    BrainCommands::Stop => commands::brain::BrainCmd::Stop,
+                };
+                commands::brain::handle(mapped).await
+            }
+        },
         Some(Commands::Help) => {
             print_smith_help();
             std::process::exit(0);
@@ -3110,29 +3370,7 @@ async fn main() {
         Some(Commands::Version) => {
             println!("{}", env!("CARGO_PKG_VERSION"));
         }
-        Some(Commands::Uninstall {
-            force,
-            remove_config,
-            remove_images,
-        }) => commands::system::handle_uninstall(force, remove_config, remove_images).await,
-        Some(Commands::Model { cmd }) => commands::model::handle(cmd).await,
-        Some(Commands::Project { cmd }) => commands::project::handle(cmd).await,
-        Some(Commands::Role { cmd }) => commands::role::handle(cmd).await,
         Some(Commands::Run { cmd }) => commands::run::handle(cmd).await,
-        Some(Commands::Agent { cmd }) => commands::agent::handle(cmd).await,
-        Some(Commands::Chat { message }) => commands::chat::handle_chat(message).await,
-        Some(Commands::Think {
-            goal,
-            max_steps,
-            reset,
-        }) => commands::chat::handle_think(goal, max_steps, reset).await,
-        Some(Commands::Brain { cmd }) => {
-            let mapped = match cmd {
-                BrainCommands::Status => commands::brain::BrainCmd::Status,
-                BrainCommands::Stop => commands::brain::BrainCmd::Stop,
-            };
-            commands::brain::handle(mapped).await
-        }
     }
 }
 

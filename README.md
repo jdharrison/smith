@@ -61,14 +61,23 @@ cargo run -- help
 
 Private, no-egress conversation and solve loop against a local Ollama model. Existing `smith run` / `smith agent` pipelines are unchanged.
 
-**Prerequisites:** Docker, and a local model running (`smith model add … --agent-type local` then `smith model start`).
+**Prerequisites:** Docker (for sealed brain / agents). Local model via `smith settings model add … --agent-type local` then `smith settings model start`.
+
+**GPU / Ollama backends:**
+- **NVIDIA + Docker:** `smith settings model start` may run `smith-ollama` with `--gpus` when the NVIDIA Container Toolkit is present.
+- **AMD on Windows (RX 7900 etc.):** Docker Desktop `--gpus` is NVIDIA-only; ROCm passthrough inside Desktop is not a reliable MVP path. Install [native Ollama for Windows](https://ollama.com/download), then `smith settings model start` prefers **host Ollama** and points the sealed brain at `host.docker.internal:11434` (soft-seal: no cloud keys, but egress is not blocked like the internal-net Docker path).
+- **Fallback:** Docker Ollama in **CPU** mode (slow for 14B — avoid unless necessary).
 
 ```bash
-# Interactive sealed chat (text REPL)
+# Interactive sealed chat (text REPL; /new resets the session)
+# Markdown replies are rendered in the terminal (set NO_COLOR=1 for raw)
 smith chat
 
-# One-shot
+# One-shot (same ongoing session as REPL)
 smith chat -m "Summarize my profile preferences"
+
+# Fresh session, then one-shot
+smith chat --new -m "Start over"
 
 # Iterate/kill solve loop (writes durable analysis.json)
 smith think "Draft a private research outline on X" --reset
@@ -76,20 +85,30 @@ smith think "Draft a private research outline on X" --reset
 # Ops
 smith brain status
 smith brain stop
+# or: smith settings model start / stop
 ```
 
-**Isolation:** brain + Ollama share Docker network `smith-brain-net` (`--internal`, no external egress). The brain container has no published ports, no SSH mount, and no cloud API keys.
+**Isolation (Docker Ollama):** brain + Ollama share Docker network `smith-brain-net` (`--internal`, no external egress). The brain container has no published ports, no SSH mount, and no cloud API keys.
+
+**Isolation (host Ollama):** brain uses `host.docker.internal` (soft-seal). Still no published ports / no cloud API keys; egress blocking does not apply.
 
 **Host memory** (survives container stop/recreate), under the smith data dir `…/smith/brain/`:
 
 | Path | Purpose |
 |------|---------|
 | `profile.md` | Stable preferences / constraints |
-| `episodic/` | Session notes (chat exit writes a note) |
+| `episodic/session.jsonl` | Ongoing chat transcript (one JSON turn per line) |
+| `episodic/` | Dated session notes (e.g. archived on `/new`) |
+| `working/session.md` | Bounded recent chat window |
+| `working/chat_session.json` | OpenCode session id for `--session` continue |
 | `working/analysis.json` | Think-loop notebook |
+| `working/pending_intent.json` | Host-routable intent (e.g. search ask awaiting confirmation) |
+| `.opencode-share/` | OpenCode session DB (bind-mounted into smith-brain) |
 | `journal/` | Per-step attempt logs |
 
-Edit `profile.md` freely; it stays on-host and is injected into chat context only inside the sealed bubble.
+Edit `profile.md` freely; it stays on-host and is injected into chat context only inside the sealed bubble. `smith chat` / `smith chat -m` share one continuous session. Named workers (`smith-agent-*`) and spawn agents do **not** receive brain chat history.
+
+**Live web search (ephemeral):** chat stays sealed. After smith confirms an ambiguous query, the host opens a short-lived `smith-search-*` container on the default bridge (internet), fetches results (DuckDuckGo + wttr.in for weather), then `--rm`. Results are declassified back into the chat turn. No long-running search agent.
 
 ### Pipeline commands (run plan / develop / review / release)
 

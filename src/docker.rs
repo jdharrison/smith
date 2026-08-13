@@ -73,6 +73,29 @@ fn collect_text_parts(value: &Value, out: &mut Vec<String>) {
             }
         }
         Value::Object(map) => {
+            // OpenCode `--format json` events are typed. Prefer final assistant text parts only;
+            // skip reasoning / tool / step events so we don't print meta-narration.
+            if let Some(event_type) = map.get("type").and_then(Value::as_str) {
+                if event_type == "text" {
+                    if let Some(part) = map.get("part") {
+                        if let Some(text) = part.get("text").and_then(Value::as_str) {
+                            if !text.is_empty() {
+                                out.push(text.to_string());
+                            }
+                            return;
+                        }
+                        collect_text_parts(part, out);
+                        return;
+                    }
+                    if let Some(text) = map.get("text").and_then(Value::as_str) {
+                        if !text.is_empty() {
+                            out.push(text.to_string());
+                        }
+                    }
+                }
+                // Non-reply stream events — ignore nested text (e.g. reasoning about a reply).
+                return;
+            }
             for key in [
                 "text",
                 "delta",
@@ -85,7 +108,8 @@ fn collect_text_parts(value: &Value, out: &mut Vec<String>) {
                     collect_text_parts(v, out);
                 }
             }
-            for key in ["data", "result", "response", "choices", "parts"] {
+            // Untyped payloads may nest under these keys.
+            for key in ["data", "result", "response", "choices", "parts", "part"] {
                 if let Some(v) = map.get(key) {
                     collect_text_parts(v, out);
                 }
@@ -203,7 +227,9 @@ fn provider_api_key_env(provider: &str) -> String {
 
 /// Start an agent container running OpenCode in server mode. Exposes `port` on the host.
 /// Uses `--entrypoint opencode` so the container runs exactly `opencode serve --hostname 0.0.0.0 --port N`.
-/// If a container with this name already exists, tries to start it (e.g. after stop).
+/// If a container with this name already exists, removes and recreates it.
+/// If `config_mount` is Some, mounts that host dir to `/root/.config/opencode:ro`;
+/// otherwise mounts the global `~/.config/opencode` when present.
 /// If provider is Some, passes through the corresponding API key env var from host to container.
 /// If base_url is Some, passes OPENCODE_BASE_URL env var to container.
 pub fn start_agent_container(
@@ -212,86 +238,49 @@ pub fn start_agent_container(
     port: u16,
     provider: Option<&str>,
     base_url: Option<&str>,
+    config_mount: Option<&std::path::Path>,
 ) -> Result<(), String> {
     let name = agent_container_name(agent_name);
     let port_str = port.to_string();
 
-    let mut args = vec![
-        "run".to_string(),
-        "-d".to_string(),
-        "--restart".to_string(),
-        "unless-stopped".to_string(),
-        "--name".to_string(),
-        name.clone(),
-        "-p".to_string(),
-        format!("{}:{}", port, port),
-    ];
+    let mount_dir = config_mount
+        .map(|p| p.to_path_buf())
+        .or_else(|| host_opencode_config_dir().filter(|p| p.exists()));
 
-    if let Some(cfg_dir) = host_opencode_config_dir().filter(|p| p.exists()) {
-        args.extend([
-            "-v".to_string(),
-            format!("{}:/root/.config/opencode:ro", cfg_dir.to_string_lossy()),
-        ]);
-    }
-
-    if let Some(prov) = provider {
-        let env_var = provider_api_key_env(prov);
-        args.push("-e".to_string());
-        args.push(env_var);
-    }
-
-    if let Some(url) = base_url {
-        args.push("-e".to_string());
-        args.push(format!("OPENCODE_BASE_URL={}", url));
-    }
-
-    args.extend([
-        "--entrypoint".to_string(),
-        "opencode".to_string(),
-        image.to_string(),
-        "serve".to_string(),
-        "--hostname".to_string(),
-        "0.0.0.0".to_string(),
-        "--port".to_string(),
-        port_str.clone(),
-    ]);
-
-    let run = Command::new("docker")
-        .args(&args)
-        .output()
-        .map_err(|e| format!("Failed to run container: {}", e))?;
-    if run.status.success() {
-        return Ok(());
-    }
-    let stderr = String::from_utf8_lossy(&run.stderr);
-    if stderr.contains("already in use") || stderr.contains("Conflict") {
-        let _ = Command::new("docker").args(["rm", "-f", &name]).output();
-
-        let mut args2 = vec![
+    let build_args = |include_base_url: bool| -> Vec<String> {
+        let mut args = vec![
             "run".to_string(),
             "-d".to_string(),
+            // MVP: avoid Docker Desktop crash loops if the agent dies
             "--restart".to_string(),
-            "unless-stopped".to_string(),
+            "on-failure:1".to_string(),
             "--name".to_string(),
             name.clone(),
             "-p".to_string(),
             format!("{}:{}", port, port),
         ];
+        compose::push_compose_service_labels(
+            &mut args,
+            &format!("agent-{}", compose::compose_service_name(agent_name)),
+        );
 
-        if let Some(cfg_dir) = host_opencode_config_dir().filter(|p| p.exists()) {
-            args2.extend([
+        if let Some(ref cfg_dir) = mount_dir {
+            args.extend([
                 "-v".to_string(),
                 format!("{}:/root/.config/opencode:ro", cfg_dir.to_string_lossy()),
             ]);
         }
-
         if let Some(prov) = provider {
-            let env_var = provider_api_key_env(prov);
-            args2.push("-e".to_string());
-            args2.push(env_var);
+            args.push("-e".to_string());
+            args.push(provider_api_key_env(prov));
         }
-
-        args2.extend([
+        if include_base_url {
+            if let Some(url) = base_url {
+                args.push("-e".to_string());
+                args.push(format!("OPENCODE_BASE_URL={}", url));
+            }
+        }
+        args.extend([
             "--entrypoint".to_string(),
             "opencode".to_string(),
             image.to_string(),
@@ -301,9 +290,21 @@ pub fn start_agent_container(
             "--port".to_string(),
             port_str.clone(),
         ]);
+        args
+    };
 
+    let run = Command::new("docker")
+        .args(build_args(true))
+        .output()
+        .map_err(|e| format!("Failed to run container: {}", e))?;
+    if run.status.success() {
+        return Ok(());
+    }
+    let stderr = String::from_utf8_lossy(&run.stderr);
+    if stderr.contains("already in use") || stderr.contains("Conflict") {
+        let _ = Command::new("docker").args(["rm", "-f", &name]).output();
         let run2 = Command::new("docker")
-            .args(&args2)
+            .args(build_args(true))
             .output()
             .map_err(|e| format!("Failed to run container: {}", e))?;
         if run2.status.success() {
@@ -516,7 +517,9 @@ pub fn restart_container(container_name: &str) -> Result<(), String> {
 
 mod agent_runtime;
 mod brain_runtime;
+mod compose;
 mod model_runtime;
+mod search_runtime;
 
 pub use agent_runtime::{
     ensure_spawn_dir, ensure_spawn_state_dir, list_spawn_plan_dirs, list_spawned_containers,
@@ -527,10 +530,14 @@ pub use agent_runtime::{
 };
 pub use brain_runtime::{
     brain_status, ensure_brain_network, ensure_brain_ready, remove_brain_container,
-    run_prompt_in_brain, stop_brain_container, verify_no_egress, BRAIN_CONTAINER_NAME, BRAIN_IMAGE,
-    BRAIN_NETWORK,
+    run_prompt_in_brain, run_prompt_in_brain_with, stop_brain_container, verify_no_egress,
+    BrainPromptOpts, BrainPromptResult, BRAIN_CHAT_AGENT, BRAIN_CONTAINER_NAME, BRAIN_IMAGE,
+    BRAIN_NETWORK, BRAIN_THINK_AGENT,
 };
+pub use compose::{compose_file_path, ensure_compose_project_file, COMPOSE_PROJECT};
 pub use model_runtime::{
-    is_ollama_running, start_ollama_container, stop_ollama_container, OLLAMA_CONTAINER_NAME,
+    active_ollama_backend, is_docker_ollama_running, is_host_ollama_api_up, is_ollama_running,
+    ollama_hostname_for_brain, start_ollama, stop_ollama, OllamaBackend, OLLAMA_CONTAINER_NAME,
     OLLAMA_PORT,
 };
+pub use search_runtime::run_oneshot_web_search;

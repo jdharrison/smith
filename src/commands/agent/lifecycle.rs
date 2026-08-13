@@ -2,7 +2,11 @@ use crate::*;
 
 pub async fn handle(cmd: AgentCommands) {
     match cmd {
+        AgentCommands::Add { .. } | AgentCommands::Remove { .. } => {
+            unreachable!("handled in commands/agent.rs");
+        }
         AgentCommands::Start {
+            name: _,
             project,
             branch,
             port,
@@ -140,9 +144,11 @@ pub async fn handle(cmd: AgentCommands) {
             }
         }
         AgentCommands::Stop {
+            name: _,
             project,
             branch,
             all,
+            all_named: _,
         } => {
             if all {
                 // Stop all spawned agents
@@ -311,10 +317,10 @@ pub async fn handle(cmd: AgentCommands) {
         }
         AgentCommands::List => match docker::list_spawned_containers() {
             Ok(containers) => {
+                println!("Workspace agents (agent_<project>_<branch>):");
                 if containers.is_empty() {
-                    println!("No spawned agents");
+                    println!("  (none)");
                 } else {
-                    println!("Spawned agents:");
                     for c in containers {
                         let status_color = if c.status.to_lowercase().contains("up") {
                             ANSI_GREEN

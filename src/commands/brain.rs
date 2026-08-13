@@ -20,6 +20,7 @@ pub async fn handle(cmd: BrainCmd) {
                 }
             };
             let st = docker::brain_status(&mem);
+            let _ = docker::ensure_compose_project_file();
             let net_b = if st.network_exists {
                 crate::BULLET_GREEN
             } else {
@@ -42,6 +43,13 @@ pub async fn handle(cmd: BrainCmd) {
             };
 
             println!("{} sealed brain", brain_b);
+            println!(
+                "     compose project: {} ({})",
+                docker::COMPOSE_PROJECT,
+                docker::compose_file_path()
+                    .map(|p| p.display().to_string())
+                    .unwrap_or_else(|| "(no compose file)".to_string())
+            );
             println!(
                 "     {} network {} ({})",
                 net_b,
@@ -66,7 +74,11 @@ pub async fn handle(cmd: BrainCmd) {
                 "     {} ollama — {}",
                 ollama_b,
                 if st.ollama_running {
-                    "running"
+                    match docker::active_ollama_backend() {
+                        Some(docker::OllamaBackend::Host) => "running (host)",
+                        Some(docker::OllamaBackend::Docker) => "running (docker)",
+                        None => "running",
+                    }
                 } else {
                     "stopped"
                 }
@@ -74,7 +86,14 @@ pub async fn handle(cmd: BrainCmd) {
             println!(
                 "     {} ollama on brain net — {}",
                 onet_b,
-                if st.ollama_on_network { "yes" } else { "no" }
+                if st.ollama_on_network {
+                    match docker::active_ollama_backend() {
+                        Some(docker::OllamaBackend::Host) => "host.docker.internal",
+                        _ => "yes",
+                    }
+                } else {
+                    "no"
+                }
             );
             println!("     memory: {}", st.memory_path);
 
@@ -83,10 +102,19 @@ pub async fn handle(cmd: BrainCmd) {
                     Ok(true) => {
                         println!("     {} egress — blocked (sealed)", crate::BULLET_GREEN)
                     }
-                    Ok(false) => println!(
-                        "     {} egress — UNEXPECTED reachability",
-                        crate::BULLET_RED
-                    ),
+                    Ok(false) => {
+                        if docker::active_ollama_backend() == Some(docker::OllamaBackend::Host) {
+                            println!(
+                                "     {} egress — soft-seal (host Ollama; no cloud keys mounted)",
+                                crate::BULLET_YELLOW
+                            );
+                        } else {
+                            println!(
+                                "     {} egress — UNEXPECTED reachability",
+                                crate::BULLET_RED
+                            );
+                        }
+                    }
                     Err(e) => println!("     egress check: {}", e),
                 }
             }

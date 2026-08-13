@@ -1,6 +1,5 @@
+use super::compose::{compose_service_name, push_compose_service_labels};
 use super::*;
-
-/// Sanitize project or branch name for use in container name.
 /// Docker names allow [a-zA-Z0-9][a-zA-Z0-9_.-]*. Replaces disallowed chars with -.
 fn sanitize_for_container_name(s: &str) -> String {
     let safe: String = s
@@ -775,13 +774,21 @@ exec opencode serve --hostname 0.0.0.0 --port {port}"#,
     let mut args = vec![
         "run".to_string(),
         "-d".to_string(),
+        // MVP: one retry max — unless-stopped hammered Docker Desktop on failures
         "--restart".to_string(),
-        "unless-stopped".to_string(),
+        "on-failure:1".to_string(),
         "--name".to_string(),
         container_name.clone(),
         "-p".to_string(),
         format!("{}:{}", final_port, final_port),
     ];
+    push_compose_service_labels(
+        &mut args,
+        &format!(
+            "workspace-{}",
+            compose_service_name(&format!("{}_{}", project, branch))
+        ),
+    );
 
     if let Some(cfg_dir) = host_opencode_config_dir().filter(|p| p.exists()) {
         args.extend([
