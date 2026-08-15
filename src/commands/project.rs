@@ -39,26 +39,7 @@ pub async fn handle(cmd: ProjectCommands) {
                 commit_name,
                 commit_email,
                 model,
-                ask_setup_run: None,
-                ask_setup_check: None,
-                ask_execute_run: None,
-                ask_execute_check: None,
-                ask_validate_run: None,
-                ask_validate_check: None,
-                dev_setup_run: None,
-                dev_setup_check: None,
-                dev_execute_run: None,
-                dev_execute_check: None,
-                dev_validate_run: None,
-                dev_validate_check: None,
-                dev_commit_run: None,
-                dev_commit_check: None,
-                review_setup_run: None,
-                review_setup_check: None,
-                review_execute_run: None,
-                review_execute_check: None,
-                review_validate_run: None,
-                review_validate_check: None,
+                ..Default::default()
             };
             if let Err(e) = add_project_to_config(&mut cfg, project) {
                 eprintln!("Error: {}", e);
@@ -76,10 +57,15 @@ pub async fn handle(cmd: ProjectCommands) {
                 std::process::exit(1);
             });
             if cfg.projects.is_empty() {
-                println!("No projects registered");
+                println!("No projects registered. Add one with `smith settings project add <name> --repo <url-or-path>`.");
             } else {
                 for proj in &cfg.projects {
-                    let mut parts = format!("  {} -> {}", proj.name, proj.repo);
+                    let kind = if project_repo_is_remote(&proj.repo) {
+                        "git"
+                    } else {
+                        "local"
+                    };
+                    let mut parts = format!("  {} [{}] -> {}", proj.name, kind, proj.repo);
                     if let Some(ref image) = proj.image {
                         parts.push_str(&format!(" (image: {})", image));
                     }
@@ -125,17 +111,44 @@ pub async fn handle(cmd: ProjectCommands) {
                 },
                 None => {
                     if cfg.projects.is_empty() {
-                        eprintln!("No projects registered. Add one with `smith project add`.");
+                        eprintln!(
+                            "No projects registered. Add one with `smith settings project add`."
+                        );
                         std::process::exit(1);
                     }
                     cfg.projects.iter().collect()
                 }
             };
+            let mut failed = false;
             for proj in projects {
                 let resolved_repo = &proj.repo;
+                if !project_repo_is_remote(resolved_repo) {
+                    let host = expand_user_path(resolved_repo);
+                    if host.exists() {
+                        println!(
+                            "  {} {} - local {}",
+                            BULLET_GREEN,
+                            proj.name,
+                            host.display()
+                        );
+                    } else {
+                        println!(
+                            "  {} {} - missing {}",
+                            BULLET_RED,
+                            proj.name,
+                            host.display()
+                        );
+                        failed = true;
+                    }
+                    continue;
+                }
                 if resolved_repo.starts_with("https://") {
-                    eprintln!("Error: HTTPS URLs are not supported. Use SSH URLs (git@github.com:user/repo.git).");
-                    std::process::exit(1);
+                    println!(
+                        "  {} {} - HTTPS URLs are not supported for clone (use SSH or a local path)",
+                        BULLET_RED, proj.name
+                    );
+                    failed = true;
+                    continue;
                 }
                 let base = resolve_base_branch(None, Some(proj));
                 let ssh_key_path = resolve_ssh_key(None, Some(proj));
@@ -145,16 +158,17 @@ pub async fn handle(cmd: ProjectCommands) {
                 }
                 if let Some(path) = ssh_key_path.as_ref() {
                     if !path.exists() {
-                        eprintln!(
-                            "  {} {} - failed: ssh key not found at {}",
+                        println!(
+                            "  {} {} - ssh key not found at {}",
                             BULLET_RED,
                             proj.name,
                             path.display()
                         );
-                        std::process::exit(1);
+                        failed = true;
+                        continue;
                     }
                 }
-                println!("\n  {} {} - ready", BULLET_GREEN, proj.name);
+                println!("  {} {} - ready (git {})", BULLET_GREEN, proj.name, base);
                 if verbose {
                     println!("  ---");
                     println!("    repo: {}", resolved_repo);
@@ -165,6 +179,9 @@ pub async fn handle(cmd: ProjectCommands) {
                         println!("    ssh key: default");
                     }
                 }
+            }
+            if failed {
+                std::process::exit(1);
             }
         }
         ProjectCommands::Update {

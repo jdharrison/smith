@@ -92,7 +92,7 @@ fn build_chat_preamble() -> Result<String, String> {
     Ok(preamble)
 }
 
-fn ensure_ready() -> Result<(std::path::PathBuf, String), String> {
+pub(crate) fn ensure_ready() -> Result<(std::path::PathBuf, String), String> {
     let mem = ensure_memory_layout()?;
     let model = resolve_local_model();
     docker::ensure_brain_ready(&mem, Some(&model))?;
@@ -180,7 +180,7 @@ fn session_error_looks_stale(err: &str) -> bool {
         || lower.contains("dummy")
 }
 
-fn run_chat_turn(user_message: &str, model: &str) -> Result<String, String> {
+pub(crate) fn run_chat_turn(user_message: &str, model: &str) -> Result<String, String> {
     let pending = load_pending_intent().ok().flatten();
     if let Some(ref p) = pending {
         if p.is_search_ask() && looks_like_affirmation(user_message) {

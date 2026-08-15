@@ -43,7 +43,7 @@ Pre-built binaries for Linux and macOS are available in [GitHub Releases](https:
 # After installing the binary
 smith install   # bootstrap Docker, local model, sealed brain + validate
 smith status    # monitor smith services/systems
-smith brain status
+smith settings brain status
 smith help
 
 # Development
@@ -56,10 +56,11 @@ cargo run -- help
 - ensures internal network `smith-brain-net`
 - offers a default local Ollama profile (`qwen3:14b` — balanced for ~16GB VRAM with desktop headroom)
 - optionally starts Ollama + sealed brain and checks egress is blocked
+- can register **projects** (git clone or local path) and **workspaces** (existing host directories) to inject into agent containers
 
 ### Sealed local brain (chat / think)
 
-Private, no-egress conversation and solve loop against a local Ollama model. Existing `smith run` / `smith agent` pipelines are unchanged.
+Private, no-egress conversation and solve loop against a local Ollama model. Existing `smith run` / `smith settings agent` pipelines are unchanged.
 
 **Prerequisites:** Docker (for sealed brain / agents). Local model via `smith settings model add … --agent-type local` then `smith settings model start`.
 
@@ -82,9 +83,16 @@ smith chat --new -m "Start over"
 # Iterate/kill solve loop (writes durable analysis.json)
 smith think "Draft a private research outline on X" --reset
 
+# Local chat bridge for native clients (Flutter later). Loopback only.
+smith serve --echo          # no brain — protocol smoke test
+smith serve                 # same session as `smith chat`
+# curl -s http://127.0.0.1:4783/v1/health
+# curl -s http://127.0.0.1:4783/v1/chat -H "Content-Type: application/json" \
+#   -d '{"v":1,"text":"hello","session":"default"}'
+
 # Ops
-smith brain status
-smith brain stop
+smith settings brain status
+smith settings brain stop
 # or: smith settings model start / stop
 ```
 
@@ -109,6 +117,8 @@ smith brain stop
 Edit `profile.md` freely; it stays on-host and is injected into chat context only inside the sealed bubble. `smith chat` / `smith chat -m` share one continuous session. Named workers (`smith-agent-*`) and spawn agents do **not** receive brain chat history.
 
 **Live web search (ephemeral):** chat stays sealed. After smith confirms an ambiguous query, the host opens a short-lived `smith-search-*` container on the default bridge (internet), fetches results (DuckDuckGo + wttr.in for weather), then `--rm`. Results are declassified back into the chat turn. No long-running search agent.
+
+**Native client bridge:** `smith serve` listens on `127.0.0.1:4783` (not Ollama/OpenCode ports). The host process owns the turn (intents, search, session); the client owns UI/STT/TTS. `POST /v1/chat` with `{"v":1,"text":"…","session":"default","new":false}` returns `{"v":1,"text":"…","session":"default"}`. `--echo` skips the brain so clients can integrate against the protocol first. Not a public API — loopback only.
 
 ### Pipeline commands (run plan / develop / review / release)
 
@@ -140,7 +150,7 @@ The plan/develop/release pipeline uses project+branch scoped spawned containers 
 - Use `smith run release --keep-agent` to keep the container running after success for debugging.
 - If release is blocked or fails, the container remains running for diagnosis.
 
-Use **SSH repository URLs** (e.g. `git@github.com:user/repo.git`). The pipeline mounts your host `~/.ssh` and forwards `SSH_AUTH_SOCK` when set, so host auth (e.g. `ssh-add`) works. Use `--ssh-key <path>` to supply a specific key. Projects can store an image and SSH key via `smith project add/update`.
+Use **SSH repository URLs** (e.g. `git@github.com:user/repo.git`). The pipeline mounts your host `~/.ssh` and forwards `SSH_AUTH_SOCK` when set, so host auth (e.g. `ssh-add`) works. Use `--ssh-key <path>` to supply a specific key. Projects can store an image and SSH key via `smith settings project add/update`.
 
 ### How does the pipeline choose the container image?
 
@@ -227,20 +237,22 @@ Use model profile env mappings to inject host environment variables into spawned
 
 - Add/update mappings with repeatable `--env` flags:
   ```bash
-  smith model add opencode --provider openai --model gpt-5 --env 'OPENAI_API_KEY=$OPENAI_API_KEY'
-  smith model update opencode --env 'OPENAI_API_KEY=$OPENAI_API_KEY' --env 'OPENROUTER_API_KEY=$OPENROUTER_API_KEY'
+  smith settings model add opencode --provider openai --model gpt-5 --env 'OPENAI_API_KEY=$OPENAI_API_KEY'
+  smith settings model update opencode --env 'OPENAI_API_KEY=$OPENAI_API_KEY' --env 'OPENROUTER_API_KEY=$OPENROUTER_API_KEY'
   ```
 - Clear mappings on update by passing an empty env value:
   ```bash
-  smith model update opencode --env ''
+  smith settings model update opencode --env ''
   ```
 - Always quote the `--env` value so your shell does not expand `$HOST_ENV` before smith parses it.
-- If a mapped host env is missing or empty at runtime, `smith agent start` fails fast with a clear error.
+- If a mapped host env is missing or empty at runtime, `smith settings agent start` fails fast with a clear error.
 - Security note: injected values are passed to Docker as container environment variables; treat host access and Docker inspect permissions accordingly.
 
-### Project commands — `smith project <cmd>`
+### Project commands — `smith settings project <cmd>`
 
-- **`smith project add <name> --repo <path-or-url>`**  
+Projects are git repos (SSH URL) or **local paths**. On `smith settings agent start <name>` they are cloned/fetched into smith’s project cache (when remote) and bind-mounted at `/projects/<name>` (readwrite). Spawned pipeline agents still clone the primary project to `/workspace`; extra projects appear under `/projects/<name>`.
+
+- **`smith settings project add <name> --repo <path-or-url>`**  
   Register a project.  
   - `--image <image>` — Docker image for this project.  
   - `--ssh-key <path>` — SSH key path for this project.  
@@ -248,20 +260,43 @@ Use model profile env mappings to inject host environment variables into spawned
   - `--remote <name>` — Remote name for fetch/push (default: `origin`).  
   - `--github-token <token>` — GitHub personal access token for PR creation (per-repository).
 
-- **`smith project list`**  
+- **`smith settings project list`**  
   List registered projects (shows repo, image, ssh_key, base_branch, remote, and whether github-token is set).
 
-- **`smith project status [--project <name>] [--verbose]`**  
+- **`smith settings project status [--project <name>] [--verbose]`**  
   Validate project configuration and connectivity.
 
-- **`smith project update <name>`**  
+- **`smith settings project update <name>`**  
   Update a project.  
   - `--repo <url>`, `--image <image>`, `--ssh-key <path>`, `--base-branch <branch>`, `--remote <name>`, `--github-token <token>` — Set new value; pass `""` to clear optional fields.
 
-- **`smith project remove <name>`**  
+- **`smith settings project remove <name>`**  
   Remove a project.
 
-### Agent commands — `smith agent <cmd>`
+### Workspace commands — `smith settings workspace <cmd>`
+
+Workspaces are **existing host directories** (a personal repo, a `projects/` folder, etc.) bind-mounted into agent containers at `/workspaces/<name>`. Unlike projects, smith does not clone them.
+
+Access (Docker bind mode):
+- **`readwrite`** (default) — `:rw`
+- **`read`** — `:ro`
+- **`write`** — treated as readwrite (Docker has no write-only mounts)
+
+```bash
+smith settings workspace add code --path ~/Develop/personal/projects
+smith settings workspace add notes --path ~/notes --access read
+smith settings workspace list
+smith settings workspace status
+```
+
+Optional per-agent subset (omit to attach **all** configured projects + workspaces):
+
+```bash
+smith settings agent add coding --type local --model qwen3:14b \
+  --project smith --workspace code
+```
+
+### Agent commands — `smith settings agent <cmd>`
 
 Agents are identified by **name** (id). Each agent has:
 - **name** — Unique id/name.
@@ -276,44 +311,41 @@ Agents are identified by **name** (id). Each agent has:
 - `openai` → `OPENAI_API_KEY`
 - `openrouter` → `OPENROUTER_API_KEY`
 
-- **`smith agent add <name>`**  
+- **`smith settings agent add <name>`**  
   Register an agent.  
   - `--image <image>` — Docker image (default: `ghcr.io/anomalyco/opencode`).  
   - `--model <model>` — Model to use (e.g. `anthropic/claude-sonnet-4-5`).  
   - `--small-model <model>` — Small model for internal ops.  
   - `--provider <name>` — Provider name (`anthropic`, `openai`, `openrouter`, etc.).  
-  - `--base-url <url>` — Custom base URL for provider.
+  - `--base-url <url>` — Custom base URL for provider.  
+  - `--project <name>` / `--workspace <name>` — Repeatable; omit to attach all configured.
 
-- **`smith agent status`**  
-  Show status of all configured agents (active/inactive, image, port, model, provider).
+- **`smith settings agent list`**  
+  Show named agents and spawned project/branch agents.
 
-- **`smith agent build [<name>] [--all] [--force] [--verbose]`**  
-  Build Docker image for one agent or all. Generates Dockerfile if missing, then runs `docker build`. Use `--all` to build all configured agents, `--force` for clean build (remove image, build with `--no-cache`), `--verbose` to print Dockerfile path and docker build command.
+- **`smith settings agent remove <name>`**  
+  Remove a named agent from config (does not stop a running container).
 
-- **`smith agent update <name>`**  
-  Update an agent.  
-  - `--image <image>`, `--model <model>`, `--small-model <model>`, `--provider <name>`, `--base-url <url>` — Set new value; pass `""` to clear.
+- **`smith settings agent start <name>`**  
+  Start a named agent (`smith-agent-<name>`). Injects configured projects (`/projects/<name>`) and workspaces (`/workspaces/<name>`).
 
-- **`smith agent remove <name>`**  
-  Remove an agent.
+- **`smith settings agent start --project <name> --branch <branch>`**  
+  Start a spawned project/branch agent (`agent_<project>_<branch>`). Primary repo clones to `/workspace`; extra projects/workspaces are also mounted.
 
-- **`smith agent start [--verbose]`**  
-  Start all configured agents. Each agent runs in its own container with the configured model/provider. Skips agents that already have a running container. Use `--verbose` to print docker command and health-check details.
+- **`smith settings agent stop <name>`** / **`--all`** / **`--all-named`**  
+  Stop named or spawned agent containers.
 
-- **`smith agent stop`**  
-  Stop all running agent containers (smith-agent-*).
-
-- **`smith agent logs <name>`**  
-  Stream live logs from an agent container (`docker logs -f`).
+- **`smith settings agent logs --project <name> --branch <branch>`**  
+  Stream logs from a spawned agent.
 ---
 
 ## GitHub Pull Requests
 
 1. Add or update a project with a GitHub token (one per repository):
    ```bash
-   smith project add myproject --repo git@github.com:user/repo.git --github-token <your-github-token>
+   smith settings project add myproject --repo git@github.com:user/repo.git --github-token <your-github-token>
    # or
-   smith project update myproject --github-token <your-github-token>
+   smith settings project update myproject --github-token <your-github-token>
    ```
 2. Use `--pr` with `run dev` and that project:
    ```bash

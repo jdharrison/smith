@@ -122,6 +122,26 @@ pub async fn handle(cmd: AgentCommands) {
                 }
             }
 
+            let extra_mounts = match resolve_container_mounts(&cfg, None, None, Some(&project)) {
+                Ok(m) => m,
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+            if !extra_mounts.is_empty() {
+                println!("       Extra mounts:");
+                for m in &extra_mounts {
+                    println!(
+                        "         {} {} → {} ({})",
+                        m.kind,
+                        m.name,
+                        m.container_path,
+                        m.access_label()
+                    );
+                }
+            }
+
             match docker::start_spawned_container(
                 &project,
                 &branch,
@@ -132,6 +152,7 @@ pub async fn handle(cmd: AgentCommands) {
                 commit_name.as_deref(),
                 commit_email.as_deref(),
                 &injected_env,
+                &extra_mounts,
             ) {
                 Ok(actual_port) => {
                     let url = clickable_agent_url(actual_port);
@@ -524,7 +545,7 @@ pub async fn handle(cmd: AgentCommands) {
                         let is_running = String::from_utf8_lossy(&out.stdout).trim() == "true";
                         if !is_running {
                             eprintln!(
-                                    "Error: container '{}' is not running. Start it with `smith agent start`.",
+                                    "Error: container '{}' is not running. Start it with `smith settings agent start`.",
                                     name
                                 );
                             std::process::exit(1);

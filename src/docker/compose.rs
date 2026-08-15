@@ -58,7 +58,7 @@ services:
     profiles: ["brain"]
 
   # Named workers (smith-agent-*) and workspace agents (agent_*) are created
-  # dynamically by `smith agent start …` with the same project labels.
+  # dynamically by `smith settings agent start …` with the same project labels.
   # One-shot search windows (smith-search-*) use bridge egress then --rm.
 
 networks:

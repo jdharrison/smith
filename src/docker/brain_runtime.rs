@@ -16,18 +16,6 @@ pub const BRAIN_MEMORY_MOUNT: &str = "/memory";
 /// Default OpenCode image for the sealed brain (local inference via Ollama).
 pub const BRAIN_IMAGE: &str = "ghcr.io/anomalyco/opencode";
 
-/// Convert a host path into a Docker Desktop-friendly bind-mount source.
-/// Strips Windows `\\?\` prefixes and normalizes separators so volume specs
-/// like `C:/Users/...:/memory:rw` parse correctly.
-fn docker_host_path(path: &Path) -> String {
-    let raw = path.to_string_lossy();
-    let trimmed = raw
-        .strip_prefix(r"\\?\")
-        .or_else(|| raw.strip_prefix("//?/"))
-        .unwrap_or(&raw);
-    trimmed.replace('\\', "/")
-}
-
 /// OpenCode agent for sealed conversational chat (tool-free).
 pub const BRAIN_CHAT_AGENT: &str = "chat";
 
@@ -195,7 +183,7 @@ pub fn connect_to_brain_network(container_name: &str) -> Result<(), String> {
 
     if !inspect.status.success() {
         return Err(format!(
-            "Container '{}' not found; start Ollama with `smith model start` first",
+            "Container '{}' not found; start Ollama with `smith settings model start` first",
             container_name
         ));
     }
@@ -258,7 +246,7 @@ pub fn ensure_ollama_on_brain_network() -> Result<(), String> {
         }
         Some(OllamaBackend::Docker) => connect_to_brain_network(OLLAMA_CONTAINER_NAME),
         None => Err(
-            "Ollama is not running. Start a local model first: `smith model start` (local profile)"
+            "Ollama is not running. Start a local model first: `smith settings model start` (local profile)"
                 .to_string(),
         ),
     }
@@ -267,7 +255,7 @@ pub fn ensure_ollama_on_brain_network() -> Result<(), String> {
 /// Start (or reuse) the sealed brain container with host memory bind-mounted.
 pub fn start_brain_container(memory_host_path: &Path, model: Option<&str>) -> Result<(), String> {
     let backend = active_ollama_backend().ok_or_else(|| {
-        "Ollama is not running. Start a local model first: `smith model start`".to_string()
+        "Ollama is not running. Start a local model first: `smith settings model start`".to_string()
     })?;
 
     // Docker-backend sealing uses the internal net. Host-backend needs host gateway access,
@@ -421,7 +409,7 @@ pub fn remove_brain_container() -> Result<(), String> {
     }
 }
 
-/// Status snapshot for `smith brain status`.
+/// Status snapshot for `smith settings brain status`.
 #[derive(Debug, Clone)]
 pub struct BrainStatus {
     pub network_exists: bool,
@@ -620,7 +608,7 @@ pub fn run_prompt_in_brain_with(
 ) -> Result<BrainPromptResult, String> {
     if !container_running(BRAIN_CONTAINER_NAME) {
         return Err(
-            "Sealed brain is not running. Use `smith chat` or `smith brain status`.".to_string(),
+            "Sealed brain is not running. Use `smith chat` or `smith settings brain status`.".to_string(),
         );
     }
 

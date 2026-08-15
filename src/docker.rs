@@ -5,7 +5,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::fs;
 use std::hash::{Hash, Hasher};
 use std::io::{BufRead, BufReader, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Once};
@@ -30,6 +30,55 @@ pub const OPENCODE_SERVER_PORT: u16 = 4096;
 
 pub fn host_opencode_config_dir() -> Option<std::path::PathBuf> {
     dirs::config_dir().map(|p| p.join("opencode"))
+}
+
+/// Convert a host path into a Docker Desktop-friendly bind-mount source.
+/// Strips Windows `\\?\` prefixes and normalizes separators so volume specs
+/// like `C:/Users/...:/memory:rw` parse correctly.
+pub fn docker_host_path(path: &Path) -> String {
+    let raw = path.to_string_lossy();
+    let trimmed = raw
+        .strip_prefix(r"\\?\")
+        .or_else(|| raw.strip_prefix("//?/"))
+        .unwrap_or(&raw);
+    trimmed.replace('\\', "/")
+}
+
+/// Bind-mount to apply when starting an agent or spawn container.
+#[derive(Debug, Clone)]
+pub struct VolumeMount {
+    pub name: String,
+    /// "workspace" or "project"
+    pub kind: String,
+    pub host_path: PathBuf,
+    pub container_path: String,
+    pub read_only: bool,
+}
+
+impl VolumeMount {
+    pub fn docker_arg(&self) -> String {
+        let mode = if self.read_only { "ro" } else { "rw" };
+        format!(
+            "{}:{}:{}",
+            docker_host_path(&self.host_path),
+            self.container_path,
+            mode
+        )
+    }
+
+    pub fn access_label(&self) -> &'static str {
+        if self.read_only {
+            "read"
+        } else {
+            "readwrite"
+        }
+    }
+}
+
+fn push_volume_mounts(args: &mut Vec<String>, mounts: &[VolumeMount]) {
+    for mount in mounts {
+        args.extend(["-v".to_string(), mount.docker_arg()]);
+    }
 }
 
 static SPAWN_RUN_CANCELLED: AtomicBool = AtomicBool::new(false);
@@ -147,7 +196,7 @@ fn classify_spawn_run_error(raw: &str, exit_code: Option<i32>) -> String {
     let lower = raw.to_lowercase();
 
     if lower.contains("no such container") {
-        return "Spawned agent container not found. Start it with `smith agent start` and try again."
+        return "Spawned agent container not found. Start it with `smith settings agent start` and try again."
             .to_string();
     }
 
@@ -239,6 +288,7 @@ pub fn start_agent_container(
     provider: Option<&str>,
     base_url: Option<&str>,
     config_mount: Option<&std::path::Path>,
+    mounts: &[VolumeMount],
 ) -> Result<(), String> {
     let name = agent_container_name(agent_name);
     let port_str = port.to_string();
@@ -267,9 +317,10 @@ pub fn start_agent_container(
         if let Some(ref cfg_dir) = mount_dir {
             args.extend([
                 "-v".to_string(),
-                format!("{}:/root/.config/opencode:ro", cfg_dir.to_string_lossy()),
+                format!("{}:/root/.config/opencode:ro", docker_host_path(cfg_dir)),
             ]);
         }
+        push_volume_mounts(&mut args, mounts);
         if let Some(prov) = provider {
             args.push("-e".to_string());
             args.push(provider_api_key_env(prov));

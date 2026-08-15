@@ -15,9 +15,12 @@ pub async fn handle(cmd: AgentCommands) {
             port,
             prompt,
             mcp,
+            projects,
+            workspaces,
         } => {
             workers::add_named(
-                name, image, agent_type, model, provider, base_url, port, prompt, mcp,
+                name, image, agent_type, model, provider, base_url, port, prompt, mcp, projects,
+                workspaces,
             );
         }
         AgentCommands::Remove { name } => workers::remove_named(name),
@@ -29,7 +32,7 @@ pub async fn handle(cmd: AgentCommands) {
         } => {
             if project.is_some() || branch.is_some() {
                 eprintln!(
-                    "Error: pass either a named agent (`smith agent start <name>`) or --project/--branch for a workspace agent, not both."
+                    "Error: pass either a named agent (`smith settings agent start <name>`) or --project/--branch for a workspace agent, not both."
                 );
                 std::process::exit(1);
             }

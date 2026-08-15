@@ -724,11 +724,11 @@ pub async fn handle(cmd: ModelCommands) {
 
             if local_agents.is_empty() {
                 println!("No local model profiles; nothing to start.");
-                println!("  Tip: `smith agent start <name>` for specialized workers.");
+                println!("  Tip: `smith settings agent start <name>` for specialized workers.");
             } else {
                 println!("Ollama ready. Named agent containers are not auto-started.");
-                println!("  Start a worker with: smith agent start <name>");
-                println!("  List agents with:    smith agent list");
+                println!("  Start a worker with: smith settings agent start <name>");
+                println!("  List agents with:    smith settings agent list");
             }
             if verbose {
                 let running = docker::list_running_agent_containers().unwrap_or_default();
@@ -799,7 +799,7 @@ pub async fn handle(cmd: ModelCommands) {
             let container_name = docker::agent_container_name(&name);
             if !docker::container_exists(&container_name).unwrap_or(false) {
                 eprintln!(
-                    "Error: Container '{}' not found. Start the agent with 'smith agent start'.",
+                    "Error: Container '{}' not found. Start the agent with 'smith settings agent start'.",
                     container_name
                 );
                 std::process::exit(1);

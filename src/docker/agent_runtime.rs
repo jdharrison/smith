@@ -638,6 +638,7 @@ pub fn start_spawned_container(
     commit_name: Option<&str>,
     commit_email: Option<&str>,
     env_vars: &[(String, String)],
+    extra_mounts: &[VolumeMount],
 ) -> Result<u16, String> {
     let container_name = spawn_container_name(project, branch);
 
@@ -793,9 +794,10 @@ exec opencode serve --hostname 0.0.0.0 --port {port}"#,
     if let Some(cfg_dir) = host_opencode_config_dir().filter(|p| p.exists()) {
         args.extend([
             "-v".to_string(),
-            format!("{}:/root/.config/opencode:ro", cfg_dir.to_string_lossy()),
+            format!("{}:/root/.config/opencode:ro", docker_host_path(&cfg_dir)),
         ]);
     }
+    push_volume_mounts(&mut args, extra_mounts);
 
     for (key, value) in env_vars {
         args.extend(["-e".to_string(), format!("{}={}", key, value)]);

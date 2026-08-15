@@ -191,14 +191,25 @@ pub async fn handle_status(verbose: bool) {
         .projects
         .iter()
         .map(|proj| {
-            if proj.repo.starts_with("https://") {
+            if !project_repo_is_remote(&proj.repo) {
+                let host = expand_user_path(&proj.repo);
+                if host.exists() {
+                    (proj.name.clone(), true, format!("local {}", host.display()))
+                } else {
+                    (
+                        proj.name.clone(),
+                        false,
+                        format!("missing {}", host.display()),
+                    )
+                }
+            } else if proj.repo.starts_with("https://") {
                 (
                     proj.name.clone(),
                     false,
-                    "unsupported repo URL (use SSH)".to_string(),
+                    "unsupported repo URL (use SSH or a local path)".to_string(),
                 )
             } else {
-                (proj.name.clone(), true, "configured".to_string())
+                (proj.name.clone(), true, "git configured".to_string())
             }
         })
         .collect();
@@ -220,6 +231,54 @@ pub async fn handle_status(verbose: bool) {
         }
     } else {
         for (name, ok, msg) in &project_results {
+            let bullet = if *ok { BULLET_GREEN } else { BULLET_RED };
+            println!("       {} {} - {}", bullet, name, msg);
+        }
+    }
+
+    // workspaces:
+    let workspace_results: Vec<(String, bool, String)> = cfg
+        .workspaces
+        .iter()
+        .map(|ws| {
+            let host = expand_user_path(&ws.path);
+            match parse_workspace_access(ws.access.as_deref()) {
+                Err(e) => (ws.name.clone(), false, e),
+                Ok(read_only) => {
+                    let access = if read_only { "read" } else { "readwrite" };
+                    if host.is_dir() {
+                        (
+                            ws.name.clone(),
+                            true,
+                            format!("{} ({})", host.display(), access),
+                        )
+                    } else {
+                        (
+                            ws.name.clone(),
+                            false,
+                            format!("missing {}", host.display()),
+                        )
+                    }
+                }
+            }
+        })
+        .collect();
+    let workspace_ok = workspace_results.iter().filter(|(_, ok, _)| *ok).count();
+    let workspace_total = workspace_results.len();
+    let workspaces_bullet = if workspace_total == 0 {
+        BULLET_BLUE
+    } else if workspace_ok == workspace_total {
+        BULLET_GREEN
+    } else if workspace_ok > 0 {
+        BULLET_YELLOW
+    } else {
+        BULLET_RED
+    };
+    println!("  {} workspaces", workspaces_bullet);
+    if workspace_results.is_empty() {
+        println!("       (none)");
+    } else {
+        for (name, ok, msg) in &workspace_results {
             let bullet = if *ok { BULLET_GREEN } else { BULLET_RED };
             println!("       {} {} - {}", bullet, name, msg);
         }
@@ -316,7 +375,7 @@ pub async fn handle_install() {
         println!();
         match prompt_yn("Create default opencode agent?", true) {
             false => {
-                println!("  No agent created. Use 'smith agent add' later.");
+                println!("  No agent created. Use 'smith settings agent add' later.");
             }
             true => {
                 let new_agent = AgentEntry {
@@ -334,6 +393,8 @@ pub async fn handle_install() {
                     env: None,
                     prompt: None,
                     mcp: None,
+                    projects: None,
+                    workspaces: None,
                 };
                 cfg.agents = Some(vec![new_agent]);
                 if let Err(e) = save_config(&cfg) {
@@ -523,26 +584,7 @@ pub async fn handle_install() {
                 commit_name: None,
                 commit_email: None,
                 model,
-                ask_setup_run: None,
-                ask_setup_check: None,
-                ask_execute_run: None,
-                ask_execute_check: None,
-                ask_validate_run: None,
-                ask_validate_check: None,
-                dev_setup_run: None,
-                dev_setup_check: None,
-                dev_execute_run: None,
-                dev_execute_check: None,
-                dev_validate_run: None,
-                dev_validate_check: None,
-                dev_commit_run: None,
-                dev_commit_check: None,
-                review_setup_run: None,
-                review_setup_check: None,
-                review_execute_run: None,
-                review_execute_check: None,
-                review_validate_run: None,
-                review_validate_check: None,
+                ..Default::default()
             };
             match add_project_to_config(&mut cfg, project) {
                 Ok(()) => {
@@ -560,6 +602,68 @@ pub async fn handle_install() {
         },
     }
     println!();
+    // --- Workspaces ---
+    if cfg.workspaces.is_empty() {
+        println!("  Current workspaces: (none)");
+    } else {
+        println!("  Current workspaces:");
+        for w in &cfg.workspaces {
+            println!("    - {} ({})", w.name, w.path);
+        }
+    }
+    println!();
+    match prompt_yn_skip("Add any host workspaces (existing directories to mount into agents)?") {
+        None => println!("  Skipping workspaces."),
+        Some(false) => {}
+        Some(true) => loop {
+            let name = prompt_line("  Workspace name: ");
+            if name.is_empty() {
+                println!("  Workspace name cannot be empty.");
+                continue;
+            }
+            let path_in = prompt_line("  Host directory: ");
+            if path_in.is_empty() {
+                println!("  Path is required.");
+                continue;
+            }
+            let host = expand_user_path(&path_in);
+            if !host.is_dir() {
+                println!("  Path must be an existing directory: {}", host.display());
+                continue;
+            }
+            let access_in = prompt_line("  Access [readwrite] (read|write|readwrite): ");
+            let access = if access_in.is_empty() {
+                None
+            } else {
+                match parse_workspace_access(Some(&access_in)) {
+                    Ok(_) => Some(access_in),
+                    Err(e) => {
+                        println!("  {}", e);
+                        continue;
+                    }
+                }
+            };
+            let workspace = WorkspaceConfig {
+                name: name.clone(),
+                path: store_host_path(&host.canonicalize().unwrap_or(host)),
+                access,
+            };
+            match add_workspace_to_config(&mut cfg, workspace) {
+                Ok(()) => {
+                    save_config(&cfg).unwrap_or_else(|e| {
+                        eprintln!("Error: {}", e);
+                        std::process::exit(1);
+                    });
+                    println!("  {} Added workspace '{}'", BULLET_GREEN, name);
+                }
+                Err(e) => eprintln!("  {} {}", BULLET_RED, e),
+            }
+            if !prompt_yn("Add another workspace?", false) {
+                break;
+            }
+        },
+    }
+    println!();
     // --- Sealed local brain ---
     bootstrap_sealed_brain(&mut cfg);
 
@@ -569,8 +673,10 @@ pub async fn handle_install() {
         std::process::exit(1);
     }
     println!("  {} Install complete", BULLET_GREEN);
-    println!("     Sealed brain:  smith chat | smith think \"…\" | smith brain status");
-    println!("     Pipelines:     smith run plan | develop | review | release");
+    println!("     Sealed brain:  smith chat | smith think \"…\" | smith settings brain status");
+    println!("     Projects:      smith settings project add <name> --repo <url-or-path>");
+    println!("     Workspaces:    smith settings workspace add <name> --path <dir>");
+    println!("     Agents:        smith settings agent start <name>");
 }
 
 /// Bootstrap sealed brain: memory, local model profile, network, Ollama, brain, validate.
@@ -646,7 +752,7 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
             }
         } else {
             println!(
-                "  {} no local profile — add later with `smith model add local --agent-type local --model {}`",
+                "  {} no local profile — add later with `smith settings model add local --agent-type local --model {}`",
                 BULLET_YELLOW, DEFAULT_LOCAL_MODEL
             );
         }
@@ -673,7 +779,7 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
     );
     if !start_stack {
         println!("  {} skipped runtime start", BULLET_BLUE);
-        println!("     Later: `smith model start` then `smith chat`");
+        println!("     Later: `smith settings model start` then `smith chat`");
         return;
     }
 
@@ -776,7 +882,12 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
     println!("  {} sealed brain ready — try `smith chat`", BULLET_GREEN);
 }
 
-pub async fn handle_uninstall(force: bool, remove_config: bool, remove_images: bool) {
+pub async fn handle_uninstall(
+    force: bool,
+    remove_config: bool,
+    remove_project_data: bool,
+    remove_images: bool,
+) {
     let prompt =
         "This will stop all agent containers and Ollama. Continue? Type 'yes' to confirm: ";
     if !confirm_reset(prompt, force) {
@@ -862,6 +973,31 @@ pub async fn handle_uninstall(force: bool, remove_config: bool, remove_images: b
         confirm_reset(prompt, false)
     };
 
+    let remove_project_data = if remove_project_data {
+        true
+    } else {
+        let prompt = "Remove cloned project checkouts (smith project cache)? This does not delete host workspace directories. Type 'yes' to confirm: ";
+        confirm_reset(prompt, false)
+    };
+
+    if remove_project_data {
+        println!("  Removing cloned project data...");
+        match project_cache_dir() {
+            Ok(dir) => {
+                if dir.exists() {
+                    if let Err(e) = fs::remove_dir_all(&dir) {
+                        eprintln!("    Failed to remove project cache: {}", e);
+                    } else {
+                        println!("    {}: removed", dir.display());
+                    }
+                } else {
+                    println!("    (no project cache)");
+                }
+            }
+            Err(e) => eprintln!("    Warning: {}", e),
+        }
+    }
+
     if remove_config {
         println!("  Removing config directory...");
         match config_dir() {
@@ -884,6 +1020,9 @@ pub async fn handle_uninstall(force: bool, remove_config: bool, remove_images: b
     println!("  {} Uninstalled successfully", BULLET_GREEN);
     if !remove_config {
         println!("     (config preserved - run with --remove-config to delete)");
+    }
+    if !remove_project_data {
+        println!("     (project cache preserved - run with --remove-project-data to delete)");
     }
     if !remove_images {
         println!("     (images preserved - run with --remove-images to delete)");

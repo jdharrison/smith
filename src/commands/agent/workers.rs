@@ -13,6 +13,8 @@ pub fn add_named(
     port: Option<u16>,
     prompt: Option<String>,
     mcp_specs: Vec<String>,
+    projects: Option<Vec<String>>,
+    workspaces: Option<Vec<String>>,
 ) {
     let mut cfg = load_config().unwrap_or_else(|e| {
         eprintln!("Error: {}", e);
@@ -59,6 +61,14 @@ pub fn add_named(
         eprintln!("Error: {}", e);
         std::process::exit(1);
     }
+    if let Some(entry) = cfg
+        .agents
+        .as_mut()
+        .and_then(|a| a.iter_mut().find(|e| e.name == name))
+    {
+        entry.projects = projects;
+        entry.workspaces = workspaces;
+    }
     save_config(&cfg).unwrap_or_else(|e| {
         eprintln!("Error: {}", e);
         std::process::exit(1);
@@ -68,10 +78,17 @@ pub fn add_named(
         .as_ref()
         .and_then(|a| a.iter().find(|e| e.name == name))
     {
-        let _ = write_named_agent_runtime_config(entry);
+        let mounts = resolve_container_mounts(
+            &cfg,
+            entry.projects.as_deref(),
+            entry.workspaces.as_deref(),
+            None,
+        )
+        .unwrap_or_default();
+        let _ = write_named_agent_runtime_config(entry, &mounts);
     }
     println!(
-        "Agent '{}' added. Start with: smith agent start {}",
+        "Agent '{}' added. Start with: smith settings agent start {}",
         name, name
     );
 }
@@ -96,7 +113,7 @@ pub fn remove_named(name: String) {
         std::process::exit(1);
     });
     println!(
-        "Agent '{}' removed from config (container left untouched; use `smith agent stop {}`).",
+        "Agent '{}' removed from config (container left untouched; use `smith settings agent stop {}`).",
         name, name
     );
 }
@@ -120,7 +137,7 @@ pub fn start_named(name: String, port_override: Option<u16>) {
         .map(|(i, e)| (i, e.clone()))
         .unwrap_or_else(|| {
             eprintln!(
-                "Error: Agent '{}' not found. Add with `smith agent add {}`.",
+                "Error: Agent '{}' not found. Add with `smith settings agent add {}`.",
                 name, name
             );
             std::process::exit(1);
@@ -151,11 +168,24 @@ pub fn start_named(name: String, port_override: Option<u16>) {
 
     if is_local && !docker::is_ollama_running() {
         eprintln!(
-            "Warning: Ollama is not running. Start it with `smith model start` (ollama only), then retry."
+            "Warning: Ollama is not running. Start it with `smith settings model start` (ollama only), then retry."
         );
     }
 
-    let config_dir = match write_named_agent_runtime_config(&entry) {
+    let mounts = match resolve_container_mounts(
+        &cfg,
+        entry.projects.as_deref(),
+        entry.workspaces.as_deref(),
+        None,
+    ) {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            std::process::exit(1);
+        }
+    };
+
+    let config_dir = match write_named_agent_runtime_config(&entry, &mounts) {
         Ok(p) => p,
         Err(e) => {
             eprintln!("Error: {}", e);
@@ -170,6 +200,7 @@ pub fn start_named(name: String, port_override: Option<u16>) {
         provider.as_deref(),
         base_url.as_deref(),
         Some(&config_dir),
+        &mounts,
     ) {
         Ok(()) => {
             println!(
@@ -192,6 +223,7 @@ pub fn start_named(name: String, port_override: Option<u16>) {
                     println!("  mcp: {}", names.join(", "));
                 }
             }
+            print_mounts_summary(&mounts);
             println!("  config: {}", config_dir.display());
         }
         Err(e) => {
@@ -244,7 +276,7 @@ pub fn list_named_section() {
     let list = cfg.agents.as_deref().unwrap_or(&[]);
     println!("Named agents (smith-agent-*):");
     if list.is_empty() {
-        println!("  (none — `smith agent add <name>`)");
+        println!("  (none — `smith settings agent add <name>`)");
         return;
     }
     for (i, e) in list.iter().enumerate() {
@@ -261,14 +293,26 @@ pub fn list_named_section() {
         } else {
             "-"
         };
+        let proj_mark = match e.projects.as_ref() {
+            None => "projects=*".to_string(),
+            Some(v) if v.is_empty() => "projects=-".to_string(),
+            Some(v) => format!("projects={}", v.join(",")),
+        };
+        let ws_mark = match e.workspaces.as_ref() {
+            None => "workspaces=*".to_string(),
+            Some(v) if v.is_empty() => "workspaces=-".to_string(),
+            Some(v) => format!("workspaces={}", v.join(",")),
+        };
         println!(
-            "  {} [{}] type={} port={} mcp={} {} {}",
+            "  {} [{}] type={} port={} mcp={} {} {} {} {}",
             e.name,
             status,
             kind,
             port,
             mcp_n,
             prompt_mark,
+            proj_mark,
+            ws_mark,
             if status == "running" {
                 clickable_agent_url(port)
             } else {

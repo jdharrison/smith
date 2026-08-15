@@ -19,3 +19,4 @@ tokio = { version = "1", features = ["full"] }
 libc = "0.2"
 ctrlc = "3"
 termimad = "0.35.1"
+axum = "0.8.9"

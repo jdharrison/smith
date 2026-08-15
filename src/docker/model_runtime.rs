@@ -233,7 +233,7 @@ pub fn start_ollama(model: &str) -> Result<(u16, OllamaBackend), String> {
             "  AMD GPU detected: Docker `--gpus` is NVIDIA-only and ROCm passthrough is unreliable on Docker Desktop."
         );
         println!(
-            "  Install native Ollama for Windows (https://ollama.com/download) for GPU acceleration, then re-run `smith model start`."
+            "  Install native Ollama for Windows (https://ollama.com/download) for GPU acceleration, then re-run `smith settings model start`."
         );
     }
 

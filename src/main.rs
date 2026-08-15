@@ -1440,6 +1440,15 @@ enum Commands {
         #[arg(long)]
         new: bool,
     },
+    /// Local chat bridge for native clients (loopback HTTP)
+    Serve {
+        /// Listen port (default: 4783)
+        #[arg(long, default_value_t = commands::serve::BRIDGE_DEFAULT_PORT)]
+        port: u16,
+        /// Echo mode: no brain/Docker; POST /v1/chat returns the request text (client integration)
+        #[arg(long)]
+        echo: bool,
+    },
     /// Iterate/kill solve loop against durable analysis.json
     Think {
         /// Goal to work toward
@@ -1462,17 +1471,20 @@ enum Commands {
     Install,
     /// Remove all data, containers, and optionally, smith entirely.
     Uninstall {
-        /// Skip confirmation prompt (still prompts for config removal unless --remove-config)
+        /// Skip confirmation prompt (still prompts for config/project-cache removal unless those flags are set)
         #[arg(short, long)]
         force: bool,
         /// Also remove the config directory (~/.config/smith)
         #[arg(long)]
         remove_config: bool,
+        /// Also remove cloned project checkouts (smith project cache). Does not delete host workspaces.
+        #[arg(long)]
+        remove_project_data: bool,
         /// Also remove Docker images built by smith
         #[arg(long)]
         remove_images: bool,
     },
-    /// Model, project, role, agent, and brain configuration
+    /// Model, project, workspace, role, agent, and brain configuration
     Settings {
         #[command(subcommand)]
         cmd: SettingsCommands,
@@ -1497,10 +1509,15 @@ enum SettingsCommands {
         #[command(subcommand)]
         cmd: ModelCommands,
     },
-    /// Repos and config for run pipelines
+    /// Git repos to clone/inject into agent containers
     Project {
         #[command(subcommand)]
         cmd: ProjectCommands,
+    },
+    /// Host directories bind-mounted into agent containers
+    Workspace {
+        #[command(subcommand)]
+        cmd: WorkspaceCommands,
     },
     /// Manage OpenCode subagent roles
     Role {
@@ -1804,6 +1821,45 @@ enum ProjectCommands {
     },
 }
 
+#[derive(Subcommand)]
+enum WorkspaceCommands {
+    /// Add a host directory workspace
+    Add {
+        /// Workspace name (id referenced by agents)
+        name: String,
+        /// Host directory to share into agent containers
+        #[arg(long)]
+        path: String,
+        /// Access: read, write, or readwrite (default: readwrite)
+        #[arg(long)]
+        access: Option<String>,
+    },
+    /// List configured workspaces
+    List,
+    /// Validate workspace paths and access
+    Status {
+        /// Workspace name (omit to check all)
+        #[arg(long)]
+        workspace: Option<String>,
+    },
+    /// Update an existing workspace
+    Update {
+        /// Workspace name
+        name: String,
+        /// New host directory
+        #[arg(long)]
+        path: Option<String>,
+        /// Access: read, write, or readwrite (pass empty to reset to readwrite)
+        #[arg(long)]
+        access: Option<String>,
+    },
+    /// Remove a workspace
+    Remove {
+        /// Workspace name
+        name: String,
+    },
+}
+
 /// Pipeline commands (run via `smith run <cmd>`).
 #[derive(Subcommand)]
 enum RunCommands {
@@ -1925,6 +1981,12 @@ enum AgentCommands {
         /// MCP server spec (repeatable): `name`, `name=local:command…`, or `name=cloud:https://…`
         #[arg(long)]
         mcp: Vec<String>,
+        /// Project names to inject (repeatable). Omit to attach all configured projects.
+        #[arg(long = "project", action = ArgAction::Append)]
+        projects: Option<Vec<String>>,
+        /// Workspace names to mount (repeatable). Omit to attach all configured workspaces.
+        #[arg(long = "workspace", action = ArgAction::Append)]
+        workspaces: Option<Vec<String>>,
     },
     /// Remove a named specialized agent from config (does not stop a running container)
     Remove {
@@ -2023,7 +2085,11 @@ enum AgentCommands {
 
 #[derive(Serialize, Deserialize, Default)]
 struct SmithConfig {
+    #[serde(default)]
     projects: Vec<ProjectConfig>,
+    /// Host directories bind-mounted into agent containers.
+    #[serde(default)]
+    workspaces: Vec<WorkspaceConfig>,
     /// Legacy: global github token (no longer used; PRs use project.github_token)
     #[serde(skip_serializing_if = "Option::is_none")]
     github: Option<GitHubConfig>,
@@ -2114,6 +2180,22 @@ struct AgentEntry {
     /// MCP servers available to this agent (local skills / cloud access)
     #[serde(skip_serializing_if = "Option::is_none")]
     mcp: Option<Vec<AgentMcp>>,
+    /// Project names to inject. None = all configured projects.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    projects: Option<Vec<String>>,
+    /// Workspace names to mount. None = all configured workspaces.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    workspaces: Option<Vec<String>>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct WorkspaceConfig {
+    name: String,
+    /// Host directory (already exists; bind-mounted into agents)
+    path: String,
+    /// "read" | "write" | "readwrite" (default readwrite). Docker has no write-only mounts.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    access: Option<String>,
 }
 
 /// Resolve port for an agent: port if set, else OPENCODE_SERVER_PORT + index.
@@ -2128,7 +2210,7 @@ struct GitHubConfig {
     token: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 struct ProjectConfig {
     name: String,
     repo: String,
@@ -2456,6 +2538,8 @@ fn add_agent_to_config(
         env,
         prompt,
         mcp,
+        projects: None,
+        workspaces: None,
     });
     if cfg.current_agent.is_none() {
         cfg.current_agent = Some(agent_name);
@@ -2543,13 +2627,21 @@ fn parse_agent_mcp_specs(specs: &[String]) -> Result<Vec<AgentMcp>, String> {
 }
 
 /// Write per-agent OpenCode config (prompt + mcp stub) under ~/.config/smith/agents/<name>/.
-fn write_named_agent_runtime_config(entry: &AgentEntry) -> Result<PathBuf, String> {
+fn write_named_agent_runtime_config(
+    entry: &AgentEntry,
+    mounts: &[docker::VolumeMount],
+) -> Result<PathBuf, String> {
     let dir = config_dir()?.join("agents").join(&entry.name);
     std::fs::create_dir_all(&dir).map_err(|e| format!("Failed to create agent dir: {}", e))?;
 
     if let Some(ref prompt) = entry.prompt {
         std::fs::write(dir.join("prompt.md"), prompt)
             .map_err(|e| format!("Failed to write prompt.md: {}", e))?;
+    }
+
+    if !mounts.is_empty() {
+        std::fs::write(dir.join("mounts.md"), mounts_instruction_markdown(mounts))
+            .map_err(|e| format!("Failed to write mounts.md: {}", e))?;
     }
 
     let mut cfg = serde_json::Map::new();
@@ -2569,8 +2661,15 @@ fn write_named_agent_runtime_config(entry: &AgentEntry) -> Result<PathBuf, Strin
         };
         cfg.insert("model".to_string(), json!(model_ref));
     }
+    let mut instructions = Vec::new();
     if entry.prompt.is_some() {
-        cfg.insert("instructions".to_string(), json!(["prompt.md"]));
+        instructions.push("prompt.md");
+    }
+    if !mounts.is_empty() {
+        instructions.push("mounts.md");
+    }
+    if !instructions.is_empty() {
+        cfg.insert("instructions".to_string(), json!(instructions));
     }
     if let Some(ref mcps) = entry.mcp {
         if !mcps.is_empty() {
@@ -2722,6 +2821,298 @@ fn add_project_to_config(cfg: &mut SmithConfig, project: ProjectConfig) -> Resul
     }
     cfg.projects.push(project);
     Ok(())
+}
+
+fn add_workspace_to_config(
+    cfg: &mut SmithConfig,
+    workspace: WorkspaceConfig,
+) -> Result<(), String> {
+    if cfg.workspaces.iter().any(|w| w.name == workspace.name) {
+        return Err(format!("Workspace '{}' already exists", workspace.name));
+    }
+    cfg.workspaces.push(workspace);
+    Ok(())
+}
+
+/// Remote git URL (ssh/https) vs a local filesystem path.
+fn project_repo_is_remote(repo: &str) -> bool {
+    let r = repo.trim();
+    r.contains("://") || r.starts_with("git@")
+}
+
+/// Parse workspace access into Docker read-only flag.
+/// `write` is treated as readwrite — Docker has no write-only bind mounts.
+fn parse_workspace_access(access: Option<&str>) -> Result<bool, String> {
+    match access.map(|s| s.trim().to_ascii_lowercase()).as_deref() {
+        None | Some("") | Some("rw") | Some("readwrite") | Some("read-write")
+        | Some("read/write") | Some("write") => Ok(false),
+        Some("r") | Some("read") | Some("ro") | Some("readonly") | Some("read-only") => Ok(true),
+        Some(other) => Err(format!(
+            "Invalid workspace access '{}'. Use read, write, or readwrite (default).",
+            other
+        )),
+    }
+}
+
+fn sanitize_mount_name(s: &str) -> String {
+    let safe: String = s
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '_' || c == '-' {
+                c
+            } else {
+                '-'
+            }
+        })
+        .collect();
+    let trimmed = safe.trim_matches('-').to_string();
+    if trimmed.is_empty() {
+        "unnamed".to_string()
+    } else {
+        trimmed
+    }
+}
+
+fn expand_user_path(raw: &str) -> PathBuf {
+    let trimmed = raw.trim();
+    if trimmed == "~" {
+        return dirs::home_dir().unwrap_or_else(|| PathBuf::from(trimmed));
+    }
+    if let Some(rest) = trimmed
+        .strip_prefix("~/")
+        .or_else(|| trimmed.strip_prefix("~\\"))
+    {
+        if let Some(home) = dirs::home_dir() {
+            return home.join(rest);
+        }
+    }
+    PathBuf::from(trimmed)
+}
+
+fn store_host_path(path: &Path) -> String {
+    docker::docker_host_path(path)
+}
+
+fn project_cache_dir() -> Result<PathBuf, String> {
+    ProjectDirs::from("com", "agent", "smith")
+        .ok_or_else(|| "Could not determine data directory".to_string())
+        .map(|d| d.data_dir().join("projects"))
+}
+
+fn apply_project_git_ssh(cmd: &mut Command, project: &ProjectConfig) {
+    if let Some(key) = project.ssh_key.as_deref() {
+        let key_path = PathBuf::from(key);
+        if key_path.exists() {
+            cmd.env(
+                "GIT_SSH_COMMAND",
+                format!(
+                    "ssh -i \"{}\" -o StrictHostKeyChecking=no",
+                    key_path.display()
+                ),
+            );
+        }
+    }
+}
+
+/// Local path as-is, or clone/fetch a remote repo into smith's project cache.
+fn ensure_project_host_dir(project: &ProjectConfig) -> Result<PathBuf, String> {
+    if !project_repo_is_remote(&project.repo) {
+        let path = expand_user_path(&project.repo);
+        if !path.exists() {
+            return Err(format!(
+                "Project '{}' path does not exist: {}",
+                project.name,
+                path.display()
+            ));
+        }
+        return Ok(path.canonicalize().unwrap_or(path));
+    }
+
+    let dest = project_cache_dir()?.join(sanitize_mount_name(&project.name));
+    if let Some(parent) = dest.parent() {
+        fs::create_dir_all(parent).map_err(|e| format!("Failed to create project cache: {}", e))?;
+    }
+
+    let branch = project.base_branch.as_deref().unwrap_or("main");
+    if dest.join(".git").is_dir() {
+        let mut fetch = Command::new("git");
+        apply_project_git_ssh(&mut fetch, project);
+        let _ = fetch
+            .current_dir(&dest)
+            .args(["fetch", "--all", "--prune"])
+            .output();
+        let mut checkout = Command::new("git");
+        apply_project_git_ssh(&mut checkout, project);
+        let _ = checkout
+            .current_dir(&dest)
+            .args(["checkout", branch])
+            .output();
+        return Ok(dest);
+    }
+
+    if dest.exists() {
+        let non_empty = dest
+            .read_dir()
+            .map(|mut it| it.next().is_some())
+            .unwrap_or(false);
+        if non_empty {
+            return Err(format!(
+                "Project cache '{}' exists but is not a git checkout",
+                dest.display()
+            ));
+        }
+    }
+
+    let mut clone = Command::new("git");
+    apply_project_git_ssh(&mut clone, project);
+    let output = clone
+        .args(["clone", "--branch", branch, &project.repo])
+        .arg(&dest)
+        .output()
+        .map_err(|e| format!("Failed to clone project '{}': {}", project.name, e))?;
+    if output.status.success() {
+        return Ok(dest);
+    }
+
+    let _ = fs::remove_dir_all(&dest);
+    let mut retry = Command::new("git");
+    apply_project_git_ssh(&mut retry, project);
+    let retry_out = retry
+        .args(["clone", &project.repo])
+        .arg(&dest)
+        .output()
+        .map_err(|e| format!("Failed to clone project '{}': {}", project.name, e))?;
+    if retry_out.status.success() {
+        return Ok(dest);
+    }
+    Err(format!(
+        "Failed to clone project '{}': {}",
+        project.name,
+        String::from_utf8_lossy(&retry_out.stderr).trim()
+    ))
+}
+
+fn filter_named<'a, T>(
+    all: &'a [T],
+    names: Option<&[String]>,
+    get_name: impl Fn(&T) -> &str,
+    kind: &str,
+) -> Result<Vec<&'a T>, String> {
+    match names {
+        None => Ok(all.iter().collect()),
+        Some(list) => {
+            let mut out = Vec::new();
+            for name in list {
+                match all.iter().find(|item| get_name(item) == name.as_str()) {
+                    Some(item) => out.push(item),
+                    None => return Err(format!("{} '{}' is not configured", kind, name)),
+                }
+            }
+            Ok(out)
+        }
+    }
+}
+
+/// Resolve host→container mounts for named or spawned agents.
+fn resolve_container_mounts(
+    cfg: &SmithConfig,
+    project_filter: Option<&[String]>,
+    workspace_filter: Option<&[String]>,
+    skip_project: Option<&str>,
+) -> Result<Vec<docker::VolumeMount>, String> {
+    let mut mounts = Vec::new();
+
+    let workspaces = filter_named(
+        &cfg.workspaces,
+        workspace_filter,
+        |w| w.name.as_str(),
+        "Workspace",
+    )?;
+    for ws in workspaces {
+        let host = expand_user_path(&ws.path);
+        if !host.exists() {
+            return Err(format!(
+                "Workspace '{}' path does not exist: {}",
+                ws.name,
+                host.display()
+            ));
+        }
+        let read_only = parse_workspace_access(ws.access.as_deref())?;
+        mounts.push(docker::VolumeMount {
+            name: ws.name.clone(),
+            kind: "workspace".to_string(),
+            host_path: host.canonicalize().unwrap_or(host),
+            container_path: format!("/workspaces/{}", sanitize_mount_name(&ws.name)),
+            read_only,
+        });
+    }
+
+    let projects = filter_named(
+        &cfg.projects,
+        project_filter,
+        |p| p.name.as_str(),
+        "Project",
+    )?;
+    for proj in projects {
+        if skip_project.is_some_and(|n| n == proj.name) {
+            continue;
+        }
+        let host = ensure_project_host_dir(proj)?;
+        mounts.push(docker::VolumeMount {
+            name: proj.name.clone(),
+            kind: "project".to_string(),
+            host_path: host,
+            container_path: format!("/projects/{}", sanitize_mount_name(&proj.name)),
+            read_only: false,
+        });
+    }
+
+    Ok(mounts)
+}
+
+fn mounts_instruction_markdown(mounts: &[docker::VolumeMount]) -> String {
+    let mut out = String::from(
+        "# Host mounts\n\nThese directories are bind-mounted from the host. Prefer them over cloning from the internet.\n",
+    );
+    let workspaces: Vec<_> = mounts.iter().filter(|m| m.kind == "workspace").collect();
+    let projects: Vec<_> = mounts.iter().filter(|m| m.kind == "project").collect();
+    if !workspaces.is_empty() {
+        out.push_str("\n## Workspaces (existing host directories)\n");
+        for m in workspaces {
+            out.push_str(&format!(
+                "- `{}` → `{}` ({})\n",
+                m.name,
+                m.container_path,
+                m.access_label()
+            ));
+        }
+    }
+    if !projects.is_empty() {
+        out.push_str("\n## Projects (git checkouts or local repos)\n");
+        for m in projects {
+            out.push_str(&format!(
+                "- `{}` → `{}` (readwrite)\n",
+                m.name, m.container_path
+            ));
+        }
+    }
+    out
+}
+
+fn print_mounts_summary(mounts: &[docker::VolumeMount]) {
+    if mounts.is_empty() {
+        return;
+    }
+    println!("  mounts:");
+    for m in mounts {
+        println!(
+            "    {} {} → {} ({})",
+            m.kind,
+            m.name,
+            m.container_path,
+            m.access_label()
+        );
+    }
 }
 
 fn load_config() -> Result<SmithConfig, String> {
@@ -3070,14 +3461,14 @@ fn resolve_project_model_profile(
         .as_deref()
         .ok_or_else(|| {
             format!(
-                "Project '{}' is missing `model`; set it via `smith project update {} --model <profile>`",
+                "Project '{}' is missing `model`; set it via `smith settings project update {} --model <profile>`",
                 project.name, project.name
             )
         })?;
 
     let cfg = load_config()?;
     let agents = cfg.agents.as_ref().ok_or_else(|| {
-        "No model profiles configured; add one with `smith model add`".to_string()
+        "No model profiles configured; add one with `smith settings model add`".to_string()
     })?;
 
     agents
@@ -3086,7 +3477,7 @@ fn resolve_project_model_profile(
         .cloned()
         .ok_or_else(|| {
             format!(
-                "Project '{}' references unknown model profile '{}'; add it with `smith model add {}`",
+                "Project '{}' references unknown model profile '{}'; add it with `smith settings model add {}`",
                 project.name, model_profile, model_profile
             )
         })
@@ -3128,7 +3519,7 @@ fn ensure_spawned_container_for_pipeline(
 
     if !auto_start {
         return Err(format!(
-            "Spawned agent is not running for {}:{}; run `smith run plan --project {} --branch {} \"<prompt>\"` or `smith agent start --project {} --branch {}` first",
+            "Spawned agent is not running for {}:{}; run `smith run plan --project {} --branch {} \"<prompt>\"` or `smith settings agent start --project {} --branch {}` first",
             project, branch, project, branch, project, branch
         ));
     }
@@ -3153,6 +3544,7 @@ fn ensure_spawned_container_for_pipeline(
     let commit_email = project_config.commit_email.clone();
     let port = docker::spawn_container_port(project, branch);
 
+    let extra_mounts = resolve_container_mounts(&load_config()?, None, None, Some(project))?;
     let _ = docker::start_spawned_container(
         project,
         branch,
@@ -3163,6 +3555,7 @@ fn ensure_spawned_container_for_pipeline(
         commit_name.as_deref(),
         commit_email.as_deref(),
         &injected_env,
+        &extra_mounts,
     )?;
 
     Ok(true)
@@ -3296,7 +3689,7 @@ fn print_smith_help() {
         println!("{}\n", about);
     }
     println!("Usage: smith [COMMAND]");
-    const SERVICE: &[&str] = &["status", "chat", "think"];
+    const SERVICE: &[&str] = &["status", "chat", "think", "serve"];
     const SYSTEM: &[&str] = &[
         "doctor",
         "install",
@@ -3338,6 +3731,7 @@ async fn main() {
         }
         Some(Commands::Status { verbose }) => commands::system::handle_status(verbose).await,
         Some(Commands::Chat { message, new }) => commands::chat::handle_chat(message, new).await,
+        Some(Commands::Serve { port, echo }) => commands::serve::handle_serve(port, echo).await,
         Some(Commands::Think {
             goal,
             max_steps,
@@ -3348,11 +3742,21 @@ async fn main() {
         Some(Commands::Uninstall {
             force,
             remove_config,
+            remove_project_data,
             remove_images,
-        }) => commands::system::handle_uninstall(force, remove_config, remove_images).await,
+        }) => {
+            commands::system::handle_uninstall(
+                force,
+                remove_config,
+                remove_project_data,
+                remove_images,
+            )
+            .await
+        }
         Some(Commands::Settings { cmd }) => match cmd {
             SettingsCommands::Model { cmd } => commands::model::handle(cmd).await,
             SettingsCommands::Project { cmd } => commands::project::handle(cmd).await,
+            SettingsCommands::Workspace { cmd } => commands::workspace::handle(cmd).await,
             SettingsCommands::Role { cmd } => commands::role::handle(cmd).await,
             SettingsCommands::Agent { cmd } => commands::agent::handle(cmd).await,
             SettingsCommands::Brain { cmd } => {
@@ -3397,40 +3801,53 @@ mod tests {
         cfg.projects.push(ProjectConfig {
             name: "test".to_string(),
             repo: "https://example.com/repo".to_string(),
-            image: None,
-            ssh_key: None,
-            base_branch: None,
-            remote: None,
-            github_token: None,
-            script: None,
-            commit_name: None,
-            commit_email: None,
-            model: None,
-            ask_setup_run: None,
-            ask_setup_check: None,
-            ask_execute_run: None,
-            ask_execute_check: None,
-            ask_validate_run: None,
-            ask_validate_check: None,
-            dev_setup_run: None,
-            dev_setup_check: None,
-            dev_execute_run: None,
-            dev_execute_check: None,
-            dev_validate_run: None,
-            dev_validate_check: None,
-            dev_commit_run: None,
-            dev_commit_check: None,
-            review_setup_run: None,
-            review_setup_check: None,
-            review_execute_run: None,
-            review_execute_check: None,
-            review_validate_run: None,
-            review_validate_check: None,
+            ..Default::default()
+        });
+        cfg.workspaces.push(WorkspaceConfig {
+            name: "code".to_string(),
+            path: "/tmp/code".to_string(),
+            access: Some("read".to_string()),
         });
         let serialized = toml::to_string(&cfg).unwrap();
         let deserialized: SmithConfig = toml::from_str(&serialized).unwrap();
         assert_eq!(deserialized.projects.len(), 1);
         assert_eq!(deserialized.projects[0].name, "test");
+        assert_eq!(deserialized.workspaces.len(), 1);
+        assert_eq!(deserialized.workspaces[0].access.as_deref(), Some("read"));
+    }
+
+    #[test]
+    fn parse_workspace_access_defaults_to_readwrite() {
+        assert!(!parse_workspace_access(None).unwrap());
+        assert!(!parse_workspace_access(Some("readwrite")).unwrap());
+        assert!(!parse_workspace_access(Some("write")).unwrap());
+        assert!(parse_workspace_access(Some("read")).unwrap());
+        assert!(parse_workspace_access(Some("bogus")).is_err());
+    }
+
+    #[test]
+    fn project_repo_remote_vs_local() {
+        assert!(project_repo_is_remote("git@github.com:user/repo.git"));
+        assert!(project_repo_is_remote("https://github.com/user/repo.git"));
+        assert!(!project_repo_is_remote(
+            r"C:\Develop\personal\projects\smith"
+        ));
+        assert!(!project_repo_is_remote("/home/jake/code/smith"));
+        assert!(!project_repo_is_remote("./local-lib"));
+    }
+
+    #[test]
+    fn sanitize_mount_name_strips_unsafe() {
+        assert_eq!(sanitize_mount_name("My Project"), "My-Project");
+        assert_eq!(sanitize_mount_name(".."), "unnamed");
+    }
+
+    #[test]
+    fn docker_host_path_normalizes_windows_prefix() {
+        let p = PathBuf::from(r"\\?\C:\Users\Jake\code");
+        let rendered = docker::docker_host_path(&p);
+        assert!(!rendered.starts_with(r"\\?\"));
+        assert!(!rendered.contains('\\'));
     }
 
     #[test]
