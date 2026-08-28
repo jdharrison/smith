@@ -35,7 +35,7 @@ pub fn ensure_compose_project_file() -> Result<PathBuf, String> {
 name: {project}
 
 services:
-  ollama:
+  services-ollama:
     image: ollama/ollama
     container_name: smith-ollama
     restart: "no"
@@ -57,9 +57,28 @@ services:
     # Memory bind-mount and entrypoint are applied by `smith chat` / brain start.
     profiles: ["brain"]
 
-  # Named workers (smith-agent-*) and workspace agents (agent_*) are created
-  # dynamically by `smith settings agent start …` with the same project labels.
-  # One-shot search windows (smith-search-*) use bridge egress then --rm.
+  # Named workers (agents-*) and sandbox-default are created dynamically by smith
+  # with matching Compose project labels. Host sidecars: bridge / whisper / tts.
+
+  sandbox-default:
+    image: node:22-bookworm-slim
+    container_name: smith-sandbox
+    restart: "no"
+    profiles: ["sandbox"]
+
+  agents-coding:
+    image: ghcr.io/anomalyco/opencode
+    container_name: smith-agent-coding
+    restart: "no"
+    profiles: ["agents"]
+
+  services-searxng:
+    image: docker.io/searxng/searxng:latest
+    container_name: smith-searxng
+    restart: "no"
+    ports:
+      - "127.0.0.1:4792:8080"
+    profiles: ["services"]
 
 networks:
   brain-net:

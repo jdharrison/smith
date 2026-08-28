@@ -2,6 +2,7 @@ mod brain;
 mod commands;
 mod docker;
 mod github;
+mod service;
 mod term_md;
 
 use clap::{ArgAction, CommandFactory, Parser, Subcommand};
@@ -18,7 +19,9 @@ use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-/// ANSI color codes for status output (circle: red = not built, blue = built, green = online).
+/// ANSI color codes for status output.
+/// green = online/healthy, blue = idle/ready/none (not an error),
+/// yellow = degraded, red = error / broken config.
 const ANSI_RED: &str = "\x1b[31m";
 const ANSI_BLUE: &str = "\x1b[34m";
 const ANSI_GREEN: &str = "\x1b[32m";
@@ -26,10 +29,10 @@ const ANSI_YELLOW: &str = "\x1b[33m";
 const ANSI_RESET: &str = "\x1b[0m";
 
 /// Colored bullet for status/install output (avoids format! in format args).
-const BULLET_GREEN: &str = "\x1b[32m●\x1b[0m";
-const BULLET_BLUE: &str = "\x1b[34m●\x1b[0m";
-const BULLET_RED: &str = "\x1b[31m●\x1b[0m";
-const BULLET_YELLOW: &str = "\x1b[33m●\x1b[0m";
+pub(crate) const BULLET_GREEN: &str = "\x1b[32m●\x1b[0m";
+pub(crate) const BULLET_BLUE: &str = "\x1b[34m●\x1b[0m";
+pub(crate) const BULLET_RED: &str = "\x1b[31m●\x1b[0m";
+pub(crate) const BULLET_YELLOW: &str = "\x1b[33m●\x1b[0m";
 
 /// OSC 8 hyperlink so the URL is clickable in supported terminals (e.g. VS Code, iTerm2, Windows Terminal).
 fn clickable_agent_url(port: u16) -> String {
@@ -39,19 +42,54 @@ fn clickable_agent_url(port: u16) -> String {
 
 /// active = container running, reachable = health endpoint responds (only meaningful when active).
 /// is_cloud = cloud agents are always green (no build needed).
-/// Local agents: red (none) -> blue (built) -> green (online).
-fn status_circle(active: bool, reachable: Option<bool>, built: bool, is_cloud: bool) -> String {
+/// Local agents: blue (none/not built, ready to build) -> blue (built, ready to start) -> green (online).
+/// Yellow = running but unhealthy; red reserved for true failures elsewhere.
+fn status_circle(active: bool, reachable: Option<bool>, _built: bool, is_cloud: bool) -> String {
     let bullet = "●";
     let color = if active && reachable == Some(false) {
         ANSI_YELLOW
     } else if active || is_cloud {
         ANSI_GREEN
-    } else if built {
-        ANSI_BLUE
     } else {
-        ANSI_RED
+        // Not running (none / not built / built idle) — ready, not an error.
+        ANSI_BLUE
     };
     format!("{}{}{}", color, bullet, ANSI_RESET)
+}
+
+/// Braille spinner while `work` runs on this thread (spinner on a helper thread).
+pub(crate) fn run_with_spinner<T, F>(label: &str, work: F) -> T
+where
+    F: FnOnce() -> T,
+{
+    let stop = Arc::new(AtomicBool::new(false));
+    let stop_flag = Arc::clone(&stop);
+    let label = label.to_string();
+    let handle = thread::spawn(move || {
+        const FRAMES: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+        let started = Instant::now();
+        let mut i = 0usize;
+        while !stop_flag.load(Ordering::SeqCst) {
+            let elapsed = started.elapsed().as_secs_f32();
+            print!(
+                "\r\x1b[2K  {} {} {} {:>4.1}s",
+                BULLET_BLUE,
+                FRAMES[i % FRAMES.len()],
+                label,
+                elapsed
+            );
+            let _ = io::stdout().flush();
+            i = i.wrapping_add(1);
+            thread::sleep(Duration::from_millis(80));
+        }
+        print!("\r\x1b[2K");
+        let _ = io::stdout().flush();
+    });
+
+    let result = work();
+    stop.store(true, Ordering::SeqCst);
+    let _ = handle.join();
+    result
 }
 
 fn is_valid_short_plan_id(value: &str) -> bool {
@@ -1484,7 +1522,7 @@ enum Commands {
         #[arg(long)]
         remove_images: bool,
     },
-    /// Model, project, workspace, role, agent, and brain configuration
+    /// Model, project, workspace, role, agent, brain, runtime, and network
     Settings {
         #[command(subcommand)]
         cmd: SettingsCommands,
@@ -1494,7 +1532,6 @@ enum Commands {
     /// Print version
     Version,
     /// Run pipeline workflows (plan/develop/review/release)
-    #[command(hide = true)]
     Run {
         #[command(subcommand)]
         cmd: RunCommands,
@@ -1533,6 +1570,96 @@ enum SettingsCommands {
     Brain {
         #[command(subcommand)]
         cmd: BrainCommands,
+    },
+    /// Where the brain process runs (`host` | `container`)
+    Runtime {
+        #[command(subcommand)]
+        cmd: RuntimeCommands,
+    },
+    /// Whether the brain has general internet (`public` | `private`)
+    Network {
+        #[command(subcommand)]
+        cmd: NetworkCommands,
+    },
+    /// Deprecated alias: sets runtime+network (`sealed` → container/private, `host` → host/public)
+    Isolation {
+        #[command(subcommand)]
+        cmd: IsolationCommands,
+    },
+    /// Ad-hoc demo sandbox (code intent host)
+    Sandbox {
+        #[command(subcommand)]
+        cmd: SandboxCommands,
+    },
+    /// Host supervisor autostart + warm/on-demand services
+    Service {
+        #[command(subcommand)]
+        cmd: ServiceCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum ServiceCommands {
+    /// Show autostart + service tree (mode / running)
+    Status,
+    /// Enable or disable OS login autostart for `smith serve`
+    Autostart {
+        /// on | off
+        state: String,
+    },
+    /// Set a service to warm or on_demand
+    Set {
+        /// Service id (e.g. services.searxng, coding, whisper)
+        id: String,
+        /// warm | on_demand
+        mode: String,
+    },
+    /// Ensure all warm services are running
+    Apply,
+    /// Register OS unit (if needed) and start supervisor now
+    Start,
+    /// Disable OS autostart unit (does not kill a foreground serve)
+    Stop,
+}
+
+#[derive(Subcommand)]
+enum SandboxCommands {
+    /// Show coding agent + sandbox status
+    Status,
+    /// Stop the demo sandbox container (scratch files kept)
+    Stop,
+}
+
+#[derive(Subcommand)]
+enum RuntimeCommands {
+    /// Show current runtime mode and host roots
+    Get,
+    /// Set runtime (`host` or `container`)
+    Set {
+        /// host | container
+        mode: String,
+    },
+}
+
+#[derive(Subcommand)]
+enum NetworkCommands {
+    /// Show current network mode
+    Get,
+    /// Set network (`public` or `private`)
+    Set {
+        /// public | private
+        mode: String,
+    },
+}
+
+#[derive(Subcommand)]
+enum IsolationCommands {
+    /// Show current isolation (deprecated; prefer runtime + network)
+    Get,
+    /// Set isolation (`sealed` or `host`; `child` is reserved)
+    Set {
+        /// sealed | host
+        mode: String,
     },
 }
 
@@ -1594,6 +1721,11 @@ pub const DEFAULT_LOCAL_MODEL: &str = "qwen3:14b";
 /// Built-in agent name and image when no config is set (OpenCode cloud wrapper).
 const DEFAULT_AGENT_NAME: &str = "opencode";
 const DEFAULT_AGENT_IMAGE: &str = "ghcr.io/anomalyco/opencode";
+
+/// Built-in public project so smith can iterate on itself (bootstrap).
+pub const DEFAULT_SMITH_PROJECT_NAME: &str = "smith";
+pub const DEFAULT_SMITH_PROJECT_REPO: &str = "https://github.com/jdharrison/smith.git";
+pub const DEFAULT_SMITH_PROJECT_BASE_BRANCH: &str = "main";
 
 #[derive(Subcommand)]
 enum ModelCommands {
@@ -2083,7 +2215,7 @@ enum AgentCommands {
     Prune,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 struct SmithConfig {
     #[serde(default)]
     projects: Vec<ProjectConfig>,
@@ -2102,6 +2234,193 @@ struct SmithConfig {
     /// Default model profile name (used by install/model workflows)
     #[serde(skip_serializing_if = "Option::is_none")]
     current_agent: Option<String>,
+    /// Where the brain process runs (`host` | `container`). Absent → migrate from `isolation`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    runtime: Option<RuntimeMode>,
+    /// Whether the brain has general internet (`public` | `private`). Absent → migrate from `isolation`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    network: Option<NetworkMode>,
+    /// Deprecated trust-boundary knob. Migrated into `runtime` + `network` on load.
+    #[serde(default)]
+    isolation: IsolationMode,
+    /// Host-runtime extras (search/preview roots). Ignored when runtime is container.
+    #[serde(default, skip_serializing_if = "HostIsolationConfig::is_empty")]
+    host: HostIsolationConfig,
+    /// Always-on supervisor + warm/on-demand service policy.
+    #[serde(default)]
+    service: service::ServiceRootConfig,
+}
+
+/// Where the brain process runs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+enum RuntimeMode {
+    #[default]
+    Container,
+    Host,
+}
+
+impl RuntimeMode {
+    fn as_str(self) -> &'static str {
+        match self {
+            RuntimeMode::Container => "container",
+            RuntimeMode::Host => "host",
+        }
+    }
+
+    fn parse_mode(raw: &str) -> Result<Self, String> {
+        match raw.trim().to_ascii_lowercase().as_str() {
+            "container" | "docker" | "sealed" => Ok(RuntimeMode::Container),
+            "host" | "native" => Ok(RuntimeMode::Host),
+            other => Err(format!(
+                "unknown runtime '{}'; use host or container",
+                other
+            )),
+        }
+    }
+
+    fn is_host(self) -> bool {
+        self == RuntimeMode::Host
+    }
+}
+
+/// Whether the brain (and what it may spawn itself) has general internet.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+enum NetworkMode {
+    #[default]
+    Private,
+    Public,
+}
+
+impl NetworkMode {
+    fn as_str(self) -> &'static str {
+        match self {
+            NetworkMode::Private => "private",
+            NetworkMode::Public => "public",
+        }
+    }
+
+    fn parse_mode(raw: &str) -> Result<Self, String> {
+        match raw.trim().to_ascii_lowercase().as_str() {
+            "private" | "offline" | "sealed" => Ok(NetworkMode::Private),
+            "public" | "open" | "online" => Ok(NetworkMode::Public),
+            other => Err(format!(
+                "unknown network '{}'; use public or private",
+                other
+            )),
+        }
+    }
+
+    fn is_private(self) -> bool {
+        self == NetworkMode::Private
+    }
+}
+
+/// Deprecated isolation posture. Prefer `runtime` + `network`.
+/// `child` is reserved (relay of a primary host).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+enum IsolationMode {
+    #[default]
+    Sealed,
+    Host,
+    Child,
+}
+
+impl IsolationMode {
+    fn as_str(self) -> &'static str {
+        match self {
+            IsolationMode::Sealed => "sealed",
+            IsolationMode::Host => "host",
+            IsolationMode::Child => "child",
+        }
+    }
+
+    fn parse_mode(raw: &str) -> Result<Self, String> {
+        match raw.trim().to_ascii_lowercase().as_str() {
+            "sealed" => Ok(IsolationMode::Sealed),
+            "host" => Ok(IsolationMode::Host),
+            "child" => Ok(IsolationMode::Child),
+            other => Err(format!(
+                "unknown isolation '{}'; use sealed or host (child is reserved)",
+                other
+            )),
+        }
+    }
+
+    /// Map legacy isolation into runtime + network.
+    fn to_runtime_network(self) -> (RuntimeMode, NetworkMode) {
+        match self {
+            IsolationMode::Host => (RuntimeMode::Host, NetworkMode::Public),
+            IsolationMode::Sealed | IsolationMode::Child => {
+                (RuntimeMode::Container, NetworkMode::Private)
+            }
+        }
+    }
+}
+
+impl SmithConfig {
+    fn runtime(&self) -> RuntimeMode {
+        self.runtime
+            .unwrap_or_else(|| self.isolation.to_runtime_network().0)
+    }
+
+    fn network(&self) -> NetworkMode {
+        self.network
+            .unwrap_or_else(|| self.isolation.to_runtime_network().1)
+    }
+
+    fn set_runtime(&mut self, mode: RuntimeMode) {
+        self.runtime = Some(mode);
+        self.sync_isolation_compat();
+    }
+
+    fn set_network(&mut self, mode: NetworkMode) {
+        self.network = Some(mode);
+        self.sync_isolation_compat();
+    }
+
+    fn set_runtime_network(&mut self, runtime: RuntimeMode, network: NetworkMode) {
+        self.runtime = Some(runtime);
+        self.network = Some(network);
+        self.sync_isolation_compat();
+    }
+
+    /// Keep deprecated `isolation` aligned for older readers.
+    fn sync_isolation_compat(&mut self) {
+        self.isolation = match self.runtime() {
+            RuntimeMode::Host => IsolationMode::Host,
+            RuntimeMode::Container => IsolationMode::Sealed,
+        };
+    }
+
+    /// Materialize explicit runtime/network after load (migration + save-ready).
+    fn normalize_runtime_network(&mut self) {
+        let runtime = self.runtime();
+        let network = self.network();
+        self.runtime = Some(runtime);
+        self.network = Some(network);
+        self.sync_isolation_compat();
+    }
+}
+
+const HOST_RUNTIME_WARNING: &str = "Host runtime: smith uses native hardware (disks, display). You contain this machine. Coding, pipeline, and search workers stay in Docker.";
+#[allow(dead_code)]
+/// Deprecated alias — prefer HOST_RUNTIME_WARNING.
+const HOST_ISOLATION_WARNING: &str = HOST_RUNTIME_WARNING;
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+struct HostIsolationConfig {
+    /// Extra filesystem roots for host files.find / preview. Empty → workspaces + Pictures/Documents.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    roots: Vec<String>,
+}
+
+impl HostIsolationConfig {
+    fn is_empty(&self) -> bool {
+        self.roots.is_empty()
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Default)]
@@ -2302,7 +2621,7 @@ struct ProjectConfig {
     review_validate_check: Option<String>,
 }
 
-fn config_dir() -> Result<PathBuf, String> {
+pub(crate) fn config_dir() -> Result<PathBuf, String> {
     ProjectDirs::from("com", "agent", "smith")
         .ok_or_else(|| "Could not determine config directory".to_string())
         .map(|dirs| dirs.config_dir().to_path_buf())
@@ -2823,6 +3142,53 @@ fn add_project_to_config(cfg: &mut SmithConfig, project: ProjectConfig) -> Resul
     Ok(())
 }
 
+/// Ensure the public `smith` project is registered (HTTPS → `main`).
+/// Idempotent. Returns `true` when it was newly added.
+pub fn ensure_default_smith_project() -> Result<bool, String> {
+    let mut cfg = load_config()?;
+    if cfg
+        .projects
+        .iter()
+        .any(|p| p.name == DEFAULT_SMITH_PROJECT_NAME)
+    {
+        return Ok(false);
+    }
+    add_project_to_config(
+        &mut cfg,
+        ProjectConfig {
+            name: DEFAULT_SMITH_PROJECT_NAME.to_string(),
+            repo: DEFAULT_SMITH_PROJECT_REPO.to_string(),
+            base_branch: Some(DEFAULT_SMITH_PROJECT_BASE_BRANCH.to_string()),
+            remote: Some("origin".to_string()),
+            ..Default::default()
+        },
+    )?;
+    save_config(&cfg)?;
+    Ok(true)
+}
+
+/// Same as [`ensure_default_smith_project`] but mutates an already-loaded config (no save).
+pub(crate) fn ensure_default_smith_project_in(cfg: &mut SmithConfig) -> bool {
+    if cfg
+        .projects
+        .iter()
+        .any(|p| p.name == DEFAULT_SMITH_PROJECT_NAME)
+    {
+        return false;
+    }
+    let _ = add_project_to_config(
+        cfg,
+        ProjectConfig {
+            name: DEFAULT_SMITH_PROJECT_NAME.to_string(),
+            repo: DEFAULT_SMITH_PROJECT_REPO.to_string(),
+            base_branch: Some(DEFAULT_SMITH_PROJECT_BASE_BRANCH.to_string()),
+            remote: Some("origin".to_string()),
+            ..Default::default()
+        },
+    );
+    true
+}
+
 fn add_workspace_to_config(
     cfg: &mut SmithConfig,
     workspace: WorkspaceConfig,
@@ -2887,6 +3253,65 @@ fn expand_user_path(raw: &str) -> PathBuf {
         }
     }
     PathBuf::from(trimmed)
+}
+
+fn current_runtime() -> RuntimeMode {
+    load_config()
+        .map(|c| c.runtime())
+        .unwrap_or_default()
+}
+
+fn current_network() -> NetworkMode {
+    load_config()
+        .map(|c| c.network())
+        .unwrap_or_default()
+}
+
+#[allow(dead_code)]
+/// Deprecated: derived from `runtime` for one-release compat.
+fn current_isolation() -> IsolationMode {
+    load_config()
+        .map(|c| c.isolation)
+        .unwrap_or_default()
+}
+
+/// Directories host files.find / preview may touch.
+fn host_file_roots(cfg: &SmithConfig) -> Vec<PathBuf> {
+    let mut roots: Vec<PathBuf> = Vec::new();
+    let push_dir = |roots: &mut Vec<PathBuf>, p: PathBuf| {
+        if p.is_dir() {
+            let canon = p.canonicalize().unwrap_or(p);
+            if !roots.iter().any(|e| e == &canon) {
+                roots.push(canon);
+            }
+        }
+    };
+
+    if !cfg.host.roots.is_empty() {
+        for r in &cfg.host.roots {
+            push_dir(&mut roots, expand_user_path(r));
+        }
+        return roots;
+    }
+
+    for ws in &cfg.workspaces {
+        push_dir(&mut roots, expand_user_path(&ws.path));
+    }
+    if let Some(p) = dirs::picture_dir() {
+        push_dir(&mut roots, p);
+    }
+    if let Some(p) = dirs::document_dir() {
+        push_dir(&mut roots, p);
+    }
+    roots
+}
+
+fn path_is_under_roots(path: &Path, roots: &[PathBuf]) -> bool {
+    let canon = match path.canonicalize() {
+        Ok(p) => p,
+        Err(_) => return false,
+    };
+    roots.iter().any(|root| canon.starts_with(root))
 }
 
 fn store_host_path(path: &Path) -> String {
@@ -3121,15 +3546,22 @@ fn load_config() -> Result<SmithConfig, String> {
         return Ok(SmithConfig::default());
     }
     let content = fs::read_to_string(&file).map_err(|e| format!("Failed to read config: {}", e))?;
-    toml::from_str(&content).map_err(|e| format!("Failed to parse config: {}", e))
+    let mut cfg: SmithConfig =
+        toml::from_str(&content).map_err(|e| format!("Failed to parse config: {}", e))?;
+    cfg.normalize_runtime_network();
+    cfg.service.ensure_defaults();
+    Ok(cfg)
 }
 
 fn save_config(config: &SmithConfig) -> Result<(), String> {
     let dir = config_dir()?;
     fs::create_dir_all(&dir).map_err(|e| format!("Failed to create config directory: {}", e))?;
     let file = config_file_path()?;
-    let content =
-        toml::to_string_pretty(config).map_err(|e| format!("Failed to serialize config: {}", e))?;
+    let mut to_write = config.clone();
+    to_write.normalize_runtime_network();
+    to_write.service.ensure_defaults();
+    let content = toml::to_string_pretty(&to_write)
+        .map_err(|e| format!("Failed to serialize config: {}", e))?;
 
     // Atomic write: write to temp file then rename. On EXDEV (cross-filesystem), fall back to copy + remove.
     let temp_file = file.with_extension("toml.tmp");
@@ -3243,10 +3675,26 @@ fn ensure_docker_started_and_enabled() {
         .status();
 }
 
+#[cfg(target_os = "linux")]
+fn docker_enabled_at_boot() -> bool {
+    let Ok(out) = Command::new("systemctl")
+        .args(["is-enabled", "docker"])
+        .output()
+    else {
+        return false;
+    };
+    out.status.success() && String::from_utf8_lossy(&out.stdout).trim() == "enabled"
+}
+
 #[cfg(not(target_os = "linux"))]
 #[allow(dead_code)]
 fn ensure_docker_started_and_enabled() {}
 
+#[cfg(not(target_os = "linux"))]
+#[allow(dead_code)]
+fn docker_enabled_at_boot() -> bool {
+    false
+}
 /// Write config dir and install marker with current version (called at end of install wizard).
 /// Storing the version allows future migrations to run when upgrading.
 fn run_install_finish() -> Result<(), String> {
@@ -3766,6 +4214,17 @@ async fn main() {
                 };
                 commands::brain::handle(mapped).await
             }
+            SettingsCommands::Runtime { cmd } => commands::isolation::handle_runtime(cmd).await,
+            SettingsCommands::Network { cmd } => commands::isolation::handle_network(cmd).await,
+            SettingsCommands::Isolation { cmd } => commands::isolation::handle(cmd).await,
+            SettingsCommands::Sandbox { cmd } => {
+                let mapped = match cmd {
+                    SandboxCommands::Status => commands::sandbox::SandboxCmd::Status,
+                    SandboxCommands::Stop => commands::sandbox::SandboxCmd::Stop,
+                };
+                commands::sandbox::handle(mapped).await
+            }
+            SettingsCommands::Service { cmd } => commands::service::handle(cmd).await,
         },
         Some(Commands::Help) => {
             print_smith_help();
@@ -3814,6 +4273,79 @@ mod tests {
         assert_eq!(deserialized.projects[0].name, "test");
         assert_eq!(deserialized.workspaces.len(), 1);
         assert_eq!(deserialized.workspaces[0].access.as_deref(), Some("read"));
+        assert_eq!(deserialized.runtime(), RuntimeMode::Container);
+        assert_eq!(deserialized.network(), NetworkMode::Private);
+        assert_eq!(deserialized.isolation, IsolationMode::Sealed);
+    }
+
+    #[test]
+    fn ensure_default_smith_project_is_idempotent() {
+        let mut cfg = SmithConfig::default();
+        assert!(ensure_default_smith_project_in(&mut cfg));
+        assert_eq!(cfg.projects.len(), 1);
+        assert_eq!(cfg.projects[0].name, DEFAULT_SMITH_PROJECT_NAME);
+        assert_eq!(cfg.projects[0].repo, DEFAULT_SMITH_PROJECT_REPO);
+        assert_eq!(
+            cfg.projects[0].base_branch.as_deref(),
+            Some(DEFAULT_SMITH_PROJECT_BASE_BRANCH)
+        );
+        assert!(!ensure_default_smith_project_in(&mut cfg));
+        assert_eq!(cfg.projects.len(), 1);
+    }
+
+    #[test]
+    fn isolation_parse_and_default() {
+        assert_eq!(IsolationMode::default(), IsolationMode::Sealed);
+        assert_eq!(IsolationMode::parse_mode("HOST").unwrap(), IsolationMode::Host);
+        assert!(IsolationMode::parse_mode("nope").is_err());
+        let missing: SmithConfig = toml::from_str("").unwrap();
+        assert_eq!(missing.isolation, IsolationMode::Sealed);
+        assert_eq!(missing.runtime(), RuntimeMode::Container);
+        assert_eq!(missing.network(), NetworkMode::Private);
+    }
+
+    #[test]
+    fn migrates_legacy_isolation_host() {
+        let mut cfg: SmithConfig = toml::from_str("isolation = \"host\"\n").unwrap();
+        cfg.normalize_runtime_network();
+        assert_eq!(cfg.runtime(), RuntimeMode::Host);
+        assert_eq!(cfg.network(), NetworkMode::Public);
+        assert_eq!(cfg.isolation, IsolationMode::Host);
+    }
+
+    #[test]
+    fn explicit_runtime_network_wins_over_isolation() {
+        let mut cfg: SmithConfig = toml::from_str(
+            r#"
+isolation = "sealed"
+runtime = "host"
+network = "private"
+"#,
+        )
+        .unwrap();
+        cfg.normalize_runtime_network();
+        assert_eq!(cfg.runtime(), RuntimeMode::Host);
+        assert_eq!(cfg.network(), NetworkMode::Private);
+    }
+
+    #[test]
+    fn runtime_network_parse() {
+        assert_eq!(RuntimeMode::parse_mode("CONTAINER").unwrap(), RuntimeMode::Container);
+        assert_eq!(NetworkMode::parse_mode("public").unwrap(), NetworkMode::Public);
+        assert!(RuntimeMode::parse_mode("nope").is_err());
+        assert!(NetworkMode::parse_mode("nope").is_err());
+    }
+
+    #[test]
+    fn path_under_roots_rejects_escape() {
+        let root = std::env::temp_dir();
+        let inside = root.join("smith-iso-test");
+        let _ = std::fs::create_dir_all(&inside);
+        assert!(path_is_under_roots(&inside, &[root.canonicalize().unwrap()]));
+        assert!(!path_is_under_roots(
+            Path::new("/nonexistent/smith-escape"),
+            &[root]
+        ));
     }
 
     #[test]

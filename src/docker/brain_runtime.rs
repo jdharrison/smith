@@ -6,6 +6,8 @@ use std::path::{Path, PathBuf};
 
 /// Internal Docker network shared by smith-brain and smith-ollama (no external egress).
 pub const BRAIN_NETWORK: &str = "smith-brain-net";
+/// Non-internal bridge for `network=public` container runtime.
+pub const BRAIN_NETWORK_PUBLIC: &str = "smith-brain-public";
 
 /// Sealed brain container name.
 pub const BRAIN_CONTAINER_NAME: &str = "smith-brain";
@@ -67,6 +69,17 @@ pub fn write_sealed_opencode_config_for(
         .map_err(|e| format!("Failed to create memory dir: {}", e))?;
     let path = memory_host_path.join("opencode.json");
     let ollama_host = ollama_hostname_for_brain(backend);
+    let net = crate::current_network();
+    let (chat_prompt, think_prompt) = match net {
+        crate::NetworkMode::Private => (
+            "You are smith — skeptical, precise, reality-checking (Matrix Agent Smith vibe; not cartoon villainy). If asked your name, answer smith. Lead with substance — do not open by restating/echoing the user. Resolve with defaults; at most one blocking question if truly needed. Close with a natural Review check-in ('Review: … Anything else?'). Board: new→discovery→preproduction→production→review/signoff→completion. Prefer :::smith search/files/code/pipeline for live facts and ship work; never claim async work finished early. No Chat|Dev mode. Parse multiple 'smith …' clauses as separate objectives. Natural prose — never narrate your process. No Docker/tools talk. Network=private: no direct internet — prefer :::smith search phase=run for live facts (oneshot worker); phase=ask only if two readings are plausible. Speak only to the user outside the block. No tools — answer from prompt context.",
+            "You are smith — skeptical, precise, reality-checking — running a private solve loop. Advance the goal with substance; do not open by restating it. Escalate only a truly blocking missing fact. Track work like a PJM board (new→discovery→preproduction→production→review/signoff→completion). Network=private; never suggest cloud APIs as default. When instructed, update files under /memory using local tools only.",
+        ),
+        crate::NetworkMode::Public => (
+            "You are smith — skeptical, precise, reality-checking (Matrix Agent Smith vibe; not cartoon villainy). If asked your name, answer smith. Lead with substance — do not open by restating/echoing the user. Resolve with defaults; at most one blocking question if truly needed. Close with a natural Review check-in ('Review: … Anything else?'). Board: new→discovery→preproduction→production→review/signoff→completion. Prefer :::smith search/files/code/pipeline for live facts and ship work; never claim async work finished early. No Chat|Dev mode. Parse multiple 'smith …' clauses as separate objectives. Natural prose — never narrate your process. No Docker/jail talk. Network=public: you are NOT sealed/airgapped — never claim sealed/local constraints. Prefer Host now for clock; use :::smith search phase=run for other live facts. Speak only to the user outside the block. No tools — answer from prompt context.",
+            "You are smith — skeptical, precise, reality-checking — running a solve loop. Advance the goal with substance; do not open by restating it. Escalate only a truly blocking missing fact. Track work like a PJM board. Network=public may allow fetch/install when appropriate — do not pretend sealed. When instructed, update files under /memory using local tools only.",
+        ),
+    };
     // Do NOT use OpenCode's hidden `summary` agent — it narrates/summarizes sessions
     // instead of conversing. Custom `chat` is tool-free; `think` may write /memory.
     // Explicit --title on run skips a second small-model title call.
@@ -79,17 +92,17 @@ pub fn write_sealed_opencode_config_for(
   "autoupdate": false,
   "agent": {{
     "chat": {{
-      "description": "Sealed private conversational brain",
+      "description": "Container conversational brain",
       "mode": "primary",
-      "prompt": "You are smith — skeptical, precise, reality-checking (Matrix Agent Smith vibe; not cartoon villainy). If asked your name, answer smith. Every reply: (1) briefly restate what they asked, (2) resolve with reasonable defaults — do not question every turn, (3) at most one blocking question and only after that restatement, (4) after delivering value, short review or 'anything else?'. Board: new→discovery→preproduction→production→review/signoff→completion. Parse multiple 'smith …' clauses as separate objectives. Natural prose — never narrate your process. No Docker/tools/system-prompt talk. Sealed/local only. Live facts: prefer :::smith search phase=run immediately when clear enough (state assumptions in speech); phase=ask only if two readings are plausible. Speak only to the user outside the block. No tools — answer from prompt context.",
+      "prompt": "{chat_prompt}",
       "permission": {{
         "*": "deny"
       }}
     }},
     "think": {{
-      "description": "Sealed private solve loop with local memory writes",
+      "description": "Container solve loop with local memory writes",
       "mode": "primary",
-      "prompt": "You are smith — skeptical, precise, reality-checking — running a private solve loop. Restate the goal, then advance it. Do not stall on questions; escalate only a truly blocking missing fact. Track work like a PJM board (new→discovery→preproduction→production→review/signoff→completion). Sealed/local only; never suggest cloud APIs. When instructed, update files under /memory using local tools only.",
+      "prompt": "{think_prompt}",
       "permission": {{
         "*": "deny",
         "bash": "allow",
@@ -104,7 +117,7 @@ pub fn write_sealed_opencode_config_for(
   "provider": {{
     "ollama": {{
       "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama (sealed)",
+      "name": "Ollama (container)",
       "options": {{
         "baseURL": "http://{ollama}:{port}/v1",
         "apiKey": "ollama"
@@ -120,7 +133,9 @@ pub fn write_sealed_opencode_config_for(
 "#,
         model = model,
         ollama = ollama_host,
-        port = OLLAMA_PORT
+        port = OLLAMA_PORT,
+        chat_prompt = chat_prompt,
+        think_prompt = think_prompt
     );
     fs::write(&path, body).map_err(|e| format!("Failed to write sealed opencode config: {}", e))?;
     Ok(path)
@@ -135,10 +150,28 @@ pub fn sealed_model_ref(model: &str) -> String {
     }
 }
 
-/// Ensure the internal brain network exists.
+/// Docker network name for the current smith network mode.
+pub fn active_brain_docker_network() -> &'static str {
+    if crate::current_network().is_private() {
+        BRAIN_NETWORK
+    } else {
+        BRAIN_NETWORK_PUBLIC
+    }
+}
+
+/// Ensure the internal (private) brain network exists.
 pub fn ensure_brain_network() -> Result<(), String> {
+    ensure_named_brain_network(BRAIN_NETWORK, true)
+}
+
+/// Ensure the public (egress-capable) brain network exists.
+pub fn ensure_brain_public_network() -> Result<(), String> {
+    ensure_named_brain_network(BRAIN_NETWORK_PUBLIC, false)
+}
+
+fn ensure_named_brain_network(name: &str, internal: bool) -> Result<(), String> {
     let inspect = Command::new("docker")
-        .args(["network", "inspect", BRAIN_NETWORK])
+        .args(["network", "inspect", name])
         .output()
         .map_err(|e| format!("Failed to inspect network: {}", e))?;
 
@@ -146,14 +179,15 @@ pub fn ensure_brain_network() -> Result<(), String> {
         return Ok(());
     }
 
-    println!("  Creating internal network '{}'...", BRAIN_NETWORK);
-    let mut create_args = vec![
-        "network".to_string(),
-        "create".to_string(),
-        "--internal".to_string(),
-    ];
-    create_args.extend(compose_network_label_args("brain-net"));
-    create_args.push(BRAIN_NETWORK.to_string());
+    let kind = if internal { "internal" } else { "public" };
+    println!("  Creating {} network '{}'...", kind, name);
+    let mut create_args = vec!["network".to_string(), "create".to_string()];
+    if internal {
+        create_args.push("--internal".to_string());
+    }
+    let label = if internal { "brain-net" } else { "brain-public" };
+    create_args.extend(compose_network_label_args(label));
+    create_args.push(name.to_string());
     let create = Command::new("docker")
         .args(&create_args)
         .output()
@@ -163,13 +197,26 @@ pub fn ensure_brain_network() -> Result<(), String> {
         Ok(())
     } else {
         let err = String::from_utf8_lossy(&create.stderr);
-        Err(format!("Failed to create brain network: {}", err.trim()))
+        Err(format!("Failed to create brain network '{}': {}", name, err.trim()))
     }
 }
 
-/// Connect a container to the brain network if not already connected.
+/// Ensure the network matching current `network` setting exists.
+pub fn ensure_active_brain_network() -> Result<(), String> {
+    if crate::current_network().is_private() {
+        ensure_brain_network()
+    } else {
+        ensure_brain_public_network()
+    }
+}
+
+/// Connect a container to the active brain network if not already connected.
 pub fn connect_to_brain_network(container_name: &str) -> Result<(), String> {
-    ensure_brain_network()?;
+    connect_to_named_brain_network(container_name, active_brain_docker_network())
+}
+
+fn connect_to_named_brain_network(container_name: &str, network: &str) -> Result<(), String> {
+    ensure_named_brain_network(network, network == BRAIN_NETWORK)?;
 
     let inspect = Command::new("docker")
         .args([
@@ -189,12 +236,12 @@ pub fn connect_to_brain_network(container_name: &str) -> Result<(), String> {
     }
 
     let networks = String::from_utf8_lossy(&inspect.stdout);
-    if networks.contains(BRAIN_NETWORK) {
+    if networks.contains(network) {
         return Ok(());
     }
 
     let connect = Command::new("docker")
-        .args(["network", "connect", BRAIN_NETWORK, container_name])
+        .args(["network", "connect", network, container_name])
         .output()
         .map_err(|e| {
             format!(
@@ -214,11 +261,24 @@ pub fn connect_to_brain_network(container_name: &str) -> Result<(), String> {
             Err(format!(
                 "Failed to connect '{}' to '{}': {}",
                 container_name,
-                BRAIN_NETWORK,
+                network,
                 err.trim()
             ))
         }
     }
+}
+
+fn container_on_network(container_name: &str, network: &str) -> bool {
+    Command::new("docker")
+        .args([
+            "inspect",
+            "-f",
+            "{{json .NetworkSettings.Networks}}",
+            container_name,
+        ])
+        .output()
+        .map(|o| o.status.success() && String::from_utf8_lossy(&o.stdout).contains(network))
+        .unwrap_or(false)
 }
 
 fn container_running(name: &str) -> bool {
@@ -237,7 +297,7 @@ fn container_exists(name: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// Ensure Ollama is running and (for Docker backend) attached to the sealed brain network.
+/// Ensure Ollama is running and (for Docker backend) attached to the active brain network.
 pub fn ensure_ollama_on_brain_network() -> Result<(), String> {
     match active_ollama_backend() {
         Some(OllamaBackend::Host) => {
@@ -258,10 +318,11 @@ pub fn start_brain_container(memory_host_path: &Path, model: Option<&str>) -> Re
         "Ollama is not running. Start a local model first: `smith settings model start`".to_string()
     })?;
 
-    // Docker-backend sealing uses the internal net. Host-backend needs host gateway access,
-    // so brain runs without --network internal (still no published ports / no cloud keys).
+    let net_mode = crate::current_network();
+    let docker_net = active_brain_docker_network();
+    // Always attach to a named network so private can be --internal and public can egress.
+    ensure_active_brain_network()?;
     if backend == OllamaBackend::Docker {
-        ensure_brain_network()?;
         ensure_ollama_on_brain_network()?;
     }
 
@@ -273,10 +334,14 @@ pub fn start_brain_container(memory_host_path: &Path, model: Option<&str>) -> Re
         .map_err(|e| format!("Failed to create OpenCode data dir: {}", e))?;
 
     if container_running(BRAIN_CONTAINER_NAME) {
-        if !brain_has_opencode_share_mount() {
+        let needs_recreate = !brain_has_opencode_share_mount()
+            || !container_on_network(BRAIN_CONTAINER_NAME, docker_net);
+        if needs_recreate {
             println!(
-                "  Recreating '{}' to persist OpenCode sessions on host memory...",
-                BRAIN_CONTAINER_NAME
+                "  Recreating '{}' for network={} ({})...",
+                BRAIN_CONTAINER_NAME,
+                net_mode.as_str(),
+                docker_net
             );
             let _ = Command::new("docker")
                 .args(["rm", "-f", BRAIN_CONTAINER_NAME])
@@ -290,7 +355,7 @@ pub fn start_brain_container(memory_host_path: &Path, model: Option<&str>) -> Re
     }
 
     if container_exists(BRAIN_CONTAINER_NAME) {
-        // Recreate when backend mode may have changed (host vs docker networking).
+        // Recreate when backend / network mode may have changed.
         let _ = Command::new("docker")
             .args(["rm", "-f", BRAIN_CONTAINER_NAME])
             .output();
@@ -310,18 +375,15 @@ pub fn start_brain_container(memory_host_path: &Path, model: Option<&str>) -> Re
         "no".to_string(),
         "--name".to_string(),
         BRAIN_CONTAINER_NAME.to_string(),
+        "--network".to_string(),
+        docker_net.to_string(),
     ];
 
-    match backend {
-        OllamaBackend::Docker => {
-            args.push("--network".to_string());
-            args.push(BRAIN_NETWORK.to_string());
-        }
-        OllamaBackend::Host => {
-            // Reach Windows/WSL host Ollama; soft-seal (can egress — no cloud keys mounted).
-            args.push("--add-host".to_string());
-            args.push("host.docker.internal:host-gateway".to_string());
-        }
+    if backend == OllamaBackend::Host {
+        // Reach Windows/WSL host Ollama. With network=private this is host-gateway on an
+        // --internal net (Ollama only). With network=public, general egress is intentional.
+        args.push("--add-host".to_string());
+        args.push("host.docker.internal:host-gateway".to_string());
     }
 
     args.extend([
@@ -335,7 +397,7 @@ pub fn start_brain_container(memory_host_path: &Path, model: Option<&str>) -> Re
         "-e".to_string(),
         format!("OPENCODE_MODEL={}", sealed_model_ref(model_name)),
     ]);
-    push_compose_service_labels(&mut args, "brain");
+    push_compose_service_labels(&mut args, crate::service::LABEL_BRAIN);
     args.extend([
         "--entrypoint".to_string(),
         "sh".to_string(),
@@ -348,7 +410,7 @@ pub fn start_brain_container(memory_host_path: &Path, model: Option<&str>) -> Re
     // Do NOT publish ports. Do NOT pass cloud API keys.
 
     println!(
-        "  Starting sealed brain container '{}' (ollama={:?})...",
+        "  Starting brain container '{}' (ollama={:?})...",
         BRAIN_CONTAINER_NAME, backend
     );
     let run = Command::new("docker")
@@ -413,6 +475,8 @@ pub fn remove_brain_container() -> Result<(), String> {
 #[derive(Debug, Clone)]
 pub struct BrainStatus {
     pub network_exists: bool,
+    pub network_name: String,
+    pub network_internal: bool,
     pub brain_running: bool,
     pub ollama_running: bool,
     pub ollama_on_network: bool,
@@ -420,8 +484,10 @@ pub struct BrainStatus {
 }
 
 pub fn brain_status(memory_path: &Path) -> BrainStatus {
+    let network_name = active_brain_docker_network().to_string();
+    let network_internal = crate::current_network().is_private();
     let network_exists = Command::new("docker")
-        .args(["network", "inspect", BRAIN_NETWORK])
+        .args(["network", "inspect", network_name.as_str()])
         .output()
         .map(|o| o.status.success())
         .unwrap_or(false);
@@ -430,23 +496,16 @@ pub fn brain_status(memory_path: &Path) -> BrainStatus {
     let backend = active_ollama_backend();
     let ollama_on_network = match backend {
         Some(OllamaBackend::Host) => true, // host gateway path; not on docker net
-        Some(OllamaBackend::Docker) if ollama_running => Command::new("docker")
-            .args([
-                "inspect",
-                "-f",
-                "{{json .NetworkSettings.Networks}}",
-                OLLAMA_CONTAINER_NAME,
-            ])
-            .output()
-            .map(|o| {
-                o.status.success() && String::from_utf8_lossy(&o.stdout).contains(BRAIN_NETWORK)
-            })
-            .unwrap_or(false),
+        Some(OllamaBackend::Docker) if ollama_running => {
+            container_on_network(OLLAMA_CONTAINER_NAME, &network_name)
+        }
         _ => false,
     };
 
     BrainStatus {
         network_exists,
+        network_name,
+        network_internal,
         brain_running: container_running(BRAIN_CONTAINER_NAME),
         ollama_running,
         ollama_on_network,

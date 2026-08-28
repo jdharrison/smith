@@ -1,19 +1,17 @@
-//! One-shot web search worker: brief egress window, then gone.
+//! Web search for the sealed brain: local SearXNG + optional weather fetches.
 //!
-//! Not attached to smith-brain-net (internal). Uses the default bridge so it can
-//! reach the internet, labeled under compose project `smith`, then `--rm`.
+//! General web results come from always-on `smith-searxng` (loopback :4792).
+//! Weather still hits wttr / Open-Meteo directly (small public APIs).
+//! Results are declassified text only — the brain never browses.
 
-use super::compose::push_compose_service_labels;
+use super::searx_runtime::{self, SEARXNG_PORT};
 use super::*;
 use serde_json::Value;
-use std::time::{SystemTime, UNIX_EPOCH};
-
-pub const SEARCH_IMAGE: &str = "alpine:3.20";
-pub const SEARCH_CONTAINER_PREFIX: &str = "smith-search-";
 
 const MAX_RESULT_CHARS: usize = 8_000;
+const FETCH_UA: &str = "curl/8.4.0";
 
-/// Run a temporary search container and return declassified text for the brain.
+/// Run search and return declassified text for the brain.
 pub fn run_oneshot_web_search(query: &str) -> Result<String, String> {
     check_docker_available()?;
 
@@ -22,135 +20,297 @@ pub fn run_oneshot_web_search(query: &str) -> Result<String, String> {
         return Err("Search query is empty".to_string());
     }
 
-    let ts = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_millis())
-        .unwrap_or(0);
-    let name = format!("{}{}", SEARCH_CONTAINER_PREFIX, ts);
+    println!("  Opening search via local SearXNG (:{SEARXNG_PORT})…");
 
-    let ddg_url = format!(
-        "https://api.duckduckgo.com/?q={}&format=json&no_html=1&skip_disambig=1",
-        urlencode(q)
-    );
+    let mut parts: Vec<String> = Vec::new();
 
-    let wttr_url = if looks_like_weather_query(q) {
+    if looks_like_weather_query(q) {
         let place = guess_weather_place(q);
-        Some(format!(
-            "https://wttr.in/{}?format=%l:+%t+%h+%c+%C+%w",
-            urlencode(&place)
-        ))
-    } else {
-        None
-    };
-
-    let mut args = vec![
-        "run".to_string(),
-        "--rm".to_string(),
-        "--name".to_string(),
-        name.clone(),
-        "--network".to_string(),
-        "bridge".to_string(),
-        "--restart".to_string(),
-        "no".to_string(),
-        "-e".to_string(),
-        format!("SMITH_DDG_URL={}", ddg_url),
-    ];
-    if let Some(ref w) = wttr_url {
-        args.push("-e".to_string());
-        args.push(format!("SMITH_WTTR_URL={}", w));
-    }
-    push_compose_service_labels(&mut args, "search");
-    args.extend([
-        SEARCH_IMAGE.to_string(),
-        "sh".to_string(),
-        "-c".to_string(),
-        r#"echo '=== ddg ==='
-wget -qO- --timeout=20 -U 'smith/0.3' "$SMITH_DDG_URL" || echo '(ddg failed)'
-echo
-if [ -n "$SMITH_WTTR_URL" ]; then
-  echo '=== wttr ==='
-  wget -qO- --timeout=15 -U 'smith/0.3' "$SMITH_WTTR_URL" || echo '(wttr failed)'
-fi
-"#
-        .to_string(),
-    ]);
-
-    println!("  Opening brief search window (then shutdown)…");
-    let output = Command::new("docker")
-        .args(&args)
-        .output()
-        .map_err(|e| format!("Failed to start search container: {}", e))?;
-
-    // Belt-and-suspenders: --rm should drop it, but never leave a search box running.
-    let _ = Command::new("docker").args(["rm", "-f", &name]).output();
-
-    if !output.status.success() {
-        let err = String::from_utf8_lossy(&output.stderr);
-        return Err(format!(
-            "Search window failed: {}",
-            err.trim().chars().take(500).collect::<String>()
-        ));
+        if let Some(w) = fetch_weather(&place) {
+            parts.push(w);
+        }
     }
 
-    let raw = String::from_utf8_lossy(&output.stdout);
-    let summarized = summarize_search_output(&raw);
+    match searx_runtime::searxng_search_json(q) {
+        Ok(json) => {
+            let web = summarize_searx_json(&json);
+            if !web.is_empty() {
+                parts.push(format!("Web (SearXNG):\n{web}"));
+            } else if let Some(ddg) = fetch_ddg_fallback(q) {
+                parts.push(format!("Web (DDG fallback):\n{ddg}"));
+            }
+        }
+        Err(e) => {
+            println!("  SearXNG unavailable ({e}); trying DDG Instant Answer fallback…");
+            if let Some(ddg) = fetch_ddg_fallback(q) {
+                parts.push(format!("Web (DDG fallback):\n{ddg}"));
+            } else if parts.is_empty() {
+                return Err(format!(
+                    "Search failed: SearXNG error ({e}); DDG also empty. \
+                     Start Docker and retry, or open http://127.0.0.1:{SEARXNG_PORT}"
+                ));
+            }
+        }
+    }
+
+    let summarized = parts.join("\n\n");
     if summarized.trim().is_empty() {
-        Err("Search window returned no usable results".to_string())
+        Err("Search returned no usable results".to_string())
     } else {
+        let preview: String = summarized.chars().take(120).collect();
+        println!("  Search declassified: {}…", preview.replace('\n', " "));
         Ok(truncate_chars(&summarized, MAX_RESULT_CHARS))
     }
 }
 
-fn summarize_search_output(raw: &str) -> String {
-    let mut ddg_raw = String::new();
-    let mut wttr_raw = String::new();
-    let mut section = "";
-    for line in raw.lines() {
-        let t = line.trim();
-        if t == "=== ddg ===" {
-            section = "ddg";
-            continue;
-        }
-        if t == "=== wttr ===" {
-            section = "wttr";
-            continue;
-        }
-        match section {
-            "ddg" => {
-                if !ddg_raw.is_empty() {
-                    ddg_raw.push('\n');
-                }
-                ddg_raw.push_str(line);
+fn summarize_searx_json(raw: &str) -> String {
+    let Ok(v) = serde_json::from_str::<Value>(raw) else {
+        return truncate_chars(raw.trim(), 2_000);
+    };
+    let mut lines = Vec::new();
+
+    if let Some(answer) = v
+        .get("answers")
+        .and_then(Value::as_array)
+        .and_then(|a| a.first())
+        .and_then(|x| {
+            x.as_str()
+                .map(|s| s.to_string())
+                .or_else(|| x.get("answer").and_then(Value::as_str).map(|s| s.to_string()))
+        })
+        .filter(|s| !s.is_empty())
+    {
+        lines.push(format!("Answer: {answer}"));
+    }
+
+    if let Some(results) = v.get("results").and_then(Value::as_array) {
+        for (i, item) in results.iter().take(8).enumerate() {
+            let title = item
+                .get("title")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .trim();
+            let url = item
+                .get("url")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .trim();
+            let content = item
+                .get("content")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .trim();
+            if title.is_empty() && content.is_empty() {
+                continue;
             }
-            "wttr" => {
-                if !wttr_raw.is_empty() {
-                    wttr_raw.push('\n');
-                }
-                wttr_raw.push_str(line);
+            let mut block = format!("{}. {}", i + 1, title);
+            if !url.is_empty() {
+                block.push_str(&format!("\n   {url}"));
             }
-            _ => {}
+            if !content.is_empty() {
+                block.push_str(&format!("\n   {}", truncate_chars(content, 280)));
+            }
+            lines.push(block);
         }
     }
 
-    let mut out = String::new();
-    let ddg = summarize_ddg_json(ddg_raw.trim());
-    if !ddg.is_empty() {
-        out.push_str("Web:\n");
-        out.push_str(&ddg);
-    }
-    let wttr = wttr_raw.trim();
-    if !wttr.is_empty() && !wttr.contains("(wttr failed)") {
-        if !out.is_empty() {
-            out.push_str("\n\n");
+    if let Some(infoboxes) = v.get("infoboxes").and_then(Value::as_array) {
+        for box_ in infoboxes.iter().take(2) {
+            if let Some(content) = box_.get("content").and_then(Value::as_str) {
+                let t = content.trim();
+                if !t.is_empty() {
+                    lines.push(format!("Infobox: {}", truncate_chars(t, 400)));
+                }
+            }
         }
-        out.push_str("Live weather:\n");
-        out.push_str(wttr);
     }
-    if out.trim().is_empty() {
-        truncate_chars(raw.trim(), 2_000)
+
+    lines.join("\n\n")
+}
+
+fn fetch_ddg_fallback(q: &str) -> Option<String> {
+    let url = format!(
+        "https://api.duckduckgo.com/?q={}&format=json&no_html=1&skip_disambig=1",
+        urlencode(q)
+    );
+    let raw = http_get(&url)?;
+    let s = summarize_ddg_json(&raw);
+    if s.is_empty() {
+        None
     } else {
-        out
+        Some(s)
     }
+}
+
+fn fetch_weather(place: &str) -> Option<String> {
+    let mut out = String::new();
+    let wttr_url = format!("https://wttr.in/{}?format=3", urlencode(place));
+    if let Some(wttr) = http_get(&wttr_url) {
+        let t = wttr.trim();
+        if !t.is_empty() && !looks_like_error_page(t) {
+            out.push_str("Live weather (wttr):\n");
+            out.push_str(t);
+        }
+    }
+
+    let geo_url = format!(
+        "https://geocoding-api.open-meteo.com/v1/search?name={}&count=3&language=en&format=json",
+        urlencode(place)
+    );
+    if let Some(geo) = http_get(&geo_url) {
+        if let Some((lat, lon, label)) = parse_geo_first(&geo) {
+            let meteo_url = format!(
+                "https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}\
+                 &current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m\
+                 &temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto"
+            );
+            if let Some(meteo) = http_get(&meteo_url) {
+                let sum = summarize_open_meteo(&format!(
+                    "place={label} lat={lat} lon={lon}\n{meteo}"
+                ));
+                if !sum.is_empty() {
+                    if !out.is_empty() {
+                        out.push_str("\n\n");
+                    }
+                    out.push_str("Live weather (open-meteo):\n");
+                    out.push_str(&sum);
+                }
+            }
+        }
+    }
+
+    if out.is_empty() {
+        None
+    } else {
+        Some(out)
+    }
+}
+
+fn parse_geo_first(geo: &str) -> Option<(String, String, String)> {
+    let v: Value = serde_json::from_str(geo).ok()?;
+    let first = v.get("results")?.as_array()?.first()?;
+    let lat = first.get("latitude")?.to_string();
+    let lon = first.get("longitude")?.to_string();
+    let name = first
+        .get("name")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+    let admin = first
+        .get("admin1")
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    let country = first
+        .get("country")
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    let label = [name.as_str(), admin, country]
+        .iter()
+        .filter(|s| !s.is_empty())
+        .cloned()
+        .collect::<Vec<_>>()
+        .join(", ");
+    Some((lat, lon, label))
+}
+
+fn http_get(url: &str) -> Option<String> {
+    let out = Command::new("curl")
+        .args([
+            "-fsSL",
+            "--max-time",
+            "20",
+            "-A",
+            FETCH_UA,
+            url,
+        ])
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    Some(String::from_utf8_lossy(&out.stdout).to_string())
+}
+
+fn looks_like_error_page(s: &str) -> bool {
+    let l = s.to_lowercase();
+    l.contains("<html") || l.contains("502 bad gateway") || l.contains("503 service")
+}
+
+fn summarize_open_meteo(raw: &str) -> String {
+    let mut place = String::new();
+    let mut json_part = String::new();
+    for line in raw.lines() {
+        let t = line.trim();
+        if t.starts_with("place=") {
+            place = t.trim_start_matches("place=").to_string();
+        } else if t.starts_with('{') {
+            json_part = t.to_string();
+        }
+    }
+    if json_part.is_empty() {
+        // whole blob might be JSON
+        if raw.trim().starts_with('{') {
+            json_part = raw.trim().to_string();
+        } else {
+            return String::new();
+        }
+    }
+    let Ok(v) = serde_json::from_str::<Value>(&json_part) else {
+        return String::new();
+    };
+    let current = match v.get("current") {
+        Some(c) => c,
+        None => return String::new(),
+    };
+    let temp = current
+        .get("temperature_2m")
+        .and_then(Value::as_f64)
+        .map(|t| format!("{t:.0}°F"));
+    let humidity = current
+        .get("relative_humidity_2m")
+        .and_then(Value::as_f64)
+        .map(|h| format!("humidity {h:.0}%"));
+    let wind = current
+        .get("wind_speed_10m")
+        .and_then(Value::as_f64)
+        .map(|w| format!("wind {w:.0} mph"));
+    let code = current
+        .get("weather_code")
+        .and_then(Value::as_i64)
+        .map(weather_code_label);
+    let mut bits: Vec<String> = Vec::new();
+    if !place.is_empty() {
+        bits.push(place);
+    }
+    if let Some(t) = temp {
+        bits.push(t);
+    }
+    if let Some(c) = code {
+        bits.push(c);
+    }
+    if let Some(h) = humidity {
+        bits.push(h);
+    }
+    if let Some(w) = wind {
+        bits.push(w);
+    }
+    bits.join(" · ")
+}
+
+fn weather_code_label(code: i64) -> String {
+    let label = match code {
+        0 => "Clear",
+        1 | 2 => "Partly cloudy",
+        3 => "Overcast",
+        45 | 48 => "Fog",
+        51 | 53 | 55 => "Drizzle",
+        61 | 63 | 65 => "Rain",
+        71 | 73 | 75 => "Snow",
+        80..=82 => "Rain showers",
+        95 | 96 | 99 => "Thunderstorm",
+        _ => "Mixed conditions",
+    };
+    format!("{label} (code {code})")
 }
 
 fn summarize_ddg_json(raw: &str) -> String {
@@ -178,7 +338,7 @@ fn summarize_ddg_json(raw: &str) -> String {
         }
     }
     if parts.is_empty() {
-        truncate_chars(raw, 1_500)
+        String::new()
     } else {
         parts.join("\n\n")
     }
@@ -235,8 +395,8 @@ fn urlencode(s: &str) -> String {
             b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
                 out.push(char::from(*b));
             }
-            b' ' => out.push('+'),
-            _ => out.push_str(&format!("%{:02X}", b)),
+            b' ' => out.push_str("%20"),
+            _ => out.push_str(&format!("%{b:02X}")),
         }
     }
     out
@@ -256,19 +416,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn weather_place_corona() {
-        assert_eq!(
-            guess_weather_place("what is the weather like today in Corona California"),
-            "Corona California"
-        );
-        assert!(looks_like_weather_query("weather in Corona?"));
+    fn summarize_searx_extracts_results() {
+        let json = r#"{
+          "query": "rust lang",
+          "results": [
+            {"title": "Rust", "url": "https://www.rust-lang.org/", "content": "A language."},
+            {"title": "Book", "url": "https://doc.rust-lang.org/book/", "content": "The book."}
+          ]
+        }"#;
+        let s = summarize_searx_json(json);
+        assert!(s.contains("Rust"));
+        assert!(s.contains("rust-lang.org"));
     }
 
     #[test]
-    fn summarize_ddg_extracts_abstract() {
-        let json = r#"{"AbstractText":"Hot day.","Answer":"","RelatedTopics":[{"Text":"Heat wave warning"}]}"#;
-        let s = summarize_ddg_json(json);
-        assert!(s.contains("Hot day"));
-        assert!(s.contains("Heat wave"));
+    fn summarize_ddg_empty_instant_answer_is_blank() {
+        let json = r#"{"Abstract":"","Answer":"","RelatedTopics":[]}"#;
+        assert!(summarize_ddg_json(json).is_empty());
+    }
+
+    #[test]
+    fn guess_place_from_weather_question() {
+        assert_eq!(guess_weather_place("what's the weather in Austin"), "Austin");
     }
 }

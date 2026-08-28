@@ -1,11 +1,16 @@
 pub mod agent;
 pub mod brain;
 pub mod chat;
+pub mod isolation;
 pub mod model;
 pub mod pipeline;
 pub mod project;
 pub mod role;
 pub mod run;
+pub mod sandbox;
 pub mod serve;
+pub mod service;
 pub mod system;
+pub mod tts;
+pub mod whisper;
 pub mod workspace;

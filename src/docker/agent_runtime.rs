@@ -786,7 +786,7 @@ exec opencode serve --hostname 0.0.0.0 --port {port}"#,
     push_compose_service_labels(
         &mut args,
         &format!(
-            "workspace-{}",
+            "agents-spawn-{}",
             compose_service_name(&format!("{}_{}", project, branch))
         ),
     );

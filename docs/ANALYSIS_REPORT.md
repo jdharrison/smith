@@ -2,7 +2,7 @@
 
 **Generated**: 2026-03-02  
 **Project**: smith  
-**Status**: Complete but not stable (v0.3.0)  
+**Status**: Complete but not stable (v0.4.0)  
 
 ---
 

@@ -1,1 +1,9 @@
 /target
+
+# Flutter client
+client/.dart_tool/
+client/.flutter-plugins-dependencies
+client/.pub-cache/
+client/.pub/
+client/build/
+client/**/doc/api/

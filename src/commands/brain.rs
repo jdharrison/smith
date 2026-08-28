@@ -1,4 +1,4 @@
-//! Sealed brain ops: status / stop.
+//! Brain ops: status / stop.
 
 use crate::brain::ensure_memory_layout;
 use crate::docker;
@@ -21,6 +21,8 @@ pub async fn handle(cmd: BrainCmd) {
             };
             let st = docker::brain_status(&mem);
             let _ = docker::ensure_compose_project_file();
+            let net_mode = crate::current_network();
+            let runtime = crate::current_runtime();
             let net_b = if st.network_exists {
                 crate::BULLET_GREEN
             } else {
@@ -42,7 +44,12 @@ pub async fn handle(cmd: BrainCmd) {
                 crate::BULLET_YELLOW
             };
 
-            println!("{} sealed brain", brain_b);
+            println!("{} brain", brain_b);
+            println!(
+                "     runtime: {}  |  network: {}",
+                runtime.as_str(),
+                net_mode.as_str()
+            );
             println!(
                 "     compose project: {} ({})",
                 docker::COMPOSE_PROJECT,
@@ -53,11 +60,13 @@ pub async fn handle(cmd: BrainCmd) {
             println!(
                 "     {} network {} ({})",
                 net_b,
-                docker::BRAIN_NETWORK,
-                if st.network_exists {
+                st.network_name,
+                if !st.network_exists {
+                    "missing"
+                } else if st.network_internal {
                     "internal"
                 } else {
-                    "missing"
+                    "public/egress"
                 }
             );
             println!(
@@ -97,20 +106,34 @@ pub async fn handle(cmd: BrainCmd) {
             );
             println!("     memory: {}", st.memory_path);
 
-            if st.brain_running {
+            if st.brain_running && !runtime.is_host() {
                 match docker::verify_no_egress() {
                     Ok(true) => {
-                        println!("     {} egress — blocked (sealed)", crate::BULLET_GREEN)
+                        if net_mode.is_private() {
+                            println!("     {} egress — blocked (private)", crate::BULLET_GREEN);
+                        } else {
+                            println!(
+                                "     {} egress — blocked (unexpected for network=public)",
+                                crate::BULLET_YELLOW
+                            );
+                        }
                     }
                     Ok(false) => {
-                        if docker::active_ollama_backend() == Some(docker::OllamaBackend::Host) {
+                        if !net_mode.is_private() {
                             println!(
-                                "     {} egress — soft-seal (host Ollama; no cloud keys mounted)",
+                                "     {} egress — open (network=public)",
+                                crate::BULLET_GREEN
+                            );
+                        } else if docker::active_ollama_backend()
+                            == Some(docker::OllamaBackend::Host)
+                        {
+                            println!(
+                                "     {} egress — soft-seal (private intended; host Ollama path may leak). Prefer Docker Ollama or accept public.",
                                 crate::BULLET_YELLOW
                             );
                         } else {
                             println!(
-                                "     {} egress — UNEXPECTED reachability",
+                                "     {} egress — UNEXPECTED reachability (network=private)",
                                 crate::BULLET_RED
                             );
                         }
@@ -120,7 +143,7 @@ pub async fn handle(cmd: BrainCmd) {
             }
         }
         BrainCmd::Stop => match docker::stop_brain_container() {
-            Ok(()) => println!("Sealed brain stopped (host memory preserved)."),
+            Ok(()) => println!("Brain container stopped (host memory preserved)."),
             Err(e) => {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);

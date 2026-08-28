@@ -30,6 +30,93 @@ cargo install --git https://github.com/jdharrison/smith.git
 
 Pre-built binaries for Linux and macOS are available in [GitHub Releases](https://github.com/jdharrison/smith/releases). (Windows is not supported; use Linux binary with WSL.)
 
+## Runtime and network
+
+Two orthogonal settings (replacing the old `isolation` knob):
+
+| Axis | Values | Meaning |
+|------|--------|---------|
+| **runtime** | `host` \| `container` | Where the brain process runs |
+| **network** | `public` \| `private` | Whether the brain has general internet |
+
+Defaults: `runtime=container`, `network=private` (former **sealed**). Legacy `isolation=host` migrates to `runtime=host` + `network=public`.
+
+| Combo | Chat / think | Internet |
+|-------|--------------|----------|
+| container + private | Docker `smith-brain` on internal net | Brain offline; live search via local **SearXNG** (`127.0.0.1:4792`) then declassified snippets |
+| container + public | Docker `smith-brain` with egress | Brain may reach the net |
+| host + public/private | Native OpenCode + host Ollama | Private still uses SearXNG / workers for net tasks (honest policy) |
+
+```bash
+smith settings runtime get|set host|container
+smith settings network get|set public|private
+# deprecated alias:
+smith settings isolation set sealed   # → container + private
+smith settings isolation set host     # → host + public
+```
+
+Host runtime needs **native Ollama** (`127.0.0.1:11434`) and **`opencode` on PATH**. Coding/pipeline/search still need Docker. First host capability: find a file under workspaces / Pictures / Documents (or `host.roots` in config) and preview it (OS viewer + Flutter attachment).
+
+Container runtime needs Docker. Host Ollama via `host.docker.internal` with `network=private` uses the internal net + host-gateway (Ollama only). With `network=public`, soft-seal egress is intentional — set `network=private` if you want blocked egress.
+
+## Coding agent + ad-hoc host
+
+Chat can ask smith to **build and host** small demos. A local `coding` agent is ensured on install/chat; demos run in `smith-sandbox` with a published port (stays up until stopped).
+
+```bash
+smith chat -m "create a web server and host an index file with just hello world on port 8080"
+# → http://127.0.0.1:8080  (scratch under smith data dir)
+
+smith settings sandbox status
+smith settings sandbox stop
+```
+
+Brain emits a `:::smith code` intent; smith writes under the `scratch` workspace and serves via the sandbox container. Coding/pipeline stay in Docker even when brain runtime is host.
+
+## Local search (SearXNG)
+
+Web search for chat goes through a **local SearXNG** container (`smith-searxng`), not Google.
+
+- **UI + API:** [http://127.0.0.1:4792](http://127.0.0.1:4792) (loopback only — use this instead of browser Google when you want private metasearch)
+- **License:** SearXNG is AGPL-3.0 (the image); smith only starts/stops it
+- **Config:** `~/.config/smith/searxng/settings.yml` (JSON format enabled for smith)
+- Starts on `smith install` and on first `:::smith search` / live fact turn
+- Skip with `SMITH_SEARX=0` (falls back to thin DDG Instant Answer)
+- Override URL with `SMITH_SEARX_URL`
+
+Weather still uses wttr.in / Open-Meteo as small public helpers alongside SearXNG results.
+
+## Desktop client (prototype)
+
+Flutter desktop UI lives in [`client/`](client/) (Windows/macOS/Linux). Text/voice chat against `smith serve`. Host runtime can show image attachments and Open.
+
+**Always-on supervisor:** `smith install` registers OS login autostart for `smith serve` (`smith settings service autostart on|off`). Warm services (default): bridge, brain, `services.searxng`, `services.ollama`. On-demand: Whisper, TTS, coding, sandbox. Compose project stays **`smith`** with hierarchical labels (`services-searxng`, `agents-coding`, `sandbox-default`). SearXNG UI: [http://127.0.0.1:4792](http://127.0.0.1:4792).
+
+**Async task board:** every chat message creates a durable host task. Fast replies complete in the same turn; search/files/code/pipeline ack immediately and finish in the background. The client polls `GET /v1/tasks` while work is running and **injects an assistant message** into Chat when a task completes (TTS may speak the inject). Tabs: **Chat | Tasks | Settings** (no Chat|Dev session mode — pipeline kind comes from intent).
+
+```bash
+# After smith install (Whisper + Kokoro TTS venvs/models; re-runs are idempotent)
+smith serve                 # bridge :4783 (+ warm set); or rely on login autostart
+
+# UI
+cd client && flutter run -d windows   # or macos / linux
+```
+
+`smith install` sets up Whisper (`.venv`) and Kokoro TTS (`.venv-tts` + ONNX under
+`client/sidecar/models/`). Kokoro weights are Apache-2.0; `kokoro-onnx` is MIT.
+`smith serve` starts Whisper and TTS when not already healthy (both normal and `--echo`).
+Skip Whisper with `SMITH_WHISPER=0`, TTS with `SMITH_TTS=0`. Override folders with
+`SMITH_WHISPER_DIR` / `SMITH_TTS_DIR`. Default Kokoro voice: `am_onyx` (`SMITH_TTS_VOICE`).
+Ctrl-C stops sidecars smith started.
+
+Windows: allow microphone access for the app under **Settings → Privacy → Microphone**.
+Host file preview reads local paths on this machine. Voice uses hold-to-talk → WAV →
+local Whisper (`127.0.0.1:4790`); replies speak via Kokoro (`127.0.0.1:4791`) when up,
+else OS SAPI / flutter_tts. Voice/TTS controls live under **Settings**. If Kokoro needs
+phonemes, install **espeak-ng**.
+
+Bridge extras: `GET /v1/tasks?active=1&since=<unix>`, `GET /v1/tasks/:id`; `POST /v1/chat`
+returns a `task` snapshot (ack-first for async work).
 ## Quick Start
 
 ### Prerequisites
@@ -62,7 +149,7 @@ cargo run -- help
 
 Private, no-egress conversation and solve loop against a local Ollama model. Existing `smith run` / `smith settings agent` pipelines are unchanged.
 
-**Prerequisites:** Docker (for sealed brain / agents). Local model via `smith settings model add … --agent-type local` then `smith settings model start`.
+**Prerequisites:** Docker (for sealed brain / agents). Local model via the `coding` agent (`--type local`) then `smith settings agent start coding`.
 
 **GPU / Ollama backends:**
 - **NVIDIA + Docker:** `smith settings model start` may run `smith-ollama` with `--gpus` when the NVIDIA Container Toolkit is present.
@@ -84,6 +171,7 @@ smith chat --new -m "Start over"
 smith think "Draft a private research outline on X" --reset
 
 # Local chat bridge for native clients (Flutter later). Loopback only.
+# Also starts Whisper STT on :4790 and Kokoro TTS on :4791 when not already up.
 smith serve --echo          # no brain — protocol smoke test
 smith serve                 # same session as `smith chat`
 # curl -s http://127.0.0.1:4783/v1/health
@@ -96,9 +184,13 @@ smith settings brain stop
 # or: smith settings model start / stop
 ```
 
-**Isolation (Docker Ollama):** brain + Ollama share Docker network `smith-brain-net` (`--internal`, no external egress). The brain container has no published ports, no SSH mount, and no cloud API keys.
+**Network private + Docker Ollama:** brain + Ollama share Docker network `smith-brain-net` (`--internal`, no external egress). The brain container has no published ports, no SSH mount, and no cloud API keys.
 
-**Isolation (host Ollama):** brain uses `host.docker.internal` (soft-seal). Still no published ports / no cloud API keys; egress blocking does not apply.
+**Network public (container):** brain attaches to a non-internal bridge so it can egress. Still no published ports / no cloud API keys.
+
+**Network private + host Ollama:** brain uses internal net + `host.docker.internal` for Ollama only. If egress is unexpectedly open, status reports soft-seal honestly — prefer Docker Ollama for strict private.
+
+**Live web search (ephemeral):** under `network=private` the brain stays offline; smith opens a short-lived `smith-search-*` container on the default bridge (internet), fetches results (DuckDuckGo + wttr.in for weather), then `--rm`. Results are declassified back into the chat turn. Oneshots also work under `public`.
 
 **Host memory** (survives container stop/recreate), under the smith data dir `…/smith/brain/`:
 
@@ -116,30 +208,32 @@ smith settings brain stop
 
 Edit `profile.md` freely; it stays on-host and is injected into chat context only inside the sealed bubble. `smith chat` / `smith chat -m` share one continuous session. Named workers (`smith-agent-*`) and spawn agents do **not** receive brain chat history.
 
-**Live web search (ephemeral):** chat stays sealed. After smith confirms an ambiguous query, the host opens a short-lived `smith-search-*` container on the default bridge (internet), fetches results (DuckDuckGo + wttr.in for weather), then `--rm`. Results are declassified back into the chat turn. No long-running search agent.
+**Live web search (ephemeral):** under `network=private` the brain stays offline; smith opens a short-lived `smith-search-*` oneshot on the bridge, then declassifies results into the turn. Same oneshot path works under `public`.
 
-**Native client bridge:** `smith serve` listens on `127.0.0.1:4783` (not Ollama/OpenCode ports). The host process owns the turn (intents, search, session); the client owns UI/STT/TTS. `POST /v1/chat` with `{"v":1,"text":"…","session":"default","new":false}` returns `{"v":1,"text":"…","session":"default"}`. `--echo` skips the brain so clients can integrate against the protocol first. Not a public API — loopback only.
+**Native client bridge:** `smith serve` listens on `127.0.0.1:4783` (not Ollama/OpenCode ports) and starts Whisper STT (`:4790`) and Kokoro TTS (`:4791`) when needed. The host process owns the turn (intents, search, session, pipelines); the client owns UI/STT/TTS. `POST /v1/chat` with `{"v":1,"text":"…","session":"default","new":false,"mode":"chat"|"dev"}` returns text plus optional `pipeline` status. Flutter Chat|Dev toggle sets `mode`. `--echo` skips the brain so clients can integrate against the protocol first. Not a public API — loopback only.
 
 ### Pipeline commands (run plan / develop / review / release)
 
-
-Run pipeline workflows via `smith run <cmd>`.
+Run pipeline workflows via `smith run <cmd>`. Chat can also start them with a
+`:::smith pipeline` intent (see Desktop client / `smith serve`); push/release
+waits for explicit user signoff.
 
 ```bash
-# Ask a question (read-only); default branch is main, use --base to ask about another branch
-smith run ask "How does auth work?" --project myproject
-smith run ask "What's in this branch?" --project myproject --base feature/x
+# Plan a feature (creates plan-* artifacts in the spawned agent)
+smith run plan "Add login endpoint" --project myproject --branch feature/login
 
-# Run a development task (commit + push); use --pr to create or update a PR
-smith run dev "Add login endpoint" --branch feature/login --project myproject
-smith run dev "Fix bug" --branch fix/123 --project myproject --pr --verbose
+# Execute a plan (validate / assurance loop)
+smith run develop "Add login endpoint" --project myproject --branch feature/login --plan plan-ab12
 
-# Review a branch
-smith run review feature/login --project myproject
-smith run review feature/login --project myproject --base main --verbose
+# Review plan artifacts
+smith run review --project myproject --branch feature/login --plan plan-ab12
+
+# Integrate / sync after develop (CLI); from chat this runs only after you affirm signoff
+smith run release --project myproject --branch feature/login --plan plan-ab12
+smith run release --project myproject --branch feature/login --plan plan-ab12 --pr
 ```
 
-### Spawn pipeline lifecycle (v0.3.0)
+### Spawn pipeline lifecycle (v0.4.0)
 
 The plan/develop/release pipeline uses project+branch scoped spawned containers (`agent_<project>_<branch>`).
 
@@ -168,30 +262,25 @@ Only **one runtime** is installed (the one for that project type); the image usu
 
 ## Agent pipeline and feedback loops
 
-All pipeline commands (ask, dev, review) use the same high-level flow.
+Plan / develop / release share spawned workspace state under `/state/plan-*`.
 
-### Phases
+### High-level ship flow (from chat or CLI)
 
-1. **Setup**
-   - **Setup Run** — Clone repo, install deps (cargo check / npm install / go mod / pip), bootstrap opencode-ai. If install fails, the run fails with a clear message.
-   - **Setup Check** — Build and run tests. If this fails, the agent is given the failure output and asked to fix the project (deps/config/code); we re-run install and re-check. Repeats up to 3 times.
-3. **Execute**
-   - **Execute Run** — Run the agent (ask: answer the question; dev: run the task; review: run the review prompt).
-   - **Execute Check** — Validate the output (for dev, format and build). If this fails, the agent is given the failure, asked to fix the code, then re-checks. Repeats up to 3 times.
-5. **Assurance** — Depends on the command:
-   - **Ask:** **Ask assurance** — Filter step: the raw answer is passed through a cleanup prompt (trim preamble/cruft); that can run up to 2 passes (feed back into itself). Does not fail the run.
-   - **Dev:** **Assurance loop** — Agent reviews recent changes. If the review reports issues, the agent is asked to address them; we re-run execute check, then assurance again. Up to 3 attempts; then we continue to commit.
-6. **Commit & Push (dev only)** — Commit, `git fetch` + rebase onto remote branch when it exists, then push. Push failures (e.g. non–fast-forward) are reported.
+1. **Plan** — Producer/architect/designer/planner artifacts for the request.
+2. **Develop** — Implement against the plan with validate / assurance loops.
+3. **Signoff (chat)** — Human affirms before release; CLI `release` can be run directly.
+4. **Release** — Role reviews / integrate / sync (optional `--pr`).
 
-All commands **fetch from the configured remote** and **reset/checkout to the latest remote ref** for the base branch. Features are created from up-to-date remote base; reviews compare against the latest remote base. Base branch and remote name are configurable per project (see Project commands) or via `--base` for the branch.
+All commands **fetch from the configured remote** and **reset/checkout to the latest remote ref** for the base branch when applicable. Base branch and remote name are configurable per project (see Project commands) or via `--base`.
 
 ### Summary
 
-| Command | Setup loop | Execute | Execute-check loop | Assurance | Commit/push |
-|--------|------------|---------|--------------------|-----------|-------------|
-| **ask**  | ✓ | Question → answer | — | Cleanup filter (2 passes) | — |
-| **dev**  | ✓ | Task → edits | ✓ | Review → fix loop | ✓ |
-| **review** | ✓ | Review prompt → text | — | — | — |
+| Command | Role |
+|--------|------|
+| **plan** | Create plan artifacts for a prompt |
+| **develop** | Implement + validate a plan |
+| **review** | Inspect plan artifacts / issues |
+| **release** | Integrate after develop (push/sync; optional PR) |
 
 ---
 
@@ -207,29 +296,26 @@ All commands **fetch from the configured remote** and **reset/checkout to the la
 
 ### Pipeline commands — `smith run <cmd>`
 
-- **`smith run ask "<question>"`**  
-  Ask the agent about the project (read-only).  
-  - `--base <branch>` — Branch to clone and ask about (default: `main`).  
-  - `--repo <url>` — Override repo (SSH URL).  
-  - `--project <name>` — Use repo/image/ssh_key from config.  
-  - `--image <image>` — Override Docker image (default: auto from repo: Rust/Node/Go/Python image; must be glibc-based or have Node for OpenCode).  
-  - `--ssh-key <path>` — SSH key path (overrides project config and `SSH_KEY_PATH`).  
-  - `--keep-alive` — Keep container alive after run (debugging).  
-  - `--timeout <sec>` — Timeout for agent run (default: 300).  
-  - `--verbose` — Show detailed pipeline output.
+- **`smith run plan "<prompt>"`**  
+  Run planner roles and write `plan-*` artifacts.  
+  - `--project <name>` / `--branch <branch>` — Target spawned workspace.  
+  - `--verbose` — Show detailed agent output.
 
-- **`smith run dev "<task>" --branch <branch>`**  
-  Run a development task, validate, commit, and push.  
-  - `--branch <branch>` — **(required)** Target branch to work on and push.  
-  - `--base <branch>` — Base branch to start from (default: `main`).  
-  - `--repo`, `--project`, `--image`, `--ssh-key`, `--keep-alive` — Same as ask.  
-  - `--pr` — Create or update a GitHub PR after push (requires token).  
-  - `--timeout <sec>`, `--verbose` — As above.
+- **`smith run develop "<task>" --plan <plan-id>`**  
+  Execute a plan-driven development loop.  
+  - `--project` / `--branch` / `--base` — Workspace targeting.  
+  - `--plan` — Full id (`plan-xxxx`) or short id.  
+  - `--max-validate-passes` — Default 3.  
+  - `--pr` — Create/update PR after success (post-step).  
+  - `--verbose` — Detailed output.
 
-- **`smith run review <branch>`**  
-  Review the given branch (read-only).  
-  - `--base <branch>` — Base branch to compare against (optional).  
-  - `--repo`, `--project`, `--image`, `--ssh-key`, `--keep-alive`, `--timeout`, `--verbose` — Same as above.
+- **`smith run review`**  
+  Review plan artifacts in the spawned container.  
+  - `--project` / `--branch` / `--plan` / `--limit` / `--state` / `--reply`.
+
+- **`smith run release --plan <plan-id>`**  
+  Release / integrate a completed plan.  
+  - `--project` / `--branch` / `--base` / `--pr` / `--keep-agent` / `--verbose`.
 
 ### Model profile env passthrough
 
@@ -250,7 +336,9 @@ Use model profile env mappings to inject host environment variables into spawned
 
 ### Project commands — `smith settings project <cmd>`
 
-Projects are git repos (SSH URL) or **local paths**. On `smith settings agent start <name>` they are cloned/fetched into smith’s project cache (when remote) and bind-mounted at `/projects/<name>` (readwrite). Spawned pipeline agents still clone the primary project to `/workspace`; extra projects appear under `/projects/<name>`.
+Projects are git repos (HTTPS/SSH URL) or **local paths**. On `smith settings agent start <name>` they are cloned/fetched into smith’s project cache (when remote) and bind-mounted at `/projects/<name>` (readwrite). Spawned pipeline agents still clone the primary project to `/workspace`; extra projects appear under `/projects/<name>`.
+
+**Default project:** install (and chat/serve ensure) registers **`smith`** → [https://github.com/jdharrison/smith.git](https://github.com/jdharrison/smith.git) on **`main`** (HTTPS, no SSH key required). That is the bootstrap for smith iterating on smith. Override or remove with the project commands below; SSH remotes remain preferred for private repos.
 
 - **`smith settings project add <name> --repo <path-or-url>`**  
   Register a project.  

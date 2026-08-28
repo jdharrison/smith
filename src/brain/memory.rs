@@ -24,7 +24,7 @@ const IDENTITY_BLOCK: &str = r#"<!-- smith-identity:begin -->
 - Name: **smith** (Agent Smith–inspired: skeptical, precise, reality-checking — not cartoon villainy).
 - If asked "what is your name?", answer **smith**.
 - Multi-command: utterances like "smith we need to research … also smith we should run QA …" are separate objectives; consolidate them onto a PJM-style task board.
-- Every turn: restate understanding → resolve with defaults (do not interrogate) → at most one blocking question after that restatement → review / anything else?
+- Every turn: lead with substance (do not echo/restate the user first) → resolve with defaults (do not interrogate) → at most one blocking question if truly needed → close with a natural Review check-in ("Review: … Anything else?").
 - Task stages (normalize names in memory as needed): new → discovery → preproduction → production → review/signoff → completion.
 <!-- smith-identity:end -->"#;
 
@@ -36,7 +36,7 @@ fn default_profile() -> String {
 
 ## Constraints
 - Prefer concise, direct answers.
-- Sealed/local only — do not suggest cloud APIs or sending data off-host.
+- Stay local to this host's policy (runtime/network); do not push cloud APIs as the default.
 - Treat all session content as private to this host.
 Edit this file freely; it is never sent to cloud providers.
 "#,
@@ -222,7 +222,7 @@ fn normalize_profile_text(s: &str) -> String {
     s.replace("\r\n", "\n").trim().to_string()
 }
 
-/// Refresh marked identity, or rewrite if the on-disk profile is still a stock default.
+/// Refresh marked identity, migrate stale sealed constraints, or rewrite stock defaults.
 fn sync_profile_identity(path: &PathBuf) -> Result<(), String> {
     let current = fs::read_to_string(path).map_err(|e| format!("Failed to read profile: {}", e))?;
     let normalized = normalize_profile_text(&current);
@@ -239,20 +239,28 @@ fn sync_profile_identity(path: &PathBuf) -> Result<(), String> {
         return Ok(());
     }
 
-    if let (Some(begin), Some(end)) = (current.find(IDENTITY_BEGIN), current.find(IDENTITY_END)) {
+    let mut updated = current.clone();
+    if let (Some(begin), Some(end)) = (updated.find(IDENTITY_BEGIN), updated.find(IDENTITY_END)) {
         if begin < end {
             let end_at = end + IDENTITY_END.len();
-            let mut updated = String::new();
-            updated.push_str(&current[..begin]);
-            updated.push_str(IDENTITY_BLOCK);
-            updated.push_str(&current[end_at..]);
-            if normalize_profile_text(&updated) != normalized {
-                fs::write(path, updated)
-                    .map_err(|e| format!("Failed to sync profile identity: {}", e))?;
-            }
+            let mut rebuilt = String::new();
+            rebuilt.push_str(&updated[..begin]);
+            rebuilt.push_str(IDENTITY_BLOCK);
+            rebuilt.push_str(&updated[end_at..]);
+            updated = rebuilt;
         }
     }
-    // Customized without markers: leave user edits alone (chat preamble still carries identity).
+
+    // Drop obsolete sealed framing that contradicts runtime/network settings.
+    if let Some(line) = updated.lines().find(|l| l.contains("Sealed/local only")) {
+        let replacement =
+            "- Follow host runtime/network policy; do not push cloud APIs as the default.";
+        updated = updated.replace(line, replacement);
+    }
+
+    if normalize_profile_text(&updated) != normalized {
+        fs::write(path, updated).map_err(|e| format!("Failed to sync profile identity: {}", e))?;
+    }
     Ok(())
 }
 

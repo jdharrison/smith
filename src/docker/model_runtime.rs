@@ -80,7 +80,15 @@ pub fn active_ollama_backend() -> Option<OllamaBackend> {
 
 /// Resolve ollama binary on the host (Windows install paths + PATH).
 pub fn find_host_ollama_bin() -> Option<PathBuf> {
-    if let Ok(output) = Command::new("where").arg("ollama").output() {
+    let mut where_cmd = Command::new("where");
+    where_cmd.arg("ollama");
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        where_cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    if let Ok(output) = where_cmd.output() {
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
             if let Some(line) = stdout.lines().next() {
@@ -148,13 +156,19 @@ pub enum HostGpuKind {
 pub fn detect_host_gpu_kind() -> HostGpuKind {
     #[cfg(windows)]
     {
-        let wmi = Command::new("powershell")
-            .args([
-                "-NoProfile",
-                "-Command",
-                "(Get-CimInstance Win32_VideoController).Name -join ';'",
-            ])
-            .output();
+        let mut wmi_cmd = Command::new("powershell");
+        wmi_cmd.args([
+            "-NoProfile",
+            "-NonInteractive",
+            "-WindowStyle",
+            "Hidden",
+            "-Command",
+            "(Get-CimInstance Win32_VideoController).Name -join ';'",
+        ]);
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        wmi_cmd.creation_flags(CREATE_NO_WINDOW);
+        let wmi = wmi_cmd.output();
         if let Ok(out) = wmi {
             let names = String::from_utf8_lossy(&out.stdout).to_lowercase();
             if names.contains("nvidia") {
@@ -343,7 +357,7 @@ pub fn start_ollama_container(model: &str, gpu: bool) -> Result<u16, String> {
         "-v".to_string(),
         format!("{}:/root/.ollama", OLLAMA_VOLUME),
     ];
-    push_compose_service_labels(&mut args, "ollama");
+    push_compose_service_labels(&mut args, crate::service::LABEL_SERVICES_OLLAMA);
 
     if gpu {
         if !docker_nvidia_runtime_available() {

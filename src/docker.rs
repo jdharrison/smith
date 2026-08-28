@@ -109,7 +109,7 @@ fn extract_string_field(value: Option<&Value>) -> Option<String> {
     }
 }
 
-fn collect_text_parts(value: &Value, out: &mut Vec<String>) {
+pub(crate) fn collect_text_parts(value: &Value, out: &mut Vec<String>) {
     match value {
         Value::String(s) => {
             if !s.is_empty() {
@@ -309,10 +309,12 @@ pub fn start_agent_container(
             "-p".to_string(),
             format!("{}:{}", port, port),
         ];
-        compose::push_compose_service_labels(
-            &mut args,
-            &format!("agent-{}", compose::compose_service_name(agent_name)),
-        );
+        let compose_svc = if agent_name == CODING_AGENT_NAME {
+            crate::service::LABEL_AGENTS_CODING.to_string()
+        } else {
+            format!("agents-{}", compose::compose_service_name(agent_name))
+        };
+        compose::push_compose_service_labels(&mut args, &compose_svc);
 
         if let Some(ref cfg_dir) = mount_dir {
             args.extend([
@@ -570,7 +572,9 @@ mod agent_runtime;
 mod brain_runtime;
 mod compose;
 mod model_runtime;
+mod sandbox_runtime;
 mod search_runtime;
+mod searx_runtime;
 
 pub use agent_runtime::{
     ensure_spawn_dir, ensure_spawn_state_dir, list_spawn_plan_dirs, list_spawned_containers,
@@ -591,4 +595,11 @@ pub use model_runtime::{
     ollama_hostname_for_brain, start_ollama, stop_ollama, OllamaBackend, OLLAMA_CONTAINER_NAME,
     OLLAMA_PORT,
 };
+pub use sandbox_runtime::{
+    ensure_coding_agent_ready, ensure_coding_config, run_code_and_host, sandbox_status, stop_sandbox,
+    CODING_AGENT_NAME, SANDBOX_CONTAINER_NAME,
+};
 pub use search_runtime::run_oneshot_web_search;
+pub use searx_runtime::{
+    ensure_searxng, searxng_status, stop_searxng, SEARXNG_CONTAINER_NAME, SEARXNG_PORT,
+};

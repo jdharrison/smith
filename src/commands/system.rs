@@ -61,6 +61,41 @@ pub async fn handle_doctor(verbose: bool) {
         );
     }
 
+    match service::collect_status() {
+        Ok(snap) => {
+            println!(
+                "  {} services - autostart={} os_registered={} (compose: {})",
+                BULLET_GREEN,
+                if snap.autostart { "on" } else { "off" },
+                if snap.os_registered { "yes" } else { "no" },
+                docker::COMPOSE_PROJECT
+            );
+            for row in &snap.services {
+                let b = if row.healthy {
+                    BULLET_GREEN
+                } else if row.running {
+                    BULLET_YELLOW
+                } else {
+                    BULLET_BLUE
+                };
+                let url = row.url.as_deref().unwrap_or("");
+                println!(
+                    "       {} {} [{}] {}{}",
+                    b,
+                    row.id,
+                    row.mode,
+                    if row.running { "up" } else { "down" },
+                    if url.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" {url}")
+                    }
+                );
+            }
+        }
+        Err(e) => println!("  {} services - {}", BULLET_YELLOW, e),
+    }
+
     println!();
     if ok {
         println!("  {} environment OK", BULLET_GREEN);
@@ -86,9 +121,31 @@ pub async fn handle_status(verbose: bool) {
     } else if installed {
         BULLET_BLUE
     } else {
-        BULLET_RED
+        // Not installed yet — ready to install, not a hard error.
+        BULLET_YELLOW
     };
     println!("{} smith", smith_bullet);
+    println!(
+        "     runtime: {}{}",
+        cfg.runtime().as_str(),
+        match cfg.runtime() {
+            RuntimeMode::Host => " (native process; you contain this machine)",
+            RuntimeMode::Container => " (process in Docker — not the same as network policy)",
+        }
+    );
+    println!(
+        "     network: {}{}",
+        cfg.network().as_str(),
+        match cfg.network() {
+            NetworkMode::Private => " (brain offline; SearXNG for live facts)",
+            NetworkMode::Public => " (brain may reach the internet)",
+        }
+    );
+    if cfg.runtime().is_host() {
+        println!("     chat: native  |  coding/pipeline/search: Docker");
+    } else {
+        println!("     chat: Docker  |  coding/pipeline/search: Docker");
+    }
     let d_bullet = if docker_ok { BULLET_GREEN } else { BULLET_RED };
     println!(
         "     {} docker - {}",
@@ -99,37 +156,93 @@ pub async fn handle_status(verbose: bool) {
             "unavailable"
         }
     );
+    if docker_ok {
+        let _ = docker::ensure_coding_config();
+        if let Ok(st) = docker::sandbox_status() {
+            let c_b = if st.coding_running {
+                BULLET_GREEN
+            } else if st.coding_configured {
+                BULLET_YELLOW
+            } else {
+                BULLET_BLUE
+            };
+            println!(
+                "     {} coding agent - {}",
+                c_b,
+                if st.coding_running {
+                    "running"
+                } else if st.coding_configured {
+                    "ready (start on chat / agent start coding)"
+                } else {
+                    "not configured"
+                }
+            );
+            let (sx_run, sx_ok) = docker::searxng_status();
+            let sx_b = if sx_ok {
+                BULLET_GREEN
+            } else if sx_run {
+                BULLET_YELLOW
+            } else {
+                BULLET_BLUE
+            };
+            println!(
+                "     {} searxng - {}",
+                sx_b,
+                if sx_ok {
+                    format!("ready http://127.0.0.1:{}", docker::SEARXNG_PORT)
+                } else if sx_run {
+                    "starting…".to_string()
+                } else {
+                    "not running (starts on search / install)".to_string()
+                }
+            );
+            if st.sandbox_running {
+                println!(
+                    "     {} sandbox - {}",
+                    BULLET_GREEN,
+                    st.published_port
+                        .map(|p| format!("http://127.0.0.1:{p}"))
+                        .unwrap_or_else(|| "running".to_string())
+                );
+            }
+        }
+    }
     if list.is_empty() {
         println!("  {} agents", BULLET_BLUE);
         println!("       (none)");
     } else {
-        // First pass: determine aggregate status
-        let mut agents_bullet = BULLET_BLUE;
-        let mut has_cloud_or_running = false;
+        // Aggregate: green if any online/cloud; yellow if any degraded; else blue (ready).
+        let mut has_online = false;
+        let mut has_degraded = false;
         for agent_entry in list.iter() {
             let active = running.contains(&agent_entry.name);
-            let built = docker::image_exists(&docker::agent_built_image_tag(&agent_entry.name))
-                .unwrap_or(false);
             let is_cloud = agent_entry
                 .agent_type
                 .as_deref()
                 .map(|t| t != "local")
                 .unwrap_or(true);
             if is_cloud || active {
-                has_cloud_or_running = true;
-            } else if !built {
-                agents_bullet = BULLET_RED;
+                has_online = true;
+            }
+            if active {
+                let i = list
+                    .iter()
+                    .position(|a| a.name == agent_entry.name)
+                    .unwrap_or(0);
+                let port = agent_port(agent_entry, i);
+                if !docker::check_agent_reachable(port) {
+                    has_degraded = true;
+                }
             }
         }
-        // Print header with aggregate status
-        if agents_bullet == BULLET_RED {
-            println!("  {} agents", BULLET_RED);
-        } else if has_cloud_or_running {
-            println!("  {} agents", BULLET_GREEN);
+        let agents_bullet = if has_degraded {
+            BULLET_YELLOW
+        } else if has_online {
+            BULLET_GREEN
         } else {
-            println!("  {} agents", BULLET_BLUE);
-        }
-        // Second pass: print each agent
+            BULLET_BLUE
+        };
+        println!("  {} agents", agents_bullet);
         for (i, agent_entry) in list.iter().enumerate() {
             let name = &agent_entry.name;
             let active = running.contains(name);
@@ -151,10 +264,9 @@ pub async fn handle_status(verbose: bool) {
                 BULLET_YELLOW
             } else if active {
                 BULLET_GREEN
-            } else if built {
-                BULLET_BLUE
             } else {
-                BULLET_RED
+                // not built / built idle — ready, not an error
+                BULLET_BLUE
             };
             let state = if is_cloud {
                 "cloud"
@@ -216,7 +328,7 @@ pub async fn handle_status(verbose: bool) {
     let project_ok_count = project_results.iter().filter(|(_, ok, _)| *ok).count();
     let project_total = project_results.len();
     let projects_bullet = if project_total == 0 {
-        BULLET_RED
+        BULLET_BLUE
     } else if project_ok_count == project_total {
         BULLET_GREEN
     } else if project_ok_count > 0 {
@@ -344,164 +456,211 @@ pub async fn handle_status(verbose: bool) {
     }
 }
 
+/// Install summary: coding worker vs optional/legacy named OpenCode profiles.
+fn print_install_workers_summary(agents: &[AgentEntry]) {
+    if agents.is_empty() {
+        println!("  Workers: (none configured yet)");
+        return;
+    }
+    println!("  Workers (named OpenCode profiles):");
+    for a in agents {
+        let kind = a.agent_type.as_deref().unwrap_or("cloud");
+        let (label, note) = match a.name.as_str() {
+            n if n == docker::CODING_AGENT_NAME => (
+                format!("{} [agents.coding]", a.name),
+                "demos / code intents".to_string(),
+            ),
+            "search" => (
+                a.name.clone(),
+                "legacy name — web search is services.searxng".to_string(),
+            ),
+            "local" => (
+                a.name.clone(),
+                "legacy local profile — prefer coding".to_string(),
+            ),
+            _ => (a.name.clone(), format!("{kind} worker")),
+        };
+        println!("    - {label}  ({kind})  {note}");
+    }
+    println!(
+        "  {} Warm/on-demand policy: smith settings service status",
+        BULLET_GREEN
+    );
+}
+
 pub async fn handle_install() {
     println!("{} smith install", BULLET_GREEN);
     println!();
+    let already_installed = is_installed();
+    if already_installed {
+        println!("  Re-run: skipping prompts for sections that are already initialized.");
+        println!();
+    }
+
     // --- Dependencies ---
     println!("  Dependencies:");
     try_install_docker();
     println!();
+
     // --- Docker always run (Linux) ---
     #[cfg(target_os = "linux")]
     {
         if docker::check_docker_available().is_ok() {
-            println!("  Always run Docker at boot so agents stay available after restart?");
-            println!("  (Requires sudo / password to run systemctl enable docker)");
-            if prompt_yn("Enable Docker at boot?", true) {
-                ensure_docker_started_and_enabled();
-                println!("  {} Docker - enabled at boot", BULLET_GREEN);
+            if docker_enabled_at_boot() {
+                println!("  {} Docker - already enabled at boot", BULLET_GREEN);
+            } else if !already_installed {
+                println!("  Always run Docker at boot so workers stay available after restart?");
+                println!("  (Requires sudo / password to run systemctl enable docker)");
+                if prompt_yn("Enable Docker at boot?", true) {
+                    ensure_docker_started_and_enabled();
+                    println!("  {} Docker - enabled at boot", BULLET_GREEN);
+                }
+            } else {
+                println!(
+                    "  {} Docker - not enabled at boot (use systemctl enable docker)",
+                    BULLET_BLUE
+                );
             }
             println!();
         }
     }
-    // --- Config and agents ---
+
+    // --- Workers (coding + optional named OpenCode profiles) ---
     let mut cfg = load_config().unwrap_or_else(|e| {
         eprintln!("Error: {}", e);
         std::process::exit(1);
     });
-    let agents_list = cfg.agents.as_deref().unwrap_or(&[]);
-    if agents_list.is_empty() {
-        println!("  Current agents: (none)");
-        println!();
-        match prompt_yn("Create default opencode agent?", true) {
-            false => {
-                println!("  No agent created. Use 'smith settings agent add' later.");
-            }
-            true => {
-                let new_agent = AgentEntry {
-                    name: DEFAULT_AGENT_NAME.to_string(),
-                    image: DEFAULT_AGENT_IMAGE.to_string(),
-                    agent_type: Some("cloud".to_string()),
-                    model: None,
-                    small_model: None,
-                    provider: None,
-                    base_url: None,
-                    port: None,
-                    enabled: Some(true),
-                    default_role: None,
-                    roles: None,
-                    env: None,
-                    prompt: None,
-                    mcp: None,
-                    projects: None,
-                    workspaces: None,
-                };
-                cfg.agents = Some(vec![new_agent]);
-                if let Err(e) = save_config(&cfg) {
-                    eprintln!("Error saving config: {}", e);
-                } else {
+    print_install_workers_summary(cfg.agents.as_deref().unwrap_or(&[]));
+    if cfg.agents.as_deref().unwrap_or(&[]).is_empty() && !already_installed {
+        println!(
+            "  Coding worker (agents.coding) is offered in the sealed-brain step."
+        );
+        println!(
+            "  Extra named OpenCode workers (optional): smith settings agent add"
+        );
+    }
+    println!();
+
+    let has_coding = cfg
+        .agents
+        .as_deref()
+        .unwrap_or(&[])
+        .iter()
+        .any(|a| a.name == docker::CODING_AGENT_NAME);
+    // First install only: optional extras when coding already exists in config.
+    if !already_installed && has_coding {
+        match prompt_yn_skip(
+            "Add extra named OpenCode workers? (optional — search is services.searxng)",
+        ) {
+            None => println!("  Skipping extra workers."),
+            Some(false) => {}
+            Some(true) => loop {
+                let name = prompt_line("  Worker name: ");
+                if name.is_empty() {
+                    println!("  Name cannot be empty.");
+                    continue;
+                }
+                if name == "search" {
                     println!(
-                        "  {} Created default agent: {}",
-                        BULLET_GREEN, DEFAULT_AGENT_NAME
+                        "  Tip: web search uses services.searxng, not an OpenCode worker."
                     );
                 }
-            }
+                let image_default = DEFAULT_AGENT_IMAGE.to_string();
+                let image_in = prompt_line(&format!("  Image [{}]: ", image_default));
+                let image = if image_in.is_empty() {
+                    None
+                } else {
+                    Some(image_in)
+                };
+                let model_in =
+                    prompt_line("  Model (e.g. anthropic/claude-sonnet-4-5, Enter to skip): ");
+                let model = if model_in.is_empty() {
+                    None
+                } else {
+                    Some(model_in)
+                };
+                let small_model_in =
+                    prompt_line("  Small model for internal ops (optional, Enter to skip): ");
+                let small_model = if small_model_in.is_empty() {
+                    None
+                } else {
+                    Some(small_model_in)
+                };
+                let provider_in = prompt_line(
+                    "  Provider (e.g. ollama, anthropic, openai, Enter for cloud default): ",
+                );
+                let provider = if provider_in.is_empty() {
+                    None
+                } else {
+                    Some(provider_in)
+                };
+                let base_url_in =
+                    prompt_line("  Base URL for provider (optional, Enter to skip): ");
+                let base_url = if base_url_in.is_empty() {
+                    None
+                } else {
+                    Some(base_url_in)
+                };
+                let type_in = prompt_line("  Type (local or cloud, Enter for cloud): ");
+                let agent_type = if type_in.is_empty() {
+                    None
+                } else {
+                    Some(type_in)
+                };
+                let port_in =
+                    prompt_line("  Port for opencode serve (Enter for default 4096): ");
+                let port = if port_in.is_empty() {
+                    None
+                } else {
+                    port_in.parse().ok()
+                };
+                let enabled = Some(true);
+                match add_agent_to_config(
+                    &mut cfg,
+                    name.clone(),
+                    image,
+                    agent_type,
+                    model,
+                    small_model,
+                    provider,
+                    base_url,
+                    port,
+                    enabled,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                ) {
+                    Ok(()) => println!("  {} Added worker '{}'", BULLET_GREEN, name),
+                    Err(e) => eprintln!("  {} {}", BULLET_RED, e),
+                }
+                save_config(&cfg).unwrap_or_else(|e| {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                });
+                if !prompt_yn("Add another worker?", false) {
+                    break;
+                }
+            },
         }
-    } else {
-        println!("  Current agents:");
-        for a in agents_list {
-            println!("    - {} (image: {})", a.name, a.image);
-        }
+        println!();
     }
-    println!();
-    match prompt_yn_skip("Add more agents?") {
-        None => println!("  Skipping agents."),
-        Some(false) => {}
-        Some(true) => loop {
-            let name = prompt_line("  Agent name: ");
-            if name.is_empty() {
-                println!("  Agent name cannot be empty.");
-                continue;
-            }
-            let image_default = DEFAULT_AGENT_IMAGE.to_string();
-            let image_in = prompt_line(&format!("  Image [{}]: ", image_default));
-            let image = if image_in.is_empty() {
-                None
-            } else {
-                Some(image_in)
-            };
-            let model_in =
-                prompt_line("  Model (e.g. anthropic/claude-sonnet-4-5, Enter to skip): ");
-            let model = if model_in.is_empty() {
-                None
-            } else {
-                Some(model_in)
-            };
-            let small_model_in =
-                prompt_line("  Small model for internal ops (optional, Enter to skip): ");
-            let small_model = if small_model_in.is_empty() {
-                None
-            } else {
-                Some(small_model_in)
-            };
-            let provider_in = prompt_line(
-                "  Provider (e.g. ollama, anthropic, openai, Enter for cloud default): ",
-            );
-            let provider = if provider_in.is_empty() {
-                None
-            } else {
-                Some(provider_in)
-            };
-            let base_url_in = prompt_line("  Base URL for provider (optional, Enter to skip): ");
-            let base_url = if base_url_in.is_empty() {
-                None
-            } else {
-                Some(base_url_in)
-            };
-            let type_in = prompt_line("  Type (local or cloud, Enter for cloud): ");
-            let agent_type = if type_in.is_empty() {
-                None
-            } else {
-                Some(type_in)
-            };
-            let port_in = prompt_line("  Port for opencode serve (Enter for default 4096): ");
-            let port = if port_in.is_empty() {
-                None
-            } else {
-                port_in.parse().ok()
-            };
-            let enabled = Some(true);
-            match add_agent_to_config(
-                &mut cfg,
-                name.clone(),
-                image,
-                agent_type,
-                model,
-                small_model,
-                provider,
-                base_url,
-                port,
-                enabled,
-                None,
-                None,
-                None,
-                None,
-                None,
-            ) {
-                Ok(()) => println!("  {} Added agent '{}'", BULLET_GREEN, name),
-                Err(e) => eprintln!("  {} {}", BULLET_RED, e),
-            }
-            save_config(&cfg).unwrap_or_else(|e| {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            });
-            if !prompt_yn("Add another agent?", false) {
-                break;
-            }
-        },
-    }
-    println!();
+
     // --- Projects ---
+    if ensure_default_smith_project_in(&mut cfg) {
+        if let Err(e) = save_config(&cfg) {
+            eprintln!("Error: {}", e);
+            std::process::exit(1);
+        }
+        println!(
+            "  {} default project '{}' → {} (base {})",
+            BULLET_GREEN,
+            DEFAULT_SMITH_PROJECT_NAME,
+            DEFAULT_SMITH_PROJECT_REPO,
+            DEFAULT_SMITH_PROJECT_BASE_BRANCH
+        );
+    }
     if cfg.projects.is_empty() {
         println!("  Current projects: (none)");
     } else {
@@ -509,99 +668,106 @@ pub async fn handle_install() {
         for p in &cfg.projects {
             println!("    - {} ({})", p.name, p.repo);
         }
+        println!("  {} projects - configured", BULLET_GREEN);
     }
     println!();
-    match prompt_yn_skip("Add any projects?") {
-        None => println!("  Skipping projects."),
-        Some(false) => {}
-        Some(true) => loop {
-            let name = prompt_line("  Project name: ");
-            if name.is_empty() {
-                println!("  Project name cannot be empty.");
-                continue;
-            }
-            let repo = prompt_line("  Repository (URL or path): ");
-            if repo.is_empty() {
-                println!("  Repository is required.");
-                continue;
-            }
-            let image_in = prompt_line("  Image (optional, Enter to skip): ");
-            let image = if image_in.is_empty() {
-                None
-            } else {
-                Some(image_in)
-            };
-            let ssh_key_in = prompt_line("  SSH key path (optional): ");
-            let ssh_key = if ssh_key_in.is_empty() {
-                None
-            } else {
-                Some(ssh_key_in)
-            };
-            let base_in = prompt_line("  Base branch [main]: ");
-            let base_branch = if base_in.is_empty() {
-                None
-            } else {
-                Some(base_in)
-            };
-            let remote_in = prompt_line("  Remote name [origin]: ");
-            let remote = if remote_in.is_empty() {
-                None
-            } else {
-                Some(remote_in)
-            };
-            let token_in = prompt_line("  GitHub token for PRs (optional): ");
-            let github_token = if token_in.is_empty() {
-                None
-            } else {
-                Some(token_in)
-            };
-            let script_in = prompt_line("  Script to run in container (optional, e.g. curl -fsSL https://opencode.ai/install | sh): ");
-            let script = if script_in.is_empty() {
-                None
-            } else {
-                Some(script_in)
-            };
-            let model_in = prompt_line(&format!(
-                "  Model profile for this project [{}]: ",
-                cfg.current_agent.as_deref().unwrap_or(DEFAULT_AGENT_NAME)
-            ));
-            let model = if model_in.is_empty() {
-                cfg.current_agent
-                    .clone()
-                    .or_else(|| Some(DEFAULT_AGENT_NAME.to_string()))
-            } else {
-                Some(model_in)
-            };
-            let project = ProjectConfig {
-                name: name.clone(),
-                repo,
-                image,
-                ssh_key,
-                base_branch,
-                remote,
-                github_token,
-                script,
-                commit_name: None,
-                commit_email: None,
-                model,
-                ..Default::default()
-            };
-            match add_project_to_config(&mut cfg, project) {
-                Ok(()) => {
-                    save_config(&cfg).unwrap_or_else(|e| {
-                        eprintln!("Error: {}", e);
-                        std::process::exit(1);
-                    });
-                    println!("  {} Added project '{}'", BULLET_GREEN, name);
+    // Always seed default smith; only prompt for *additional* projects on first install.
+    if already_installed {
+        // skip prompts
+    } else {
+        match prompt_yn_skip("Add more projects?") {
+            None => println!("  Skipping additional projects."),
+            Some(false) => {}
+            Some(true) => loop {
+                let name = prompt_line("  Project name: ");
+                if name.is_empty() {
+                    println!("  Project name cannot be empty.");
+                    continue;
                 }
-                Err(e) => eprintln!("  {} {}", BULLET_RED, e),
-            }
-            if !prompt_yn("Add another project?", false) {
-                break;
-            }
-        },
+                let repo = prompt_line("  Repository (URL or path): ");
+                if repo.is_empty() {
+                    println!("  Repository is required.");
+                    continue;
+                }
+                let image_in = prompt_line("  Image (optional, Enter to skip): ");
+                let image = if image_in.is_empty() {
+                    None
+                } else {
+                    Some(image_in)
+                };
+                let ssh_key_in = prompt_line("  SSH key path (optional): ");
+                let ssh_key = if ssh_key_in.is_empty() {
+                    None
+                } else {
+                    Some(ssh_key_in)
+                };
+                let base_in = prompt_line("  Base branch [main]: ");
+                let base_branch = if base_in.is_empty() {
+                    None
+                } else {
+                    Some(base_in)
+                };
+                let remote_in = prompt_line("  Remote name [origin]: ");
+                let remote = if remote_in.is_empty() {
+                    None
+                } else {
+                    Some(remote_in)
+                };
+                let token_in = prompt_line("  GitHub token for PRs (optional): ");
+                let github_token = if token_in.is_empty() {
+                    None
+                } else {
+                    Some(token_in)
+                };
+                let script_in = prompt_line("  Script to run in container (optional, e.g. curl -fsSL https://opencode.ai/install | sh): ");
+                let script = if script_in.is_empty() {
+                    None
+                } else {
+                    Some(script_in)
+                };
+                let model_in = prompt_line(&format!(
+                    "  Model profile for this project [{}]: ",
+                    cfg.current_agent.as_deref().unwrap_or(DEFAULT_AGENT_NAME)
+                ));
+                let model = if model_in.is_empty() {
+                    cfg.current_agent
+                        .clone()
+                        .or_else(|| Some(DEFAULT_AGENT_NAME.to_string()))
+                } else {
+                    Some(model_in)
+                };
+                let project = ProjectConfig {
+                    name: name.clone(),
+                    repo,
+                    image,
+                    ssh_key,
+                    base_branch,
+                    remote,
+                    github_token,
+                    script,
+                    commit_name: None,
+                    commit_email: None,
+                    model,
+                    ..Default::default()
+                };
+                match add_project_to_config(&mut cfg, project) {
+                    Ok(()) => {
+                        save_config(&cfg).unwrap_or_else(|e| {
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        });
+                        println!("  {} Added project '{}'", BULLET_GREEN, name);
+                    }
+                    Err(e) => eprintln!("  {} {}", BULLET_RED, e),
+                }
+                if !prompt_yn("Add another project?", false) {
+                    break;
+                }
+            },
+        }
+        println!();
     }
-    println!();
+
     // --- Workspaces ---
     if cfg.workspaces.is_empty() {
         println!("  Current workspaces: (none)");
@@ -610,77 +776,167 @@ pub async fn handle_install() {
         for w in &cfg.workspaces {
             println!("    - {} ({})", w.name, w.path);
         }
+        println!("  {} workspaces - already configured", BULLET_GREEN);
     }
     println!();
-    match prompt_yn_skip("Add any host workspaces (existing directories to mount into agents)?") {
-        None => println!("  Skipping workspaces."),
-        Some(false) => {}
-        Some(true) => loop {
-            let name = prompt_line("  Workspace name: ");
-            if name.is_empty() {
-                println!("  Workspace name cannot be empty.");
-                continue;
-            }
-            let path_in = prompt_line("  Host directory: ");
-            if path_in.is_empty() {
-                println!("  Path is required.");
-                continue;
-            }
-            let host = expand_user_path(&path_in);
-            if !host.is_dir() {
-                println!("  Path must be an existing directory: {}", host.display());
-                continue;
-            }
-            let access_in = prompt_line("  Access [readwrite] (read|write|readwrite): ");
-            let access = if access_in.is_empty() {
-                None
-            } else {
-                match parse_workspace_access(Some(&access_in)) {
-                    Ok(_) => Some(access_in),
-                    Err(e) => {
-                        println!("  {}", e);
-                        continue;
+    if already_installed || !cfg.workspaces.is_empty() {
+        // skip
+    } else {
+        match prompt_yn_skip("Add any host workspaces (existing directories to mount into agents)?")
+        {
+            None => println!("  Skipping workspaces."),
+            Some(false) => {}
+            Some(true) => loop {
+                let name = prompt_line("  Workspace name: ");
+                if name.is_empty() {
+                    println!("  Workspace name cannot be empty.");
+                    continue;
+                }
+                let path_in = prompt_line("  Host directory: ");
+                if path_in.is_empty() {
+                    println!("  Path is required.");
+                    continue;
+                }
+                let host = expand_user_path(&path_in);
+                if !host.is_dir() {
+                    println!("  Path must be an existing directory: {}", host.display());
+                    continue;
+                }
+                let access_in = prompt_line("  Access [readwrite] (read|write|readwrite): ");
+                let access = if access_in.is_empty() {
+                    None
+                } else {
+                    match parse_workspace_access(Some(&access_in)) {
+                        Ok(_) => Some(access_in),
+                        Err(e) => {
+                            println!("  {}", e);
+                            continue;
+                        }
                     }
+                };
+                let workspace = WorkspaceConfig {
+                    name: name.clone(),
+                    path: store_host_path(&host.canonicalize().unwrap_or(host)),
+                    access,
+                };
+                match add_workspace_to_config(&mut cfg, workspace) {
+                    Ok(()) => {
+                        save_config(&cfg).unwrap_or_else(|e| {
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        });
+                        println!("  {} Added workspace '{}'", BULLET_GREEN, name);
+                    }
+                    Err(e) => eprintln!("  {} {}", BULLET_RED, e),
                 }
-            };
-            let workspace = WorkspaceConfig {
-                name: name.clone(),
-                path: store_host_path(&host.canonicalize().unwrap_or(host)),
-                access,
-            };
-            match add_workspace_to_config(&mut cfg, workspace) {
-                Ok(()) => {
-                    save_config(&cfg).unwrap_or_else(|e| {
-                        eprintln!("Error: {}", e);
-                        std::process::exit(1);
-                    });
-                    println!("  {} Added workspace '{}'", BULLET_GREEN, name);
+                if !prompt_yn("Add another workspace?", false) {
+                    break;
                 }
-                Err(e) => eprintln!("  {} {}", BULLET_RED, e),
-            }
-            if !prompt_yn("Add another workspace?", false) {
-                break;
-            }
-        },
+            },
+        }
+        println!();
     }
+
+    // --- Whisper STT ---
+    crate::commands::whisper::ensure_whisper_install();
     println!();
+
+    // --- Kokoro TTS ---
+    crate::commands::tts::ensure_tts_install();
+    println!();
+
     // --- Sealed local brain ---
-    bootstrap_sealed_brain(&mut cfg);
+    bootstrap_sealed_brain(&mut cfg, already_installed);
+
+    println!();
+    // --- Runtime + network ---
+    if already_installed || cfg.runtime().is_host() {
+        println!(
+            "  {} runtime = {}, network = {}",
+            BULLET_GREEN,
+            cfg.runtime().as_str(),
+            cfg.network().as_str()
+        );
+    } else {
+        println!("  Runtime (where the brain process runs):");
+        println!("    container — smith jails the brain in Docker (default).");
+        println!(
+            "    host      — native control plane; you contain this machine. Workers stay in Docker."
+        );
+        match prompt_yn_skip("Switch to host runtime? (default: keep container)") {
+            Some(true) => {
+                cfg.set_runtime_network(RuntimeMode::Host, NetworkMode::Public);
+                if let Err(e) = save_config(&cfg) {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+                println!("  {} runtime = host, network = public", BULLET_YELLOW);
+                println!("     {}", HOST_RUNTIME_WARNING);
+            }
+            _ => {
+                println!(
+                    "  {} runtime = container, network = {}",
+                    BULLET_GREEN,
+                    cfg.network().as_str()
+                );
+            }
+        }
+    }
 
     println!();
     if let Err(e) = run_install_finish() {
         eprintln!("Error: {}", e);
         std::process::exit(1);
     }
+
+    // Always-on supervisor: fill defaults; preserve existing autostart preference.
+    {
+        let mut svc = service::load_service_config().unwrap_or_default();
+        svc.ensure_defaults();
+        let autostart = svc.autostart;
+        let _ = service::save_service_config(&svc);
+        match service::apply_warm_set() {
+            Ok(notes) => {
+                for n in notes {
+                    println!("  {n}");
+                }
+            }
+            Err(e) => eprintln!("  {} warm apply: {}", BULLET_YELLOW, e),
+        }
+        if autostart {
+            match service::os_register::register_and_enable() {
+                Ok(()) => println!(
+                    "  {} supervisor autostart — smith serve at login",
+                    BULLET_GREEN
+                ),
+                Err(e) => eprintln!(
+                    "  {} supervisor OS register: {} (run `smith settings service start`)",
+                    BULLET_YELLOW, e
+                ),
+            }
+        } else {
+            println!(
+                "  {} supervisor autostart off (enable with `smith settings service autostart on`)",
+                BULLET_BLUE
+            );
+        }
+    }
+
     println!("  {} Install complete", BULLET_GREEN);
+    println!("     Runtime:       smith settings runtime get|set host|container");
+    println!("     Network:       smith settings network get|set public|private");
+    println!("     Services:      smith settings service status|autostart on|off");
     println!("     Sealed brain:  smith chat | smith think \"…\" | smith settings brain status");
+    println!("     Coding:        smith settings sandbox status|stop | agent start coding");
+    println!("     Client:        smith serve (or login autostart) | flutter run -d windows");
+    println!("     SearXNG:       http://127.0.0.1:4792");
     println!("     Projects:      smith settings project add <name> --repo <url-or-path>");
     println!("     Workspaces:    smith settings workspace add <name> --path <dir>");
-    println!("     Agents:        smith settings agent start <name>");
+    println!("     Workers:       smith settings agent add|start <name> (coding = agents.coding)");
 }
 
 /// Bootstrap sealed brain: memory, local model profile, network, Ollama, brain, validate.
-fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
+fn bootstrap_sealed_brain(cfg: &mut SmithConfig, already_installed: bool) {
     println!("  Sealed local brain:");
 
     // 1. Memory layout
@@ -701,7 +957,7 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
         return;
     }
 
-    // 2. Ensure a local model profile exists
+    // 2. Ensure coding agent exists as the default local (Ollama) worker profile
     let has_local = cfg
         .agents
         .as_deref()
@@ -710,54 +966,58 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
         .any(|a| a.agent_type.as_deref() == Some("local"));
 
     if !has_local {
-        let create = prompt_yn(
-            &format!(
-                "Create default local model profile (ollama / {}) for sealed brain?",
-                DEFAULT_LOCAL_MODEL
-            ),
-            false,
-        );
+        let create = if already_installed {
+            true
+        } else {
+            prompt_yn(
+                &format!(
+                    "Ensure coding worker agents.coding (ollama / {}) for demos?",
+                    DEFAULT_LOCAL_MODEL
+                ),
+                false,
+            )
+        };
         if create {
-            match add_agent_to_config(
-                cfg,
-                "local".to_string(),
-                Some(DEFAULT_AGENT_IMAGE.to_string()),
-                Some("local".to_string()),
-                Some(DEFAULT_LOCAL_MODEL.to_string()),
-                None,
-                Some("ollama".to_string()),
-                Some(format!("http://localhost:{}", docker::OLLAMA_PORT)),
-                None,
-                Some(true),
-                None,
-                None,
-                None,
-                None,
-                None,
-            ) {
+            match docker::ensure_coding_config() {
                 Ok(()) => {
+                    // Reload — ensure_coding_config saves its own copy.
+                    if let Ok(updated) = load_config() {
+                        *cfg = updated;
+                    }
                     if cfg.current_agent.is_none() {
-                        cfg.current_agent = Some("local".to_string());
+                        cfg.current_agent = Some(docker::CODING_AGENT_NAME.to_string());
+                        if let Err(e) = save_config(cfg) {
+                            eprintln!("  {} failed to save current agent: {}", BULLET_RED, e);
+                        }
                     }
-                    if let Err(e) = save_config(cfg) {
-                        eprintln!("  {} failed to save local profile: {}", BULLET_RED, e);
-                    } else {
-                        println!(
-                            "  {} local model profile 'local' ({})",
-                            BULLET_GREEN, DEFAULT_LOCAL_MODEL
-                        );
-                    }
+                    println!(
+                        "  {} coding worker ({}) ready — service agents.coding",
+                        BULLET_GREEN,
+                        docker::CODING_AGENT_NAME
+                    );
                 }
-                Err(e) => eprintln!("  {} {}", BULLET_RED, e),
+                Err(e) => eprintln!("  {} coding agent profile: {}", BULLET_RED, e),
             }
         } else {
             println!(
-                "  {} no local profile — add later with `smith settings model add local --agent-type local --model {}`",
+                "  {} no coding worker — add later with `smith settings agent add coding --type local --model {}`",
                 BULLET_YELLOW, DEFAULT_LOCAL_MODEL
             );
         }
     } else {
-        println!("  {} local model profile present", BULLET_GREEN);
+        println!("  {} local Ollama worker profile present", BULLET_GREEN);
+        // Prefer coding as current when an old 'local' profile still exists.
+        if cfg.current_agent.as_deref() == Some("local")
+            && cfg
+                .agents
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .any(|a| a.name == docker::CODING_AGENT_NAME)
+        {
+            cfg.current_agent = Some(docker::CODING_AGENT_NAME.to_string());
+            let _ = save_config(cfg);
+        }
     }
 
     // 3. Internal network
@@ -773,16 +1033,6 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
         }
     }
 
-    let start_stack = prompt_yn(
-        "Start Ollama + sealed brain now and validate isolation?",
-        false,
-    );
-    if !start_stack {
-        println!("  {} skipped runtime start", BULLET_BLUE);
-        println!("     Later: `smith settings model start` then `smith chat`");
-        return;
-    }
-
     // 4. Resolve local model name
     let local_model = cfg
         .agents
@@ -793,7 +1043,7 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
         .and_then(|a| a.model.clone())
         .unwrap_or_else(|| DEFAULT_LOCAL_MODEL.to_string());
 
-    // 5. Start Ollama (host preferred on AMD/Windows; Docker NVIDIA only when available)
+    // 5. Start Ollama (heal without prompt)
     if docker::is_ollama_running() {
         println!(
             "  {} ollama - already running ({:?})",
@@ -871,12 +1121,72 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig) {
     }
 
     match docker::verify_no_egress() {
-        Ok(true) => println!("  {} egress - blocked (sealed)", BULLET_GREEN),
-        Ok(false) => eprintln!(
-            "  {} egress - UNEXPECTED public reachability from brain",
-            BULLET_RED
-        ),
+        Ok(true) => {
+            if cfg.network().is_private() {
+                println!("  {} egress - blocked (network=private)", BULLET_GREEN);
+            } else {
+                println!(
+                    "  {} egress - blocked (unexpected for network=public)",
+                    BULLET_YELLOW
+                );
+            }
+        }
+        Ok(false) => {
+            if !cfg.network().is_private() {
+                println!("  {} egress - open (network=public)", BULLET_GREEN);
+            } else if docker::active_ollama_backend() == Some(docker::OllamaBackend::Host) {
+                eprintln!(
+                    "  {} egress - soft-seal (private intended; host Ollama path may leak)",
+                    BULLET_YELLOW
+                );
+            } else {
+                eprintln!(
+                    "  {} egress - UNEXPECTED reachability (network=private)",
+                    BULLET_RED
+                );
+            }
+        }
         Err(e) => eprintln!("  {} egress check - {}", BULLET_YELLOW, e),
+    }
+
+    // 9. Always-on coding agent + scratch workspace
+    match docker::ensure_coding_config() {
+        Ok(()) => println!("  {} coding config - scratch + agent 'coding'", BULLET_GREEN),
+        Err(e) => eprintln!("  {} coding config - {}", BULLET_YELLOW, e),
+    }
+    match docker::ensure_coding_agent_ready() {
+        Ok(()) => println!(
+            "  {} coding agent - running ({})",
+            BULLET_GREEN,
+            docker::CODING_AGENT_NAME
+        ),
+        Err(e) => eprintln!("  {} coding agent - {}", BULLET_YELLOW, e),
+    }
+
+    // 9b. Default public smith project (self-iteration bootstrap)
+    match ensure_default_smith_project() {
+        Ok(true) => println!(
+            "  {} project '{}' → {} @{}",
+            BULLET_GREEN,
+            DEFAULT_SMITH_PROJECT_NAME,
+            DEFAULT_SMITH_PROJECT_REPO,
+            DEFAULT_SMITH_PROJECT_BASE_BRANCH
+        ),
+        Ok(false) => println!(
+            "  {} project '{}' already registered",
+            BULLET_GREEN, DEFAULT_SMITH_PROJECT_NAME
+        ),
+        Err(e) => eprintln!("  {} default smith project - {}", BULLET_YELLOW, e),
+    }
+
+    // 10. Local SearXNG (metasearch UI + API on loopback)
+    match docker::ensure_searxng() {
+        Ok(()) => println!(
+            "  {} searxng - http://127.0.0.1:{} (browser + smith search)",
+            BULLET_GREEN,
+            docker::SEARXNG_PORT
+        ),
+        Err(e) => eprintln!("  {} searxng - {}", BULLET_YELLOW, e),
     }
 
     println!("  {} sealed brain ready — try `smith chat`", BULLET_GREEN);
@@ -897,6 +1207,22 @@ pub async fn handle_uninstall(
 
     println!("{} smith uninstall", BULLET_YELLOW);
     println!();
+
+    println!("  Stopping supervisor bridge (and Whisper/TTS if owned)...");
+    if let Err(e) = service::os_register::request_bridge_shutdown() {
+        eprintln!("    Warning: {}", e);
+    } else if service::os_register::bridge_is_listening() {
+        eprintln!("    Warning: bridge still listening after shutdown request");
+    } else {
+        println!("    bridge stopped (or was not running)");
+    }
+
+    println!("  Removing supervisor OS registration...");
+    if let Err(e) = service::os_register::uninstall_registration() {
+        eprintln!("    Warning: {}", e);
+    } else {
+        println!("    autostart unit/task removed");
+    }
 
     if let Err(e) = docker::check_docker_available() {
         eprintln!(
@@ -930,6 +1256,13 @@ pub async fn handle_uninstall(
             if let Err(e) = docker::stop_ollama() {
                 eprintln!("    Warning: {}", e);
             }
+        }
+
+        println!("  Stopping SearXNG...");
+        if let Err(e) = docker::stop_searxng() {
+            eprintln!("    Warning: {}", e);
+        } else {
+            println!("    {}: removed", docker::SEARXNG_CONTAINER_NAME);
         }
 
         // Drop internal brain network if present
