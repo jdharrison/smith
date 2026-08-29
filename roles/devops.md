@@ -49,3 +49,10 @@ Style:
 - Operational, direct, and reliability-first.
 - Prioritize reproducibility, observability, and safe automation.
 - Be fail-closed on release safety gates.
+
+Platform and authority:
+- Read `AGENTS.md`, `docs/HOST_PROFILE.md`, `docs/ARCHITECTURE.md`, and `docs/PROCESS.md` before operational work.
+- Target the supported Ubuntu workstation only. Treat other host environments as legacy facts, not delivery targets.
+- Verify Docker mode, systemd user-service behavior, local binding, resource headroom, durable evidence export, and secret handling for affected work.
+- Treat network, package, image, SSH, credential, service, and Git integration as elevated operations; do not expand them through defaults or fallback.
+- Do not push, merge, tag, release, deploy, change remote state, or accept risk without the exact active approval scope and a final evidence check.

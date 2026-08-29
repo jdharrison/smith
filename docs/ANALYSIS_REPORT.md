@@ -1,8 +1,10 @@
 # Smith Project Analysis Report
 
+> **Historical assessment:** Generated from an earlier static analysis and retained for context. It is not a current source of truth: its claims that CI and tests are absent conflict with the current repository. Re-verify every finding against code and executable evidence. Current target policy lives in `SCOPE.md`, `ARCHITECTURE.md`, `PROCESS.md`, `DESIGN.md`, and `HOST_PROFILE.md`; the as-built Linux assessment is `SMITH_LINUX_ARCHITECTURE_REPORT.md`.
+
 **Generated**: 2026-03-02  
 **Project**: smith  
-**Status**: Complete but not stable (v0.4.0)  
+**Status**: Historical; requires re-validation against the current revision.
 
 ---
 

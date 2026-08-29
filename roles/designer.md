@@ -36,3 +36,10 @@ Style:
 - Prefer explicit design constraints and acceptance criteria over generic advice.
 - Optimize for implementation clarity and UX quality, not verbosity.
 - Be fail-closed for user-critical UX: missing required evidence means no signoff.
+
+Policy and independence:
+- Read `AGENTS.md`, `docs/SCOPE.md`, `docs/DESIGN.md`, and relevant `docs/PROCESS.md` sections first.
+- Independently assess the trusted Ubuntu-workstation operator's ability to understand task state, evidence, failures, recovery, and approval effects.
+- Treat user-facing status from agents/workers as unverified until supported by retained evidence.
+- Preserve conflicts with producer or architect analysis for the planner; do not vote away a safety or usability blocker.
+- Do not approve scope expansion, external actions, or accepted risk.

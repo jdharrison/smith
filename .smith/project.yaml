@@ -1,0 +1,121 @@
+version: 1
+
+project:
+  id: smith
+  name: SMITH
+  workspace_root: /home/jdharrison/develop/personal/projects/smith
+  platform_target: ubuntu_linux_workstation
+
+aliases:
+  "gh:smith":
+    provider: github
+    repository: jdharrison/smith
+  "jira:smith":
+    provider: jira
+    site: jdharrison.atlassian.net
+    project_key: SMITH
+
+repositories:
+  - id: smith
+    source: "gh:smith"
+    path: .
+    role: core
+    default_branch: main
+    integration_branch: main
+    validation:
+      format:
+        - cargo fmt --check
+      lint:
+        - cargo clippy --all-targets -- -D warnings
+      build:
+        - cargo build --locked --verbose
+      unit:
+        - cargo test --locked --verbose
+      integration: []
+      e2e: []
+      security: []
+
+project_management:
+  - id: smith
+    source: "jira:smith"
+    role: optional
+    board_id: 3
+    # Status mapping is intentionally unresolved until verified from Jira.
+    workflow_mapping:
+      backlog: []
+      ready: []
+      in_progress: []
+      review: []
+      done: []
+
+workflow:
+  # Work tracking is optional. When enabled, use the ticket-key conventions below.
+  ticket_required: false
+  bootstrap_exceptions:
+    - branch: feature/autonomy
+      reason: pre-policy self-hosting bootstrap branch
+  base_branch_precedence:
+    - repository_default
+  branch_patterns:
+    feature: "feature/{ticket}-{slug}"
+    fix: "fix/{ticket}-{slug}"
+    feature_without_ticket: "feature/{slug}"
+    fix_without_ticket: "fix/{slug}"
+    hotfix: "hotfix/{ticket}-{slug}"
+    release: "release/v{version}"
+  pull_requests:
+    start_as_draft: true
+    ticket_key_required: false
+    independent_review_required: true
+    human_merge_approval_required: true
+  releases:
+    branch_only_when_requested: true
+    tag_pattern: "release/v{version}"
+    annotated_tag_for_new_releases: true
+    human_release_approval_required: true
+  deployments:
+    separate_human_approval_required: true
+
+synchronization:
+  mode: optional
+  jira_to_github:
+    require_ticket_key_in_branch: false
+    require_ticket_key_in_pr: false
+    copy_acceptance_criteria_to_pr_checklist: false
+  github_to_jira:
+    link_branch: false
+    link_pull_requests: false
+    summarize_validation: false
+    transition_only_with_approval: true
+    completion_requires_merge: true
+
+agents:
+  architect:
+    permissions: [read, propose]
+  builder:
+    permissions: [read, local_write, local_test]
+  reviewer:
+    permissions: [read, review, add_failing_tests]
+    independent_context: true
+  adversary:
+    permissions: [read, isolated_execute, report]
+    independent_context: true
+  release:
+    permissions: [read, verify]
+    human_approval_required: true
+
+approvals:
+  default_scope: DISCOVERY_READ_ONLY
+  external_mutations: human
+  merge: human
+  release: human
+  deployment: human
+  destructive_operations: human
+  accepted_risk: human
+
+security:
+  secrets_in_manifest: forbidden
+  untrusted_external_content: true
+  least_privilege_tools: true
+  immutable_audit_expectation: true
+  self_approval: forbidden

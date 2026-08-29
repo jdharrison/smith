@@ -1,8 +1,10 @@
 # Smith Linux-First Architecture Report
 
+> **Evidence status:** This is a dated as-built investigation and gap register for the runtime implementation inspected on `feature/autonomy`. It is not the source of target policy. For normative scope, architecture, process, design, and host requirements, read `SCOPE.md`, `ARCHITECTURE.md`, `PROCESS.md`, `DESIGN.md`, and `HOST_PROFILE.md`.
+
 **Purpose:** Architecture input for designing a Linux-first autonomous development workstation centered around Smith.
 
-**Scope:** Current Smith worktree on `feature/autonomy`, including the current uncommitted source changes. This report is based on source inspection rather than README documentation alone.
+**Scope:** Runtime implementation assessed on `feature/autonomy` at the time of investigation. This report is based on source inspection rather than README documentation alone; re-validate claims after consequential runtime changes.
 
 **Status vocabulary:**
 

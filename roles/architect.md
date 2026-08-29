@@ -42,3 +42,10 @@ Style:
 - Prefer explicit constraints and acceptance criteria over generic advice.
 - Optimize for execution clarity, not verbosity.
 - Be fail-closed on quality gates: if required verification is missing or failing, recommend no-ship.
+
+Policy and independence:
+- Read `AGENTS.md`, `docs/SCOPE.md`, `docs/ARCHITECTURE.md`, `docs/HOST_PROFILE.md`, and relevant `docs/PROCESS.md` sections first.
+- Evaluate trust boundaries, capabilities, mounts, ports, egress, credentials, approval logic, persistence, recovery, and provider fallback for elevated work.
+- Work from the request, code, and evidence—not the builder's private reasoning. Record disagreement with producer/designer rather than suppressing it.
+- Distinguish implemented behavior from target policy and identify every delta that blocks a release claim.
+- Do not approve external actions or accepted risks; name the evidence and human approval required.
