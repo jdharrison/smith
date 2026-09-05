@@ -368,16 +368,19 @@ async fn list_tasks(
                 }),
             )
         })?
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorBody { error: e })))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorBody { error: e }),
+            )
+        })?;
     Ok(Json(TasksListResponse {
         v: 1,
         tasks: tasks.iter().map(TaskDto::from).collect(),
     }))
 }
 
-async fn get_task(
-    Path(id): Path<String>,
-) -> Result<Json<TaskDto>, (StatusCode, Json<ErrorBody>)> {
+async fn get_task(Path(id): Path<String>) -> Result<Json<TaskDto>, (StatusCode, Json<ErrorBody>)> {
     let id = id.trim().to_string();
     if id.is_empty() {
         return Err((
@@ -423,7 +426,12 @@ async fn list_services() -> Result<Json<service::ServicesSnapshot>, (StatusCode,
             )
         })?
         .map(Json)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorBody { error: e })))
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorBody { error: e }),
+            )
+        })
 }
 
 async fn patch_services(
@@ -497,7 +505,12 @@ async fn apply_services(
             }),
         )
     })?
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorBody { error: e })))?;
+    .map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorBody { error: e }),
+        )
+    })?;
     Ok(Json(serde_json::json!({ "ok": true, "notes": notes })))
 }
 
@@ -579,23 +592,26 @@ pub async fn handle_serve(port: u16, echo: bool) {
         return;
     }
 
-    // Warm Docker set before binding (SearXNG / ollama / brain per policy).
-    match crate::service::apply_warm_set() {
-        Ok(notes) => {
-            for n in notes {
-                println!("  {n}");
+    // Echo mode is a lightweight client/bridge integration check. It must not
+    // provision the default model or start configured warm sidecars.
+    if !echo {
+        match crate::service::apply_warm_set() {
+            Ok(notes) => {
+                for n in notes {
+                    println!("  {n}");
+                }
             }
+            Err(e) => eprintln!("  Warning: warm apply: {e}"),
         }
-        Err(e) => eprintln!("  Warning: warm apply: {e}"),
     }
 
-    let whisper = if crate::service::whisper_is_warm() {
+    let whisper = if !echo && crate::service::whisper_is_warm() {
         crate::commands::whisper::ensure_whisper_sidecar()
     } else {
         println!("  services.whisper: on_demand (POST /v1/sidecars/ensure)");
         WhisperGuard::none()
     };
-    let tts = if crate::service::tts_is_warm() {
+    let tts = if !echo && crate::service::tts_is_warm() {
         crate::commands::tts::ensure_tts_sidecar()
     } else {
         println!("  services.tts: on_demand (POST /v1/sidecars/ensure)");
@@ -635,7 +651,7 @@ pub async fn handle_serve(port: u16, echo: bool) {
         network_label()
     );
     if echo {
-        println!("  mode: echo (no brain — client integration)");
+        println!("  mode: echo (no brain or warm services — client integration)");
     } else {
         println!("  mode: chat (same session as `smith chat`)");
         if current_runtime().is_host() {
