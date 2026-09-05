@@ -9,6 +9,7 @@ use std::time::Duration;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 use std::fs;
 
+#[cfg(windows)]
 const WINDOWS_TASK_NAME: &str = "SmithServe";
 #[cfg(target_os = "linux")]
 const SYSTEMD_UNIT: &str = "smith.service";
