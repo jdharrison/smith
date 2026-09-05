@@ -8,11 +8,7 @@ import 'package:smith_client/listen/voice_turn.dart';
 
 /// Settings tab — TTS, services policy, bridge status.
 class SettingsTab extends StatefulWidget {
-  const SettingsTab({
-    super.key,
-    required this.chat,
-    required this.voice,
-  });
+  const SettingsTab({super.key, required this.chat, required this.voice});
 
   final ChatController chat;
   final VoiceTurnController voice;
@@ -173,15 +169,12 @@ class _SettingsTabState extends State<SettingsTab> {
         _row('backend', voice.ttsBackend),
         _row(
           'kokoro',
-          voice.ttsKokoroOnline ? 'online :4791' : 'offline (OS fallback)',
+          voice.ttsKokoroOnline ? 'online :4791' : 'offline (Kokoro required)',
         ),
         _row('voice', voice.ttsVoice ?? '—'),
         if (voice.ttsVoices.isNotEmpty) ...[
           const SizedBox(height: 4),
-          Text(
-            'Voice',
-            style: GoogleFonts.dmSans(fontSize: 12, color: _muted),
-          ),
+          Text('Voice', style: GoogleFonts.dmSans(fontSize: 12, color: _muted)),
           DropdownButton<String>(
             isExpanded: true,
             value: voice.ttsVoices.contains(voice.ttsVoice)
@@ -274,11 +267,7 @@ class _SettingsTabState extends State<SettingsTab> {
         Text(
           'Configure via CLI for now (`smith settings project`, '
           '`smith settings agent`, `smith run`).',
-          style: GoogleFonts.dmSans(
-            fontSize: 13,
-            height: 1.4,
-            color: _muted,
-          ),
+          style: GoogleFonts.dmSans(fontSize: 13, height: 1.4, color: _muted),
         ),
       ],
     );
@@ -298,17 +287,19 @@ class _SettingsTabState extends State<SettingsTab> {
         'services' => 'Services',
         _ => g,
       };
-      out.add(Padding(
-        padding: const EdgeInsets.only(top: 10, bottom: 4),
-        child: Text(
-          title,
-          style: GoogleFonts.dmSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: _ink,
+      out.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 10, bottom: 4),
+          child: Text(
+            title,
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: _ink,
+            ),
           ),
         ),
-      ));
+      );
       for (final row in subset) {
         out.add(
           ListTile(

@@ -11,9 +11,12 @@ import 'package:smith_client/listen/kokoro_client.dart';
 /// Text-to-speech facade: prefers local Kokoro sidecar (`:4791`), else OS TTS.
 class SmithTts {
   SmithTts({KokoroClient? kokoro})
-      : _kokoro = kokoro ?? KokoroClient(),
-        _fallback =
-            Platform.isWindows ? _WindowsSapiTts() : _FlutterPluginTts() {
+    : _kokoro = kokoro ?? KokoroClient(),
+      _fallback = Platform.isWindows
+          ? _WindowsSapiTts()
+          : Platform.isLinux
+          ? _UnavailableTts()
+          : _FlutterPluginTts() {
     _player = AudioPlayer();
     unawaited(refreshVoices());
   }
@@ -33,8 +36,7 @@ class SmithTts {
   bool get kokoroOnline => _kokoroOnline;
   double get rate => _rate;
 
-  String get backendLabel =>
-      _kokoroOnline ? 'kokoro' : _fallback.backendLabel;
+  String get backendLabel => _kokoroOnline ? 'kokoro' : _fallback.backendLabel;
 
   List<String> get voices => _voices;
   String? get voice => _voice;
@@ -201,6 +203,42 @@ String? _pickPreferredVoice(List<String> names) {
       names.first;
 }
 
+class _UnavailableTts implements _FallbackTts {
+  bool _enabled = true;
+
+  @override
+  String get backendLabel => 'unavailable (Kokoro required)';
+
+  @override
+  List<String> get voices => const [];
+
+  @override
+  String? get voice => null;
+
+  @override
+  void setEnabled(bool value) => _enabled = value;
+
+  @override
+  Future<void> setRate(double value) async {}
+
+  @override
+  Future<void> refreshVoices() async {}
+
+  @override
+  Future<void> setVoice(String? name) async {}
+
+  @override
+  Future<void> speak(String text) async {
+    if (!_enabled || text.trim().isEmpty) return;
+  }
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> dispose() async {}
+}
+
 class _WindowsSapiTts implements _FallbackTts {
   _WindowsSapiTts() {
     unawaited(refreshVoices());
@@ -250,19 +288,16 @@ class _WindowsSapiTts implements _FallbackTts {
   @override
   Future<void> refreshVoices() async {
     try {
-      final r = await Process.run(
-        'powershell',
-        [
-          '-NoProfile',
-          '-NonInteractive',
-          '-WindowStyle',
-          'Hidden',
-          '-Command',
-          'Add-Type -AssemblyName System.Speech; '
-              '\$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; '
-              '\$s.GetInstalledVoices() | ForEach-Object { \$_.VoiceInfo.Name }',
-        ],
-      );
+      final r = await Process.run('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-WindowStyle',
+        'Hidden',
+        '-Command',
+        'Add-Type -AssemblyName System.Speech; '
+            '\$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; '
+            '\$s.GetInstalledVoices() | ForEach-Object { \$_.VoiceInfo.Name }',
+      ]);
       if (r.exitCode != 0) return;
       final list = (r.stdout as String)
           .split(RegExp(r'\r?\n'))
@@ -291,32 +326,31 @@ class _WindowsSapiTts implements _FallbackTts {
 
     final b64 = base64Encode(utf8.encode(cleaned));
     final voiceName = _voice;
-    final voiceEscaped =
-        voiceName == null ? '' : voiceName.replaceAll("'", "''");
+    final voiceEscaped = voiceName == null
+        ? ''
+        : voiceName.replaceAll("'", "''");
     final voiceSelect = voiceEscaped.isEmpty
         ? ''
         : "try { \$s.SelectVoice('$voiceEscaped') } catch {} ";
     try {
-      _proc = await Process.start(
-        'powershell',
-        [
-          '-NoProfile',
-          '-NonInteractive',
-          '-WindowStyle',
-          'Hidden',
-          '-Command',
-          'Add-Type -AssemblyName System.Speech; '
-              '\$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; '
-              '$voiceSelect'
-              '\$s.Rate = $_sapiRate; '
-              '\$t = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(\'$b64\')); '
-              '\$s.Speak(\$t);',
-        ],
-        mode: ProcessStartMode.normal,
+      _proc = await Process.start('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-WindowStyle',
+        'Hidden',
+        '-Command',
+        'Add-Type -AssemblyName System.Speech; '
+            '\$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; '
+            '$voiceSelect'
+            '\$s.Rate = $_sapiRate; '
+            '\$t = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(\'$b64\')); '
+            '\$s.Speak(\$t);',
+      ], mode: ProcessStartMode.normal);
+      unawaited(
+        _proc!.exitCode.then((_) {
+          _proc = null;
+        }),
       );
-      unawaited(_proc!.exitCode.then((_) {
-        _proc = null;
-      }));
     } catch (e) {
       debugPrint('smith TTS (SAPI) failed: $e');
       _proc = null;

@@ -71,6 +71,7 @@ class VoiceTurnController extends ChangeNotifier {
 
   VoiceTurnState get state => _state;
   bool get isIdle => _state == VoiceTurnState.idle;
+
   /// Mic only from idle with Whisper reachable (avoids dead-end holds).
   bool get canRecord =>
       _state == VoiceTurnState.idle && _whisperOnline && !_chat.busy;
@@ -78,12 +79,15 @@ class VoiceTurnController extends ChangeNotifier {
       _state == VoiceTurnState.starting || _state == VoiceTurnState.recording;
   bool get holding => _state == VoiceTurnState.recording;
   String? get error => _error;
+
   /// Live partials removed (no WinRT); kept for UI compatibility.
   String get partial => '';
   Duration get holdElapsed => _holdElapsed;
   double get holdProgress =>
-      (_holdElapsed.inMilliseconds / kMaxHoldRecord.inMilliseconds)
-          .clamp(0.0, 1.0);
+      (_holdElapsed.inMilliseconds / kMaxHoldRecord.inMilliseconds).clamp(
+        0.0,
+        1.0,
+      );
   String? get playingPath => _playingPath;
   bool isPlaying(String? path) =>
       path != null && path.isNotEmpty && _playingPath == path;
@@ -140,15 +144,14 @@ class VoiceTurnController extends ChangeNotifier {
   bool get statusRed => _state == VoiceTurnState.idle;
 
   String get statusLabel => switch (_state) {
-        VoiceTurnState.idle => _whisperOnline
-            ? (_chat.busy ? 'brain busy' : 'idle')
-            : 'whisper offline',
-        VoiceTurnState.starting => 'starting',
-        VoiceTurnState.recording => 'recording',
-        VoiceTurnState.processing => 'processing',
-        VoiceTurnState.replying => 'replying',
-        VoiceTurnState.stopping => 'stopping',
-      };
+    VoiceTurnState.idle =>
+      _whisperOnline ? (_chat.busy ? 'brain busy' : 'idle') : 'whisper offline',
+    VoiceTurnState.starting => 'starting',
+    VoiceTurnState.recording => 'recording',
+    VoiceTurnState.processing => 'processing',
+    VoiceTurnState.replying => 'replying',
+    VoiceTurnState.stopping => 'stopping',
+  };
 
   Future<void> refreshWhisperHealth() async {
     if (_disposed) return;
@@ -455,10 +458,10 @@ class VoiceTurnController extends ChangeNotifier {
       final stopped = await _recorder.stop();
       final path = stopped ?? _activeClipPath;
       _activeClipPath = path;
-      return _usableClip(path);
+      return await _usableClip(path);
     } catch (e) {
       debugPrint('Clip stop failed: $e');
-      return _usableClip(_activeClipPath);
+      return await _usableClip(_activeClipPath);
     }
   }
 
