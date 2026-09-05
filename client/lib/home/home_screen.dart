@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smith_client/bridge/smith_bridge.dart';
 import 'package:smith_client/chat/chat_controller.dart';
@@ -141,20 +145,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              if (_tab == 0 && chat.pipeline != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-                  child: Text(
-                    'pipeline: ${chat.pipeline!.shortLabel}'
-                    '${chat.pipeline!.summary.isNotEmpty ? ' — ${chat.pipeline!.summary}' : ''}',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 11,
-                      color: muted,
-                    ),
-                  ),
-                ),
               Expanded(
                 child: IndexedStack(
                   index: _tab,
@@ -245,63 +235,185 @@ class _ChatBody extends StatelessWidget {
             ),
           ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-          child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: statusColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: statusColor.withValues(alpha: 0.45),
-                        blurRadius: 6,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  voice.statusLabel,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: muted,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                if (voice.whisperOnline && voice.whisperModel != null) ...[
-                  const SizedBox(width: 10),
-                  Text(
-                    voice.whisperModel!,
-                    style: GoogleFonts.dmSans(
-                      fontSize: 11,
-                      color: muted.withValues(alpha: 0.85),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: statusColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: statusColor.withValues(alpha: 0.45),
+                      blurRadius: 5,
                     ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 7),
+              Text(
+                voice.statusLabel,
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: muted,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              if (voice.whisperOnline && voice.whisperModel != null) ...[
+                const SizedBox(width: 10),
+                Text(
+                  voice.whisperModel!,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 11,
+                    color: muted.withValues(alpha: 0.85),
                   ),
-                ],
+                ),
               ],
-            ),
+            ],
           ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: Center(
-            child: _HoldTalkButton(
-              holding: voice.holding,
-              progress: voice.holdProgress,
-              canStart: voice.canRecord,
-              capturing: voice.isRecording,
-              onPointerDown: voice.onPointerDown,
-              onPointerUp: voice.onPointerUp,
-            ),
-          ),
+          child: _InputBar(chat: chat, voice: voice),
         ),
       ],
+    );
+  }
+}
+
+/// ChatGPT/Claude-style input bar: text is primary, voice is a secondary,
+/// optional affordance (never required — see docs/DESIGN.md).
+class _InputBar extends StatefulWidget {
+  const _InputBar({required this.chat, required this.voice});
+
+  final ChatController chat;
+  final VoiceTurnController voice;
+
+  @override
+  State<_InputBar> createState() => _InputBarState();
+}
+
+class _InputBarState extends State<_InputBar> {
+  final TextEditingController _text = TextEditingController();
+  final FocusNode _fieldFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _text.dispose();
+    _fieldFocus.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final value = _text.text.trim();
+    if (value.isEmpty || !widget.chat.canSend) return;
+    _text.clear();
+    unawaited(widget.chat.send(value));
+    _fieldFocus.requestFocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const ink = Color(0xFF12353F);
+    const muted = Color(0xFF6A7C86);
+    final chat = widget.chat;
+    final voice = widget.voice;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFD0D8DE)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _text,
+              focusNode: _fieldFocus,
+              minLines: 1,
+              maxLines: 6,
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _submit(),
+              style: GoogleFonts.dmSans(fontSize: 15, color: ink),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 10,
+                ),
+                hintText: 'Message smith…',
+                hintStyle: GoogleFonts.dmSans(fontSize: 15, color: muted),
+              ),
+            ),
+          ),
+          _CompactMicButton(voice: voice),
+          IconButton(
+            tooltip: 'Send',
+            onPressed: chat.canSend ? _submit : null,
+            icon: Icon(
+              Icons.arrow_upward_rounded,
+              color: chat.canSend ? ink : muted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactMicButton extends StatelessWidget {
+  const _CompactMicButton({required this.voice});
+
+  final VoiceTurnController voice;
+
+  @override
+  Widget build(BuildContext context) {
+    const ink = Color(0xFF12353F);
+    const accent = Color(0xFF1A6B78);
+    final holding = voice.holding;
+    final capturing = voice.isRecording;
+    final canStart = voice.canRecord;
+
+    return Listener(
+      onPointerDown: canStart ? (_) => voice.onPointerDown() : null,
+      onPointerUp: capturing ? (_) => voice.onPointerUp() : null,
+      onPointerCancel: capturing ? (_) => voice.onPointerUp() : null,
+      child: Opacity(
+        opacity: canStart || capturing ? 1 : 0.4,
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (holding)
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: CircularProgressIndicator(
+                    value: voice.holdProgress.clamp(0.0, 1.0),
+                    strokeWidth: 3,
+                    backgroundColor: const Color(0xFFD0D8DE),
+                    color: accent,
+                  ),
+                ),
+              Icon(
+                holding || capturing ? Icons.mic : Icons.mic_none,
+                color: holding ? accent : ink,
+                size: 22,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -364,9 +476,11 @@ class _Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final italic = message.role == ChatRole.system;
+    final markdown = message.role == ChatRole.assistant;
     final hasAudio =
         message.audioPath != null && message.audioPath!.isNotEmpty;
     final showText = message.text.isNotEmpty;
+    const textColor = Color(0xFF15262D);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -406,18 +520,39 @@ class _Bubble extends StatelessWidget {
                 const SizedBox(width: 4),
               ],
               Expanded(
-                child: showText
-                    ? SelectableText(
+                child: !showText
+                    ? const SizedBox.shrink()
+                    : markdown
+                    ? MarkdownBody(
+                        data: message.text,
+                        selectable: true,
+                        styleSheet: MarkdownStyleSheet(
+                          p: GoogleFonts.dmSans(
+                            fontSize: 15,
+                            height: 1.45,
+                            color: textColor,
+                          ),
+                          code: GoogleFonts.dmSans(
+                            fontSize: 13.5,
+                            backgroundColor: const Color(0xFFEDF1F3),
+                            color: textColor,
+                          ),
+                          codeblockDecoration: BoxDecoration(
+                            color: const Color(0xFFEDF1F3),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      )
+                    : SelectableText(
                         message.text,
                         style: GoogleFonts.dmSans(
                           fontSize: 15,
                           height: 1.45,
                           fontStyle:
                               italic ? FontStyle.italic : FontStyle.normal,
-                          color: const Color(0xFF15262D),
+                          color: textColor,
                         ),
-                      )
-                    : const SizedBox.shrink(),
+                      ),
               ),
               if (message.showSpinner) ...[
                 const SizedBox(width: 8),
@@ -425,6 +560,25 @@ class _Bubble extends StatelessWidget {
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ],
+              if (markdown && showText && !message.showSpinner) ...[
+                const SizedBox(width: 4),
+                IconButton(
+                  tooltip: 'Copy',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
+                  onPressed: () => Clipboard.setData(
+                    ClipboardData(text: message.text),
+                  ),
+                  icon: const Icon(
+                    Icons.copy_outlined,
+                    size: 16,
+                    color: Color(0xFF8A9AA3),
+                  ),
                 ),
               ],
             ],
@@ -442,83 +596,3 @@ class _Bubble extends StatelessWidget {
   }
 }
 
-/// Circular hold-to-talk. Fill ring maps 0→1 over [kMaxHoldRecord].
-class _HoldTalkButton extends StatelessWidget {
-  const _HoldTalkButton({
-    required this.holding,
-    required this.progress,
-    required this.canStart,
-    required this.capturing,
-    required this.onPointerDown,
-    required this.onPointerUp,
-  });
-
-  final bool holding;
-  final double progress;
-  final bool canStart;
-  final bool capturing;
-  final VoidCallback onPointerDown;
-  final VoidCallback onPointerUp;
-
-  @override
-  Widget build(BuildContext context) {
-    const ink = Color(0xFF12353F);
-    const accent = Color(0xFF1A6B78);
-    const size = 88.0;
-
-    return Listener(
-      onPointerDown: canStart ? (_) => onPointerDown() : null,
-      onPointerUp: capturing ? (_) => onPointerUp() : null,
-      onPointerCancel: capturing ? (_) => onPointerUp() : null,
-      child: Opacity(
-        opacity: canStart || capturing ? 1 : 0.45,
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: size,
-                height: size,
-                child: CircularProgressIndicator(
-                  value: holding ? progress.clamp(0.0, 1.0) : 0,
-                  strokeWidth: 5,
-                  backgroundColor: const Color(0xFFD0D8DE),
-                  color: holding ? accent : ink,
-                ),
-              ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 120),
-                width: 68,
-                height: 68,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: holding ? ink : Colors.white,
-                  border: Border.all(
-                    color: holding ? ink : const Color(0xFFD0D8DE),
-                    width: 1.5,
-                  ),
-                  boxShadow: holding
-                      ? const [
-                          BoxShadow(
-                            color: Color(0x3312353F),
-                            blurRadius: 12,
-                            offset: Offset(0, 4),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Icon(
-                  holding || capturing ? Icons.mic : Icons.mic_none,
-                  color: holding ? Colors.white : ink,
-                  size: 28,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

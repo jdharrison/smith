@@ -21,6 +21,9 @@ enum MessagePhase {
 
   /// Assistant row: waiting on smith reply.
   awaitingReply,
+
+  /// Assistant row: full reply known, revealing word-by-word.
+  revealing,
 }
 
 class ChatMessage {
@@ -63,6 +66,7 @@ class ChatController extends ChangeNotifier {
   final List<ChatMessage> _messages = <ChatMessage>[];
   final List<BoardTask> _tasks = <BoardTask>[];
   final Set<String> _injectedTaskIds = <String>{};
+  final Map<String, Timer> _revealTimers = <String, Timer>{};
   int _msgSeq = 0;
 
   BridgeStatus _bridgeStatus = BridgeStatus.unknown;
@@ -115,6 +119,10 @@ class ChatController extends ChangeNotifier {
   void dispose() {
     _healthTimer?.cancel();
     _stopTaskPoll();
+    for (final timer in _revealTimers.values) {
+      timer.cancel();
+    }
+    _revealTimers.clear();
     _bridge.close();
     super.dispose();
   }
@@ -282,10 +290,41 @@ class ChatController extends ChangeNotifier {
   }) {
     final m = messageById(id);
     if (m == null) return;
-    m.text = text.trim().isEmpty ? '(empty reply)' : text.trim();
-    m.phase = MessagePhase.complete;
+    final full = text.trim().isEmpty ? '(empty reply)' : text.trim();
     m.attachments = attachments;
-    notifyListeners();
+    _revealText(id, full);
+  }
+
+  /// Word-chunked reveal of an already-known full reply — perceived
+  /// streaming without depending on the (single-shot) bridge response.
+  void _revealText(String id, String full) {
+    _revealTimers.remove(id)?.cancel();
+    final words = full.split(RegExp(r'(?<=\s)'));
+    if (words.length <= 1) {
+      setMessageText(id, full);
+      setMessagePhase(id, MessagePhase.complete);
+      return;
+    }
+
+    var next = 0;
+    setMessagePhase(id, MessagePhase.revealing);
+    _revealTimers[id] = Timer.periodic(const Duration(milliseconds: 28), (
+      timer,
+    ) {
+      final m = messageById(id);
+      if (m == null) {
+        timer.cancel();
+        _revealTimers.remove(id);
+        return;
+      }
+      next = (next + 2).clamp(0, words.length);
+      setMessageText(id, words.sublist(0, next).join());
+      if (next >= words.length) {
+        timer.cancel();
+        _revealTimers.remove(id);
+        setMessagePhase(id, MessagePhase.complete);
+      }
+    });
   }
 
   void failAssistant(String id, String errorText) {
@@ -356,15 +395,18 @@ class ChatController extends ChangeNotifier {
                 ? 'Failed: ${t.error}'
                 : 'Task ${t.status}.');
         if (body.isEmpty) continue;
+        final id = _nextId('smith');
         _messages.add(
           ChatMessage(
-            id: _nextId('smith'),
+            id: id,
             role: ChatRole.assistant,
-            text: body,
+            text: '',
             at: DateTime.now(),
+            phase: MessagePhase.awaitingReply,
           ),
         );
         notifyListeners();
+        _revealText(id, body);
         final speak = onSpeakAssistant;
         if (speak != null) {
           unawaited(speak(body));
