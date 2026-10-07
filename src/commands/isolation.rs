@@ -29,7 +29,10 @@ pub async fn handle_runtime(cmd: RuntimeCommands) {
                     }
                 }
             }
-            println!("  network: {} (orthogonal — `smith settings network`)", cfg.network().as_str());
+            println!(
+                "  network: {} (orthogonal — `smith settings network`)",
+                cfg.network().as_str()
+            );
         }
         RuntimeCommands::Set { mode } => {
             let parsed = match RuntimeMode::parse_mode(&mode) {
@@ -78,7 +81,10 @@ pub async fn handle_network(cmd: NetworkCommands) {
                     println!("  Oneshot search workers remain available.");
                 }
             }
-            println!("  runtime: {} (orthogonal — `smith settings runtime`)", cfg.runtime().as_str());
+            println!(
+                "  runtime: {} (orthogonal — `smith settings runtime`)",
+                cfg.runtime().as_str()
+            );
         }
         NetworkCommands::Set { mode } => {
             let parsed = match NetworkMode::parse_mode(&mode) {
@@ -104,7 +110,9 @@ pub async fn handle_network(cmd: NetworkCommands) {
                 );
             }
             if !cfg.runtime().is_host() {
-                println!("  recreate the brain container on next chat so Docker networking applies.");
+                println!(
+                    "  recreate the brain container on next chat so Docker networking applies."
+                );
             }
         }
     }
@@ -118,10 +126,7 @@ pub async fn handle(cmd: IsolationCommands) {
                 eprintln!("Error: {}", e);
                 std::process::exit(1);
             });
-            println!(
-                "isolation: {} (deprecated alias)",
-                cfg.isolation.as_str()
-            );
+            println!("isolation: {} (deprecated alias)", cfg.isolation.as_str());
             println!(
                 "  runtime: {}  |  network: {}",
                 cfg.runtime().as_str(),
@@ -130,7 +135,10 @@ pub async fn handle(cmd: IsolationCommands) {
             println!("  prefer: `smith settings runtime get` / `smith settings network get`");
             match cfg.runtime() {
                 RuntimeMode::Container => {
-                    println!("  brain process: Docker. Network policy: {}.", cfg.network().as_str());
+                    println!(
+                        "  brain process: Docker. Network policy: {}.",
+                        cfg.network().as_str()
+                    );
                 }
                 RuntimeMode::Host => {
                     println!("  {}", HOST_RUNTIME_WARNING);

@@ -13,11 +13,7 @@ class SmithBridgeException implements Exception {
 }
 
 class ChatAttachment {
-  ChatAttachment({
-    required this.kind,
-    required this.path,
-    required this.name,
-  });
+  ChatAttachment({required this.kind, required this.path, required this.name});
 
   final String kind;
   final String path;
@@ -40,8 +36,51 @@ class HealthInfo {
     required this.service,
     required this.echo,
     required this.isolation,
+    this.profile,
+    this.provider,
+    this.model,
+    this.providerAvailable,
+    this.modelAvailable,
+    this.desktopSession,
   });
 
+  factory HealthInfo.fromJson(Map<String, dynamic> body) {
+    final providerAvailable = body['provider_available'] as bool?;
+    final model = body['model'] as String?;
+    // Chat-only provider_available is the backend's exact installed-local-tag
+    // probe (not merely Ollama listener liveness). Explicit additive model
+    // availability, including null, takes precedence and fails closed.
+    final exactTagProbe =
+        body['service'] == 'smith-bridge' &&
+        body['profile'] == 'chat-only' &&
+        body['echo'] == false &&
+        body['provider'] == 'ollama' &&
+        model != null &&
+        model.isNotEmpty;
+    return HealthInfo(
+      ok: body['ok'] == true,
+      service: body['service'] as String? ?? 'unknown',
+      echo: body['echo'] != false,
+      isolation: body['isolation'] as String? ?? 'unknown',
+      profile: body['profile'] as String?,
+      provider: body['provider'] as String?,
+      model: model,
+      providerAvailable: providerAvailable,
+      modelAvailable: body.containsKey('model_available')
+          ? body['model_available'] as bool?
+          : exactTagProbe
+          ? providerAvailable
+          : null,
+      desktopSession: body['desktop_session'] as String?,
+    );
+  }
+
+  final String? desktopSession;
+  final String? profile;
+  final String? provider;
+  final String? model;
+  final bool? providerAvailable;
+  final bool? modelAvailable;
   final bool ok;
   final String service;
   final bool echo;
@@ -126,6 +165,7 @@ class BoardTask {
   bool get isTerminalInject =>
       status == 'completed' ||
       status == 'failed' ||
+      status == 'interrupted' ||
       status == 'awaiting_signoff';
 
   factory BoardTask.fromJson(Map<String, dynamic> json) {
@@ -178,11 +218,8 @@ class ChatReply {
 
 /// Loopback client for `smith serve` (http://127.0.0.1:4783).
 class SmithBridge {
-  SmithBridge({
-    this.host = '127.0.0.1',
-    this.port = 4783,
-    http.Client? client,
-  }) : _client = client ?? http.Client();
+  SmithBridge({this.host = '127.0.0.1', this.port = 4783, http.Client? client})
+    : _client = client ?? http.Client();
 
   final String host;
   final int port;
@@ -190,10 +227,15 @@ class SmithBridge {
 
   Uri get _base => Uri(scheme: 'http', host: host, port: port);
 
-  Future<HealthInfo> health({Duration timeout = const Duration(seconds: 2)}) async {
-    final res = await _client
-        .get(_base.replace(path: '/v1/health'))
-        .timeout(timeout);
+  Future<HealthInfo> health({
+    Duration timeout = const Duration(seconds: 2),
+  }) async {
+    final request = http.Request('GET', _base.replace(path: '/v1/health'))
+      ..followRedirects = false;
+    final res = await (() async {
+      final streamed = await _client.send(request);
+      return http.Response.fromStream(streamed);
+    })().timeout(timeout);
     if (res.statusCode != 200) {
       throw SmithBridgeException(
         'health failed (${res.statusCode})',
@@ -201,12 +243,7 @@ class SmithBridge {
       );
     }
     final body = jsonDecode(res.body) as Map<String, dynamic>;
-    return HealthInfo(
-      ok: body['ok'] == true,
-      service: (body['service'] as String?) ?? 'unknown',
-      echo: body['echo'] == true,
-      isolation: (body['isolation'] as String?) ?? 'sealed',
-    );
+    return HealthInfo.fromJson(body);
   }
 
   Future<ChatReply> chat(
@@ -214,26 +251,88 @@ class SmithBridge {
     bool newSession = false,
     String session = 'default',
     Duration timeout = const Duration(minutes: 5),
+  }) => _chat(
+    text,
+    newSession: newSession,
+    session: session,
+    timeout: timeout,
+    chatOnly: false,
+  );
+
+  /// Exclusive text-only route. Never fall back to legacy orchestration.
+  Future<ChatReply> chatOnly(
+    String text, {
+    bool newSession = false,
+    Duration timeout = const Duration(minutes: 5),
+  }) => _chat(
+    text,
+    newSession: newSession,
+    session: 'default',
+    timeout: timeout,
+    chatOnly: true,
+  );
+
+  Future<ChatReply> _chat(
+    String text, {
+    required bool newSession,
+    required String session,
+    required Duration timeout,
+    required bool chatOnly,
   }) async {
-    final res = await _client
-        .post(
-          _base.replace(path: '/v1/chat'),
-          headers: const {'Content-Type': 'application/json'},
-          body: jsonEncode({
+    final request =
+        http.Request(
+            'POST',
+            _base.replace(path: chatOnly ? '/v1/chat-only' : '/v1/chat'),
+          )
+          ..followRedirects = false
+          ..headers['Content-Type'] = 'application/json'
+          ..body = jsonEncode({
             'v': 1,
             'text': text,
             'session': session,
             'new': newSession,
-          }),
-        )
-        .timeout(timeout);
+          });
+    final res = await (() async {
+      final streamed = await _client.send(request);
+      return http.Response.fromStream(streamed);
+    })().timeout(timeout);
 
-    final decoded = jsonDecode(res.body);
+    Object? decoded;
+    if (!chatOnly) {
+      decoded = jsonDecode(res.body);
+    } else {
+      try {
+        decoded = jsonDecode(res.body);
+      } on FormatException {
+        if (res.statusCode == 200) {
+          throw SmithBridgeException('Invalid chat response: expected JSON');
+        }
+      }
+    }
     if (res.statusCode != 200) {
-      final err = decoded is Map<String, dynamic>
-          ? (decoded['error'] as String?) ?? res.body
-          : res.body;
+      final err = !chatOnly
+          ? decoded is Map<String, dynamic>
+                ? (decoded['error'] as String?) ?? res.body
+                : res.body
+          : decoded is Map<String, dynamic> && decoded['error'] is String
+          ? decoded['error'] as String
+          : 'Chat request failed (${res.statusCode})';
       throw SmithBridgeException(err, statusCode: res.statusCode);
+    }
+    if (chatOnly &&
+        (decoded is! Map<String, dynamic> ||
+            decoded['v'] != 1 ||
+            decoded['profile'] != 'chat-only' ||
+            decoded['mode'] != 'chat-only' ||
+            decoded['session'] != 'default' ||
+            decoded['text'] is! String ||
+            decoded['attachments'] is! List ||
+            (decoded['attachments'] as List).isNotEmpty ||
+            decoded['pipeline'] != null ||
+            decoded['task'] != null)) {
+      throw SmithBridgeException(
+        'Invalid chat-only response: expected the text-only profile schema. No fallback is attempted.',
+      );
     }
     final body = decoded as Map<String, dynamic>;
     final rawAtt = body['attachments'];
@@ -436,15 +535,78 @@ class ServiceRow {
   bool get isWarm => mode == 'warm';
 }
 
+class SupervisorStatus {
+  const SupervisorStatus({
+    required this.registered,
+    required this.loadState,
+    required this.enabledState,
+    required this.enabledAtLogin,
+    required this.activeState,
+    required this.subState,
+    required this.linger,
+    required this.bridgeIdentity,
+    required this.bridgeHealthy,
+    required this.detail,
+  });
+
+  final bool registered;
+  final String loadState;
+  final String enabledState;
+  final bool? enabledAtLogin;
+  final String activeState;
+  final String subState;
+  final bool? linger;
+  final String bridgeIdentity;
+  final bool bridgeHealthy;
+  final String? detail;
+
+  factory SupervisorStatus.fromJson(
+    Map<String, dynamic> json, {
+    bool registeredFallback = false,
+  }) {
+    return SupervisorStatus(
+      registered: json['registered'] is bool
+          ? json['registered'] as bool
+          : registeredFallback,
+      loadState: _observedString(json['load_state']),
+      enabledState: _observedString(json['enabled_state']),
+      enabledAtLogin: json['enabled_at_login'] as bool?,
+      activeState: _observedString(json['active_state']),
+      subState: _observedString(json['sub_state']),
+      linger: json['linger'] as bool?,
+      bridgeIdentity: _observedString(json['bridge_identity']),
+      bridgeHealthy: json['bridge_healthy'] == true,
+      detail: json['detail'] as String?,
+    );
+  }
+
+  factory SupervisorStatus.legacy({required bool registered}) {
+    return SupervisorStatus.fromJson(
+      const <String, dynamic>{},
+      registeredFallback: registered,
+    );
+  }
+
+  static String _observedString(Object? value) {
+    if (value is String && value.trim().isNotEmpty) return value;
+    return 'unknown';
+  }
+}
+
 class ServicesSnapshot {
   ServicesSnapshot({
     required this.autostart,
     required this.osRegistered,
     required this.services,
-  });
+    SupervisorStatus? supervisor,
+  }) : supervisor =
+           supervisor ?? SupervisorStatus.legacy(registered: osRegistered);
 
   final bool autostart;
+
+  /// Legacy registration field retained for existing client callers.
   final bool osRegistered;
+  final SupervisorStatus supervisor;
   final List<ServiceRow> services;
 
   factory ServicesSnapshot.fromJson(Map<String, dynamic> json) {
@@ -457,9 +619,19 @@ class ServicesSnapshot {
         }
       }
     }
+
+    final legacyRegistered = json['os_registered'] == true;
+    final rawSupervisor = json['supervisor'];
+    final supervisor = rawSupervisor is Map<String, dynamic>
+        ? SupervisorStatus.fromJson(
+            rawSupervisor,
+            registeredFallback: legacyRegistered,
+          )
+        : SupervisorStatus.legacy(registered: legacyRegistered);
     return ServicesSnapshot(
       autostart: json['autostart'] == true,
-      osRegistered: json['os_registered'] == true,
+      osRegistered: supervisor.registered,
+      supervisor: supervisor,
       services: list,
     );
   }

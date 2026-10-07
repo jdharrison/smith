@@ -34,14 +34,8 @@ class VoiceTurnController extends ChangeNotifier {
   }) : _chat = chat,
        _whisper = whisper ?? WhisperClient(),
        _tts = tts ?? SmithTts() {
-    _recorder = AudioRecorder();
-    _player = AudioPlayer();
+    _tts.onStateChanged = _safeNotify;
     _chat.onSpeakAssistant = (text) => _tts.speak(text);
-    _player.onPlayerComplete.listen((_) {
-      if (_disposed) return;
-      _playingPath = null;
-      notifyListeners();
-    });
     unawaited(refreshWhisperHealth());
     _healthTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       unawaited(refreshWhisperHealth());
@@ -51,8 +45,9 @@ class VoiceTurnController extends ChangeNotifier {
   final ChatController _chat;
   final WhisperClient _whisper;
   final SmithTts _tts;
-  late final AudioRecorder _recorder;
-  late final AudioPlayer _player;
+  AudioRecorder? _recorder;
+  AudioPlayer? _player;
+  StreamSubscription<void>? _playerCompleteSubscription;
   Timer? _healthTimer;
   bool _disposed = false;
 
@@ -72,9 +67,27 @@ class VoiceTurnController extends ChangeNotifier {
   VoiceTurnState get state => _state;
   bool get isIdle => _state == VoiceTurnState.idle;
 
-  /// Mic only from idle with Whisper reachable (avoids dead-end holds).
+  AudioRecorder get _audioRecorder => _recorder ??= AudioRecorder();
+
+  AudioPlayer get _audioPlayer {
+    final existing = _player;
+    if (existing != null) return existing;
+    final player = AudioPlayer();
+    _playerCompleteSubscription = player.onPlayerComplete.listen((_) {
+      if (_disposed) return;
+      _playingPath = null;
+      notifyListeners();
+    });
+    _player = player;
+    return player;
+  }
+
+  /// Permit an explicit voice-start attempt when Whisper or the bridge is online.
+  /// An online bridge can start an initially offline on-demand sidecar.
   bool get canRecord =>
-      _state == VoiceTurnState.idle && _whisperOnline && !_chat.busy;
+      _state == VoiceTurnState.idle &&
+      !_chat.busy &&
+      (_whisperOnline || _chat.bridgeStatus == BridgeStatus.online);
   bool get isRecording =>
       _state == VoiceTurnState.starting || _state == VoiceTurnState.recording;
   bool get holding => _state == VoiceTurnState.recording;
@@ -94,6 +107,7 @@ class VoiceTurnController extends ChangeNotifier {
   bool get whisperOnline => _whisperOnline;
   String? get whisperModel => _whisperModel;
   bool get ttsEnabled => _tts.enabled;
+  bool get ttsSpeaking => _tts.speaking;
   double get ttsRate => _tts.rate;
   String get ttsBackend => _tts.backendLabel;
   bool get ttsKokoroOnline => _tts.kokoroOnline;
@@ -156,15 +170,12 @@ class VoiceTurnController extends ChangeNotifier {
   Future<void> refreshWhisperHealth() async {
     if (_disposed) return;
     try {
-      await _chat.ensureVoiceSidecars();
-    } catch (_) {}
-    try {
       final h = await _whisper.health();
       if (_disposed) return;
       _whisperOnline = h.ok;
       _whisperModel = h.model;
-      // Only surface / clear sidecar errors while idle — never clobber turn errors.
-      if (_state == VoiceTurnState.idle) {
+      // Surface readiness errors before capture, but never clobber turn errors.
+      if (_state == VoiceTurnState.idle || _state == VoiceTurnState.starting) {
         if (h.ok) {
           if (_error != null &&
               (_error!.startsWith('Whisper') ||
@@ -179,7 +190,7 @@ class VoiceTurnController extends ChangeNotifier {
     } catch (_) {
       if (_disposed) return;
       _whisperOnline = false;
-      if (_state == VoiceTurnState.idle) {
+      if (_state == VoiceTurnState.idle || _state == VoiceTurnState.starting) {
         _error = 'Whisper offline — start client/sidecar (port 4790)';
       }
     }
@@ -209,8 +220,9 @@ class VoiceTurnController extends ChangeNotifier {
       return;
     }
     try {
-      await _player.stop();
-      await _player.play(DeviceFileSource(path));
+      final player = _audioPlayer;
+      await player.stop();
+      await player.play(DeviceFileSource(path));
       _playingPath = path;
       _safeNotify();
     } catch (e) {
@@ -221,9 +233,12 @@ class VoiceTurnController extends ChangeNotifier {
   }
 
   Future<void> stopPlayback() async {
-    try {
-      await _player.stop();
-    } catch (_) {}
+    final player = _player;
+    if (player != null) {
+      try {
+        await player.stop();
+      } catch (_) {}
+    }
     if (_playingPath != null) {
       _playingPath = null;
       _safeNotify();
@@ -239,18 +254,27 @@ class VoiceTurnController extends ChangeNotifier {
     await stopPlayback();
 
     try {
+      try {
+        await _chat.ensureVoiceSidecars();
+      } catch (e) {
+        _whisperOnline = false;
+        _error = 'Voice sidecars could not start: $e';
+        _setState(VoiceTurnState.idle);
+        return;
+      }
+
       await refreshWhisperHealth();
       if (!_wantDown || _disposed) {
         await _abortStarting();
         return;
       }
       if (!_whisperOnline) {
-        _error = 'Whisper offline — start client/sidecar (port 4790)';
+        _error ??= 'Whisper offline — start client/sidecar (port 4790)';
         _setState(VoiceTurnState.idle);
         return;
       }
 
-      final permitted = await _recorder.hasPermission();
+      final permitted = await _audioRecorder.hasPermission();
       if (!_wantDown || _disposed) {
         await _abortStarting();
         return;
@@ -426,7 +450,7 @@ class VoiceTurnController extends ChangeNotifier {
       final dir = await getTemporaryDirectory();
       final path =
           '${dir.path}${Platform.pathSeparator}smith_clip_$sessionId.wav';
-      await _recorder.start(
+      await _audioRecorder.start(
         const RecordConfig(
           encoder: AudioEncoder.wav,
           sampleRate: 16000,
@@ -454,8 +478,10 @@ class VoiceTurnController extends ChangeNotifier {
       return _usableClip(_activeClipPath);
     }
     _clipRecording = false;
+    final recorder = _recorder;
+    if (recorder == null) return _usableClip(_activeClipPath);
     try {
-      final stopped = await _recorder.stop();
+      final stopped = await recorder.stop();
       final path = stopped ?? _activeClipPath;
       _activeClipPath = path;
       return await _usableClip(path);
@@ -477,7 +503,7 @@ class VoiceTurnController extends ChangeNotifier {
   Future<void> _cancelCaptureQuietly() async {
     try {
       if (_clipRecording) {
-        await _recorder.stop();
+        await _recorder?.stop();
       }
     } catch (_) {}
     _clipRecording = false;
@@ -504,14 +530,18 @@ class VoiceTurnController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _tts.onStateChanged = null;
     _healthTimer?.cancel();
     _holdTimer?.cancel();
     _chat.onSpeakAssistant = null;
     _chat.setTurnBusy(false);
     _whisper.close();
     unawaited(_tts.dispose());
-    unawaited(_recorder.dispose());
-    unawaited(_player.dispose());
+    final recorder = _recorder;
+    if (recorder != null) unawaited(recorder.dispose());
+    unawaited(_playerCompleteSubscription?.cancel() ?? Future<void>.value());
+    final player = _player;
+    if (player != null) unawaited(player.dispose());
     super.dispose();
   }
 }

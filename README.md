@@ -6,9 +6,9 @@ smith — open-source control plane for local agent orchestration
 
 ## Status
 
-> **Note:** This project is complete but not yet stable. Use in production at your own risk.
+> **Note:** This project is under active hardening and is not yet stable. Use in production at your own risk.
 
-**Supported target:** one self-hosted Ubuntu/Linux workstation. Smith is still being hardened: the current runtime contains useful local-first functionality, while its target approval, credential, worker-isolation, recovery, and release guarantees are documented but not all yet enforced.
+**Supported target:** one self-hosted Ubuntu LTS x86_64 workstation. Smith's current runtime contains useful local-first functionality, while its target approval, credential, worker-isolation, recovery, service-lifecycle, and release guarantees are documented but not all yet enforced.
 
 Read the canonical project policy before operating or changing Smith:
 
@@ -20,25 +20,78 @@ Read the canonical project policy before operating or changing Smith:
 
 Existing artifacts for other environments are legacy implementation facts, not target-policy requirements.
 
-## Installation
+## Local text-chat slice
 
-### Option 1: Install from Cargo (Recommended)
+**Implemented in the current source; local candidate, not a production release.** The approved [offline-chat plan](docs/plans/LOCAL-SMITH-OFFLINE-CHAT-SLICE-P0.md) adds an explicit profile:
 
-Build the checked-out source with Cargo:
-
-```bash
-# Install Rust and Cargo if they are not already present.
-curl --proto '=https' --tlsv1.2 -sfSf https://sh.rustup.rs | sh
-
-# From a reviewed local checkout
-cargo install --path .
+```text
+smith serve --chat-only --model <exact-installed-tag>
 ```
 
-**Prerequisites:** the supported host needs Rust stable (minimum 1.83), Docker, Git, OpenSSH, Python, and an intentionally provisioned local Ollama-compatible endpoint. Review [`docs/HOST_PROFILE.md`](docs/HOST_PROFILE.md) before installation. `smith install` may create local configuration, start services, and offer host setup; inspect its effects before running it.
+Replace `<exact-installed-tag>` with the exact local model name returned by Ollama's `/api/tags`; no default model or automatic pull is supplied. After separate launch approval, this binds the bridge to `127.0.0.1:4783` and uses only direct Ollama at `127.0.0.1:11434`, without tools, intent dispatch, tasks, OpenCode, Docker, search, voice sidecars, provisioning, or cloud fallback. One shared default session has bounded in-memory context, cleared on backend restart.
 
-### Option 2: Download Pre-built Binaries
+**Implemented Flutter-first guided setup:** the approved [desktop wizard plan](docs/plans/LOCAL-SMITH-DESKTOP-WIZARD-P0.md) extends [boot](docs/plans/LOCAL-SMITH-FLUTTER-BOOT-P0.md): Detect backend → Local runtime → Select/install model → Review & Start → Home / Chat; ordinary Settings remains read-only. The wizard automatically validates only `<actual Halo executable directory>/smith_backend/smith`, never cwd/PATH or a recursive scan. An invalid candidate does not silently fall back; **Advanced · explicit backend path** accepts a reviewed absolute executable. Opening can run read-only `smith setup inspect` for eligible installed-model inventory; it does not start the chat backend, infer, install or download. Inventory `ready` is not verified inference. Choose an observed exact `name:tag`, then explicitly **Start packaged backend**, or attach to a compatible ready external backend untouched.
 
-Pre-built Linux binaries are available in [GitHub Releases](https://github.com/jdharrison/smith/releases). Verify the release notes and the supported Ubuntu host requirements before installation.
+**Partial empty-host setup:** missing Ollama receives guided instructions to provision/run it separately at `127.0.0.1:11434`; no host installation/start, sudo, legacy install helper, service integration or cloud fallback is supplied. **Review model download** invokes the separate `smith setup pull --model <exact-name:tag>` command. Explicit consent is bound to that exact model and operation through stdin; bounded NDJSON progress/cancellation has finite deadlines and no automatic retries. Ollama may use internet and persistent disk outside Smith; sizes are unknown until reported. Cancel stops the local request/observation, not necessarily daemon work or partial cache. The chat-only bridge still has no provisioning tools/routes. See [Architecture](docs/ARCHITECTURE.md#desktop-setup-command-boundary) for guards and protocol limitations.
+
+Only a captured owned child is stopped on normal close, using health `desktop_session` plus child liveness for correlation, stdin EOF and bounded TERM/KILL cleanup; no crash-proof termination is promised. Readiness recovery preserves Home, draft and transcript without automatic resend/reset. CLI is secondary query/status/configuration with existing commands retained. Future headless operation is a separate deferred deployment/lifecycle capability, not CLI. Voice, Work, uploads, saved history, integrations and streaming remain deferred. The supplied icon is pending because its original asset is not in the workspace.
+
+Ubuntu **24.04 LTS x86_64** Halo candidates bundle `smith_backend/smith` alongside the **full Flutter `lib/` and `data/` payload**; the standalone backend candidate is secondary. Recipients need Ubuntu runtime libraries, a graphical session for Halo, and separately provisioned/running loopback Ollama with an installed or explicitly downloaded model—not Rust/Cargo, Flutter/Dart, or compiler tools. Builders need those toolchains. See [Chat candidate installation and release guide](docs/CHAT_RELEASE.md) for exact prerequisites, install-only boundaries, and provenance limitations.
+
+**Publication remains blocked:** final source/candidate-bound tests/review, actual provider pull/cancel integration and version compatibility, real contextual inference with external networking denied, clean-host desktop installation without build tools, clean-source build binding, license/SBOM review, and replacement of the legacy release workflow are not established by this documentation update. Plain `smith serve`, `smith chat`, and the existing systemd unit remain legacy orchestration paths; no default or service migration is implied. The following orchestration instructions describe those legacy paths.
+
+## Binary installation
+
+**Implemented:** [`scripts/install.sh`](scripts/install.sh) validates Ubuntu LTS and x86_64, refuses effective-root execution, installs the reviewed checkout with locked dependencies into an explicit canonical root owned by the invoking user, rejects unsafe group/world-writable roots and executables, writes the private install-root marker required by unit registration, verifies the executable with `smith --help` and `smith --version`, and stops. It does **not** install/start a unit, sidecar, Docker container, or Flutter client, and it never changes lingering.
+
+```bash
+# From a reviewed local checkout; installs $HOME/.local/bin/smith
+bash scripts/install.sh --root "$HOME/.local"
+```
+
+`SMITH_INSTALL_ROOT` can supply the root non-interactively. The root must be absolute. The script runs exactly `cargo install --locked --path <checkout> --root <install-root>` for the build/install step. Rust stable (minimum 1.83) and Cargo are installation prerequisites; runtime capabilities such as Docker, Git, OpenSSH, Python, and Ollama are provisioned separately under [`docs/HOST_PROFILE.md`](docs/HOST_PROFILE.md).
+
+Pre-built artifacts, when used, require independent release/checksum verification and are not validated by the source installer.
+
+### User-service lifecycle
+
+**Target CLI contract:** after binary installation, each service effect is an explicit command. Confirm the commands exposed by `smith settings service --help`; the dated implementation status and gaps are in [`docs/SMITH_LINUX_ARCHITECTURE_REPORT.md`](docs/SMITH_LINUX_ARCHITECTURE_REPORT.md).
+
+```bash
+# Stage the user unit and reload the user manager; do not start or enable it
+$HOME/.local/bin/smith settings service install
+
+# Observe unit load, runtime, login enablement, linger, and bridge health separately
+$HOME/.local/bin/smith settings service status
+
+# Current runtime only
+$HOME/.local/bin/smith settings service start
+$HOME/.local/bin/smith settings service restart
+$HOME/.local/bin/smith settings service stop
+
+# Login policy only; neither command changes the current runtime
+$HOME/.local/bin/smith settings service autostart on
+$HOME/.local/bin/smith settings service autostart off
+
+# Explicitly stop, disable, remove, and reload the user-unit registration
+$HOME/.local/bin/smith settings service uninstall
+```
+
+Installed, running now, enabled at login, and available before login are different claims. Status also reports manager result, restart attempts, and the last main-process exit independently. A permanently missing, non-executable, non-native, or behaviorally invalid host OpenCode configuration is checked before warm resource startup and is not automatically retried. The Ubuntu x86_64 check requires a native executable, a bare semantic version, and OpenCode-specific help markers; this detects accidental/impostor configuration but is not cryptographic package provenance. Operational probe failures such as spawn, wait, timeout, or nonzero exit remain retryable but are limited to five starts per five minutes. Enabling the unit does not start it and does not change lingering. Smith never invokes `loginctl enable-linger` or `disable-linger`; pre-login operation is an optional manual host-policy decision requiring separate review and approval. With `Linger=no` or unknown, report login-scoped behavior only.
+
+The supervisor reconciles persisted queued/running tasks and jobs to interrupted/recovery-required before new bridge readiness in the target architecture. After any restart, inspect status and retained task/job evidence rather than assuming work resumed. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/DESIGN.md`](docs/DESIGN.md).
+
+### Service smoke validation
+
+The repository smoke harness has only a sandbox mode:
+
+```bash
+bash scripts/smoke-user-service.sh --sandbox
+```
+
+It uses temporary HOME/XDG/config/install roots, activates deny-by-default fake `systemctl`/`loginctl` before installer code runs, invalidates the user-bus address, and suppresses external Docker/loopback status probes. It checks the complete Rust/shell gates, installer preflight failures, help/version behavior, lifecycle separation, restart containment and diagnostics, malformed manager output, persistent versus runtime-only enablement, offline systemd unit parsing before and after sandbox cleanup, no `enable --now`, no linger mutation, no ambient service-state contamination, and no unmanaged `smith serve` fallback. Every invocation retains a fresh checksummed, owner-read-only evidence package under `target/smoke-user-service/runs/`, including raw command results, revision/worktree/source-input identity, the exact rendered unit, and a replayable retained-binary unit fixture. The manifest truthfully labels Cargo network/cache assumptions. Local checksums detect stale mixing and accidental changes, but they are not tamper-proof against the owner; release review must anchor the package digest in an independent review or approval record. If the required separated CLI is not in the tested binary, it exits blocked before invoking lifecycle commands.
+
+Sandbox success does not validate the workstation's real user manager, login/logout behavior, lingering, reboot recovery, or runtime dependencies. Installing to a normal path or running any live-manager smoke requires later explicit human approval bound to the exact account, paths, commands, and effects; see [`docs/PROCESS.md`](docs/PROCESS.md).
 
 ## Runtime and network
 
@@ -85,7 +138,7 @@ Search output may contain hostile instructions, inaccurate claims, or sensitive 
 
 ## Desktop client (prototype)
 
-The optional Flutter client in [`client/`](client/) talks to `smith serve` over the local bridge. The supported target is Ubuntu Linux:
+The primary Flutter entry point in [`client/`](client/) uses Boot/Setup and the chat-only slice described above; see [client instructions](client/README.md). The following plain-`serve` example is retained solely as a **legacy orchestration** example, not a compatible launch path for Halo:
 
 ```bash
 # Start the local bridge after required services are provisioned
@@ -95,9 +148,9 @@ smith serve
 cd client && flutter run -d linux
 ```
 
-The bridge listens on `127.0.0.1:4783`; optional Whisper and Kokoro sidecars use loopback ports `4790` and `4791`. Their virtual environments, models, audio integration, and service lifecycle require Ubuntu-host validation before routine use. `smith.service` and user lingering are not currently provisioned on the reference workstation.
+The bridge listens on `127.0.0.1:4783`; optional Whisper and Kokoro sidecars use loopback ports `4790` and `4791`. Their virtual environments, models, audio integration, and service lifecycle require Ubuntu-host validation before routine use. A separately installed legacy `smith.service` has been observed failing in a restart loop on the reference workstation; the hardened source unit has not been deployed, and user lingering remains disabled.
 
-Every message creates a task record. An acknowledgement means work was accepted, **not** that it completed. The operator must be able to inspect task state, retained evidence, failures, and pending approval effects as defined in [`docs/DESIGN.md`](docs/DESIGN.md).
+In the legacy bridge, every message creates a task record; chat-only messages do not. An acknowledgement means work was accepted, **not** that it completed. The operator must be able to inspect task state, retained evidence, failures, and pending approval effects as defined in [`docs/DESIGN.md`](docs/DESIGN.md).
 ## Quick Start
 
 ### Before first operation
@@ -143,9 +196,9 @@ Smith retains brain data under its local configuration/data directories, includi
 
 The reference host has an AMD Navi 31 GPU but does not yet have Ollama or ROCm tooling on `PATH`. Install and validate a native Ollama path before depending on GPU inference. Smith's Docker GPU path is designed around NVIDIA `--gpus`; do not assume it provides AMD acceleration. CPU fallback may be possible but requires explicit capacity and responsiveness acceptance.
 
-### Local bridge and optional client
+### Legacy local bridge and desktop boundary
 
-`smith serve` listens on `127.0.0.1:4783`. Whisper and Kokoro sidecars use loopback ports when started. The bridge is local-only but has no separate authentication layer, so local processes are within its trust boundary. The optional client is for Ubuntu Linux and must not be required for task visibility, evidence review, or approvals.
+`smith serve` listens on `127.0.0.1:4783`. Whisper and Kokoro sidecars use loopback ports when started. The bridge is local-only but has no separate authentication layer, so local processes are within its trust boundary. Flutter is the primary Ubuntu desktop interface; the retained CLI remains secondary query/status/configuration and preserves task/evidence/approval meaning. This legacy bridge is not the desktop chat-only lifecycle; future headless deployment is separate and deferred.
 
 ## Delivery pipeline
 

@@ -212,16 +212,9 @@ fn searxng_healthy() -> bool {
 
 fn container_running(name: &str) -> bool {
     Command::new("docker")
-        .args([
-            "inspect",
-            "-f",
-            "{{.State.Running}}",
-            name,
-        ])
+        .args(["inspect", "-f", "{{.State.Running}}", name])
         .output()
-        .map(|o| {
-            o.status.success() && String::from_utf8_lossy(&o.stdout).trim() == "true"
-        })
+        .map(|o| o.status.success() && String::from_utf8_lossy(&o.stdout).trim() == "true")
         .unwrap_or(false)
 }
 
@@ -290,8 +283,7 @@ fn parse_http_url(url: &str) -> Result<ParsedUrl, String> {
     let (host, port) = if let Some((h, p)) = hostport.split_once(':') {
         (
             h.to_string(),
-            p.parse::<u16>()
-                .map_err(|_| format!("bad port in {url}"))?,
+            p.parse::<u16>().map_err(|_| format!("bad port in {url}"))?,
         )
     } else {
         (hostport.to_string(), 80)
@@ -331,9 +323,7 @@ fn random_hex(nbytes: usize) -> String {
     let mut out = String::new();
     let mut seed = h.finish();
     while out.len() < nbytes * 2 {
-        seed = seed
-            .wrapping_mul(6364136223846793005)
-            .wrapping_add(1);
+        seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
         out.push_str(&format!("{:016x}", seed));
     }
     out.truncate(nbytes * 2);

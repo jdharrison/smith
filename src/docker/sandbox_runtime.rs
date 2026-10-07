@@ -46,7 +46,11 @@ pub fn ensure_coding_config() -> Result<(), String> {
     let mut cfg = crate::load_config()?;
     let mut dirty = false;
 
-    if !cfg.workspaces.iter().any(|w| w.name == SCRATCH_WORKSPACE_NAME) {
+    if !cfg
+        .workspaces
+        .iter()
+        .any(|w| w.name == SCRATCH_WORKSPACE_NAME)
+    {
         cfg.workspaces.push(crate::WorkspaceConfig {
             name: SCRATCH_WORKSPACE_NAME.to_string(),
             path: scratch_str.clone(),
@@ -248,10 +252,8 @@ fn sandbox_published_port() -> Option<u16> {
     }
     let text = String::from_utf8_lossy(&output.stdout);
     // e.g. "8080/tcp "
-    text.split_whitespace().find_map(|tok| {
-        tok.strip_suffix("/tcp")
-            .and_then(|p| p.parse::<u16>().ok())
-    })
+    text.split_whitespace()
+        .find_map(|tok| tok.strip_suffix("/tcp").and_then(|p| p.parse::<u16>().ok()))
 }
 
 /// Ensure sandbox container is running with the requested host port published.
@@ -363,7 +365,11 @@ pub fn run_code_and_host(brief: &str, port: u16) -> Result<String, String> {
     if brief.is_empty() {
         return Err("Code brief is empty".to_string());
     }
-    let port = if port == 0 { DEFAULT_SANDBOX_PORT } else { port };
+    let port = if port == 0 {
+        DEFAULT_SANDBOX_PORT
+    } else {
+        port
+    };
 
     ensure_coding_config()?;
     let scratch = ensure_scratch_dir()?;
@@ -501,7 +507,10 @@ fn run_coder_on_scratch(brief: &str, port: u16) -> Result<String, String> {
         "--add-host".to_string(),
         "host.docker.internal:host-gateway".to_string(),
         "-e".to_string(),
-        format!("OPENCODE_BASE_URL=http://host.docker.internal:{}", OLLAMA_PORT),
+        format!(
+            "OPENCODE_BASE_URL=http://host.docker.internal:{}",
+            OLLAMA_PORT
+        ),
         "-v".to_string(),
         format!("{}:/workspaces/scratch:rw", docker_host_path(&scratch)),
     ];
@@ -602,9 +611,7 @@ fn probe_url(url: &str, attempts: u32) -> bool {
         }
         let ps = ps_cmd
             .output()
-            .map(|o| {
-                o.status.success() && String::from_utf8_lossy(&o.stdout).contains("True")
-            })
+            .map(|o| o.status.success() && String::from_utf8_lossy(&o.stdout).contains("True"))
             .unwrap_or(false);
         if ps {
             return true;

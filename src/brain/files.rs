@@ -59,22 +59,13 @@ pub fn find_files(query: &str) -> Result<Vec<FileHit>, String> {
 
     let roots = current_roots()?;
     if roots.is_empty() {
-        return Err(
-            "no host file roots (add a workspace or set host.roots in config)".to_string(),
-        );
+        return Err("no host file roots (add a workspace or set host.roots in config)".to_string());
     }
 
     let mut hits = Vec::new();
     let mut walked = 0usize;
     for root in &roots {
-        walk(
-            root,
-            0,
-            &needle_l,
-            globish,
-            &mut hits,
-            &mut walked,
-        );
+        walk(root, 0, &needle_l, globish, &mut hits, &mut walked);
         if hits.len() >= MAX_HITS || walked >= MAX_WALK {
             break;
         }
@@ -169,8 +160,7 @@ fn open_os(path: &Path) -> Result<(), String> {
         let mut cmd = Command::new("cmd");
         cmd.args(["/C", "start", "", &path.to_string_lossy()])
             .creation_flags(CREATE_NO_WINDOW);
-        cmd.spawn()
-            .map_err(|e| format!("failed to open: {}", e))?;
+        cmd.spawn().map_err(|e| format!("failed to open: {}", e))?;
         Ok(())
     }
     #[cfg(target_os = "macos")]

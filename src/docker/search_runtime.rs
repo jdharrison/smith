@@ -74,9 +74,11 @@ fn summarize_searx_json(raw: &str) -> String {
         .and_then(Value::as_array)
         .and_then(|a| a.first())
         .and_then(|x| {
-            x.as_str()
-                .map(|s| s.to_string())
-                .or_else(|| x.get("answer").and_then(Value::as_str).map(|s| s.to_string()))
+            x.as_str().map(|s| s.to_string()).or_else(|| {
+                x.get("answer")
+                    .and_then(Value::as_str)
+                    .map(|s| s.to_string())
+            })
         })
         .filter(|s| !s.is_empty())
     {
@@ -90,11 +92,7 @@ fn summarize_searx_json(raw: &str) -> String {
                 .and_then(Value::as_str)
                 .unwrap_or("")
                 .trim();
-            let url = item
-                .get("url")
-                .and_then(Value::as_str)
-                .unwrap_or("")
-                .trim();
+            let url = item.get("url").and_then(Value::as_str).unwrap_or("").trim();
             let content = item
                 .get("content")
                 .and_then(Value::as_str)
@@ -165,9 +163,8 @@ fn fetch_weather(place: &str) -> Option<String> {
                  &temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto"
             );
             if let Some(meteo) = http_get(&meteo_url) {
-                let sum = summarize_open_meteo(&format!(
-                    "place={label} lat={lat} lon={lon}\n{meteo}"
-                ));
+                let sum =
+                    summarize_open_meteo(&format!("place={label} lat={lat} lon={lon}\n{meteo}"));
                 if !sum.is_empty() {
                     if !out.is_empty() {
                         out.push_str("\n\n");
@@ -196,14 +193,8 @@ fn parse_geo_first(geo: &str) -> Option<(String, String, String)> {
         .and_then(Value::as_str)
         .unwrap_or("")
         .to_string();
-    let admin = first
-        .get("admin1")
-        .and_then(Value::as_str)
-        .unwrap_or("");
-    let country = first
-        .get("country")
-        .and_then(Value::as_str)
-        .unwrap_or("");
+    let admin = first.get("admin1").and_then(Value::as_str).unwrap_or("");
+    let country = first.get("country").and_then(Value::as_str).unwrap_or("");
     let label = [name.as_str(), admin, country]
         .iter()
         .filter(|s| !s.is_empty())
@@ -215,14 +206,7 @@ fn parse_geo_first(geo: &str) -> Option<(String, String, String)> {
 
 fn http_get(url: &str) -> Option<String> {
     let out = Command::new("curl")
-        .args([
-            "-fsSL",
-            "--max-time",
-            "20",
-            "-A",
-            FETCH_UA,
-            url,
-        ])
+        .args(["-fsSL", "--max-time", "20", "-A", FETCH_UA, url])
         .output()
         .ok()?;
     if !out.status.success() {
@@ -437,6 +421,9 @@ mod tests {
 
     #[test]
     fn guess_place_from_weather_question() {
-        assert_eq!(guess_weather_place("what's the weather in Austin"), "Austin");
+        assert_eq!(
+            guess_weather_place("what's the weather in Austin"),
+            "Austin"
+        );
     }
 }

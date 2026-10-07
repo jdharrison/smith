@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:smith_client/chat/chat_controller.dart';
-import 'package:smith_client/home/home_screen.dart';
-import 'package:smith_client/listen/voice_turn.dart';
+import 'package:smith_client/home/halo_theme.dart';
+import 'dart:async';
+import 'dart:ui' show AppExitResponse;
+import 'package:smith_client/bridge/desktop_backend.dart';
+import 'package:smith_client/bridge/desktop_setup.dart';
+import 'package:smith_client/home/desktop_boot_shell.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,38 +20,45 @@ class SmithClientApp extends StatefulWidget {
 }
 
 class _SmithClientAppState extends State<SmithClientApp> {
-  late final ChatController _chat = ChatController();
-  late final VoiceTurnController _voice = VoiceTurnController(chat: _chat);
+  late final DesktopBackendController _backend = DesktopBackendController();
+  late final ChatController _chat = ChatController(
+    chatOnly: true,
+    readinessGuard: _backend.accepts,
+  );
+  final DesktopSetup _setup = DesktopSetup();
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(
+      onExitRequested: () async {
+        await _setup.cancel();
+        await _backend.stop();
+        return _backend.cleanupConfirmed && !_setup.busy
+            ? AppExitResponse.exit
+            : AppExitResponse.cancel;
+      },
+    );
+  }
 
   @override
   void dispose() {
-    _voice.dispose();
+    _lifecycle.dispose();
+    unawaited(_setup.cancel());
+    unawaited(_backend.stop());
+    _backend.dispose();
     _chat.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final base = ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      scaffoldBackgroundColor: const Color(0xFFF0F3F6),
-      colorScheme: const ColorScheme.light(
-        primary: Color(0xFF12353F),
-        secondary: Color(0xFF1A6B78),
-        surface: Color(0xFFF0F3F6),
-        onPrimary: Color(0xFFF3F7F8),
-        onSurface: Color(0xFF15262D),
-      ),
-    );
-
     return MaterialApp(
-      title: 'smith client',
+      title: 'Halo',
       debugShowCheckedModeBanner: false,
-      theme: base.copyWith(
-        textTheme: GoogleFonts.dmSansTextTheme(base.textTheme),
-      ),
-      home: HomeScreen(chat: _chat, voice: _voice),
+      theme: buildHaloTheme(),
+      home: DesktopBootShell(backend: _backend, chat: _chat, setup: _setup),
     );
   }
 }

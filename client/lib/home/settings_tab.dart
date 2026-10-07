@@ -1,9 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:smith_client/bridge/smith_bridge.dart';
 import 'package:smith_client/chat/chat_controller.dart';
+import 'package:smith_client/home/halo_theme.dart';
 import 'package:smith_client/listen/voice_turn.dart';
 
 /// Settings tab — TTS, services policy, bridge status.
@@ -18,8 +19,8 @@ class SettingsTab extends StatefulWidget {
 }
 
 class _SettingsTabState extends State<SettingsTab> {
-  static const _ink = Color(0xFF12353F);
-  static const _muted = Color(0xFF6A7C86);
+  static const _ink = HaloColors.primary;
+  static const _muted = HaloColors.secondary;
 
   final SmithBridge _bridge = SmithBridge();
   ServicesSnapshot? _services;
@@ -122,27 +123,13 @@ class _SettingsTabState extends State<SettingsTab> {
         if (_servicesError != null)
           Text(
             _servicesError!,
-            style: GoogleFonts.dmSans(
-              fontSize: 12,
-              color: const Color(0xFFB04A4A),
-            ),
+            style: TextStyle(fontSize: 12, color: HaloColors.danger),
           ),
         if (_services != null) ...[
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-            title: Text(
-              'Autostart supervisor',
-              style: GoogleFonts.dmSans(fontSize: 13, color: _ink),
-            ),
-            subtitle: Text(
-              _services!.osRegistered
-                  ? 'OS login task registered'
-                  : 'Not registered — enable to install login task',
-              style: GoogleFonts.dmSans(fontSize: 11, color: _muted),
-            ),
-            value: _services!.autostart,
-            onChanged: _servicesBusy ? null : _setAutostart,
+          SupervisorStatusSummary(
+            snapshot: _services!,
+            busy: _servicesBusy,
+            onAutostartChanged: _setAutostart,
           ),
           ..._groupedServiceTiles(_services!.services),
         ] else if (_servicesBusy)
@@ -174,7 +161,7 @@ class _SettingsTabState extends State<SettingsTab> {
         _row('voice', voice.ttsVoice ?? '—'),
         if (voice.ttsVoices.isNotEmpty) ...[
           const SizedBox(height: 4),
-          Text('Voice', style: GoogleFonts.dmSans(fontSize: 12, color: _muted)),
+          Text('Voice', style: TextStyle(fontSize: 12, color: _muted)),
           DropdownButton<String>(
             isExpanded: true,
             value: voice.ttsVoices.contains(voice.ttsVoice)
@@ -187,7 +174,7 @@ class _SettingsTabState extends State<SettingsTab> {
                     child: Text(
                       v,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.dmSans(fontSize: 13, color: _ink),
+                      style: TextStyle(fontSize: 13, color: _ink),
                     ),
                   ),
                 )
@@ -202,14 +189,14 @@ class _SettingsTabState extends State<SettingsTab> {
           dense: true,
           title: Text(
             'Speak replies',
-            style: GoogleFonts.dmSans(fontSize: 13, color: _ink),
+            style: TextStyle(fontSize: 13, color: _ink),
           ),
           value: voice.ttsEnabled,
           onChanged: (v) => voice.setTtsEnabled(v),
         ),
         Text(
           'Rate  ${(voice.ttsRate * 100).round()}%',
-          style: GoogleFonts.dmSans(fontSize: 12, color: _muted),
+          style: TextStyle(fontSize: 12, color: _muted),
         ),
         Slider(
           value: voice.ttsRate,
@@ -267,7 +254,7 @@ class _SettingsTabState extends State<SettingsTab> {
         Text(
           'Configure via CLI for now (`smith settings project`, '
           '`smith settings agent`, `smith run`).',
-          style: GoogleFonts.dmSans(fontSize: 13, height: 1.4, color: _muted),
+          style: TextStyle(fontSize: 13, height: 1.4, color: _muted),
         ),
       ],
     );
@@ -292,7 +279,7 @@ class _SettingsTabState extends State<SettingsTab> {
           padding: const EdgeInsets.only(top: 10, bottom: 4),
           child: Text(
             title,
-            style: GoogleFonts.dmSans(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: _ink,
@@ -305,14 +292,11 @@ class _SettingsTabState extends State<SettingsTab> {
           ListTile(
             contentPadding: EdgeInsets.zero,
             dense: true,
-            title: Text(
-              row.id,
-              style: GoogleFonts.dmSans(fontSize: 13, color: _ink),
-            ),
+            title: Text(row.id, style: TextStyle(fontSize: 13, color: _ink)),
             subtitle: Text(
               '${row.mode} · ${row.running ? "running" : "stopped"}'
               '${row.url != null ? " · ${row.url}" : ""}',
-              style: GoogleFonts.dmSans(fontSize: 11, color: _muted),
+              style: TextStyle(fontSize: 11, color: _muted),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -339,7 +323,7 @@ class _SettingsTabState extends State<SettingsTab> {
   Widget _section(String title) {
     return Text(
       title,
-      style: GoogleFonts.dmSans(
+      style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.7,
@@ -356,15 +340,129 @@ class _SettingsTabState extends State<SettingsTab> {
         children: [
           SizedBox(
             width: 72,
+            child: Text(label, style: TextStyle(fontSize: 12, color: _muted)),
+          ),
+          Expanded(
+            child: Text(value, style: TextStyle(fontSize: 12, color: _ink)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Configured supervisor preference and independent observed service state.
+class SupervisorStatusSummary extends StatelessWidget {
+  const SupervisorStatusSummary({
+    super.key,
+    required this.snapshot,
+    required this.busy,
+    required this.onAutostartChanged,
+  });
+
+  final ServicesSnapshot snapshot;
+  final bool busy;
+  final ValueChanged<bool> onAutostartChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final supervisor = snapshot.supervisor;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          title: Text(
+            'Configured autostart preference',
+            style: TextStyle(fontSize: 13, color: HaloColors.primary),
+          ),
+          subtitle: Text(
+            'Configured preference: ${snapshot.autostart ? "on" : "off"}. '
+            'Observed service state may differ.',
+            style: TextStyle(fontSize: 11, color: HaloColors.secondary),
+          ),
+          value: snapshot.autostart,
+          onChanged: busy ? null : onAutostartChanged,
+        ),
+        _SupervisorStatusRow(
+          label: 'unit registration',
+          value: supervisor.registered ? 'yes' : 'no',
+        ),
+        _SupervisorStatusRow(
+          label: 'unit load state',
+          value: supervisor.loadState,
+        ),
+        _SupervisorStatusRow(
+          label: 'runtime active state',
+          value: supervisor.activeState,
+        ),
+        _SupervisorStatusRow(
+          label: 'runtime substate',
+          value: supervisor.subState,
+        ),
+        _SupervisorStatusRow(
+          label: 'enabled at login',
+          value: _yesNoUnknown(supervisor.enabledAtLogin),
+        ),
+        _SupervisorStatusRow(
+          label: 'unit enablement state',
+          value: supervisor.enabledState,
+        ),
+        _SupervisorStatusRow(
+          label: 'linger',
+          value: _yesNoUnknown(supervisor.linger),
+        ),
+        _SupervisorStatusRow(
+          label: 'bridge identity',
+          value: supervisor.bridgeIdentity,
+        ),
+        _SupervisorStatusRow(
+          label: 'bridge health',
+          value: supervisor.bridgeHealthy ? 'yes' : 'no',
+        ),
+        if (supervisor.detail != null)
+          _SupervisorStatusRow(
+            label: 'observation detail',
+            value: supervisor.detail!,
+          ),
+      ],
+    );
+  }
+
+  static String _yesNoUnknown(bool? value) {
+    return switch (value) {
+      true => 'yes',
+      false => 'no',
+      null => 'unknown',
+    };
+  }
+}
+
+class _SupervisorStatusRow extends StatelessWidget {
+  const _SupervisorStatusRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 132,
             child: Text(
               label,
-              style: GoogleFonts.dmSans(fontSize: 12, color: _muted),
+              style: TextStyle(fontSize: 12, color: HaloColors.secondary),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: GoogleFonts.dmSans(fontSize: 12, color: _ink),
+              style: TextStyle(fontSize: 12, color: HaloColors.primary),
             ),
           ),
         ],

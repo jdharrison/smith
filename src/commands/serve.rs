@@ -23,8 +23,11 @@ use tokio::sync::Notify;
 
 /// Default bridge port (avoid Ollama 11434 / OpenCode 4096).
 pub const BRIDGE_DEFAULT_PORT: u16 = 4783;
+/// `sysexits.h` EX_CONFIG: deterministic operator-action-required startup failure.
+pub const CONFIGURATION_EXIT_CODE: i32 = 78;
 
 const BRIDGE_HOST: IpAddr = IpAddr::V4(Ipv4Addr::LOCALHOST);
+const BRIDGE_IDENTITY: &str = "smith-bridge";
 const DEFAULT_SESSION: &str = "default";
 
 type ChatFn = Arc<dyn Fn(&str, ChatMode) -> Result<ChatTurn, String> + Send + Sync>;
@@ -214,6 +217,7 @@ fn pipeline_dto(meta: &pipeline_jobs::PipelineJobMeta) -> PipelineStatusDto {
             pipeline_jobs::JobState::Succeeded => "succeeded".into(),
             pipeline_jobs::JobState::Failed => "failed".into(),
             pipeline_jobs::JobState::AwaitingSignoff => "awaiting_signoff".into(),
+            pipeline_jobs::JobState::Interrupted => "interrupted".into(),
         },
         summary: meta.snapshot_summary(),
         plan: meta.plan.clone(),
@@ -289,7 +293,7 @@ fn ensure_voice_sidecars_locked(hub: &Arc<Mutex<SidecarHub>>) {
 async fn health(State(state): State<BridgeState>) -> Json<HealthResponse> {
     Json(HealthResponse {
         ok: true,
-        service: "smith-bridge".to_string(),
+        service: BRIDGE_IDENTITY.to_string(),
         echo: state.echo,
         isolation: isolation_label(),
         runtime: runtime_label(),
@@ -552,6 +556,92 @@ fn port_listening(port: u16) -> bool {
     .is_ok()
 }
 
+enum BridgePortClaim {
+    Reserved(TcpListener),
+    ExistingSmith,
+}
+
+async fn verify_smith_identity(addr: SocketAddr) -> Result<(), String> {
+    let health_url = format!("http://{addr}/v1/health");
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .timeout(std::time::Duration::from_secs(2))
+        .build()
+        .map_err(|e| format!("build Smith identity client: {e}"))?;
+    let response = client
+        .get(&health_url)
+        .send()
+        .await
+        .map_err(|e| format!("GET {health_url} failed: {e}"))?;
+    if response.status() != StatusCode::OK {
+        return Err(format!(
+            "GET {health_url} returned HTTP {} instead of 200",
+            response.status()
+        ));
+    }
+    let body: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("GET {health_url} returned an invalid Smith health body: {e}"))?;
+    if body
+        .get("profile")
+        .is_some_and(|profile| profile != "orchestration")
+    {
+        return Err("existing Smith bridge has a different process profile".into());
+    }
+    let health: HealthResponse = serde_json::from_value(body)
+        .map_err(|e| format!("GET {health_url} returned an invalid Smith health body: {e}"))?;
+    if !health.ok || health.service != BRIDGE_IDENTITY {
+        return Err(format!(
+            "GET {health_url} did not return the healthy `{BRIDGE_IDENTITY}` identity"
+        ));
+    }
+    Ok(())
+}
+
+async fn claim_bridge_port(addr: SocketAddr) -> Result<BridgePortClaim, String> {
+    match TcpListener::bind(addr).await {
+        Ok(listener) => Ok(BridgePortClaim::Reserved(listener)),
+        Err(e) if e.kind() == std::io::ErrorKind::AddrInUse => {
+            verify_smith_identity(addr).await.map_err(|identity_error| {
+                format!(
+                    "cannot start Smith: {addr} is occupied by a non-Smith listener ({identity_error}). Stop that listener or choose another loopback port"
+                )
+            })?;
+            Ok(BridgePortClaim::ExistingSmith)
+        }
+        Err(e) => Err(format!("failed to reserve Smith bridge on {addr}: {e}")),
+    }
+}
+
+pub(super) async fn wait_for_shutdown(shutdown: Arc<Notify>) {
+    #[cfg(unix)]
+    {
+        match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+            Ok(mut sigterm) => {
+                tokio::select! {
+                    _ = tokio::signal::ctrl_c() => {}
+                    _ = sigterm.recv() => {}
+                    _ = shutdown.notified() => {}
+                }
+            }
+            Err(e) => {
+                eprintln!("Warning: failed to register SIGTERM handler: {e}");
+                tokio::select! {
+                    _ = tokio::signal::ctrl_c() => {}
+                    _ = shutdown.notified() => {}
+                }
+            }
+        }
+    }
+
+    #[cfg(not(unix))]
+    tokio::select! {
+        _ = tokio::signal::ctrl_c() => {}
+        _ = shutdown.notified() => {}
+    }
+}
+
 #[derive(Debug, Deserialize)]
 struct OpenRequest {
     path: String,
@@ -583,65 +673,223 @@ async fn open_file(
     Ok(Json(serde_json::json!({"ok": true})))
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StartupStep {
+    ReconcileTasks,
+    ReconcileJobs,
+    HostPreflight,
+    WarmServices,
+    VoiceSidecars,
+    BrainReadiness,
+    BridgeReadiness,
+}
+
+impl StartupStep {
+    fn label(self) -> &'static str {
+        match self {
+            Self::ReconcileTasks => "task reconciliation",
+            Self::ReconcileJobs => "pipeline-job reconciliation",
+            Self::HostPreflight => "host-runtime preflight",
+            Self::WarmServices => "warm-service application",
+            Self::VoiceSidecars => "voice-sidecar startup",
+            Self::BrainReadiness => "brain readiness",
+            Self::BridgeReadiness => "bridge readiness",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum StartupStepError {
+    PermanentConfiguration(String),
+    Retryable(String),
+}
+
+impl From<crate::brain::host_runtime::HostPreflightError> for StartupStepError {
+    fn from(error: crate::brain::host_runtime::HostPreflightError) -> Self {
+        match error {
+            crate::brain::host_runtime::HostPreflightError::PermanentConfiguration(message) => {
+                Self::PermanentConfiguration(message)
+            }
+            crate::brain::host_runtime::HostPreflightError::Transient(message) => {
+                Self::Retryable(message)
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct StartupFailure {
+    step: StartupStep,
+    message: String,
+    exit_code: i32,
+}
+
+fn run_startup_sequence(
+    echo: bool,
+    runtime: RuntimeMode,
+    mut run: impl FnMut(StartupStep) -> Result<(), StartupStepError>,
+) -> Result<(), StartupFailure> {
+    for step in [
+        StartupStep::ReconcileTasks,
+        StartupStep::ReconcileJobs,
+        StartupStep::HostPreflight,
+        StartupStep::WarmServices,
+        StartupStep::VoiceSidecars,
+        StartupStep::BrainReadiness,
+        StartupStep::BridgeReadiness,
+    ] {
+        let should_run = match step {
+            StartupStep::HostPreflight => !echo && runtime.is_host(),
+            StartupStep::WarmServices
+            | StartupStep::VoiceSidecars
+            | StartupStep::BrainReadiness => !echo,
+            StartupStep::ReconcileTasks
+            | StartupStep::ReconcileJobs
+            | StartupStep::BridgeReadiness => true,
+        };
+        if !should_run {
+            continue;
+        }
+        if let Err(error) = run(step) {
+            let (message, exit_code) = match error {
+                StartupStepError::PermanentConfiguration(message) => {
+                    (message, CONFIGURATION_EXIT_CODE)
+                }
+                StartupStepError::Retryable(message) => (message, 1),
+            };
+            return Err(StartupFailure {
+                step,
+                message,
+                exit_code,
+            });
+        }
+    }
+    Ok(())
+}
+
 pub async fn handle_serve(port: u16, echo: bool) {
-    if port_listening(port) {
-        let addr = SocketAddr::new(BRIDGE_HOST, port);
-        println!("smith bridge is already running on http://{addr}");
-        println!("  supervisor is active in the background.");
-        println!("  run `smith settings service status` to view services, or `smith settings service stop` to stop.");
-        return;
+    let addr = SocketAddr::new(BRIDGE_HOST, port);
+    let listener = match claim_bridge_port(addr).await {
+        Ok(BridgePortClaim::ExistingSmith) => {
+            println!("smith bridge is already running on http://{addr}");
+            println!("  supervisor is active in the background.");
+            println!("  run `smith settings service status` to view services, or `smith settings service stop` to stop.");
+            return;
+        }
+        Ok(BridgePortClaim::Reserved(listener)) => listener,
+        Err(e) => {
+            eprintln!("Error: {e}");
+            std::process::exit(1);
+        }
+    };
+
+    let runtime = current_runtime();
+    let mut reconciled_tasks = 0;
+    let mut reconciled_jobs = 0;
+    let mut started_sidecars = None;
+    let mut ready_model = None;
+    let startup = run_startup_sequence(echo, runtime, |step| match step {
+        StartupStep::ReconcileTasks => {
+            reconciled_tasks = task_board::reconcile_interrupted().map_err(|error| {
+                StartupStepError::Retryable(format!(
+                    "failed to reconcile persisted tasks before readiness: {error}"
+                ))
+            })?;
+            Ok(())
+        }
+        StartupStep::ReconcileJobs => {
+            reconciled_jobs = pipeline_jobs::reconcile_interrupted().map_err(|error| {
+                StartupStepError::Retryable(format!(
+                    "failed to reconcile persisted pipeline jobs before readiness: {error}"
+                ))
+            })?;
+            Ok(())
+        }
+        StartupStep::HostPreflight => {
+            crate::brain::host_runtime::preflight_host_brain().map_err(StartupStepError::from)
+        }
+        StartupStep::WarmServices => {
+            match crate::service::apply_warm_set() {
+                Ok(notes) => {
+                    for note in notes {
+                        println!("  {note}");
+                    }
+                }
+                Err(error) => eprintln!("  Warning: warm apply: {error}"),
+            }
+            Ok(())
+        }
+        StartupStep::VoiceSidecars => {
+            let whisper = if crate::service::whisper_is_warm() {
+                crate::commands::whisper::ensure_whisper_sidecar()
+            } else {
+                println!("  services.whisper: on_demand (POST /v1/sidecars/ensure)");
+                WhisperGuard::none()
+            };
+            let tts = if crate::service::tts_is_warm() {
+                crate::commands::tts::ensure_tts_sidecar()
+            } else {
+                println!("  services.tts: on_demand (POST /v1/sidecars/ensure)");
+                TtsGuard::none()
+            };
+            started_sidecars = Some(SidecarHub { whisper, tts });
+            Ok(())
+        }
+        StartupStep::BrainReadiness => {
+            let (_memory, model) = ensure_ready().map_err(StartupStepError::Retryable)?;
+            ready_model = Some(model);
+            Ok(())
+        }
+        StartupStep::BridgeReadiness => Ok(()),
+    });
+
+    if let Err(failure) = startup {
+        if let Some(mut sidecars) = started_sidecars {
+            sidecars.whisper.stop();
+            sidecars.tts.stop();
+        }
+        if failure.exit_code == CONFIGURATION_EXIT_CODE {
+            eprintln!(
+                "Error: Smith host-runtime configuration is not ready: {}",
+                failure.message
+            );
+            eprintln!(
+                "  automatic service restart is suppressed for this configuration failure; correct it, then explicitly start Smith"
+            );
+        } else {
+            eprintln!(
+                "Error: {} failed: {}",
+                failure.step.label(),
+                failure.message
+            );
+        }
+        std::process::exit(failure.exit_code);
+    }
+
+    if reconciled_tasks > 0 || reconciled_jobs > 0 {
+        println!(
+            "  recovery: marked {reconciled_tasks} task(s) and {reconciled_jobs} pipeline job(s) interrupted"
+        );
     }
 
     // Echo mode is a lightweight client/bridge integration check. It must not
     // provision the default model or start configured warm sidecars.
-    if !echo {
-        match crate::service::apply_warm_set() {
-            Ok(notes) => {
-                for n in notes {
-                    println!("  {n}");
-                }
-            }
-            Err(e) => eprintln!("  Warning: warm apply: {e}"),
-        }
-    }
-
-    let whisper = if !echo && crate::service::whisper_is_warm() {
-        crate::commands::whisper::ensure_whisper_sidecar()
-    } else {
+    let sidecar_hub = started_sidecars.unwrap_or_else(|| {
         println!("  services.whisper: on_demand (POST /v1/sidecars/ensure)");
-        WhisperGuard::none()
-    };
-    let tts = if !echo && crate::service::tts_is_warm() {
-        crate::commands::tts::ensure_tts_sidecar()
-    } else {
         println!("  services.tts: on_demand (POST /v1/sidecars/ensure)");
-        TtsGuard::none()
-    };
-    let sidecars = Arc::new(Mutex::new(SidecarHub { whisper, tts }));
+        SidecarHub {
+            whisper: WhisperGuard::none(),
+            tts: TtsGuard::none(),
+        }
+    });
+    let sidecars = Arc::new(Mutex::new(sidecar_hub));
     let shutdown = Arc::new(Notify::new());
 
     let chat: ChatFn = if echo {
         Arc::new(echo_chat)
     } else {
-        let (_mem, model) = match ensure_ready() {
-            Ok(v) => v,
-            Err(e) => {
-                stop_sidecars(&sidecars);
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            }
-        };
+        let model = ready_model.expect("startup sequence must establish brain readiness");
         Arc::new(move |text: &str, mode: ChatMode| run_chat_turn(text, &model, mode))
-    };
-
-    let addr = SocketAddr::new(BRIDGE_HOST, port);
-    let listener = match TcpListener::bind(addr).await {
-        Ok(l) => l,
-        Err(e) => {
-            stop_sidecars(&sidecars);
-            eprintln!("Error: failed to bind smith bridge on {addr}: {e}");
-            std::process::exit(1);
-        }
     };
 
     println!("smith bridge listening on http://{addr}");
@@ -671,7 +919,7 @@ pub async fn handle_serve(port: u16, echo: bool) {
     println!("  POST /v1/shutdown");
     println!("  POST /v1/open   {{\"path\":\"...\"}}  (host runtime)");
     println!(
-        "  loopback only. Ctrl-C or POST /v1/shutdown to stop (also stops Whisper/TTS if smith started them)."
+        "  loopback only. Ctrl-C, SIGTERM, or POST /v1/shutdown to stop (also stops Whisper/TTS if smith started them)."
     );
 
     let app = bridge_router(BridgeState {
@@ -681,12 +929,7 @@ pub async fn handle_serve(port: u16, echo: bool) {
         shutdown: shutdown.clone(),
     });
     let result = axum::serve(listener, app)
-        .with_graceful_shutdown(async move {
-            tokio::select! {
-                _ = tokio::signal::ctrl_c() => {}
-                _ = shutdown.notified() => {}
-            }
-        })
+        .with_graceful_shutdown(wait_for_shutdown(shutdown))
         .await;
 
     stop_sidecars(&sidecars);
@@ -717,12 +960,70 @@ mod tests {
         let listener = TcpListener::bind(SocketAddr::new(BRIDGE_HOST, 0))
             .await
             .expect("bind test port");
-        let addr = listener.local_addr().expect("local addr");
+        let addr = listener.local_addr().expect("test address");
         let app = bridge_router(state);
         tokio::spawn(async move {
             axum::serve(listener, app).await.expect("serve");
         });
         addr
+    }
+
+    #[test]
+    fn startup_sequence_stops_after_classified_host_preflight_failure() {
+        assert_eq!(CONFIGURATION_EXIT_CODE, 78);
+        for (probe_error, expected_exit) in [
+            (
+                StartupStepError::PermanentConfiguration("invalid OpenCode identity".into()),
+                CONFIGURATION_EXIT_CODE,
+            ),
+            (
+                StartupStepError::Retryable("OpenCode probe timed out".into()),
+                1,
+            ),
+        ] {
+            let mut effects = Vec::new();
+            let error = run_startup_sequence(false, RuntimeMode::Host, |step| {
+                effects.push(step);
+                if step == StartupStep::HostPreflight {
+                    Err(probe_error.clone())
+                } else {
+                    Ok(())
+                }
+            })
+            .unwrap_err();
+            assert_eq!(
+                effects,
+                vec![
+                    StartupStep::ReconcileTasks,
+                    StartupStep::ReconcileJobs,
+                    StartupStep::HostPreflight
+                ]
+            );
+            assert_eq!(error.step, StartupStep::HostPreflight);
+            assert_eq!(error.exit_code, expected_exit);
+            assert!(!effects.contains(&StartupStep::WarmServices));
+            assert!(!effects.contains(&StartupStep::VoiceSidecars));
+            assert!(!effects.contains(&StartupStep::BrainReadiness));
+            assert!(!effects.contains(&StartupStep::BridgeReadiness));
+        }
+    }
+
+    #[test]
+    fn startup_sequence_skips_host_and_warm_effects_for_echo() {
+        let effects = std::cell::RefCell::new(Vec::new());
+        run_startup_sequence(true, RuntimeMode::Host, |step| {
+            effects.borrow_mut().push(step);
+            Ok(())
+        })
+        .unwrap();
+        assert_eq!(
+            effects.into_inner(),
+            vec![
+                StartupStep::ReconcileTasks,
+                StartupStep::ReconcileJobs,
+                StartupStep::BridgeReadiness
+            ]
+        );
     }
 
     #[test]
@@ -762,6 +1063,49 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn legacy_router_rejects_chat_only_route_before_chat_handler() {
+        let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let capture = calls.clone();
+        // Echo state keeps this negative-route fixture safe even if routing regresses:
+        // it cannot reset real legacy memory or dispatch orchestration work.
+        let mut state = echo_state();
+        state.chat = Arc::new(move |text, mode| {
+            capture.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            echo_chat(text, mode)
+        });
+        let app = bridge_router(state);
+        let listener = TcpListener::bind(SocketAddr::new(BRIDGE_HOST, 0))
+            .await
+            .unwrap();
+        let addr = listener.local_addr().unwrap();
+        let task = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        for new in [false, true] {
+            let response = client
+                .post(format!("http://{addr}/v1/chat-only"))
+                .json(&serde_json::json!({
+                    "v":1, "text":"yes, run it", "session":"default",
+                    "new":new, "mode":"chat-only"
+                }))
+                .send()
+                .await
+                .unwrap();
+            assert_eq!(response.status(), HttpStatus::NOT_FOUND);
+        }
+        assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 0);
+        // The callback is wired: only the legacy shared route invokes it.
+        let response = client
+            .post(format!("http://{addr}/v1/chat"))
+            .json(&serde_json::json!({"text":"hello"}))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), HttpStatus::OK);
+        assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 1);
+        task.abort();
+    }
+
+    #[tokio::test]
     async fn health_and_echo_chat_roundtrip() {
         let addr = spawn_bridge(echo_state()).await;
         let base = format!("http://{addr}");
@@ -776,7 +1120,7 @@ mod tests {
             .await
             .unwrap();
         assert!(health.ok);
-        assert_eq!(health.service, "smith-bridge");
+        assert_eq!(health.service, BRIDGE_IDENTITY);
         assert!(health.echo);
 
         let chat: ChatResponse = client
@@ -795,6 +1139,122 @@ mod tests {
         assert_eq!(chat.v, 1);
         assert_eq!(chat.text, "hello from client");
         assert_eq!(chat.session, DEFAULT_SESSION);
+    }
+
+    #[test]
+    fn task_dto_exposes_interrupted_status() {
+        let task = TaskRecord {
+            id: "task-test".into(),
+            title: "Interrupted task".into(),
+            kind: task_board::TaskKind::Pipeline,
+            stage: "production".into(),
+            status: task_board::TaskStatus::Interrupted,
+            user_text: "do work".into(),
+            ack_text: "working".into(),
+            result_text: "recovery required".into(),
+            expected_result: "result".into(),
+            job_id: Some("job-test".into()),
+            session: "default".into(),
+            created_at: 1,
+            updated_at: 2,
+            error: Some("retry".into()),
+            extra: Default::default(),
+        };
+
+        assert_eq!(TaskDto::from(&task).status, "interrupted");
+    }
+
+    #[test]
+    fn pipeline_dto_exposes_interrupted_state() {
+        let meta = pipeline_jobs::PipelineJobMeta {
+            id: "job-test".into(),
+            kind: "develop".into(),
+            state: pipeline_jobs::JobState::Interrupted,
+            project: None,
+            branch: None,
+            base: None,
+            plan: None,
+            task: None,
+            pr: false,
+            summary: "recovery required".into(),
+            error: Some("retry".into()),
+            created_at: 1,
+            updated_at: 2,
+            extra: Default::default(),
+        };
+
+        assert_eq!(pipeline_dto(&meta).state, "interrupted");
+    }
+
+    #[tokio::test]
+    async fn free_port_is_reserved_for_the_new_supervisor() {
+        let available = TcpListener::bind(SocketAddr::new(BRIDGE_HOST, 0))
+            .await
+            .expect("find test port");
+        let addr = available.local_addr().expect("test address");
+        drop(available);
+
+        match claim_bridge_port(addr).await.expect("claim free port") {
+            BridgePortClaim::Reserved(listener) => {
+                assert_eq!(listener.local_addr().unwrap(), addr);
+            }
+            BridgePortClaim::ExistingSmith => panic!("unexpected existing Smith"),
+        }
+    }
+
+    #[tokio::test]
+    async fn valid_smith_health_identity_is_the_only_existing_bridge_accepted() {
+        let addr = spawn_bridge(echo_state()).await;
+
+        assert!(matches!(
+            claim_bridge_port(addr).await.expect("recognize Smith"),
+            BridgePortClaim::ExistingSmith
+        ));
+    }
+
+    #[tokio::test]
+    async fn offline_chat_profile_is_not_accepted_as_legacy_serve() {
+        let listener = TcpListener::bind(SocketAddr::new(BRIDGE_HOST, 0))
+            .await
+            .unwrap();
+        let addr = listener.local_addr().unwrap();
+        let app = Router::new().route("/v1/health", get(|| async {
+            Json(serde_json::json!({"ok": true, "service": "smith-bridge", "profile": "chat-only"}))
+        }));
+        let task = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        assert!(verify_smith_identity(addr)
+            .await
+            .unwrap_err()
+            .contains("different process profile"));
+        task.abort();
+    }
+
+    #[tokio::test]
+    async fn non_smith_listener_is_rejected() {
+        let listener = TcpListener::bind(SocketAddr::new(BRIDGE_HOST, 0))
+            .await
+            .expect("bind non-Smith listener");
+        let addr = listener.local_addr().expect("non-Smith address");
+        let app = Router::new().route(
+            "/v1/health",
+            get(|| async {
+                Json(serde_json::json!({
+                    "ok": true,
+                    "service": "not-smith",
+                    "echo": false
+                }))
+            }),
+        );
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.expect("serve non-Smith");
+        });
+
+        let error = match claim_bridge_port(addr).await {
+            Err(error) => error,
+            Ok(_) => panic!("non-Smith listener must be rejected"),
+        };
+        assert!(error.contains("non-Smith listener"));
+        assert!(error.contains("/v1/health"));
     }
 
     #[tokio::test]

@@ -1,5 +1,7 @@
 //! Sealed brain chat REPL and think (iterate/kill) loop.
 
+use crate::brain::intent::SmithIntent;
+use crate::brain::task_board::{TaskKind, TaskRecord, TaskStatus};
 use crate::brain::{
     append_chat_turn, append_journal, clear_pending_intent, ensure_memory_layout, load_analysis,
     load_chat_session_meta, load_pending_intent, load_profile, looks_like_affirmation,
@@ -7,8 +9,6 @@ use crate::brain::{
     reset_chat_session, save_analysis, save_pending_intent, set_opencode_session_id, split_intent,
     task_board, AnalysisState, PipelineKind,
 };
-use crate::brain::intent::SmithIntent;
-use crate::brain::task_board::{TaskKind, TaskRecord, TaskStatus};
 use crate::docker;
 use crate::{
     current_network, current_runtime, ensure_default_smith_project, NetworkMode, RuntimeMode,
@@ -423,10 +423,7 @@ pub(crate) fn run_chat_turn(
     let pending = load_pending_intent().ok().flatten();
     if let Some(ref p) = pending {
         if looks_like_negation(user_message)
-            && (p.is_search_ask()
-                || p.is_files_ask()
-                || p.is_code_ask()
-                || p.is_pipeline_ask())
+            && (p.is_search_ask() || p.is_files_ask() || p.is_code_ask() || p.is_pipeline_ask())
         {
             let _ = clear_pending_intent();
             let msg = "Okay — cancelled.";
@@ -612,26 +609,20 @@ fn begin_async_task(
     Ok((task, ack))
 }
 
-fn start_async_research(
-    user_message: &str,
-    query: &str,
-    model: &str,
-) -> Result<ChatTurn, String> {
+fn start_async_research(user_message: &str, query: &str, model: &str) -> Result<ChatTurn, String> {
     let (task, ack) = begin_async_task(user_message, TaskKind::Research, "Live facts answered")?;
     let task_id = task.id.clone();
     let user = user_message.to_string();
     let q = query.to_string();
     let model = model.to_string();
-    thread::spawn(move || {
-        match run_search_and_synthesize(&user, &q, &model) {
-            Ok(text) => {
-                let _ = task_board::complete_task(&task_id, &text);
-                let _ = append_chat_turn("brain", &text);
-            }
-            Err(e) => {
-                let _ = task_board::fail_task(&task_id, &e);
-                let _ = append_chat_turn("brain", &format!("Failed: {e}"));
-            }
+    thread::spawn(move || match run_search_and_synthesize(&user, &q, &model) {
+        Ok(text) => {
+            let _ = task_board::complete_task(&task_id, &text);
+            let _ = append_chat_turn("brain", &text);
+        }
+        Err(e) => {
+            let _ = task_board::fail_task(&task_id, &e);
+            let _ = append_chat_turn("brain", &format!("Failed: {e}"));
         }
     });
     Ok(turn_out(ack, Some(task)))
@@ -648,8 +639,8 @@ fn start_async_files(
     let user = user_message.to_string();
     let q = query.to_string();
     let model = model.to_string();
-    thread::spawn(move || {
-        match run_files_and_synthesize(&user, &q, preview, &model) {
+    thread::spawn(
+        move || match run_files_and_synthesize(&user, &q, preview, &model) {
             Ok(turn) => {
                 let _ = task_board::complete_task(&task_id, &turn.text);
                 let _ = append_chat_turn("brain", &turn.text);
@@ -658,8 +649,8 @@ fn start_async_files(
                 let _ = task_board::fail_task(&task_id, &e);
                 let _ = append_chat_turn("brain", &format!("Failed: {e}"));
             }
-        }
-    });
+        },
+    );
     Ok(turn_out(ack, Some(task)))
 }
 
@@ -674,8 +665,8 @@ fn start_async_code(
     let user = user_message.to_string();
     let q = query.to_string();
     let model = model.to_string();
-    thread::spawn(move || {
-        match run_code_and_synthesize(&user, &q, port, &model) {
+    thread::spawn(
+        move || match run_code_and_synthesize(&user, &q, port, &model) {
             Ok(text) => {
                 let _ = task_board::complete_task(&task_id, &text);
                 let _ = append_chat_turn("brain", &text);
@@ -684,17 +675,13 @@ fn start_async_code(
                 let _ = task_board::fail_task(&task_id, &e);
                 let _ = append_chat_turn("brain", &format!("Failed: {e}"));
             }
-        }
-    });
+        },
+    );
     Ok(turn_out(ack, Some(task)))
 }
 
-fn start_async_pipeline(
-    user_message: &str,
-    intent: &SmithIntent,
-) -> Result<ChatTurn, String> {
-    let (mut task, ack) =
-        begin_async_task(user_message, TaskKind::Pipeline, "Pipeline finished")?;
+fn start_async_pipeline(user_message: &str, intent: &SmithIntent) -> Result<ChatTurn, String> {
+    let (mut task, ack) = begin_async_task(user_message, TaskKind::Pipeline, "Pipeline finished")?;
     let meta = match pipeline_jobs::start_from_intent(intent) {
         Ok(m) => m,
         Err(e) => {
@@ -717,10 +704,8 @@ fn start_async_pipeline(
         loop {
             thread::sleep(std::time::Duration::from_secs(2));
             if started.elapsed() > MAX_WATCH {
-                let _ = task_board::fail_task(
-                    &task_id,
-                    "pipeline watcher timed out waiting for job",
-                );
+                let _ =
+                    task_board::fail_task(&task_id, "pipeline watcher timed out waiting for job");
                 break;
             }
             let job = match pipeline_jobs::job_status(&job_id) {
@@ -762,6 +747,7 @@ fn start_async_pipeline(
                     let _ = append_chat_turn("brain", &format!("Failed: {err}"));
                     break;
                 }
+                pipeline_jobs::JobState::Interrupted => break,
                 pipeline_jobs::JobState::Queued | pipeline_jobs::JobState::Running => {}
             }
         }

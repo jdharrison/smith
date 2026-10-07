@@ -1450,9 +1450,8 @@ Finally print:
 
 #[derive(Parser)]
 #[command(name = "smith")]
+#[command(version)]
 #[command(about = "smith — open-source control plane for local agent orchestration", long_about = None)]
-#[command(disable_help_flag = true)]
-#[command(disable_version_flag = true)]
 #[command(disable_help_subcommand = true)]
 struct Cli {
     #[command(subcommand)]
@@ -1462,6 +1461,11 @@ struct Cli {
 #[derive(Subcommand)]
 #[allow(clippy::large_enum_variant)]
 enum Commands {
+    /// Structured desktop setup (no runtime installation or startup)
+    Setup {
+        #[command(subcommand)]
+        cmd: commands::setup::SetupCommands,
+    },
     /// Dependencies, agents, projects
     #[command(next_help_heading = "Commands (Service)")]
     Status {
@@ -1486,6 +1490,15 @@ enum Commands {
         /// Echo mode: no brain/Docker; POST /v1/chat returns the request text (client integration)
         #[arg(long)]
         echo: bool,
+        /// Text-only local Ollama chat; no orchestration or provisioning
+        #[arg(long, conflicts_with = "echo")]
+        chat_only: bool,
+        /// Exact preprovisioned Ollama model name (required with --chat-only)
+        #[arg(long, requires = "chat_only", required_if_eq("chat_only", "true"))]
+        model: Option<String>,
+        /// Desktop parent lifetime/health correlation ID (32 lowercase hex characters)
+        #[arg(long, requires_all = ["chat_only", "model"], conflicts_with = "echo", value_parser = commands::offline_chat::parse_desktop_session)]
+        desktop_session: Option<String>,
     },
     /// Iterate/kill solve loop against durable analysis.json
     Think {
@@ -1591,7 +1604,7 @@ enum SettingsCommands {
         #[command(subcommand)]
         cmd: SandboxCommands,
     },
-    /// Host supervisor autostart + warm/on-demand services
+    /// Linux user supervisor lifecycle + warm/on-demand services
     Service {
         #[command(subcommand)]
         cmd: ServiceCommands,
@@ -1600,9 +1613,11 @@ enum SettingsCommands {
 
 #[derive(Subcommand)]
 enum ServiceCommands {
-    /// Show autostart + service tree (mode / running)
+    /// Show configured policy and observed unit, linger, bridge, and service states
     Status,
-    /// Enable or disable OS login autostart for `smith serve`
+    /// Stage the Linux user unit and reload systemd; does not enable or start
+    Install,
+    /// Enable or disable login autostart without changing runtime state
     Autostart {
         /// on | off
         state: String,
@@ -1616,10 +1631,14 @@ enum ServiceCommands {
     },
     /// Ensure all warm services are running
     Apply,
-    /// Register OS unit (if needed) and start supervisor now
+    /// Start the installed user unit without enabling it
     Start,
-    /// Disable OS autostart unit (does not kill a foreground serve)
+    /// Stop the managed user unit without disabling or removing it
     Stop,
+    /// Restart the managed user unit without changing enablement
+    Restart,
+    /// Explicitly stop, disable, remove, and reload the user unit
+    Uninstall,
 }
 
 #[derive(Subcommand)]
@@ -3256,23 +3275,17 @@ fn expand_user_path(raw: &str) -> PathBuf {
 }
 
 fn current_runtime() -> RuntimeMode {
-    load_config()
-        .map(|c| c.runtime())
-        .unwrap_or_default()
+    load_config().map(|c| c.runtime()).unwrap_or_default()
 }
 
 fn current_network() -> NetworkMode {
-    load_config()
-        .map(|c| c.network())
-        .unwrap_or_default()
+    load_config().map(|c| c.network()).unwrap_or_default()
 }
 
 #[allow(dead_code)]
 /// Deprecated: derived from `runtime` for one-release compat.
 fn current_isolation() -> IsolationMode {
-    load_config()
-        .map(|c| c.isolation)
-        .unwrap_or_default()
+    load_config().map(|c| c.isolation).unwrap_or_default()
 }
 
 /// Directories host files.find / preview may touch.
@@ -4139,6 +4152,7 @@ fn print_smith_help() {
     println!("Usage: smith [COMMAND]");
     const SERVICE: &[&str] = &["status", "chat", "think", "serve"];
     const SYSTEM: &[&str] = &[
+        "setup",
         "doctor",
         "install",
         "uninstall",
@@ -4177,9 +4191,32 @@ async fn main() {
             print_smith_help();
             std::process::exit(0);
         }
+        Some(Commands::Setup { cmd }) => commands::setup::handle(cmd).await,
         Some(Commands::Status { verbose }) => commands::system::handle_status(verbose).await,
         Some(Commands::Chat { message, new }) => commands::chat::handle_chat(message, new).await,
-        Some(Commands::Serve { port, echo }) => commands::serve::handle_serve(port, echo).await,
+        Some(Commands::Serve {
+            port,
+            echo,
+            chat_only,
+            model,
+            desktop_session,
+        }) => {
+            if chat_only {
+                let model = model.expect("Clap requires --model");
+                if desktop_session.is_some() {
+                    commands::offline_chat::handle_serve_with_desktop_session(
+                        port,
+                        model,
+                        desktop_session,
+                    )
+                    .await;
+                } else {
+                    commands::offline_chat::handle_serve(port, model).await;
+                }
+            } else {
+                commands::serve::handle_serve(port, echo).await;
+            }
+        }
         Some(Commands::Think {
             goal,
             max_steps,
@@ -4242,6 +4279,127 @@ mod tests {
     use super::*;
 
     #[test]
+    fn offline_chat_cli_profile_is_explicit() {
+        assert!(matches!(
+            Cli::try_parse_from(["smith", "serve", "--chat-only", "--model", "test:latest"])
+                .unwrap()
+                .command,
+            Some(Commands::Serve {
+                chat_only: true,
+                echo: false,
+                model: Some(_),
+                ..
+            })
+        ));
+        for args in [
+            vec!["smith", "serve", "--chat-only"],
+            vec!["smith", "serve", "--model", "test:latest"],
+            vec![
+                "smith",
+                "serve",
+                "--chat-only",
+                "--echo",
+                "--model",
+                "test:latest",
+            ],
+        ] {
+            assert!(Cli::try_parse_from(args).is_err());
+        }
+        for args in [vec!["smith", "serve"], vec!["smith", "serve", "--echo"]] {
+            assert!(matches!(
+                Cli::try_parse_from(args).unwrap().command,
+                Some(Commands::Serve {
+                    chat_only: false,
+                    model: None,
+                    ..
+                })
+            ));
+        }
+    }
+
+    #[test]
+    fn offline_chat_desktop_cli_requires_profile_and_fixed_id() {
+        let id = "0123456789abcdef0123456789abcdef";
+        let cli = Cli::try_parse_from([
+            "smith",
+            "serve",
+            "--chat-only",
+            "--model",
+            "test:latest",
+            "--desktop-session",
+            id,
+        ])
+        .unwrap();
+        assert!(matches!(cli.command, Some(Commands::Serve {
+            desktop_session: Some(session), chat_only: true, echo: false, ..
+        }) if session == id));
+        for args in [
+            vec!["smith", "serve", "--desktop-session", id],
+            vec!["smith", "serve", "--echo", "--desktop-session", id],
+            vec!["smith", "serve", "--chat-only", "--desktop-session", id],
+            vec![
+                "smith",
+                "serve",
+                "--chat-only",
+                "--model",
+                "test:latest",
+                "--echo",
+                "--desktop-session",
+                id,
+            ],
+        ] {
+            assert!(
+                Cli::try_parse_from(args.clone()).is_err(),
+                "accepted {args:?}"
+            );
+        }
+        for invalid in [
+            "",
+            "abc",
+            "0123456789abcdef0123456789abcde",
+            "0123456789abcdef0123456789abcdef0",
+            "0123456789ABCDEF0123456789abcdef",
+            "g123456789abcdef0123456789abcdef",
+            "0123456789abcdef0123456789abcde\n",
+        ] {
+            assert!(Cli::try_parse_from([
+                "smith",
+                "serve",
+                "--chat-only",
+                "--model",
+                "test:latest",
+                "--desktop-session",
+                invalid,
+            ])
+            .is_err());
+        }
+    }
+
+    #[test]
+    fn service_lifecycle_cli_commands_parse_separately() {
+        for action in ["install", "start", "stop", "restart", "uninstall"] {
+            let cli = Cli::try_parse_from(["smith", "settings", "service", action]).unwrap();
+            assert!(matches!(
+                cli.command,
+                Some(Commands::Settings {
+                    cmd: SettingsCommands::Service { .. }
+                })
+            ));
+        }
+        assert!(Cli::try_parse_from(["smith", "settings", "service", "autostart", "on"]).is_ok());
+        assert!(Cli::try_parse_from(["smith", "--help"])
+            .is_err_and(|error| { error.kind() == clap::error::ErrorKind::DisplayHelp }));
+        for flag in ["--version", "-V"] {
+            assert!(Cli::try_parse_from(["smith", flag])
+                .is_err_and(|error| error.kind() == clap::error::ErrorKind::DisplayVersion));
+        }
+        assert!(matches!(
+            Cli::try_parse_from(["smith", "version"]).unwrap().command,
+            Some(Commands::Version)
+        ));
+    }
+
+    #[test]
     fn resolve_repo_prefers_explicit_repo() {
         assert_eq!(
             resolve_repo(Some("explicit".to_string()), Some("project".to_string())).unwrap(),
@@ -4296,7 +4454,10 @@ mod tests {
     #[test]
     fn isolation_parse_and_default() {
         assert_eq!(IsolationMode::default(), IsolationMode::Sealed);
-        assert_eq!(IsolationMode::parse_mode("HOST").unwrap(), IsolationMode::Host);
+        assert_eq!(
+            IsolationMode::parse_mode("HOST").unwrap(),
+            IsolationMode::Host
+        );
         assert!(IsolationMode::parse_mode("nope").is_err());
         let missing: SmithConfig = toml::from_str("").unwrap();
         assert_eq!(missing.isolation, IsolationMode::Sealed);
@@ -4330,8 +4491,14 @@ network = "private"
 
     #[test]
     fn runtime_network_parse() {
-        assert_eq!(RuntimeMode::parse_mode("CONTAINER").unwrap(), RuntimeMode::Container);
-        assert_eq!(NetworkMode::parse_mode("public").unwrap(), NetworkMode::Public);
+        assert_eq!(
+            RuntimeMode::parse_mode("CONTAINER").unwrap(),
+            RuntimeMode::Container
+        );
+        assert_eq!(
+            NetworkMode::parse_mode("public").unwrap(),
+            NetworkMode::Public
+        );
         assert!(RuntimeMode::parse_mode("nope").is_err());
         assert!(NetworkMode::parse_mode("nope").is_err());
     }
@@ -4341,7 +4508,10 @@ network = "private"
         let root = std::env::temp_dir();
         let inside = root.join("smith-iso-test");
         let _ = std::fs::create_dir_all(&inside);
-        assert!(path_is_under_roots(&inside, &[root.canonicalize().unwrap()]));
+        assert!(path_is_under_roots(
+            &inside,
+            &[root.canonicalize().unwrap()]
+        ));
         assert!(!path_is_under_roots(
             Path::new("/nonexistent/smith-escape"),
             &[root]

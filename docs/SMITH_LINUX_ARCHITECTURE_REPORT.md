@@ -13,24 +13,68 @@
 - **Intended** — documented or implied, but not fully enforced.
 - **Inference** — architectural consequence of the current implementation.
 
+### 2026-09-05 LOCAL-SMITH-USER-SERVICE-P0 integrated inspection
+
+**Confirmed in source:** `scripts/install.sh` is a binary-only Ubuntu LTS x86_64 installer with `set -euo pipefail`, effective-root refusal, an explicit canonical effective-user-owned install root, safe root/executable mode checks, private install-root provenance marker, locked Cargo installation, executable/`--help` verification, and no service, sidecar, Docker, Flutter, or lingering action. `scripts/smoke-user-service.sh` provides only `--sandbox`, isolates HOME/XDG/config/install/runtime paths, shadows `systemctl` and `loginctl`, invalidates the user bus, suppresses ambient Docker/loopback status probes, retains a transcript, monitors for unmanaged `smith serve`, and asserts installer rejection and lifecycle separation.
+
+**Implemented and sandbox-validated:** separated unit install/reload, start, stop, restart, login enable, login disable, observed status, and stop/disable/remove/reload uninstall operations are exposed through `smith settings service`. The source validates a canonical effective-user-owned stable executable against the installer’s private root marker, refuses root registration, respects `XDG_CONFIG_HOME`, renders the deliberately limited hardened unit, has no unmanaged fallback, supports `smith --help`, and never mutates lingering. Persistent enablement, raw manager state, failed manager queries, verified bridge identity, and configured preference are reported separately in CLI/API/client surfaces. `bash scripts/smoke-user-service.sh --sandbox` passed with fake managers, including negative assertions for unsupported/root/unsafe installation, ambient service probes, `enable --now`, lingering mutation, and unmanaged spawn. `cargo build --locked`, all 77 Rust tests, strict Clippy, all 32 Flutter tests, Flutter analysis, and the `smith_halo` Linux build also passed. Repository-wide `cargo fmt --check` remains blocked by pre-existing formatting drift in untouched Rust files; directly changed Rust files other than the pre-existing unformatted `src/commands/chat.rs` passed scoped `rustfmt` checking.
+
+**Observed host status:** no normal-path installer or live user-manager lifecycle command was run for this work record. The 2026-08-28 reference observation was `smith.service` absent/inactive and `Linger=no`. Sandbox evidence cannot establish login, pre-login, reboot, or real bridge behavior.
+
+### 2026-09-11 CLI lifecycle failure inspection and source hardening
+
+**Observed, not remediated:** read-only manager inspection found a separately installed legacy unit enabled and in `activating/auto-restart`, without a Smith bridge. Its restart counter reached 8,091 during QA. Each attempt performed warm/model work and then exited because host-runtime OpenCode was unavailable in the user-manager environment. The loaded unit lacks the current source hardening, and no live stop, disable, replacement, reload, or restart was authorized or performed.
+
+**Implemented in the dirty source worktree and sandbox-validated:** host-runtime startup resolves a canonical executable from an explicit absolute `OPENCODE_BIN`, the actual process `PATH`, or stable Ubuntu user locations; validates regular-file and executable mode; on Ubuntu x86_64 requires a native x86_64 ELF; and requires bounded `--version` plus OpenCode-specific `--help` behavior. This is explicitly behavioral validation rather than cryptographic provenance. Missing/non-executable/identity-invalid configuration is classified as permanent; spawn, wait, timeout, nonzero, and unclassified probe failures remain retryable. Linux probes run in a separate process group, terminate that group after every direct-child outcome, and confirm bounded child/group cleanup. `serve` executes one deterministic startup sequence proving task/job reconciliation precedes preflight and no warm service, voice sidecar, brain readiness, or bridge-readiness effect follows a failed preflight. Only permanent configuration failures map to status 78. The rendered unit prevents restart for status 78, limits other starts to five attempts per 300 seconds, defines no disruptive start-limit action, and does not order itself after `default.target`. Status validates manager properties, treats missing/duplicate/malformed values as unknown, and reports numeric `ExecMainCode`. `smith --version` and `smith -V` are restored while `smith version` remains compatible. The source installer verifies help and version.
+
+**Self-check evidence:** 2026-09-12 run-specific sandbox packages under `target/smoke-user-service/runs/` record revision/worktree/source-input identity, raw command results, exact and replay units, and explicit environment limitations. Passing runs established repository-wide formatting, locked build/tests, strict Clippy, shell syntax, ShellCheck, `git diff --check`, source-installer validation, version checks, malformed-manager rejection, and the complete fake-manager lifecycle; superseded run IDs remain historical and must not be cited as the current review candidate. Each current review must name one source-identical package and independently retain its digest outside the owner-controlled package. Local checksums detect stale mixing and accidental changes, not adversarial owner rewriting. The manifest records that Cargo is locked but neither network- nor cache-hermetic. This supersedes the earlier statement that repository formatting still failed; the 2026-09-05 paragraph remains a historical observation of that earlier run. Source and sandbox evidence do not prove the installed legacy service is fixed.
+
+### LOCAL-SMITH-OFFLINE-CHAT-SLICE-P0 source inspection
+
+**Implemented in the current dirty worktree, not a production release:** `src/main.rs` selects the dedicated `src/commands/offline_chat.rs` profile with `serve --chat-only --model <exact-installed-tag>`; plain `serve`, `chat`, and existing systemd registration remain legacy. Direct loopback Ollama uses an exact installed local model, no ambient proxy/redirects, tools, intent dispatch, tasks, OpenCode, Docker, search, voice startup, provisioning, or cloud fallback. The restricted router exposes health/chat/shutdown. One shared default session retains bounded in-memory context, cleared on backend restart; input/output/history, inference time, and concurrent admission are bounded. This does not sandbox the Ollama service or establish actual offline inference.
+
+**Implemented desktop/packaging subset:** the original Home/Chat/read-only Settings subset via `offline_chat_screen.dart` is now wrapped by the approved Flutter boot and subsequent wizard implementation described below, without Work/service integration/required voice. `scripts/package-chat.sh` and `scripts/install-prebuilt.sh` support separate Ubuntu 24.04 x86_64 backend and complete Flutter Halo bundle candidates. Ollama/model weights and runtime libraries are separately provisioned; recipients do not need builder toolchains. No service/default migration is supplied. [Chat Release](CHAT_RELEASE.md) separates recipient/builder requirements and install/launch authority.
+
+**Evidence status:** this addition is source/document inspection only; no final integrated tests are claimed. Real contextual inference with external networking denied, clean-host desktop installation without build tools, final candidate-bound checks and independent review, clean-source/license/SBOM evidence, and legacy release-workflow remediation remain publication blockers. `.github/workflows/release.yml` still publishes generic multi-platform backend archives on `release/*` tags rather than the paired slice with approval/evidence gates. Historical test results below do not validate this candidate.
+
+### LOCAL-SMITH-FLUTTER-BOOT-P0 source inspection
+
+**Implemented in current source, not an approved release:** `client/lib/main.dart`, `client/lib/home/desktop_boot_shell.dart` and `client/lib/bridge/desktop_backend.dart` implement primary Flutter Boot/Setup → Home/Chat, observational ordinary Settings, and a four-second factual readiness pulse. At the boot-only stage Setup used manual reviewed absolute executable and exact installed `name:tag` entry without discovery or provisioning. The later wizard section below supersedes those two limitations only; shell/PATH fallback, Ollama host startup, manager integration and headless implementation remain absent. CLI remains secondary query/status/configuration with all existing commands retained. Future headless is a separate deferred deployment/lifecycle capability, not CLI.
+
+**Ownership boundary:** readiness checks/opening never start the chat backend; positive chat-only/non-echo Smith identity, Ollama provider, exact model and affirmative provider/model availability gate readiness. Compatible external backends attach without send/reset and are never stopped. Explicit Start captures a child with a 15-second startup budget and `--desktop-session`; `src/commands/offline_chat.rs` rejects occupied-port adoption in desktop mode, exposes health `desktop_session`, and initiates graceful shutdown on parent stdin EOF/read failure. Child liveness plus session health correlates ownership, not hostile same-UID authentication. Stop/normal close closes stdin and sends TERM, waits five seconds, then KILL and two seconds for exit confirmation; cleanup unknown blocks restart and normal exit. No HTTP shutdown or port/PID kill is used. No crash-proof immediate termination or provider-work cancellation is claimed. Home remains mounted across pulses/recovery, retaining draft/transcript without automatic resend/reset.
+
+**Reported evidence, not independently rerun here:** agents initially reported 98 Flutter tests PASS and 110 Rust tests PASS; after independent review found shutdown-readiness and preflight-budget races, fixes added regressions and the client reported 108 Flutter tests PASS. Earlier full-suite OpenCode noisy-probe checks failed twice, followed by the current backend agent's reported passing suite; this does not establish a resolved noisy-probe root cause. Fresh static assurance re-review passed the remediated local implementation. Final source-bound integrated build/test evidence remains a separate gate. Actual desktop/process integration, denied-egress contextual inference, clean-host installation, clean-source/license/SBOM evidence and publication-workflow remediation remain no-ship gates. The supplied icon's original asset is absent from the workspace; integration remains pending.
+
+### LOCAL-SMITH-DESKTOP-WIZARD-P0 current source inspection
+
+**Implemented in inspected source, not final runtime evidence:** `src/commands/setup.rs`, `client/lib/bridge/desktop_setup.dart` and `client/lib/home/desktop_boot_shell.dart` implement Detect backend → Local runtime → Select/install model → Review & Start. `NativeSetupRuntime.discover` uses only `Platform.resolvedExecutable`'s directory plus `smith_backend/smith`, validates with `NativeExecutableResolver` before running commands, and supports an explicit advanced absolute path. There is no cwd/PATH/shell/recursive fallback or silent substitution after invalid discovery. Opening can execute read-only `setup inspect`; health checks/pulses and inspection never start the chat backend, infer or download. Inventory readiness means eligible exact local tags observed, not inference verified. `scripts/package-chat.sh` copies the release backend into full Halo `lib/`/`data/` payload and records its digest/version/source identity; existing bundle copies must match the release digest. `install-prebuilt.sh` copies the full payload install-only to `ROOT/halo/`, retaining `smith_backend/smith`. Standalone backend packaging is secondary. Assembly does not execute the resolver or authenticate/build-attest artifacts.
+
+**Implemented separate setup boundary:** schema-v1 JSON inspection reads fixed-loopback Ollama `/api/tags`, rejects ambiguous inventory and excludes cloud/remote entries. `setup pull --model <exact-name:tag>` emits operation/sequence-bound NDJSON, normally starting with `approval_required`; exact model/operation stdin approval is required within 60 seconds before POST. Decline/EOF/mismatch/expiry cannot authorize a pull. Sanitized provider stages and known layer byte counts precede terminal status; success requires provider success and fresh exact eligible-tag verification. The no-proxy/no-redirect fixed-loopback client has two-second connect/inventory probes, 256 KiB tags, 16 KiB frames, 15-minute overall pull and 30-second idle deadlines. No automatic retries, sudo, shell/Ollama CLI, legacy install helper, daemon installation/start, manager mutation, cloud fallback, persistent configuration or cache rollback/deletion exists. The chat-only bridge still has no provisioning tools/routes.
+
+**Partial setup and actual concurrency guards:** absent Ollama receives guided instructions for separate host installation/start. Explicit pull may cause external daemon internet use and persistent cache writes, with unknown sizes until reported. Cancel/EOF drops local request/observation and cleans its captured setup child; daemon continuation/partial cache outcome may remain unknown. `DesktopSetup` serializes one captured setup child and retains cleanup-unknown ownership. Wizard editing/selection requires idle setup, configurable non-ready backend, no owned backend and no active chat. Pull additionally requires backend absence and rechecks consent permission; conflicting backend/chat changes cancel locally. Start also requires backend eligibility and an inventory-observed selection. Read-only detection/inspection may run with an active backend. This is neither global provider locking nor cross-process scheduling. Owned/external lifecycle remains under `desktop_backend.dart`; external backends are never stopped. Home/draft/transcript remain mounted without automatic resend/reset.
+
+**Implemented client follow-up, inspected source:** `PullProtocol` accepts a fully validated schema-v1 sequence-zero terminal `error` as preflight failure without consent or approval; terminal success/cancelled first remain rejected and the exception cannot authorize a pull. The wizard preserves validated failure code/message with control/bidi stripping and slash-prefixed path-like redaction, retaining no-auto-retry/unknown-cache guidance. Automatic detection and advanced-path resolution are bounded by the inspection timeout (10 seconds by default). These targeted fixes supersede the earlier minor protocol/error-handling gap, not real provider compatibility gates.
+
+**Reported evidence and pending gates:** agents reported **127 Rust / full 136 Flutter tests PASS**, plus client analyzer/Linux build PASS; these are not final source-bound integrated evidence and were not rerun for this docs-only update. Fresh static assurance was reported **source-limited PASS with no blockers**; the subsequent low-severity client fixes above also passed focused independent static re-review. No final integrated checks or release approval are claimed. Actual provider pull/cancel and provider/backend/client version compatibility, desktop integration, denied-egress contextual inference, clean-host installation, final candidate-bound validation/fresh review, clean-source reconstruction, license/SBOM and publication-workflow gates remain pending. Source restrictions do not sandbox the external Ollama daemon. The supplied icon's original asset is unavailable; integration remains pending. See the [approved wizard plan](plans/LOCAL-SMITH-DESKTOP-WIZARD-P0.md), [Architecture](ARCHITECTURE.md#desktop-setup-command-boundary), and [Chat Release](CHAT_RELEASE.md).
+
 ## 1. Executive summary
 
-Smith currently consists of a Rust control plane, optional Flutter desktop client, Docker-managed workers, host/container OpenCode execution, Ollama-backed local inference, local search, and Python voice sidecars.
+Smith currently consists of a Rust control plane, primary Flutter desktop interface, Docker-managed workers, host/container OpenCode execution, Ollama-backed local inference, local search, and Python voice sidecars.
 
 The current architecture is viable for a Linux-first single workstation, but Linux should be treated as the primary deployment target rather than simply another supported OS. The most important design implications are:
 
-1. Smith’s supervisor is currently a **per-user systemd service**, not a system service.
+1. Smith’s supervisor is implemented for management by a **per-user systemd service**, not a system service; a legacy unit is now observed on the reference host but is failing, and the hardened source has not been deployed.
 2. Autonomous work depends on the supervisor process remaining alive. Pipeline jobs are not independently durable.
 3. Persistent state is mostly stored under the user’s config/data directories, but pipeline workspace state is stored inside Docker container writable layers.
 4. Docker is used through the host CLI. Smith does not use a Docker socket inside worker containers.
 5. AMD GPU support is currently expected through **host Ollama**, not AMD GPU passthrough into Docker.
 6. The repository has no resource scheduler: no maximum agent count, CPU limits, memory limits, GPU scheduling, priorities, or backpressure.
 7. A 64 GB / 16 GB VRAM workstation can support the target workload, but concurrent local inference, Docker builds, IDEs, game engines, and desktop applications will require host-level resource policy.
-8. The Flutter client is not required for autonomous operation, but voice, file opening, and browser-visible functionality require an interactive desktop session.
+8. Legacy execution can run without Flutter, but the approved desktop policy makes Flutter primary and retains CLI as secondary query/status/configuration; future headless deployment/lifecycle is separate and deferred. Voice, file opening and browser-visible functionality require an interactive desktop session.
 9. Linux avoids Windows’ executable-lock problem during Cargo rebuilds, but development and service binaries should still be separated operationally.
 10. The largest future portability constraints are localhost assumptions, process-local background jobs, container-local pipeline state, hardcoded ports, and implicit access to a single host filesystem.
 
-The ideal Phase-1 host should therefore be a continuously available Linux user environment with Docker, native AMD-capable Ollama, systemd user services with lingering or an equivalent boot strategy, fast local storage, encrypted backups, and enough headroom to preserve desktop responsiveness during autonomous work.
+The ideal Phase-1 host should therefore be a continuously available Linux user environment with Docker, native AMD-capable Ollama, a systemd user service with an explicit login-only or separately approved lingering policy, fast local storage, encrypted backups, and enough headroom to preserve desktop responsiveness during autonomous work.
 
 ## 2. Current Smith process topology
 
@@ -90,14 +134,15 @@ The ideal Phase-1 host should therefore be a continuously available Linux user e
 - The bridge is loopback-only and has no authentication layer.
 - The client is not required; CLI and HTTP clients can call the bridge directly.
 - `POST /v1/shutdown` triggers graceful shutdown.
-- Ctrl-C is handled through Tokio’s `ctrl_c` mechanism.
+- Ctrl-C and Unix SIGTERM are handled through Tokio shutdown signals.
 - Background work runs in detached threads owned by this process; the bridge is not a durable job executor.
-- References: `src/commands/serve.rs:241-681`.
+- References: `src/commands/serve.rs`.
 
 **Lifecycle:**
 
-- Starts warm Docker services before binding.
-- Optionally starts Whisper and TTS as child processes.
+- Reserves the loopback listener first; if occupied, accepts only an exact healthy Smith `/v1/health` identity and otherwise fails closed.
+- Reconciles persisted queued/running task and job records before warm-service or bridge readiness side effects.
+- Then starts configured warm Docker services and optionally starts Whisper and TTS as child processes.
 - Stops sidecars it owns when the bridge exits.
 - Does not itself run as a separate daemon from the bridge.
 
@@ -258,11 +303,9 @@ Pipeline and worker ports are generally published with ordinary `host:container`
 - **Scratch files:** survive container removal because they are host-bound.
 - **Pipeline container workspace/state:** survives only while the container remains; removal loses it.
 - **Pipeline Rust threads:** do not survive supervisor or OS restart.
-- **Pipeline metadata:** survives, but may remain incorrectly marked `running` after a crash.
+- **Pipeline metadata:** survives; on the next successfully claimed supervisor startup, persisted queued/running metadata is reconciled to `interrupted` before readiness.
 
-Smith has no startup reconciliation loop for abandoned tasks or pipeline jobs. A supervisor
-restart can therefore leave durable records claiming that work is still running even though the
-owning thread and subprocess have exited.
+The 2026-09-05 source implements idempotent startup reconciliation for persisted task and pipeline-job records: queued/running records become interrupted with appended recovery guidance while prior results/summaries/errors and forward-compatible unknown JSON fields are preserved; awaiting-signoff and terminal records remain byte-identical. Reconciled JSON uses synced same-directory temporary files and atomic rename, with deterministic pre-rename failure tests proving the original remains intact and temporary files are cleaned. `handle_serve` reserves/identifies the bridge port, performs both reconciliations, and exits on reconciliation failure before warm-service startup and bridge readiness. State-preservation, repeat-run, atomic-failure, DTO-label, valid-Smith identity, and non-Smith listener tests pass. A real controlled restart remains unvalidated and requires later explicit approval.
 
 ## 3. Linux readiness
 
@@ -270,36 +313,11 @@ Linux support is present and meaningful, but not yet Linux-primary in every deta
 
 ### Systemd integration
 
-**Confirmed:**
+**Implemented and sandbox-validated; hardened source not deployed:** the source defines an XDG-aware per-user unit at `$XDG_CONFIG_HOME/systemd/user/smith.service`, falling back to `$HOME/.config/systemd/user/smith.service`. The rendered unit captures a canonical stable executable, runs `smith serve`, and uses the deliberately limited directives `Restart=on-failure`, `RestartPreventExitStatus=78`, `RestartSec=15`, `StartLimitIntervalSec=300`, `StartLimitBurst=5`, `TimeoutStopSec=30`, `KillMode=control-group`, `UMask=0077`, and `NoNewPrivileges=true`. It defines no `StartLimitAction` and no longer orders itself after the login target that selects it.
 
-- Smith writes a user unit to:
+The service module defines separate install/reload, start, restart, stop, enable, disable, status, and stop/disable/remove/reload uninstall operations without `--now` and without an unmanaged spawn fallback. Status separately collects unit registration/load, active state/substate, manager result/restart/main-exit evidence, persistent enabled-at-login, raw enablement state, lingering, and Smith bridge identity/health; failed manager queries remain unknown, nonpersistent enablement remains separately labeled, host-brain health reuses verified bridge identity, and configured-port identity probes reject redirects. The hermetic fake-manager sandbox lifecycle uses a temporary run beneath a stable per-user QA root, requires the same installer provenance marker with no production runtime path override, passes, and retains evidence under `target/smoke-user-service/`; actual user-manager, login, logout, and reboot behavior remains unvalidated.
 
-  ```text
-  ~/.config/systemd/user/smith.service
-  ```
-
-- Unit name: `smith.service`.
-- It runs:
-
-  ```text
-  ExecStart="<captured smith binary path>" serve
-  ```
-
-- It uses:
-
-  ```text
-  Restart=on-failure
-  RestartSec=15
-  WantedBy=default.target
-  ```
-
-- It does not define `Environment=`, `EnvironmentFile=`, `WorkingDirectory=`, or an explicit
-  dependency on `docker.service`.
-- Reference: `src/service/os_register.rs:277-327`.
-
-This is a **systemd user service**, not a system service.
-
-It starts with the user service manager, normally associated with login/session startup. The repository does not enable `loginctl enable-linger`, so boot-time operation without a graphical login is not guaranteed by Smith itself.
+This remains a **systemd user service**, not a system service. Smith does not mutate `loginctl` lingering. Enabled-at-login does not establish pre-login operation; lingering is a distinct observed host policy and requires a separate manual approval if changed.
 
 ### Linux-specific paths and commands
 
@@ -314,15 +332,7 @@ It starts with the user service manager, normally associated with login/session 
 
 ### XDG behavior
 
-Smith does not directly read `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, or `XDG_CACHE_HOME`.
-
-It delegates path resolution to:
-
-- `directories::ProjectDirs`
-- `dirs::config_dir`
-- `dirs::home_dir`
-
-The systemd path is explicitly hardcoded to `$HOME/.config/systemd/user`, so custom XDG configuration may not affect every path consistently.
+Most Smith configuration/data/cache paths delegate resolution to `directories::ProjectDirs` or `dirs`. The in-progress user-service implementation now reads `XDG_CONFIG_HOME` directly for the unit path and rejects a relative value, with an absolute `$HOME/.config` fallback. Re-validate all other paths independently; XDG-aware unit placement does not prove every legacy path follows the same rule.
 
 Expected Linux paths are approximately:
 
@@ -338,13 +348,13 @@ Expected Linux paths are approximately:
 
 Linux is relatively favorable for executable discovery:
 
-- `opencode` is first attempted directly through `PATH`.
+- Host OpenCode is resolved to a canonical executable from an explicit absolute `OPENCODE_BIN`, direct inspection of the process `PATH`, or `$HOME/.opencode/bin/opencode` / `$HOME/.local/bin/opencode`; the executable bit and a bounded `--version` probe are required.
 - `ollama` uses `which` and common system paths.
 - `git`, `docker`, `curl`, `python3`, `xdg-open`, and `lspci` are expected to be discoverable by name.
 
 However:
 
-- The host OpenCode fallback path list is heavily Windows-oriented.
+- An explicit `OPENCODE_BIN` must be delivered deliberately to the user-service environment; an interactive-shell export alone is not sufficient. Stable Ubuntu user locations avoid that dependency for normal installations.
 - `SMITH_WHISPER_DIR` and `SMITH_TTS_DIR` are important for installed binaries.
 - A released or `cargo install` binary does not automatically carry the repository’s `client/sidecar` directory.
 
@@ -359,8 +369,8 @@ However:
 3. **`host.docker.internal` is not uniformly available on native Linux Docker.**  
    Some containers explicitly add `host-gateway`; others do not. This is particularly relevant to named coding and sandbox workers.
 
-4. **Systemd SIGTERM handling is incomplete.**  
-   The bridge listens for Ctrl-C/SIGINT, but the source does not explicitly install a Unix SIGTERM shutdown path. A systemd stop may terminate the process without the intended bridge-side cleanup sequence.
+4. **Systemd SIGTERM behavior still needs real-manager validation.**
+   The bridge now handles Unix SIGTERM alongside Ctrl-C and its HTTP shutdown notification, then stops owned sidecars. The code path is implemented, but an actual `systemctl --user stop` and journal/cleanup check has not been authorized or observed.
 
 5. **Docker access assumes the invoking user can use the Docker CLI.**  
    The source does not select between rootful Docker, rootless Docker, or a dedicated service account.
@@ -1003,6 +1013,8 @@ The external host design should reserve interactive headroom rather than allowin
 
 ## 8. Autonomous and headless operation
 
+**Historical/as-built legacy assessment, not current product priority or headless approval.** Flutter is the primary desktop interface under the approved boot plan. CLI remains secondary with existing commands retained; non-GUI commands do not establish a supported headless deployment/lifecycle. Future headless work is separate and deferred. The observations below do not authorize new service/provisioning/headless implementation.
+
 ### What works without the Flutter client
 
 **Confirmed:**
@@ -1208,7 +1220,7 @@ The current Linux Flutter project uses:
 - Native Linux plugins for `audioplayers` and `record`.
 - References: `client/linux/CMakeLists.txt` and `client/linux/flutter/generated_plugin_registrant.cc`.
 
-The Flutter client can be run independently of Smith’s supervisor, but it will show offline state until `smith serve` is available.
+The Flutter client is built, packaged, launched, and validated independently of Smith’s supervisor. It is not installed by `scripts/install.sh`, embedded in the Rust binary, or registered by `smith.service`; it shows offline/unknown state until a verified Smith bridge is available.
 
 ### Sidecars
 

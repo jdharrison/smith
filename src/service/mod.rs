@@ -1,4 +1,4 @@
-//! First-class smith services: warm vs on-demand policy + OS supervisor registration.
+//! First-class Smith services: warm/on-demand policy and Linux user-service management.
 
 pub mod os_register;
 
@@ -22,6 +22,8 @@ pub const LABEL_AGENTS_CODING: &str = "agents-coding";
 pub const LABEL_SERVICES_SEARXNG: &str = "services-searxng";
 pub const LABEL_SERVICES_OLLAMA: &str = "services-ollama";
 
+const TEST_EXTERNAL_PROBE_SUPPRESSION_ENV: &str = "SMITH_TEST_SUPPRESS_EXTERNAL_STATUS_PROBES";
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ServiceMode {
@@ -42,10 +44,7 @@ impl ServiceMode {
         match raw.trim().to_ascii_lowercase().as_str() {
             "warm" | "always" | "on" => Ok(ServiceMode::Warm),
             "on_demand" | "ondemand" | "demand" | "off" | "cold" => Ok(ServiceMode::OnDemand),
-            other => Err(format!(
-                "unknown mode '{}'; use warm or on_demand",
-                other
-            )),
+            other => Err(format!("unknown mode '{}'; use warm or on_demand", other)),
         }
     }
 }
@@ -79,22 +78,18 @@ pub struct ServiceEntryConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ServiceRootConfig {
-    /// Register OS unit/task so `smith serve` starts at login.
-    #[serde(default = "default_autostart_true")]
+    /// Requested login autostart policy. Observed manager state is reported separately.
+    #[serde(default)]
     pub autostart: bool,
     /// Per-service policy keyed by hierarchical id.
     #[serde(default)]
     pub services: BTreeMap<String, ServiceEntryConfig>,
 }
 
-fn default_autostart_true() -> bool {
-    true
-}
-
 impl Default for ServiceRootConfig {
     fn default() -> Self {
         let mut root = Self {
-            autostart: true,
+            autostart: false,
             services: BTreeMap::new(),
         };
         root.ensure_defaults();
@@ -219,8 +214,13 @@ pub struct ServiceStatusRow {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServicesSnapshot {
+    /// Configured preference retained for compatibility; compare with observed enablement.
     pub autostart: bool,
+    /// Observed user-unit file registration retained for API compatibility.
     pub os_registered: bool,
+    /// Additive supervisor lifecycle and bridge identity observations.
+    #[serde(default)]
+    pub supervisor: os_register::ObservedSupervisorStatus,
     pub services: Vec<ServiceStatusRow>,
 }
 
@@ -240,14 +240,20 @@ pub fn save_service_config(service: &ServiceRootConfig) -> Result<(), String> {
 
 pub fn set_autostart(on: bool) -> Result<(), String> {
     let mut svc = load_service_config()?;
-    svc.autostart = on;
-    save_service_config(&svc)?;
     if on {
-        os_register::register_and_enable()?;
+        os_register::enable()?;
     } else {
         os_register::disable()?;
     }
-    Ok(())
+    svc.autostart = on;
+    save_service_config(&svc)
+}
+
+pub fn uninstall_supervisor() -> Result<(), String> {
+    let mut svc = load_service_config()?;
+    os_register::uninstall()?;
+    svc.autostart = false;
+    save_service_config(&svc)
 }
 
 pub fn set_service_mode(id: &str, mode: ServiceMode) -> Result<(), String> {
@@ -259,10 +265,14 @@ pub fn set_service_mode(id: &str, mode: ServiceMode) -> Result<(), String> {
 /// Probe running/healthy for known services (best-effort).
 pub fn collect_status() -> Result<ServicesSnapshot, String> {
     let svc = load_service_config()?;
-    let os_registered = os_register::is_registered();
+    let supervisor = os_register::observed_status();
+    let os_registered = supervisor.registered;
+    let runtime = crate::current_runtime();
+    let external_probes_suppressed = external_status_probes_suppressed();
     let mut rows = Vec::new();
     for id in known_service_ids() {
-        let (running, healthy, url, detail) = probe_service(id);
+        let (running, healthy, url, detail) =
+            probe_service(id, &supervisor, runtime, external_probes_suppressed);
         rows.push(ServiceStatusRow {
             id: id.to_string(),
             group: service_group(id).as_str().to_string(),
@@ -276,26 +286,58 @@ pub fn collect_status() -> Result<ServicesSnapshot, String> {
     Ok(ServicesSnapshot {
         autostart: svc.autostart,
         os_registered,
+        supervisor,
         services: rows,
     })
 }
 
-fn probe_service(id: &str) -> (bool, bool, Option<String>, Option<String>) {
+fn external_status_probes_suppressed() -> bool {
+    std::env::var_os(TEST_EXTERNAL_PROBE_SUPPRESSION_ENV).is_some_and(|value| value == "1")
+}
+
+fn probe_service(
+    id: &str,
+    supervisor: &os_register::ObservedSupervisorStatus,
+    runtime: crate::RuntimeMode,
+    external_probes_suppressed: bool,
+) -> (bool, bool, Option<String>, Option<String>) {
+    if id == ID_BRIDGE {
+        let port = crate::commands::serve::BRIDGE_DEFAULT_PORT;
+        return (
+            supervisor.bridge_identity == "smith",
+            supervisor.bridge_healthy,
+            Some(format!("http://127.0.0.1:{port}")),
+            (!supervisor.bridge_healthy)
+                .then(|| format!("bridge identity: {}", supervisor.bridge_identity)),
+        );
+    }
+
+    if id == ID_BRAIN && runtime.is_host() {
+        let smith_bridge = supervisor.bridge_identity == "smith";
+        return (
+            smith_bridge,
+            smith_bridge && supervisor.bridge_healthy,
+            None,
+            Some(format!(
+                "native host runtime; supervisor bridge identity: {}",
+                supervisor.bridge_identity
+            )),
+        );
+    }
+
+    if external_probes_suppressed {
+        return (
+            false,
+            false,
+            None,
+            Some("external status probes suppressed for test".into()),
+        );
+    }
+
     match id {
-        ID_BRIDGE => {
-            let port = crate::commands::serve::BRIDGE_DEFAULT_PORT;
-            let url = Some(format!("http://127.0.0.1:{port}"));
-            let ok = port_open(port);
-            (ok, ok, url, None)
-        }
         ID_BRAIN => {
-            if crate::current_runtime().is_host() {
-                let bridge_ok = port_open(crate::commands::serve::BRIDGE_DEFAULT_PORT);
-                (bridge_ok, bridge_ok, None, Some("native host runtime".into()))
-            } else {
-                let running = docker_name_running(crate::docker::BRAIN_CONTAINER_NAME);
-                (running, running, None, None)
-            }
+            let running = docker_name_running(crate::docker::BRAIN_CONTAINER_NAME);
+            (running, running, None, None)
         }
         ID_SANDBOX_DEFAULT => {
             let running = match crate::docker::sandbox_status() {
@@ -316,10 +358,7 @@ fn probe_service(id: &str) -> (bool, bool, Option<String>, Option<String>) {
             (
                 running,
                 healthy,
-                Some(format!(
-                    "http://127.0.0.1:{}",
-                    crate::docker::SEARXNG_PORT
-                )),
+                Some(format!("http://127.0.0.1:{}", crate::docker::SEARXNG_PORT)),
                 None,
             )
         }
@@ -328,10 +367,7 @@ fn probe_service(id: &str) -> (bool, bool, Option<String>, Option<String>) {
             (
                 running,
                 running,
-                Some(format!(
-                    "http://127.0.0.1:{}",
-                    crate::docker::OLLAMA_PORT
-                )),
+                Some(format!("http://127.0.0.1:{}", crate::docker::OLLAMA_PORT)),
                 None,
             )
         }
@@ -401,9 +437,7 @@ pub fn apply_warm_set() -> Result<Vec<String>, String> {
                 "services.whisper: warm (bridge up — ensure via POST /v1/sidecars/ensure)".into(),
             );
         } else {
-            notes.push(
-                "services.whisper: warm (start `smith serve` to launch sidecar)".into(),
-            );
+            notes.push("services.whisper: warm (start `smith serve` to launch sidecar)".into());
         }
     }
     if svc.is_warm(ID_SERVICES_TTS) {
@@ -453,13 +487,84 @@ mod tests {
     #[test]
     fn defaults_include_searxng_warm() {
         let mut root = ServiceRootConfig {
-            autostart: true,
+            autostart: false,
             services: BTreeMap::new(),
         };
         root.ensure_defaults();
         assert_eq!(root.mode_of(ID_SERVICES_SEARXNG), ServiceMode::Warm);
         assert_eq!(root.mode_of(ID_AGENTS_CODING), ServiceMode::OnDemand);
         assert_eq!(root.mode_of(ID_SERVICES_WHISPER), ServiceMode::OnDemand);
+    }
+
+    #[test]
+    fn autostart_defaults_off_and_old_values_remain_compatible() {
+        let missing: ServiceRootConfig = toml::from_str("").unwrap();
+        assert!(!missing.autostart);
+
+        let enabled: ServiceRootConfig = toml::from_str("autostart = true").unwrap();
+        assert!(enabled.autostart);
+    }
+
+    #[test]
+    fn old_snapshot_json_deserializes_with_unknown_supervisor_state() {
+        let raw = r#"{"autostart":false,"os_registered":false,"services":[]}"#;
+        let snapshot: ServicesSnapshot = serde_json::from_str(raw).unwrap();
+        assert_eq!(snapshot.supervisor.load_state, "unknown");
+        assert_eq!(snapshot.supervisor.enabled_at_login, None);
+    }
+
+    #[test]
+    fn host_brain_status_reuses_verified_supervisor_bridge_observation() {
+        let unrelated_listener = os_register::ObservedSupervisorStatus {
+            bridge_listening: true,
+            bridge_identity: "other_listener".into(),
+            bridge_healthy: false,
+            ..os_register::ObservedSupervisorStatus::default()
+        };
+        let (running, healthy, _, detail) = probe_service(
+            ID_BRAIN,
+            &unrelated_listener,
+            crate::RuntimeMode::Host,
+            false,
+        );
+        assert!(!running);
+        assert!(!healthy);
+        assert!(detail.unwrap().contains("other_listener"));
+
+        let smith_bridge = os_register::ObservedSupervisorStatus {
+            bridge_listening: true,
+            bridge_identity: "smith".into(),
+            bridge_healthy: true,
+            ..os_register::ObservedSupervisorStatus::default()
+        };
+        let (running, healthy, _, _) =
+            probe_service(ID_BRAIN, &smith_bridge, crate::RuntimeMode::Host, false);
+        assert!(running);
+        assert!(healthy);
+    }
+
+    #[test]
+    fn test_probe_suppression_avoids_container_and_loopback_status_checks() {
+        let supervisor = os_register::ObservedSupervisorStatus::default();
+        for id in [
+            ID_BRAIN,
+            ID_SANDBOX_DEFAULT,
+            ID_AGENTS_CODING,
+            ID_SERVICES_SEARXNG,
+            ID_SERVICES_OLLAMA,
+            ID_SERVICES_WHISPER,
+            ID_SERVICES_TTS,
+        ] {
+            let (running, healthy, _, detail) =
+                probe_service(id, &supervisor, crate::RuntimeMode::Container, true);
+            assert!(!running, "{id}");
+            assert!(!healthy, "{id}");
+            assert_eq!(
+                detail.as_deref(),
+                Some("external status probes suppressed for test"),
+                "{id}"
+            );
+        }
     }
 
     #[test]

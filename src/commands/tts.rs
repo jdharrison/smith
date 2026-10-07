@@ -66,11 +66,7 @@ pub fn ensure_tts_install() {
 
     let reqs = sidecar.join("requirements-tts.txt");
     if !reqs.is_file() {
-        eprintln!(
-            "  {} tts - missing {}",
-            BULLET_YELLOW,
-            reqs.display()
-        );
+        eprintln!("  {} tts - missing {}", BULLET_YELLOW, reqs.display());
         return;
     }
 
@@ -221,10 +217,7 @@ pub fn ensure_tts_sidecar() -> TtsGuard {
     }
 
     if tts_healthy() {
-        println!(
-            "  tts: already up on http://127.0.0.1:{}",
-            TTS_DEFAULT_PORT
-        );
+        println!("  tts: already up on http://127.0.0.1:{}", TTS_DEFAULT_PORT);
         return TtsGuard::none();
     }
 
@@ -289,10 +282,7 @@ pub fn ensure_tts_sidecar() -> TtsGuard {
 
     for attempt in 1..=120 {
         if tts_healthy() {
-            println!(
-                "  tts: ready on http://127.0.0.1:{}",
-                TTS_DEFAULT_PORT
-            );
+            println!("  tts: ready on http://127.0.0.1:{}", TTS_DEFAULT_PORT);
             return guard;
         }
         if let Some(ref mut c) = guard.child {

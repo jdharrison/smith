@@ -17,15 +17,16 @@ class SmithTts {
           : Platform.isLinux
           ? _UnavailableTts()
           : _FlutterPluginTts() {
-    _player = AudioPlayer();
     unawaited(refreshVoices());
   }
 
   final KokoroClient _kokoro;
   final _FallbackTts _fallback;
-  late final AudioPlayer _player;
+  AudioPlayer? _player;
 
+  VoidCallback? onStateChanged;
   bool _enabled = true;
+  bool _speaking = false;
   bool _disposed = false;
   bool _kokoroOnline = false;
   double _rate = 0.45;
@@ -33,6 +34,7 @@ class SmithTts {
   String? _voice = 'am_onyx';
 
   bool get enabled => _enabled;
+  bool get speaking => _speaking;
   bool get kokoroOnline => _kokoroOnline;
   double get rate => _rate;
 
@@ -40,6 +42,17 @@ class SmithTts {
 
   List<String> get voices => _voices;
   String? get voice => _voice;
+
+  AudioPlayer get _audioPlayer {
+    final existing = _player;
+    if (existing != null) return existing;
+    final player = AudioPlayer();
+    player.onPlayerStateChanged.listen((state) {
+      _setSpeaking(state == PlayerState.playing);
+    });
+    _player = player;
+    return player;
+  }
 
   void setEnabled(bool value) {
     _enabled = value;
@@ -51,6 +64,12 @@ class SmithTts {
   }
 
   void toggleEnabled() => setEnabled(!_enabled);
+
+  void _setSpeaking(bool value) {
+    if (_speaking == value) return;
+    _speaking = value;
+    onStateChanged?.call();
+  }
 
   Future<void> setRate(double value) async {
     _rate = value.clamp(0.0, 1.0);
@@ -115,8 +134,9 @@ class SmithTts {
           voice: _voice,
           speed: speed,
         );
-        await _player.stop();
-        await _player.play(DeviceFileSource(result.path));
+        final player = _audioPlayer;
+        await player.stop();
+        await player.play(DeviceFileSource(result.path));
         return;
       } catch (e) {
         debugPrint('smith TTS kokoro failed, falling back: $e');
@@ -124,21 +144,33 @@ class SmithTts {
       }
     }
 
-    await _fallback.speak(cleaned);
+    _setSpeaking(true);
+    try {
+      await _fallback.speak(cleaned);
+    } finally {
+      _setSpeaking(false);
+    }
   }
 
   Future<void> stop() async {
-    try {
-      await _player.stop();
-    } catch (_) {}
+    final player = _player;
+    if (player != null) {
+      try {
+        await player.stop();
+      } catch (_) {}
+    }
     await _fallback.stop();
+    _setSpeaking(false);
   }
 
   Future<void> dispose() async {
     _disposed = true;
-    try {
-      await _player.dispose();
-    } catch (_) {}
+    final player = _player;
+    if (player != null) {
+      try {
+        await player.dispose();
+      } catch (_) {}
+    }
     _kokoro.close();
     await _fallback.dispose();
   }

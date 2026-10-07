@@ -53,14 +53,45 @@ class ChatMessage {
 
 enum BridgeStatus { unknown, online, offline }
 
-/// First turn on launch / new session — smith reviews and greets.
-const String kSessionKickoffPrompt =
-    'Summarize current tasks and in-progress work if any, introduce yourself, '
-    'and confirm ready status.';
-
 /// Conversation + smith bridge. Voice turns mutate placeholders via ids.
 class ChatController extends ChangeNotifier {
-  ChatController({SmithBridge? bridge}) : _bridge = bridge ?? SmithBridge();
+  ChatController({
+    SmithBridge? bridge,
+    this.chatOnly = false,
+    this.readinessGuard,
+  }) : _bridge = bridge ?? SmithBridge(),
+       _newNext = chatOnly;
+
+  final bool chatOnly;
+  final bool Function(HealthInfo health)? readinessGuard;
+
+  bool _ready(HealthInfo h) =>
+      h.ok &&
+      h.service == 'smith-bridge' &&
+      h.profile == 'chat-only' &&
+      !h.echo &&
+      h.provider == 'ollama' &&
+      h.providerAvailable == true &&
+      h.modelAvailable == true &&
+      h.model != null &&
+      h.model!.isNotEmpty &&
+      (readinessGuard?.call(h) ?? true);
+
+  void readinessChanged() {
+    if (!_disposed) notifyListeners();
+  }
+
+  HealthInfo? _health;
+  String? _connectionError;
+  String? _failedText;
+  bool _healthInFlight = false;
+  Future<void>? _healthRequest;
+
+  HealthInfo? get health => _health;
+  String? get connectionError => _connectionError;
+  String? get failedText => _failedText;
+  bool get healthChecking => _healthInFlight;
+  bool get resetPending => _newNext;
 
   final SmithBridge _bridge;
   final List<ChatMessage> _messages = <ChatMessage>[];
@@ -68,6 +99,8 @@ class ChatController extends ChangeNotifier {
   final Set<String> _injectedTaskIds = <String>{};
   final Map<String, Timer> _revealTimers = <String, Timer>{};
   int _msgSeq = 0;
+  bool _disposed = false;
+  bool _assistantSpeechAuthorized = false;
 
   BridgeStatus _bridgeStatus = BridgeStatus.unknown;
   bool _bridgeEcho = false;
@@ -76,13 +109,17 @@ class ChatController extends ChangeNotifier {
   bool _sendBusy = false;
   bool _voiceTurnBusy = false;
   String? _error;
-  bool _newNext = false;
-  bool _kickoffSent = false;
+  bool _newNext;
   Timer? _healthTimer;
   Timer? _taskPollTimer;
   int? _pollSince;
   bool _pollInFlight = false;
   BoardTask? _selectedTask;
+  DateTime? _tasksUpdatedAt;
+  String? _tasksError;
+  String? _taskDetailError;
+  int _taskRefreshGeneration = 0;
+  int _taskDetailGeneration = 0;
 
   /// Optional TTS hook (wired by VoiceTurnController).
   Future<void> Function(String text)? onSpeakAssistant;
@@ -97,8 +134,16 @@ class ChatController extends ChangeNotifier {
   List<ChatMessage> get messages => List.unmodifiable(_messages);
   List<BoardTask> get tasks => List.unmodifiable(_tasks);
   BoardTask? get selectedTask => _selectedTask;
-  bool get canSend => !_sendBusy;
+  bool get canSend =>
+      !_sendBusy &&
+      (!chatOnly ||
+          (_bridgeStatus == BridgeStatus.online &&
+              _health != null &&
+              _ready(_health!)));
   bool get pollingTasks => _taskPollTimer != null;
+  DateTime? get tasksUpdatedAt => _tasksUpdatedAt;
+  String? get tasksError => _tasksError;
+  String? get taskDetailError => _taskDetailError;
 
   String _nextId(String prefix) {
     _msgSeq += 1;
@@ -107,16 +152,19 @@ class ChatController extends ChangeNotifier {
 
   Future<void> start() async {
     await refreshHealth();
+    if (_disposed) return;
     _healthTimer?.cancel();
     _healthTimer = Timer.periodic(const Duration(seconds: 4), (_) {
       unawaited(refreshHealth());
     });
-    await refreshTasks();
-    await _ensureKickoff();
+    if (!chatOnly) await refreshTasks();
   }
 
   @override
   void dispose() {
+    _disposed = true;
+    _taskRefreshGeneration += 1;
+    _taskDetailGeneration += 1;
     _healthTimer?.cancel();
     _stopTaskPoll();
     for (final timer in _revealTimers.values) {
@@ -127,10 +175,36 @@ class ChatController extends ChangeNotifier {
     super.dispose();
   }
 
-  Future<void> refreshHealth() async {
+  Future<void> refreshHealth() {
+    if (_disposed) return Future.value();
+    return _healthRequest ??= _readHealth().whenComplete(
+      () => _healthRequest = null,
+    );
+  }
+
+  Future<void> _readHealth() async {
+    if (_disposed) return;
+    _healthInFlight = true;
+    notifyListeners();
     try {
       final h = await _bridge.health();
-      _bridgeStatus = h.ok ? BridgeStatus.online : BridgeStatus.offline;
+      if (_disposed) return;
+      _health = h;
+      final validIdentity = h.service == 'smith-bridge';
+      final validProfile = !chatOnly || (h.profile == 'chat-only' && !h.echo);
+      final ready = !chatOnly || _ready(h);
+      _bridgeStatus = h.ok && validIdentity && validProfile
+          ? BridgeStatus.online
+          : BridgeStatus.offline;
+      _connectionError = !validIdentity
+          ? 'The listener is not the Smith bridge. No message will be sent.'
+          : !validProfile
+          ? 'Chat-only profile required. Start the separately managed backend with smith serve --chat-only.'
+          : !h.ok
+          ? 'Smith is not ready. Check the local provider and preprovisioned model, then retry connection.'
+          : chatOnly && !ready
+          ? 'The local model is unavailable or its availability could not be confirmed. Check the preprovisioned Ollama model, then retry connection. No download or fallback is attempted.'
+          : null;
       _bridgeEcho = h.echo;
       _isolation = h.isolation;
       if (_bridgeStatus == BridgeStatus.online &&
@@ -139,73 +213,104 @@ class ChatController extends ChangeNotifier {
         _error = null;
       }
     } catch (_) {
+      if (_disposed) return;
+      _health = null;
       _bridgeStatus = BridgeStatus.offline;
+      _connectionError =
+          'Cannot reach the local Smith bridge. Start the separately managed chat-only backend, then retry connection. Your draft is retained.';
+    } finally {
+      _healthInFlight = false;
     }
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   Future<void> refreshTasks() async {
+    if (_disposed || chatOnly) return;
+    final generation = ++_taskRefreshGeneration;
     if (_bridgeStatus != BridgeStatus.online) {
       await refreshHealth();
     }
-    if (_bridgeStatus != BridgeStatus.online) return;
+    if (_disposed || generation != _taskRefreshGeneration) return;
+    if (_bridgeStatus != BridgeStatus.online) {
+      _tasksError = 'Bridge offline; task state may be stale.';
+      notifyListeners();
+      return;
+    }
     try {
       final list = await _bridge.listTasks();
+      if (_disposed || generation != _taskRefreshGeneration) return;
       _tasks
         ..clear()
         ..addAll(list);
+      _tasksUpdatedAt = DateTime.now();
+      _tasksError = null;
       if (_selectedTask != null) {
-        final id = _selectedTask!.id;
-        for (final t in _tasks) {
-          if (t.id == id) {
-            _selectedTask = t;
-            break;
-          }
-        }
+        final selectedIndex = _tasks.indexWhere(
+          (task) => task.id == _selectedTask!.id,
+        );
+        _selectedTask = selectedIndex < 0 ? null : _tasks[selectedIndex];
+      }
+      if (list.any((task) => task.isRunning)) {
+        _ensureTaskPoll();
+      } else {
+        _stopTaskPoll();
       }
       notifyListeners();
-    } catch (_) {
-      // Keep last snapshot; poll will retry.
+    } catch (error) {
+      if (_disposed || generation != _taskRefreshGeneration) return;
+      _tasksError = error.toString();
+      notifyListeners();
+      // Keep the last snapshot, but expose that it may be stale.
     }
   }
 
   void selectTask(BoardTask? task) {
     _selectedTask = task;
+    _taskDetailError = null;
+    if (task == null) _taskDetailGeneration += 1;
     notifyListeners();
   }
 
   Future<void> openTaskDetail(String id) async {
+    if (chatOnly) return;
+    final generation = ++_taskDetailGeneration;
+    _taskDetailError = null;
+    notifyListeners();
     try {
-      final t = await _bridge.getTask(id);
-      _selectedTask = t;
-      final idx = _tasks.indexWhere((x) => x.id == id);
-      if (idx >= 0) {
-        _tasks[idx] = t;
+      final task = await _bridge.getTask(id);
+      if (generation != _taskDetailGeneration || _selectedTask?.id != id) {
+        return;
+      }
+      _selectedTask = task;
+      final index = _tasks.indexWhere((candidate) => candidate.id == id);
+      if (index >= 0) {
+        _tasks[index] = task;
       } else {
-        _tasks.insert(0, t);
+        _tasks.insert(0, task);
       }
       notifyListeners();
-    } catch (e) {
-      _error = e.toString();
+    } catch (error) {
+      if (generation != _taskDetailGeneration || _selectedTask?.id != id) {
+        return;
+      }
+      _taskDetailError = error.toString();
       notifyListeners();
     }
   }
 
-  /// Clear transcript and start a fresh brain session with the same kickoff.
+  /// Clear local conversation state; the next explicit send starts the session.
   Future<void> requestNewSession() async {
     if (busy) return;
-    _stopTaskPoll();
     _newNext = true;
-    _kickoffSent = false;
     _messages.clear();
     _injectedTaskIds.clear();
     _error = null;
+    _failedText = null;
     notifyListeners();
-    await _ensureKickoff();
   }
 
   Future<void> openAttachment(ChatAttachment att) async {
-    if (att.path.isEmpty) return;
+    if (chatOnly || att.path.isEmpty) return;
     try {
       await _bridge.openPath(att.path);
     } catch (e) {
@@ -290,9 +395,15 @@ class ChatController extends ChangeNotifier {
   }) {
     final m = messageById(id);
     if (m == null) return;
-    final full = text.trim().isEmpty ? '(empty reply)' : text.trim();
-    m.attachments = attachments;
-    _revealText(id, full);
+    final full = text.trim().isEmpty ? 'Smith returned no text.' : text.trim();
+    m.attachments = chatOnly ? const [] : attachments;
+    if (chatOnly) {
+      m.text = full;
+      m.phase = MessagePhase.complete;
+      notifyListeners();
+    } else {
+      _revealText(id, full);
+    }
   }
 
   /// Word-chunked reveal of an already-known full reply — perceived
@@ -336,7 +447,7 @@ class ChatController extends ChangeNotifier {
   }
 
   void _noteTaskFromReply(BoardTask? task) {
-    if (task == null) return;
+    if (chatOnly || task == null) return;
     final idx = _tasks.indexWhere((t) => t.id == task.id);
     if (idx >= 0) {
       _tasks[idx] = task;
@@ -353,7 +464,7 @@ class ChatController extends ChangeNotifier {
   }
 
   void _ensureTaskPoll() {
-    if (_taskPollTimer != null) return;
+    if (chatOnly || _taskPollTimer != null) return;
     _pollSince = DateTime.now().millisecondsSinceEpoch ~/ 1000 - 5;
     _taskPollTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       unawaited(_pollTasksOnce());
@@ -375,13 +486,15 @@ class ChatController extends ChangeNotifier {
   }
 
   Future<void> _pollTasksOnce() async {
-    if (_bridgeStatus != BridgeStatus.online) return;
+    if (_disposed || chatOnly || _bridgeStatus != BridgeStatus.online) return;
     if (_pollInFlight) return;
     _pollInFlight = true;
     try {
       final list = await _bridge.listTasks(since: _pollSince);
+      if (_disposed) return;
       // Merge into local cache (full refresh for Tasks tab).
       await refreshTasks();
+      if (_disposed) return;
       var maxUpdated = _pollSince ?? 0;
       for (final t in list) {
         if (t.updatedAt > maxUpdated) maxUpdated = t.updatedAt;
@@ -392,8 +505,8 @@ class ChatController extends ChangeNotifier {
         final body = t.resultText.trim().isNotEmpty
             ? t.resultText.trim()
             : (t.error?.trim().isNotEmpty == true
-                ? 'Failed: ${t.error}'
-                : 'Task ${t.status}.');
+                  ? 'Failed: ${t.error}'
+                  : 'Task ${t.status}.');
         if (body.isEmpty) continue;
         final id = _nextId('smith');
         _messages.add(
@@ -408,7 +521,7 @@ class ChatController extends ChangeNotifier {
         notifyListeners();
         _revealText(id, body);
         final speak = onSpeakAssistant;
-        if (speak != null) {
+        if (_assistantSpeechAuthorized && speak != null) {
           unawaited(speak(body));
         }
       }
@@ -420,8 +533,11 @@ class ChatController extends ChangeNotifier {
         ...list,
         ..._tasks.where((t) => !list.any((x) => x.id == t.id)),
       ]);
-    } catch (_) {
-      // Transient; next tick retries.
+    } catch (error) {
+      if (_disposed) return;
+      _tasksError = 'Background task refresh failed: $error';
+      notifyListeners();
+      // Keep the last snapshot, explicitly marked stale, and retry next tick.
     } finally {
       _pollInFlight = false;
     }
@@ -434,23 +550,29 @@ class ChatController extends ChangeNotifier {
       throw SmithBridgeException('Empty message');
     }
 
-    if (_bridgeStatus != BridgeStatus.online) {
+    // This API is reached by an explicit text send or voice turn. Passive task
+    // reconciliation must remain silent until one of those actions occurs.
+    _assistantSpeechAuthorized = !chatOnly;
+
+    if (chatOnly || _bridgeStatus != BridgeStatus.online) {
       await refreshHealth();
     }
-    if (_bridgeStatus != BridgeStatus.online) {
+    if (_bridgeStatus != BridgeStatus.online ||
+        (chatOnly && (_health == null || !_ready(_health!)))) {
       throw SmithBridgeException(
-        'Bridge offline — start `smith serve` on :4783',
+        _connectionError ?? 'Bridge offline — retry connection before sending',
       );
     }
 
     final reset = _newNext;
+    final reply = chatOnly
+        ? await _bridge.chatOnly(trimmed, newSession: reset)
+        : await _bridge.chat(trimmed, newSession: reset);
+    if (_disposed) return reply;
+    // Only a successful response acknowledges the reset. Never replay on health refresh.
     _newNext = false;
-    final reply = await _bridge.chat(
-      trimmed,
-      newSession: reset,
-    );
     _isolation = reply.isolation;
-    if (reply.pipeline != null) {
+    if (!chatOnly && reply.pipeline != null) {
       _pipeline = reply.pipeline;
     }
     _noteTaskFromReply(reply.task);
@@ -459,10 +581,17 @@ class ChatController extends ChangeNotifier {
 
   /// Ask bridge to start on-demand Whisper/TTS sidecars if needed.
   Future<void> ensureVoiceSidecars() async {
+    if (chatOnly) {
+      throw SmithBridgeException('Voice is deferred in the text-only client');
+    }
     if (_bridgeStatus != BridgeStatus.online) {
       await refreshHealth();
     }
-    if (_bridgeStatus != BridgeStatus.online) return;
+    if (_bridgeStatus != BridgeStatus.online) {
+      throw SmithBridgeException(
+        'Bridge offline — cannot start voice sidecars',
+      );
+    }
     await _bridge.ensureSidecars();
   }
 
@@ -472,7 +601,7 @@ class ChatController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Wait until a non-voice `send` finishes (e.g. kickoff).
+  /// Wait until a non-voice `send` finishes.
   /// Returns false if still busy after [maxWaits] polls.
   Future<bool> waitForSendIdle({int maxWaits = 120}) async {
     var waits = 0;
@@ -483,100 +612,55 @@ class ChatController extends ChangeNotifier {
     return !_sendBusy;
   }
 
-  Future<void> _ensureKickoff() async {
-    if (_kickoffSent || _sendBusy) return;
-
-    for (var i = 0; i < 8; i++) {
-      if (_bridgeStatus == BridgeStatus.online) break;
-      await refreshHealth();
-      if (_bridgeStatus == BridgeStatus.online) break;
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-    }
-
-    if (_bridgeStatus != BridgeStatus.online) {
-      _messages.add(
-        ChatMessage(
-          id: _nextId('sys'),
-          role: ChatRole.system,
-          text:
-              'Bridge offline — start `smith serve`, then tap refresh to engage.',
-          at: DateTime.now(),
-        ),
-      );
-      notifyListeners();
-      return;
-    }
-
-    _kickoffSent = true;
-    await send(kSessionKickoffPrompt, hideInChat: true);
-  }
-
-  Future<void> send(String raw, {bool hideInChat = false}) async {
+  Future<void> send(String raw) async {
     final text = raw.trim();
-    if (text.isEmpty || _sendBusy) return;
+    if (_disposed || text.isEmpty || !canSend) return;
 
     _sendBusy = true;
     _error = null;
-    if (!hideInChat) {
-      _messages.add(
-        ChatMessage(
-          id: _nextId('user'),
-          role: ChatRole.user,
-          text: text,
-          at: DateTime.now(),
-          phase: MessagePhase.sent,
-        ),
-      );
-    }
+    _failedText = null;
+    _messages.add(
+      ChatMessage(
+        id: _nextId('user'),
+        role: ChatRole.user,
+        text: text,
+        at: DateTime.now(),
+        phase: MessagePhase.sent,
+      ),
+    );
     notifyListeners();
 
-    String? pendingId;
-    if (!hideInChat) {
-      pendingId = beginAssistantPending();
-    }
+    final pendingId = beginAssistantPending();
 
     try {
       final reply = await bridgeChat(text);
-      if (pendingId != null) {
-        completeAssistant(
-          pendingId,
-          reply.text,
-          attachments: reply.attachments,
-        );
-      } else {
-        _messages.add(
-          ChatMessage(
-            id: _nextId('smith'),
-            role: ChatRole.assistant,
-            text: reply.text.trim().isEmpty
-                ? '(empty reply)'
-                : reply.text.trim(),
-            at: DateTime.now(),
-            attachments: reply.attachments,
-          ),
-        );
-        notifyListeners();
-      }
+      completeAssistant(pendingId, reply.text, attachments: reply.attachments);
     } catch (e) {
-      _error = e.toString();
-      if (text == kSessionKickoffPrompt) {
-        _kickoffSent = false;
+      if (_disposed) return;
+      _failedText = text;
+      final status = e is SmithBridgeException ? e.statusCode : null;
+      _error = e is TimeoutException || status == 504
+          ? 'The request timed out. Its outcome is unknown; Smith may have processed it. Nothing will be resent automatically.'
+          : status == 429
+          ? 'Smith is handling another turn. Wait for it to finish, then edit and send again. Nothing is resent automatically.'
+          : status == 502 || status == 503
+          ? 'Local inference failed. Check the preprovisioned model and retry connection, then edit and send again. No download or fallback is attempted.'
+          : status == 400 || status == 413
+          ? 'Smith rejected the message. Check its length and edit before sending again.'
+          : 'Send failed. The request may not have completed. Retry connection, then edit and send again. Nothing will be resent automatically.';
+      if (chatOnly && e is SmithBridgeException) {
+        // Keep explicit backend reset/failure information instead of hiding it
+        // behind generic retry guidance. An unacknowledged reset stays pending.
+        _error = '${e.message}\n$_error';
       }
-      if (pendingId != null) {
-        failAssistant(pendingId, 'Send failed: $_error');
+      if (chatOnly) {
+        _messages.removeWhere((message) => message.id == pendingId);
       } else {
-        _messages.add(
-          ChatMessage(
-            id: _nextId('sys'),
-            role: ChatRole.system,
-            text: 'Send failed: $_error',
-            at: DateTime.now(),
-          ),
-        );
+        failAssistant(pendingId, 'Send failed: $_error');
       }
     } finally {
       _sendBusy = false;
-      notifyListeners();
+      if (!_disposed) notifyListeners();
     }
   }
 }

@@ -185,7 +185,11 @@ fn ensure_named_brain_network(name: &str, internal: bool) -> Result<(), String> 
     if internal {
         create_args.push("--internal".to_string());
     }
-    let label = if internal { "brain-net" } else { "brain-public" };
+    let label = if internal {
+        "brain-net"
+    } else {
+        "brain-public"
+    };
     create_args.extend(compose_network_label_args(label));
     create_args.push(name.to_string());
     let create = Command::new("docker")
@@ -197,7 +201,11 @@ fn ensure_named_brain_network(name: &str, internal: bool) -> Result<(), String> 
         Ok(())
     } else {
         let err = String::from_utf8_lossy(&create.stderr);
-        Err(format!("Failed to create brain network '{}': {}", name, err.trim()))
+        Err(format!(
+            "Failed to create brain network '{}': {}",
+            name,
+            err.trim()
+        ))
     }
 }
 
@@ -667,7 +675,8 @@ pub fn run_prompt_in_brain_with(
 ) -> Result<BrainPromptResult, String> {
     if !container_running(BRAIN_CONTAINER_NAME) {
         return Err(
-            "Sealed brain is not running. Use `smith chat` or `smith settings brain status`.".to_string(),
+            "Sealed brain is not running. Use `smith chat` or `smith settings brain status`."
+                .to_string(),
         );
     }
 

@@ -63,13 +63,13 @@ pub async fn handle_doctor(verbose: bool) {
 
     match service::collect_status() {
         Ok(snap) => {
+            println!("  {} services", BULLET_GREEN);
             println!(
-                "  {} services - autostart={} os_registered={} (compose: {})",
-                BULLET_GREEN,
-                if snap.autostart { "on" } else { "off" },
-                if snap.os_registered { "yes" } else { "no" },
-                docker::COMPOSE_PROJECT
+                "       configured autostart policy: {}",
+                if snap.autostart { "on" } else { "off" }
             );
+            crate::commands::service::print_supervisor_status(&snap.supervisor, "       ");
+            println!("       compose project: {}", docker::COMPOSE_PROJECT);
             for row in &snap.services {
                 let b = if row.healthy {
                     BULLET_GREEN
@@ -146,6 +146,11 @@ pub async fn handle_status(verbose: bool) {
     } else {
         println!("     chat: Docker  |  coding/pipeline/search: Docker");
     }
+    println!("     supervisor:");
+    crate::commands::service::print_supervisor_status(
+        &service::os_register::observed_status(),
+        "       ",
+    );
     let d_bullet = if docker_ok { BULLET_GREEN } else { BULLET_RED };
     println!(
         "     {} docker - {}",
@@ -157,7 +162,6 @@ pub async fn handle_status(verbose: bool) {
         }
     );
     if docker_ok {
-        let _ = docker::ensure_coding_config();
         if let Ok(st) = docker::sandbox_status() {
             let c_b = if st.coding_running {
                 BULLET_GREEN
@@ -532,12 +536,8 @@ pub async fn handle_install() {
     });
     print_install_workers_summary(cfg.agents.as_deref().unwrap_or(&[]));
     if cfg.agents.as_deref().unwrap_or(&[]).is_empty() && !already_installed {
-        println!(
-            "  Coding worker (agents.coding) is offered in the sealed-brain step."
-        );
-        println!(
-            "  Extra named OpenCode workers (optional): smith settings agent add"
-        );
+        println!("  Coding worker (agents.coding) is offered in the sealed-brain step.");
+        println!("  Extra named OpenCode workers (optional): smith settings agent add");
     }
     println!();
 
@@ -561,9 +561,7 @@ pub async fn handle_install() {
                     continue;
                 }
                 if name == "search" {
-                    println!(
-                        "  Tip: web search uses services.searxng, not an OpenCode worker."
-                    );
+                    println!("  Tip: web search uses services.searxng, not an OpenCode worker.");
                 }
                 let image_default = DEFAULT_AGENT_IMAGE.to_string();
                 let image_in = prompt_line(&format!("  Image [{}]: ", image_default));
@@ -607,8 +605,7 @@ pub async fn handle_install() {
                 } else {
                     Some(type_in)
                 };
-                let port_in =
-                    prompt_line("  Port for opencode serve (Enter for default 4096): ");
+                let port_in = prompt_line("  Port for opencode serve (Enter for default 4096): ");
                 let port = if port_in.is_empty() {
                     None
                 } else {
@@ -889,46 +886,21 @@ pub async fn handle_install() {
         std::process::exit(1);
     }
 
-    // Always-on supervisor: fill defaults; preserve existing autostart preference.
-    {
-        let mut svc = service::load_service_config().unwrap_or_default();
-        svc.ensure_defaults();
-        let autostart = svc.autostart;
-        let _ = service::save_service_config(&svc);
-        match service::apply_warm_set() {
-            Ok(notes) => {
-                for n in notes {
-                    println!("  {n}");
-                }
-            }
-            Err(e) => eprintln!("  {} warm apply: {}", BULLET_YELLOW, e),
-        }
-        if autostart {
-            match service::os_register::register_and_enable() {
-                Ok(()) => println!(
-                    "  {} supervisor autostart — smith serve at login",
-                    BULLET_GREEN
-                ),
-                Err(e) => eprintln!(
-                    "  {} supervisor OS register: {} (run `smith settings service start`)",
-                    BULLET_YELLOW, e
-                ),
-            }
-        } else {
-            println!(
-                "  {} supervisor autostart off (enable with `smith settings service autostart on`)",
-                BULLET_BLUE
-            );
-        }
-    }
+    println!(
+        "  {} Supervisor unit unchanged; install and manage it explicitly when ready.",
+        BULLET_BLUE
+    );
 
     println!("  {} Install complete", BULLET_GREEN);
     println!("     Runtime:       smith settings runtime get|set host|container");
     println!("     Network:       smith settings network get|set public|private");
-    println!("     Services:      smith settings service status|autostart on|off");
+    println!(
+        "     Service unit:  smith settings service install|status|start|stop|restart|uninstall"
+    );
+    println!("     Autostart:     smith settings service autostart on|off");
     println!("     Sealed brain:  smith chat | smith think \"…\" | smith settings brain status");
     println!("     Coding:        smith settings sandbox status|stop | agent start coding");
-    println!("     Client:        smith serve (or login autostart) | flutter run -d windows");
+    println!("     Ubuntu client: cd client && flutter run -d linux (separate application)");
     println!("     SearXNG:       http://127.0.0.1:4792");
     println!("     Projects:      smith settings project add <name> --repo <url-or-path>");
     println!("     Workspaces:    smith settings workspace add <name> --path <dir>");
@@ -1151,7 +1123,10 @@ fn bootstrap_sealed_brain(cfg: &mut SmithConfig, already_installed: bool) {
 
     // 9. Always-on coding agent + scratch workspace
     match docker::ensure_coding_config() {
-        Ok(()) => println!("  {} coding config - scratch + agent 'coding'", BULLET_GREEN),
+        Ok(()) => println!(
+            "  {} coding config - scratch + agent 'coding'",
+            BULLET_GREEN
+        ),
         Err(e) => eprintln!("  {} coding config - {}", BULLET_YELLOW, e),
     }
     match docker::ensure_coding_agent_ready() {
@@ -1208,20 +1183,18 @@ pub async fn handle_uninstall(
     println!("{} smith uninstall", BULLET_YELLOW);
     println!();
 
-    println!("  Stopping supervisor bridge (and Whisper/TTS if owned)...");
-    if let Err(e) = service::os_register::request_bridge_shutdown() {
+    println!("  Stopping managed supervisor user unit...");
+    if let Err(e) = service::os_register::stop() {
         eprintln!("    Warning: {}", e);
-    } else if service::os_register::bridge_is_listening() {
-        eprintln!("    Warning: bridge still listening after shutdown request");
     } else {
-        println!("    bridge stopped (or was not running)");
+        println!("    stop manager action completed");
     }
 
-    println!("  Removing supervisor OS registration...");
-    if let Err(e) = service::os_register::uninstall_registration() {
+    println!("  Removing supervisor user-unit registration...");
+    if let Err(e) = service::uninstall_supervisor() {
         eprintln!("    Warning: {}", e);
     } else {
-        println!("    autostart unit/task removed");
+        println!("    login autostart disabled and user unit removed");
     }
 
     if let Err(e) = docker::check_docker_available() {

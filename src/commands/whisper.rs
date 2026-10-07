@@ -58,11 +58,7 @@ pub fn ensure_whisper_install() {
 
     let reqs = sidecar.join("requirements.txt");
     if !reqs.is_file() {
-        eprintln!(
-            "  {} whisper - missing {}",
-            BULLET_YELLOW,
-            reqs.display()
-        );
+        eprintln!("  {} whisper - missing {}", BULLET_YELLOW, reqs.display());
         return;
     }
 

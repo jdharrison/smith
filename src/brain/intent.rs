@@ -231,10 +231,7 @@ fn repair_json_backslashes(s: &str) -> String {
     while i < chars.len() {
         if chars[i] == '\\' && i + 1 < chars.len() {
             let next = chars[i + 1];
-            if matches!(
-                next,
-                '"' | '\\' | '/' | 'b' | 'f' | 'n' | 'r' | 't' | 'u'
-            ) {
+            if matches!(next, '"' | '\\' | '/' | 'b' | 'f' | 'n' | 'r' | 't' | 'u') {
                 out.push('\\');
                 out.push(next);
                 i += 2;
@@ -404,11 +401,7 @@ mod tests {
         assert!(visible.contains("Looking"));
         let intent = intent.expect("repaired intent");
         assert!(intent.is_files_run());
-        assert!(intent
-            .query
-            .as_deref()
-            .unwrap_or("")
-            .contains("Pictures"));
+        assert!(intent.query.as_deref().unwrap_or("").contains("Pictures"));
     }
 
     #[test]
