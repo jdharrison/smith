@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-11T21:22:46.808982+00:00",
+  "work_record": "LOCAL-SMITH-NEXT-VOICE-CHAT-UPGRADE",
+  "claim_class": "implemented one-time approved installed-host service/client upgrade; no provider/audio trial",
+  "repository": "smith",
+  "branch": "feature/autonomy",
+  "base_revision": "04b72f5f5093d66294cb7e525dac0f4312dd0cbc",
+  "target_revision": "reviewed uncommitted candidate, bound by exact artifact digests",
+  "approval": {
+    "human_response": "go ahead",
+    "scope": "Stop only smith-next.service, preserve known old binary/state, publish reviewed new service binary, install matching client, explicitly start and validate Core/app bridges",
+    "expiry": "this one-time execution session only; consumed",
+    "exclusions": ["legacy unit/data", "autostart or lingering", "model downloads", "provider queries/inference", "Compose startup", "microphone/playback", "GUI launch", "commits", "remote publication"]
+  },
+  "artifact_binding": {
+    "previous_service_sha256": "8d23bbf8cbb5aca2817bf4ea766d578071595ee7b7af7c9e131dcab78d65783a",
+    "new_service_and_bundled_helper_sha256": "ac53d23c6cff1f83b671c687f14e7eb20ed24f1fedf284cc0ad2c0b78a1ed99e",
+    "new_client_manifest_sha256": "30c840b131007a5f20f769e4e46e668ace6207f5787c95a0773dce7b82feb394",
+    "source_review": "docs/plans/LOCAL-SMITH-NEXT-VOICE-CHAT-EVIDENCE.json",
+    "relocation_review": "next/VALIDATION.md#installer-tooling-relocation--2026-10-09"
+  },
+  "paths": {
+    "notation": "Effective operator XDG/HOME roots, checked at execution; no sensitive resolved paths published here",
+    "binary": "XDG_DATA_HOME/smith-next/bin/smith-service",
+    "unit": "XDG_CONFIG_HOME/systemd/user/smith-next.service",
+    "backup": "XDG_DATA_HOME/smith-next/backups/voice-chat-ac53d23c",
+    "client_selector": "XDG_DATA_HOME/smith-next/client/current",
+    "previous_client_selector": "releases/4f0f033b67feac8f739851e9f8e342a9fbcf2e812c233ff19ff63a865cb721f9",
+    "new_client_selector": "releases/30c840b131007a5f20f769e4e46e668ace6207f5787c95a0773dce7b82feb394"
+  },
+  "checks_and_effects": [
+    {
+      "scenario": "Read-only preflight: installer Filesystem verifies owned single-link0755 old/new binaries, safe ancestors/private namespaces, exact0600 expected unit, paired helper bytes and retained artifact digest; invoke installed old helper inspect",
+      "result": "pass",
+      "observed": {"binary_state": "installed", "unit_state": "installed", "runtime_state": "stopped", "bridge_state": "unavailable", "setup_complete": true}
+    },
+    {
+      "command": "/usr/bin/systemctl --user --no-pager --no-ask-password stop smith-next.service",
+      "result": "pass",
+      "exit_code": 0,
+      "scenario": "No installed desktop process active; verify inactive/dead/MainPID0, expected FragmentPath, no DropInPaths, Transient=no, NeedDaemonReload=no, UnitFileState=static; service/app socket paths absent"
+    },
+    {
+      "scenario": "Under checked private cooperative installer lock, create private backup without unknown overwrite, safely copy known service/unit/Core state/desktop/shim and capture previous verified relative client selector",
+      "result": "pass",
+      "preserved_files": ["service.previous", "unit.previous", "core-state.previous", "desktop.previous", "shim.previous", "manifest.json"],
+      "prior_app_state": "absent",
+      "backup_mode": "0700"
+    },
+    {
+      "scenario": "Revalidate backup hashes, old destination captured inode/type/owner/mode/link/size/mtime, unit/Core state identity, stopped manager/sockets, new reviewed service and client manifest. Publish0755 new stage in same filesystem; atomic exchange; sync both parents; validate and retain displaced exact old object and new exact binary",
+      "result": "pass",
+      "old_object_retained": "backup/exchanged-service",
+      "unit_and_core_state_unchanged": true
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 dagger/install.py --client client/dist --yes",
+      "working_directory": "next",
+      "result": "pass",
+      "exit_code": 0,
+      "scenario": "Bound by explicit preceding human approval; verified existing new stable service and exact reviewed client manifest; publish full release and atomically select it. Existing menu/shim already identical. Previous release and displaced selector retained; no automatic launch or unit change"
+    },
+    {
+      "command": "/usr/bin/systemctl --user --no-pager --no-ask-password start smith-next.service",
+      "result": "pass",
+      "exit_code": 0,
+      "scenario": "Start existing exact unit once; inspect until verified Core ready; no enable/reload/linger operation"
+    },
+    {
+      "scenario": "Run installed reviewed helper inspect and stdin-only app state request; validate schema/service/protocol/call correlation, app PID equals managed MainPID, exact installed/bundled bytes, client selector, unit/Core backup hashes and unchanged static enablement. No models/submit/transcribe/speak call",
+      "result": "pass",
+      "observed": {"runtime": "active/running", "core_bridge": "ready", "app_bridge": "verified", "setup_complete": true, "unit_unchanged": true, "enablement": "static", "model_selected": null, "saved_history_message_count": 0, "providers_queried": false, "gui_launched": false},
+      "private_result_record": "backup/upgrade-result.json"
+    }
+  ],
+  "limitations": [
+    "Direct approved live commands were observed by the executing agent; this is not independent live-host assurance or publication approval.",
+    "Actual model inference, microphone/playback, speech weight initialization, Compose/network behavior and all-four-mode live use remain untested.",
+    "No auto-start-at-login, lingering or logout/reboot guarantee established; UnitFileState remained static.",
+    "Backup preserves recovery options; rollback was not automatically performed or separately authorized.",
+    "Failed out-of-project create_directory tool request caused no upgrade publication; backup directories were created only by the subsequently approved scoped native filesystem operation."
+  ],
+  "outcome": "approved service/client upgrade completed; bridges verified; next live provider/audio gate awaiting separate approval"
+}

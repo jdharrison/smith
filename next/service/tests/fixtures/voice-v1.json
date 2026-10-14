@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "config": {
+    "model": "local:exact",
+    "voice": "observed_voice",
+    "revision": 7
+  },
+  "history": [
+    {
+      "role": "user",
+      "content": "old input"
+    },
+    {
+      "role": "assistant",
+      "content": "old answer"
+    }
+  ],
+  "jobs": [
+    {
+      "operation": {
+        "request_id": "00000000000000000000000000000001",
+        "kind": "models",
+        "status": "succeeded",
+        "phase": "complete",
+        "config_revision": 7,
+        "result": {
+          "models": [
+            {
+              "name": "local:exact",
+              "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ],
+          "voices": [
+            "observed_voice"
+          ],
+          "providers": {
+            "llm": {
+              "ready": true,
+              "error": null
+            },
+            "stt": {
+              "ready": true,
+              "error": null,
+              "model": "local-whisper"
+            },
+            "tts": {
+              "ready": true,
+              "error": null
+            }
+          }
+        },
+        "error": null
+      },
+      "fingerprint": "bfbb44826af23bf7688d0291d9664cf141a88ff4acea9ff8a010225624a07904"
+    },
+    {
+      "operation": {
+        "request_id": "00000000000000000000000000000002",
+        "kind": "submit",
+        "status": "succeeded",
+        "phase": "complete",
+        "config_revision": 7,
+        "result": {
+          "assistant_text": "old answer",
+          "audio": null,
+          "speech_error": {
+            "code": "AUDIO_EXPIRED",
+            "message": "Audio was transient; deliberate replay is required"
+          }
+        },
+        "error": null
+      },
+      "fingerprint": "3554f17f06cbe299db13c20e0547e2228f3ef894c38a2d963fa0a73193f5eefd"
+    },
+    {
+      "operation": {
+        "request_id": "00000000000000000000000000000003",
+        "kind": "speak",
+        "status": "succeeded",
+        "phase": "complete",
+        "config_revision": 7,
+        "result": null,
+        "error": {
+          "code": "AUDIO_EXPIRED",
+          "message": "Audio was transient; deliberate replay is required"
+        }
+      },
+      "fingerprint": "65e77d4247a7e0b2261ebd50ef65429fc20465c410f992f7425e022b26295488"
+    },
+    {
+      "operation": {
+        "request_id": "00000000000000000000000000000004",
+        "kind": "transcribe",
+        "status": "succeeded",
+        "phase": "complete",
+        "config_revision": 7,
+        "result": {
+          "text": "old transcript",
+          "language": "en",
+          "duration_ms": 10
+        },
+        "error": null
+      },
+      "fingerprint": "620edb1970eac0e75500e8716496e4d4e39ef1e13d9fd5563fadadb02a099dca"
+    },
+    {
+      "operation": {
+        "request_id": "00000000000000000000000000000005",
+        "kind": "speak",
+        "status": "failed",
+        "phase": "complete",
+        "config_revision": 7,
+        "result": null,
+        "error": {
+          "code": "TTS_UNAVAILABLE",
+          "message": "old synthesis failure"
+        }
+      },
+      "fingerprint": "7edf60c4441e317e535309d9f481fe87dd98775fa70d4938cea67935b1167d70"
+    },
+    {
+      "operation": {
+        "request_id": "00000000000000000000000000000006",
+        "kind": "submit",
+        "status": "running",
+        "phase": "synthesis",
+        "config_revision": 7,
+        "result": null,
+        "error": null
+      },
+      "fingerprint": "b9c2e6d8f026239be460e7771b52ec75712a98a58713421d91bdf9137654494a"
+    }
+  ],
+  "expired_ids": [
+    "00000000000000000000000000000063"
+  ]
+}

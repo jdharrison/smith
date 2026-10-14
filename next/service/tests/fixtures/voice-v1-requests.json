@@ -1,0 +1,48 @@
+[
+  {
+    "kind": "models",
+    "args": {
+      "request_id": "00000000000000000000000000000001"
+    }
+  },
+  {
+    "kind": "submit",
+    "args": {
+      "request_id": "00000000000000000000000000000002",
+      "text": "old input",
+      "output": "speech"
+    }
+  },
+  {
+    "kind": "speak",
+    "args": {
+      "request_id": "00000000000000000000000000000003",
+      "text": "old answer"
+    }
+  },
+  {
+    "kind": "transcribe",
+    "args": {
+      "request_id": "00000000000000000000000000000004",
+      "audio": {
+        "mime": "audio/wav",
+        "data_base64": "UklGRmQBAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YUABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+      }
+    }
+  },
+  {
+    "kind": "speak",
+    "args": {
+      "request_id": "00000000000000000000000000000005",
+      "text": "old answer"
+    }
+  },
+  {
+    "kind": "submit",
+    "args": {
+      "request_id": "00000000000000000000000000000006",
+      "text": "old input",
+      "output": "speech"
+    }
+  }
+]

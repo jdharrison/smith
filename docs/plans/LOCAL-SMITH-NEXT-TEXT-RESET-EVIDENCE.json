@@ -1,0 +1,1619 @@
+{
+  "schema_version": 1,
+  "work_record": "LOCAL-SMITH-NEXT-TEXT-RESET",
+  "evidence_type": "fresh integrated assurance and adversarial source review",
+  "reviewer": {
+    "role": "assurance",
+    "model": "GPT-6.1-Sol",
+    "independence": "Fresh review context; this reviewer did not author the implementation. Earlier reviewer IDs and parent results were context, not substitutes for the checks below.",
+    "authority": "May recommend or block; does not approve deployment, publication or accepted risk."
+  },
+  "validation_scope_summary": [
+    "Current next/service, next/client, next/dagger installer/publisher/package, Make/Dagger entrypoints, canonical policy and product-reset documentation.",
+    "Frozen 46-file voice archive, current source and exported candidate hashes, paired native payload, executable recipient help/dry-run under private HOME/XDG roots.",
+    "Source/fake/controlled-loopback tests and private compiled IPC/stdio fixtures only; no live helper, user-manager, Ollama/model, GUI, installed-path publication or upgrade.",
+    "Only this evidence document is a reviewer-authored repository change. Generated builds/exports and private temporary test fixtures are validation effects; next/VALIDATION.md is deliberately excluded."
+  ],
+  "approval_scope": {
+    "level": "LOCAL_PLAN_APPROVED",
+    "basis": "Explicit current user request and docs/plans/LOCAL-SMITH-NEXT-TEXT-RESET.md; approved archive/active text trim/conversation-first UI/separate installer source work.",
+    "repository": "smith",
+    "branch": "feature/autonomy",
+    "base_revision": "04b72f5f5093d66294cb7e525dac0f4312dd0cbc",
+    "candidate": "Uncommitted source and generated development artifacts bound below; not a clean-source release commit.",
+    "allowed_repository_write": "docs/plans/LOCAL-SMITH-NEXT-TEXT-RESET-EVIDENCE.json",
+    "external_action_approval": null,
+    "prior_voice_upgrade_approval": "Consumed; not reused. Installed voice candidate and host data were not read, replaced or migrated by this review.",
+    "prohibited_effects": [
+      "Live native helper inspection/apply against the operator environment or real systemctl/loginctl operations",
+      "Real Ollama inventory, inference, model pull, OS/Ollama/GPU provisioning or cloud fallback",
+      "GUI launch, model/audio runtime/container changes, normal HOME/XDG installation or data deletion",
+      "Implicit upgrade, autostart, enablement, lingering, legacy-unit mutation",
+      "Commit, branch creation/rename, push, merge, deployment, tag, release or publication"
+    ]
+  },
+  "environment": {
+    "target_observed": "Ubuntu 24.04.5 LTS x86_64, non-root UID 1000",
+    "native_rustc": "1.98.0 (88d9e12ae 2026-08-18)",
+    "native_cargo": "1.98.0 (797e8a9bc 2026-08-05)",
+    "native_flutter": "3.47.2 stable, framework d3b14c8769",
+    "native_dart": "3.13.2",
+    "native_python": "3.12.3",
+    "dagger_cli_and_running_engine": "v1.0.0-beta.14, commit 06660c3c",
+    "module_engine_version": "v0.21.0",
+    "configured_builder_images": [
+      "rust:1.98.0-bookworm",
+      "ubuntu:24.04"
+    ],
+    "configured_source_build_test_identity": "UID/GID 1000 after container-root toolchain preparation",
+    "dagger_execution_environment": {
+      "DAGGER_NO_NAG": "1",
+      "DAGGER_CLOUD_TOKEN": "empty for make invocations",
+      "DAGGER_PROGRESS": "plain"
+    },
+    "effects_and_limits": "Dagger used the existing developer engine/cache and exported local dist artifacts. Build nodes were cached. Native dependency resolution and Cargo checks/builds used offline flags. This is neither clean-cache/hermetic reconstruction nor independent supply-chain provenance."
+  },
+  "source_binding": {
+    "algorithm": "SHA-256; file entries contain raw-byte SHA-256 and decimal Unix permission mode. Group/global digests hash UTF-8 json.dumps(..., sort_keys=True, separators=(',', ':')).",
+    "before_validation_sha256": "ed5f6079c8378e72a124169c482a0da6d33573270f6004bab0a53b99b74bdcac",
+    "after_validation_sha256": "ed5f6079c8378e72a124169c482a0da6d33573270f6004bab0a53b99b74bdcac",
+    "unchanged_during_review": true,
+    "groups_summary": {
+      "service_input": {
+        "files": 31,
+        "sha256": "051cb82dce5a9005562a3c663c61ff973d249d45968c06a70547f659fcbca819"
+      },
+      "client_input": {
+        "files": 35,
+        "sha256": "bd5cf4d20c65a306a33b0ea91058d7f92619ca46cb77675086fafeea71778f4e"
+      },
+      "tooling_policy_tests": {
+        "files": 31,
+        "sha256": "76864244bb7b1abf4fe94926e0d7598a2414fac443344f16abafaeb3d5f5936e"
+      },
+      "archive": {
+        "files": 48,
+        "sha256": "27e706a4f30784ad29f7251ba38ef2d7ed279e6405334eeb70e99703d736cb0d"
+      }
+    },
+    "selection": {
+      "service": "All files under next/service except target/, build/, dist/ and .git/; includes existing component reports as input bytes, not new independent test evidence.",
+      "client": "All files under next/client with the exclusions configured in SmithNext._client: build, dist, .dart_tool, .git, .idea, .pub-cache, .pub, .flutter-plugins-dependencies, linux/flutter/ephemeral.",
+      "tooling_policy_tests": "Explicit Dagger/Make configuration and module code, installer/publisher/package code and tests, READMEs, AGENTS/assurance role, affected canonical documents/product reset/reset plan, gitignore and existing CI/release workflows.",
+      "archive": "All 48 reference files: 46 manifested original files plus MANIFEST.json and reference README.",
+      "excluded": [
+        "next/VALIDATION.md",
+        "this evidence file",
+        "generated build/cache/export outputs",
+        "installed host paths and data",
+        "unrelated legacy source"
+      ]
+    },
+    "file_hashes": {
+      "service_input": {
+        "next/service/Cargo.lock": {
+          "sha256": "63824e389420b2d3bc4089fdd6714a5eea8d8e518d82d9ac860d850336995d7f",
+          "mode": 436
+        },
+        "next/service/Cargo.toml": {
+          "sha256": "570493aecebcb371a0c789b5f11909dd72008b590d32898b466f417b3e9e9d08",
+          "mode": 436
+        },
+        "next/service/README.md": {
+          "sha256": "6cff0e151b6649d9d1d2686441904390cf9f92b488d270bb94623f98c67a0208",
+          "mode": 436
+        },
+        "next/service/TEXT-RESET-L1-INVESTIGATION.json": {
+          "sha256": "499a03a430ecd85b38f6c71f044770b2032b83f1e01f82a56befd6f8c2df0fea",
+          "mode": 436
+        },
+        "next/service/TEXT-RESET-L1-INVESTIGATION.log": {
+          "sha256": "9f7ed502b5f797b981c1e6f52ba1447a5bd46ad9899d87061ff5f5a4d43bb1ef",
+          "mode": 436
+        },
+        "next/service/TEXT-RESET-L1-POST-FIX.log": {
+          "sha256": "c371efded7c568b1fa93941c69939e9ef14bc18a17a802d18fb751cab4c03d4b",
+          "mode": 436
+        },
+        "next/service/TEXT-RESET-L1-REGRESSION.log": {
+          "sha256": "6b9647807d10b51504c4c98db65bb0063d0f63f537c032cc2775dc55780a07fb",
+          "mode": 436
+        },
+        "next/service/TEXT-RESET-L1-SYSCALLS-1-TEST.log": {
+          "sha256": "c78f7ef5ec7f6ea5be8df77ce6bf016817b7a854784b1a05bb02d034dbccb138",
+          "mode": 436
+        },
+        "next/service/TEXT-RESET-L1-SYSCALLS-1.log": {
+          "sha256": "b1c2f222d25082dc82dec76558fa6d8c500f201d4bc4939fe3185356c9e8bff0",
+          "mode": 436
+        },
+        "next/service/TEXT-RESET-L1-SYSCALLS-2-TEST.log": {
+          "sha256": "24324b67df46711c191e9464aca9670cce864a76013565d425a4ffac945f5fc9",
+          "mode": 436
+        },
+        "next/service/TEXT-RESET-L1-SYSCALLS-2.log": {
+          "sha256": "f4452dba70ee12b1c90310bc9a4a174c5fbd6d93a7a425022c2354d2e32456bb",
+          "mode": 436
+        },
+        "next/service/TEXT-RESET-L1-SYSCALLS-3-TEST.log": {
+          "sha256": "0222269a2dcfa5f644fe2dc1eda6a2661027122b95fe5d9c4cc79c9d3e1204c9",
+          "mode": 436
+        },
+        "next/service/TEXT-RESET-L1-SYSCALLS-3.log": {
+          "sha256": "fc5979b90bfc97d987d31ab59969f007f529bbe3d46cc3ef52a908917d5c668b",
+          "mode": 436
+        },
+        "next/service/TEXT-RESET-VALIDATION.json": {
+          "sha256": "395321ea39316ac1e8e690154c7d9f91e4bb6c71ae91693e0e2364931b7cf65a",
+          "mode": 436
+        },
+        "next/service/TEXT-RESET-VALIDATION.log": {
+          "sha256": "08cee4e20ec1643a92f5cc8f688e75d35a41fe998ea5943529ee01883560e6cc",
+          "mode": 436
+        },
+        "next/service/VOICE-CHAT-VALIDATION.json": {
+          "sha256": "fb5702ad9d6317f70cdf9900364284febc5bd0824fd6b1bff2e087808f790e75",
+          "mode": 436
+        },
+        "next/service/scripts/build.sh": {
+          "sha256": "e9b5231fe1595c1bdfd7a7dad7b9898a02c1d5af0c612529c5571d974f0efc8b",
+          "mode": 436
+        },
+        "next/service/scripts/test.sh": {
+          "sha256": "7f489edad5545b0e86176a042a5a5370922307f9b4be45f275681f02b71a9997",
+          "mode": 436
+        },
+        "next/service/src/app.rs": {
+          "sha256": "fc58b9862882700562e6a17a093582f9a6b382108985649c8445459e7fee8466",
+          "mode": 436
+        },
+        "next/service/src/app_transport.rs": {
+          "sha256": "3df30ff112bd5627d013437c53d07cd55ca4496426a35faeacd317208161e4ee",
+          "mode": 436
+        },
+        "next/service/src/control.rs": {
+          "sha256": "8de09fe127a963114a26f70a8d3312e2645f69bc29692bd49e22382a2b78e619",
+          "mode": 436
+        },
+        "next/service/src/filesystem.rs": {
+          "sha256": "c1eee617fd1365a3e888796ee460b2b36746d98f09f03126c55ce6378d7b9766",
+          "mode": 436
+        },
+        "next/service/src/lib.rs": {
+          "sha256": "1f293cc7e20b21dfd1df8d7715da0c5adf021c9b34c847de62917d14db667014",
+          "mode": 436
+        },
+        "next/service/src/main.rs": {
+          "sha256": "e34e38d4910781f006fbc419c2b185a55b08a780c3166cd6b30889f7b8e20401",
+          "mode": 436
+        },
+        "next/service/src/manager.rs": {
+          "sha256": "186b0ccd3112fb546ad23245648218fdb34766b1f9078966093dea25a7d282ea",
+          "mode": 436
+        },
+        "next/service/src/providers.rs": {
+          "sha256": "b0c90e650ba2fcce96061e60bea9081ff6c825378de56962da4483977164b3e8",
+          "mode": 436
+        },
+        "next/service/src/transport.rs": {
+          "sha256": "8626ad11aca4b5472389e8f89856f73e71752598e1716a4dcdef74c6f67749b5",
+          "mode": 436
+        },
+        "next/service/tests/application.rs": {
+          "sha256": "4baf46fb817492ef057bf98ff09a792643c87d5ad8eb284912011c09a757837d",
+          "mode": 436
+        },
+        "next/service/tests/debug_service.rs": {
+          "sha256": "ca16694a0397b4684d69bca8a64904b4f968a6f744b6cc2ebab34ebbc60d1df2",
+          "mode": 436
+        },
+        "next/service/tests/fixtures/voice-v1-requests.json": {
+          "sha256": "a297b04e9844490e890613764138f2ea3c7a2aa849cbb967ce5d9248b9a05e4b",
+          "mode": 436
+        },
+        "next/service/tests/fixtures/voice-v1.json": {
+          "sha256": "815d1fc4f7997e75dce99576be2b01aa224e435d31f3beaf41e74264a4dea45b",
+          "mode": 436
+        }
+      },
+      "client_input": {
+        "next/client/.gitignore": {
+          "sha256": "441eaa1de5b3db9fae056e7503567e9f8dd94173e1389c60f76956abf729015a",
+          "mode": 436
+        },
+        "next/client/.metadata": {
+          "sha256": "c83a33c886a8996a51438acb839bfd6eeada4bdd48bcfb352f08317484d921da",
+          "mode": 436
+        },
+        "next/client/README.md": {
+          "sha256": "c6d917308e428938bb5141a76d3064f73dd0bcd837017e36d2842259779cfd4d",
+          "mode": 436
+        },
+        "next/client/analysis_options.yaml": {
+          "sha256": "2e53c5dff72b9b05b5f1bbcf200db11d107ba75406bf7bdcb53861d43e11ff95",
+          "mode": 436
+        },
+        "next/client/lib/app_api.dart": {
+          "sha256": "d147ed3445121d8d7d38adbed5a7a5b737dd7bdf247ee23c367412c8ab8d9c17",
+          "mode": 436
+        },
+        "next/client/lib/chat_panel.dart": {
+          "sha256": "5ebded8a5e887e868805d1ad61edfbdf8dcf15d2422ec92983b9f43263ec57d0",
+          "mode": 436
+        },
+        "next/client/lib/control_api.dart": {
+          "sha256": "40fa2ca326517ed7af843722a416f0e4b8c3c1be69c4094b01c2bfed1d21f93c",
+          "mode": 436
+        },
+        "next/client/lib/main.dart": {
+          "sha256": "1a5824aec39df0d9f1229948a0ef790fd570f7eaaef97c5496a92145761c03da",
+          "mode": 436
+        },
+        "next/client/lib/native_control.dart": {
+          "sha256": "9c8be430fb668d2aab4eb19ce396c9f8453658ef357c308c7c0fc1902f32d630",
+          "mode": 436
+        },
+        "next/client/lib/text_chat.dart": {
+          "sha256": "5caa1a1f4cd6d6ecac7a671b19ff2f1c68034209e317d03e741985e1c5c6bcf3",
+          "mode": 436
+        },
+        "next/client/linux/.gitignore": {
+          "sha256": "5ded4f1a9d10d34bf6ee5beb0711d88ee2ef07b0f07ace9ed77935a246e8eb82",
+          "mode": 436
+        },
+        "next/client/linux/CMakeLists.txt": {
+          "sha256": "406dbd6bcb1924350e647797fdac8e8c79507e58f01552210f1868f7931c785b",
+          "mode": 436
+        },
+        "next/client/linux/flutter/CMakeLists.txt": {
+          "sha256": "787189e2623313cfee590a0b553338eb9fc68b3af922ddd77c5d39c75f989aeb",
+          "mode": 436
+        },
+        "next/client/linux/flutter/generated_plugin_registrant.cc": {
+          "sha256": "7861b227b10a10cc1d7643f82a246b7db35b503f2d9ff1d3c906136e6c260dce",
+          "mode": 436
+        },
+        "next/client/linux/flutter/generated_plugin_registrant.h": {
+          "sha256": "00f93bb5b1faefdede8f6065df327522900fb0b8efee86bacf424fd947ed14bb",
+          "mode": 436
+        },
+        "next/client/linux/flutter/generated_plugins.cmake": {
+          "sha256": "d5aaa52ef8594d3128b35b6619c6a353e1be5f3c5a63a9c29c0a32b424e91952",
+          "mode": 436
+        },
+        "next/client/linux/runner/CMakeLists.txt": {
+          "sha256": "ed24d6312d78fa08894ad7e08bca431ba0f9e0a810a2849ddd1d0c6285dcdaff",
+          "mode": 436
+        },
+        "next/client/linux/runner/main.cc": {
+          "sha256": "ea23f7cdf74091d63bba29ef60486370b766157b848f0cfe62bd8b1c1695a0c1",
+          "mode": 436
+        },
+        "next/client/linux/runner/my_application.cc": {
+          "sha256": "853cdbc93cbfe6ddbfa4655abe0456c12425f440432cd09954196005ddfca22c",
+          "mode": 436
+        },
+        "next/client/linux/runner/my_application.h": {
+          "sha256": "a4218d7ac0db8a9a6716daf216b2d4fc6bdc7ac647e3183078b2c962ebdfcf70",
+          "mode": 436
+        },
+        "next/client/linux/runner/resources/smith.gresource.xml": {
+          "sha256": "53836de806fc3ed5d43699cbcd86ec37f154100fa115eb40b4efc7c7b07092af",
+          "mode": 436
+        },
+        "next/client/linux/runner/resources/smith.png": {
+          "sha256": "79afede7f466a59eaa01759d246fc0c9d05d63ec7d361c6c27e0a93c37d85e53",
+          "mode": 436
+        },
+        "next/client/linux/smith.desktop.in": {
+          "sha256": "7985a43492b905d264ab60f1e2ad62f94b77e7ed1ce30b67968528723be153bd",
+          "mode": 436
+        },
+        "next/client/pubspec.lock": {
+          "sha256": "6dfb6364f3368e9ccc730329840857df49ad3a4cf29f19f253b82105fc9c5cbd",
+          "mode": 436
+        },
+        "next/client/pubspec.yaml": {
+          "sha256": "ee84da3309dfe6bd992c97a104ef1a1a98db28e543e14775c60586bdec7517ef",
+          "mode": 436
+        },
+        "next/client/scripts/build.sh": {
+          "sha256": "46c85470a3c19ccb5be37a83b3680cacc7d82cf7f54d750575fc0ceff8002bfe",
+          "mode": 436
+        },
+        "next/client/scripts/test.sh": {
+          "sha256": "0132083e40b1e094d0c24939019edfa151837b50cde13bfc78db3f6ee86f65fc",
+          "mode": 436
+        },
+        "next/client/smith_client.iml": {
+          "sha256": "078556ebd66f23eeb43b60557b1ed3d3e0b1a2a6297ccb71ad3b779316c7880d",
+          "mode": 436
+        },
+        "next/client/test/app_api_test.dart": {
+          "sha256": "605e0b64aa1fd07829ad03cf189b00f44dd46aa9a8d0ae6abf918b3047149988",
+          "mode": 436
+        },
+        "next/client/test/app_fakes.dart": {
+          "sha256": "f9ae30f9db9a90cd1efe392ef9c06feb20806d9cce3db7d51f0dc757e1401707",
+          "mode": 436
+        },
+        "next/client/test/conversation_test.dart": {
+          "sha256": "47b6cd291945ae821e9ea708d4b778b71a6e17141ad236e45638b91c6c35676d",
+          "mode": 436
+        },
+        "next/client/test/native_control_test.dart": {
+          "sha256": "7787000c7d0788cbd4c5d0a91bdf3e0daeed740fca02edb45551f95a8f60180c",
+          "mode": 436
+        },
+        "next/client/test/rust_socket_integration_test.dart": {
+          "sha256": "e0f81b3d00f7dd9ddb5f6be913fb0560509c7a1d67381e7a5539854cea6c536a",
+          "mode": 436
+        },
+        "next/client/test/text_chat_test.dart": {
+          "sha256": "524f33c3396111ee4768559f6134b1d9cdc901b60c14a77ef2a5a0f3244ae9d2",
+          "mode": 436
+        },
+        "next/client/test/widget_test.dart": {
+          "sha256": "63d5e377d7d549eaa681ca1cef0827b35da43525186b3c771f5bf7dedca38747",
+          "mode": 436
+        }
+      },
+      "tooling_policy_tests": {
+        "next/dagger/install.py": {
+          "sha256": "dc381f069c2f9728c6e34c99d26025f2f2b4d0ef98e1fa6d2526d72129ac6878",
+          "mode": 493
+        },
+        "next/dagger/installer.py": {
+          "sha256": "4a4f46efd309f2941be9bff3d3fa9cd287c5927403442216906379953e19f624",
+          "mode": 436
+        },
+        "next/dagger/package.py": {
+          "sha256": "7ced09332a52f8ea7ab69028939a59ff9945a2125b688404b075af1431ccbe6f",
+          "mode": 436
+        },
+        "next/dagger/INSTALLER.md": {
+          "sha256": "82215e744de796c5a7ab1249f62982ef515fab2a71a86ffbbb2ecb7387cff9a9",
+          "mode": 436
+        },
+        "next/dagger/dagger.json": {
+          "sha256": "68b04b0e0b02bf1e1aec3a31f4d8723bd1c07a521cf1867133ce6b0cc7acdbd6",
+          "mode": 436
+        },
+        "next/dagger/pyproject.toml": {
+          "sha256": "a47ffc01969e3f986e63ab7f0c9be8c673f6b8357312553cf4a5f1f2eede080c",
+          "mode": 436
+        },
+        "next/dagger/src/smith_next/main.py": {
+          "sha256": "32f20adfb61e74a71fdf82d2a836a949c99480a31f99270334108f8f505fb10e",
+          "mode": 436
+        },
+        "next/dagger/src/smith_next/__init__.py": {
+          "sha256": "1e185ca06c301a4f9d93ff62475ce7b833f5a84425ee41a7af0afc54faf0c03b",
+          "mode": 436
+        },
+        "next/dagger/README.md": {
+          "sha256": "08e6131987b19d11a6cac38b9fdf4764199a9802242a41182e99fedce14ed6d1",
+          "mode": 436
+        },
+        "next/dagger/pipeline.md": {
+          "sha256": "cf9294f90555b122516bf294c3a52cb6fe1559686eaae5921550415da2e17c6e",
+          "mode": 436
+        },
+        "next/Makefile": {
+          "sha256": "bdbddd278e04f929a36f63ed83c3dc860960a1df9de426015bd95cb924792def",
+          "mode": 436
+        },
+        "next/README.md": {
+          "sha256": "a8639a75689d61f8bd0b4b576ba47db00eacddd06ed6bfa94962333b9290c640",
+          "mode": 436
+        },
+        "next/dagger.toml": {
+          "sha256": "987938c78b3fb6fd311c9688c702b7b6e7f4784865848b29513a6c2a9f995898",
+          "mode": 420
+        },
+        "next/dagger.lock": {
+          "sha256": "59b50bd5d7496613fc1348ad1865108d2966255b28f69301fc59d03cd29e5c93",
+          "mode": 384
+        },
+        "next/installer/README.md": {
+          "sha256": "1e73a0fe61b16bc84304a59ed780dff75cea62845f705e1f36be8eb78016a91e",
+          "mode": 436
+        },
+        "AGENTS.md": {
+          "sha256": "7d66c0b9febb4893906aef93c37123afcca59196e5e4664ba32ab850dec55f83",
+          "mode": 436
+        },
+        "roles/assurance.md": {
+          "sha256": "6639354d7cb9ea530f85aba74c82636c4c9dbc291b62d3b3c2ed49295e10ea60",
+          "mode": 436
+        },
+        "docs/SCOPE.md": {
+          "sha256": "f4ea588099377ee55899ba5ac3826f80836e3daf15df8a6314c261e6423b3933",
+          "mode": 436
+        },
+        "docs/ARCHITECTURE.md": {
+          "sha256": "924d4aa37524576a6c9a8de4cf5616638b5b7317bde657eb201737d11c36ea24",
+          "mode": 436
+        },
+        "docs/PROCESS.md": {
+          "sha256": "9e2ab060a695eeaa6256da815138b9766815f344b67ffee265cc17b6b1c5f4e2",
+          "mode": 436
+        },
+        "docs/DESIGN.md": {
+          "sha256": "f80081bd6511221f949652a1e1a17f16e2298e38890009421889432ed70cbd2a",
+          "mode": 436
+        },
+        "docs/HOST_PROFILE.md": {
+          "sha256": "cfb4b27c1fe89217e2d91cee742b574a92e24d2924ff97cf141a69cf2cdb024d",
+          "mode": 436
+        },
+        "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md": {
+          "sha256": "700115dfbbe6e3f650beebc555bf00c1f45601c7a12574ed771a3bd37a66cf96",
+          "mode": 436
+        },
+        "docs/plans/LOCAL-SMITH-PRODUCT-RESET.md": {
+          "sha256": "ca8be0071247fa629b2fc0c373c014a486957fbfeea232491d361f5d3cced51c",
+          "mode": 436
+        },
+        "docs/plans/LOCAL-SMITH-NEXT-TEXT-RESET.md": {
+          "sha256": "0ece40fa90777f200fb5c5e0f4e70113cf49172779707afe193060989a36b1ff",
+          "mode": 436
+        },
+        ".gitignore": {
+          "sha256": "aefb93182a732838bb70484bd9bb93525bd713546bf6f01a71c1b4c867804dd7",
+          "mode": 436
+        },
+        ".github/workflows/ci.yml": {
+          "sha256": "73710a920a7c9ad44cc6d2b44ca9e569f93384e399b027306ee20119054ccd31",
+          "mode": 436
+        },
+        ".github/workflows/release.yml": {
+          "sha256": "ce89a8cf57e25cf9f2f3093ab339fe5dd99e02d2e4caa11a67854cc98b25f244",
+          "mode": 436
+        },
+        "next/dagger/tests/test_install.py": {
+          "sha256": "5f0006b87e2186060322df82460d7af4619374f4912ef2a9e9ae271315784287",
+          "mode": 436
+        },
+        "next/dagger/tests/test_package.py": {
+          "sha256": "0817cc0138cff0065cb4d8804980ff60145d0a665078ace261a465cfe2294d9e",
+          "mode": 436
+        },
+        "next/dagger/tests/test_setup.py": {
+          "sha256": "844c6d9d62a077e7a581f342bd813306edc30b66982a6a02195030f837112bc0",
+          "mode": 436
+        }
+      },
+      "archive": {
+        "reference/voice-chat-v1/MANIFEST.json": {
+          "sha256": "93f57832bd27d0a20f06d4432dba9a8bf2595a1c3f00cda6f5e48cce5f3bbf2d",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/README.md": {
+          "sha256": "d6f6114fa27fba4e3254136390738153789fbf0eddc30fa15fbb314943ea7d76",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/README.md": {
+          "sha256": "c31f85970c759e910d525e10ef9d35e9c3f1b7bc328950d99260dc897cb7af11",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/lib/app_api.dart": {
+          "sha256": "1ba910a16a9fe9426bc6ca9b70fbcd8ce3470b6db1731fef54ecab960198abcd",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/lib/audio.dart": {
+          "sha256": "62518957ad63b1e5905b1a2b644638933847228e89fdde5e44b13e5514a19c1c",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/lib/boot_controller.dart": {
+          "sha256": "deb827a91b80e5acef93d6e423933b1b83fe8625e33ba0c0ba2238b9b8a7c3d3",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/lib/control_api.dart": {
+          "sha256": "a3984cc0c3457b22ce55eecd8845d32a32439e665b6dfe47e27932697bd3f672",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/lib/main.dart": {
+          "sha256": "b7727510d4e087bdae1a127555127cae2d7acd9859b1a442e8f2a94c914a8d8e",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/lib/native_control.dart": {
+          "sha256": "9c8be430fb668d2aab4eb19ce396c9f8453658ef357c308c7c0fc1902f32d630",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/lib/voice_chat.dart": {
+          "sha256": "2614630b4de92e161918b86ba19c73adc07834d62aa0433de86092f47fdcaa78",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/pubspec.lock": {
+          "sha256": "6dfb6364f3368e9ccc730329840857df49ad3a4cf29f19f253b82105fc9c5cbd",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/pubspec.yaml": {
+          "sha256": "ee84da3309dfe6bd992c97a104ef1a1a98db28e543e14775c60586bdec7517ef",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/test/app_api_test.dart": {
+          "sha256": "20cf6f987ac5f1117a901fe755d36188b208bc4f683e596013a8b5255426c023",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/test/app_fakes.dart": {
+          "sha256": "027520fdf440722b45dafe0c288fa72ee16aa29995b4e037e98b2463ea56d39d",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/test/audio_test.dart": {
+          "sha256": "62a7c2dec4268c4d5797663bfa0629a968d3775de10ec452c6a3cf94a7a0cb46",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/test/native_control_test.dart": {
+          "sha256": "7787000c7d0788cbd4c5d0a91bdf3e0daeed740fca02edb45551f95a8f60180c",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/test/rust_socket_integration_test.dart": {
+          "sha256": "2c129df7d4a2586c62a8b7da085aeacc565d04c62a9ce3472d55508552302e6d",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/test/voice_chat_test.dart": {
+          "sha256": "2b368d75f57cd49e05dfd98615e6ec3f6e6d1c6881b505b5149d83dac08d9fcb",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/client/test/widget_test.dart": {
+          "sha256": "79452a1567a1b97d3aa3347517d622cd3571b9d8d039c83129bb617b387d0ac2",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/Cargo.lock": {
+          "sha256": "a7b535a1b02acf88c1b311a3549d5c38633d4ad590dfb755a0c9c5c28756714d",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/Cargo.toml": {
+          "sha256": "434bed178e0a56ea93d188b2d454048be7a98c7aa9cf9fabf5897502182cca9c",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/README.md": {
+          "sha256": "bc4deed55a3fd124fed7dd19a6a7a44384ca4e662b9207c37d3d506595410970",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/src/app.rs": {
+          "sha256": "7a1838ba6399d3429b6c162ff7e11b48eb83af16cdb48c635480ecc734721730",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/src/app_transport.rs": {
+          "sha256": "3df30ff112bd5627d013437c53d07cd55ca4496426a35faeacd317208161e4ee",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/src/control.rs": {
+          "sha256": "8de09fe127a963114a26f70a8d3312e2645f69bc29692bd49e22382a2b78e619",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/src/filesystem.rs": {
+          "sha256": "c1eee617fd1365a3e888796ee460b2b36746d98f09f03126c55ce6378d7b9766",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/src/lib.rs": {
+          "sha256": "1f293cc7e20b21dfd1df8d7715da0c5adf021c9b34c847de62917d14db667014",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/src/main.rs": {
+          "sha256": "e34e38d4910781f006fbc419c2b185a55b08a780c3166cd6b30889f7b8e20401",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/src/manager.rs": {
+          "sha256": "186b0ccd3112fb546ad23245648218fdb34766b1f9078966093dea25a7d282ea",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/src/providers.rs": {
+          "sha256": "8806808ea002f79482504104825e8fa410efb125baa9ad55afa88fafd87a8603",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/src/transport.rs": {
+          "sha256": "8626ad11aca4b5472389e8f89856f73e71752598e1716a4dcdef74c6f67749b5",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/tests/application.rs": {
+          "sha256": "7741bd3ba82196ad7a7770c1e466f63e377394216c5d72133069cb72c2cbb1a0",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/service/tests/debug_service.rs": {
+          "sha256": "a54fd41a188f2e0fbf5e4a9a17363017d35682eb7ac44b94a1ebe34db54cb4cc",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/.dockerignore": {
+          "sha256": "6e54a9b94a93c36c4014c5c3366ae013e0a042673ba6a180d81b14dfac25c2b6",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/Dockerfile": {
+          "sha256": "f15f1252a2943e1b2f4efeba26f39e324cf361d117c19aaf2d9210f9137166ac",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/README.md": {
+          "sha256": "b3c8e9885b96b2f59a60a73f157af77b0dcd8685efeb88ae2698ea536dded07b",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/VALIDATION.md": {
+          "sha256": "ebd4e0352408571f84f1939313bf223f8c18357a02f3ef7c75f5108a54ab2f45",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/api.py": {
+          "sha256": "ef93dbfbf2a6e39d05938351080626ef965a36e41494a385a88bb42d439aee00",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/compose.yaml": {
+          "sha256": "dffa93486029ac15552b7ec32b9b6c8ce49a49b61171923366dfe40ccf37d15f",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/engines.py": {
+          "sha256": "760b269c08afc39355405b598db5fd43fdddd1fd5c73a8944227e0a6f2c345cf",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/healthcheck.py": {
+          "sha256": "68ad500549fbd32e6a7d84d5b7bb5b4ce6e6633feaa03fe8f5272a8a9710faff",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/requirements.txt": {
+          "sha256": "e606a0a68cc5721fd497bbe597cad4da9394fdaa6f042f419f192c45e6beef6c",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/serve.py": {
+          "sha256": "bda58d8a7c4bc4edc3e3fc84f3ffe023512fab760fa79cca5a9b90453c11f65e",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/tests/test_api.py": {
+          "sha256": "a0cc3db9ce2a133895ce8d26f5f4d39ca6c6f8777d840dc66d094370b92179f1",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/tests/test_engines.py": {
+          "sha256": "ba7781b4ce14cfa3b12ac0077fe5b078356b0b93eff66fb0aebd1d1103cbae52",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/sidecars/tests/test_native.py": {
+          "sha256": "efb968a12c45f6ae812a90aa84cc94dc4c06a90a239e43acb20e4c51862c37f6",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/tooling/Makefile": {
+          "sha256": "2512a4ee60b72a1919401000eafc54732cf3f506c911b0f6c15e7eca249eb519",
+          "mode": 436
+        },
+        "reference/voice-chat-v1/tooling/dagger_main.py": {
+          "sha256": "2af427949c87c62210340fe75f4668db42b52f5f3515132163420d7ad4584701",
+          "mode": 436
+        }
+      }
+    }
+  },
+  "archive_verification": {
+    "manifest": "reference/voice-chat-v1/MANIFEST.json",
+    "expected_and_observed_manifest_sha256": "93f57832bd27d0a20f06d4432dba9a8bf2595a1c3f00cda6f5e48cce5f3bbf2d",
+    "manifested_files": 46,
+    "matching_files": 46,
+    "mismatches": [],
+    "archive_unchanged_during_review": true,
+    "implemented_input_exclusion": "Make passes only service, client and dagger component directories; the Dagger module is rooted at next/dagger. _service/_client copy those component directories, installer tests assemble explicit code/tests, and build_installer copies explicit code plus built native outputs. No function receives or copies reference/voice-chat-v1 or next/sidecars.",
+    "removed_active_paths": [
+      "next/sidecars",
+      "next/client/lib/audio.dart",
+      "next/client/lib/voice_chat.dart",
+      "next/client/lib/boot_controller.dart",
+      "next/client/test/audio_test.dart",
+      "next/client/test/voice_chat_test.dart"
+    ],
+    "removed_public_pipeline_surfaces": [
+      "services/test",
+      "test-sidecars",
+      "sidecar functions/arguments/images"
+    ],
+    "byte_identical_core_files_against_archive": [
+      "next/service/src/control.rs",
+      "next/service/src/filesystem.rs",
+      "next/service/src/manager.rs",
+      "next/service/src/main.rs",
+      "next/service/src/transport.rs",
+      "next/service/src/app_transport.rs"
+    ],
+    "dependency_observation": "Direct speech/audio/base64 use is absent from active code and Cargo.toml. base64 0.22.1 remains a generic transitive dependency of reqwest/hyper-util, independently observed with cargo tree --locked --offline -i base64; the entire dependency graph is not base64-free.",
+    "manifested_source_files": {
+      "client/README.md": {
+        "sha256": "c31f85970c759e910d525e10ef9d35e9c3f1b7bc328950d99260dc897cb7af11",
+        "source": "next/client/README.md"
+      },
+      "client/lib/app_api.dart": {
+        "sha256": "1ba910a16a9fe9426bc6ca9b70fbcd8ce3470b6db1731fef54ecab960198abcd",
+        "source": "next/client/lib/app_api.dart"
+      },
+      "client/lib/audio.dart": {
+        "sha256": "62518957ad63b1e5905b1a2b644638933847228e89fdde5e44b13e5514a19c1c",
+        "source": "next/client/lib/audio.dart"
+      },
+      "client/lib/boot_controller.dart": {
+        "sha256": "deb827a91b80e5acef93d6e423933b1b83fe8625e33ba0c0ba2238b9b8a7c3d3",
+        "source": "next/client/lib/boot_controller.dart"
+      },
+      "client/lib/control_api.dart": {
+        "sha256": "a3984cc0c3457b22ce55eecd8845d32a32439e665b6dfe47e27932697bd3f672",
+        "source": "next/client/lib/control_api.dart"
+      },
+      "client/lib/main.dart": {
+        "sha256": "b7727510d4e087bdae1a127555127cae2d7acd9859b1a442e8f2a94c914a8d8e",
+        "source": "next/client/lib/main.dart"
+      },
+      "client/lib/native_control.dart": {
+        "sha256": "9c8be430fb668d2aab4eb19ce396c9f8453658ef357c308c7c0fc1902f32d630",
+        "source": "next/client/lib/native_control.dart"
+      },
+      "client/lib/voice_chat.dart": {
+        "sha256": "2614630b4de92e161918b86ba19c73adc07834d62aa0433de86092f47fdcaa78",
+        "source": "next/client/lib/voice_chat.dart"
+      },
+      "client/pubspec.lock": {
+        "sha256": "6dfb6364f3368e9ccc730329840857df49ad3a4cf29f19f253b82105fc9c5cbd",
+        "source": "next/client/pubspec.lock"
+      },
+      "client/pubspec.yaml": {
+        "sha256": "ee84da3309dfe6bd992c97a104ef1a1a98db28e543e14775c60586bdec7517ef",
+        "source": "next/client/pubspec.yaml"
+      },
+      "client/test/app_api_test.dart": {
+        "sha256": "20cf6f987ac5f1117a901fe755d36188b208bc4f683e596013a8b5255426c023",
+        "source": "next/client/test/app_api_test.dart"
+      },
+      "client/test/app_fakes.dart": {
+        "sha256": "027520fdf440722b45dafe0c288fa72ee16aa29995b4e037e98b2463ea56d39d",
+        "source": "next/client/test/app_fakes.dart"
+      },
+      "client/test/audio_test.dart": {
+        "sha256": "62a7c2dec4268c4d5797663bfa0629a968d3775de10ec452c6a3cf94a7a0cb46",
+        "source": "next/client/test/audio_test.dart"
+      },
+      "client/test/native_control_test.dart": {
+        "sha256": "7787000c7d0788cbd4c5d0a91bdf3e0daeed740fca02edb45551f95a8f60180c",
+        "source": "next/client/test/native_control_test.dart"
+      },
+      "client/test/rust_socket_integration_test.dart": {
+        "sha256": "2c129df7d4a2586c62a8b7da085aeacc565d04c62a9ce3472d55508552302e6d",
+        "source": "next/client/test/rust_socket_integration_test.dart"
+      },
+      "client/test/voice_chat_test.dart": {
+        "sha256": "2b368d75f57cd49e05dfd98615e6ec3f6e6d1c6881b505b5149d83dac08d9fcb",
+        "source": "next/client/test/voice_chat_test.dart"
+      },
+      "client/test/widget_test.dart": {
+        "sha256": "79452a1567a1b97d3aa3347517d622cd3571b9d8d039c83129bb617b387d0ac2",
+        "source": "next/client/test/widget_test.dart"
+      },
+      "service/Cargo.lock": {
+        "sha256": "a7b535a1b02acf88c1b311a3549d5c38633d4ad590dfb755a0c9c5c28756714d",
+        "source": "next/service/Cargo.lock"
+      },
+      "service/Cargo.toml": {
+        "sha256": "434bed178e0a56ea93d188b2d454048be7a98c7aa9cf9fabf5897502182cca9c",
+        "source": "next/service/Cargo.toml"
+      },
+      "service/README.md": {
+        "sha256": "bc4deed55a3fd124fed7dd19a6a7a44384ca4e662b9207c37d3d506595410970",
+        "source": "next/service/README.md"
+      },
+      "service/src/app.rs": {
+        "sha256": "7a1838ba6399d3429b6c162ff7e11b48eb83af16cdb48c635480ecc734721730",
+        "source": "next/service/src/app.rs"
+      },
+      "service/src/app_transport.rs": {
+        "sha256": "3df30ff112bd5627d013437c53d07cd55ca4496426a35faeacd317208161e4ee",
+        "source": "next/service/src/app_transport.rs"
+      },
+      "service/src/control.rs": {
+        "sha256": "8de09fe127a963114a26f70a8d3312e2645f69bc29692bd49e22382a2b78e619",
+        "source": "next/service/src/control.rs"
+      },
+      "service/src/filesystem.rs": {
+        "sha256": "c1eee617fd1365a3e888796ee460b2b36746d98f09f03126c55ce6378d7b9766",
+        "source": "next/service/src/filesystem.rs"
+      },
+      "service/src/lib.rs": {
+        "sha256": "1f293cc7e20b21dfd1df8d7715da0c5adf021c9b34c847de62917d14db667014",
+        "source": "next/service/src/lib.rs"
+      },
+      "service/src/main.rs": {
+        "sha256": "e34e38d4910781f006fbc419c2b185a55b08a780c3166cd6b30889f7b8e20401",
+        "source": "next/service/src/main.rs"
+      },
+      "service/src/manager.rs": {
+        "sha256": "186b0ccd3112fb546ad23245648218fdb34766b1f9078966093dea25a7d282ea",
+        "source": "next/service/src/manager.rs"
+      },
+      "service/src/providers.rs": {
+        "sha256": "8806808ea002f79482504104825e8fa410efb125baa9ad55afa88fafd87a8603",
+        "source": "next/service/src/providers.rs"
+      },
+      "service/src/transport.rs": {
+        "sha256": "8626ad11aca4b5472389e8f89856f73e71752598e1716a4dcdef74c6f67749b5",
+        "source": "next/service/src/transport.rs"
+      },
+      "service/tests/application.rs": {
+        "sha256": "7741bd3ba82196ad7a7770c1e466f63e377394216c5d72133069cb72c2cbb1a0",
+        "source": "next/service/tests/application.rs"
+      },
+      "service/tests/debug_service.rs": {
+        "sha256": "a54fd41a188f2e0fbf5e4a9a17363017d35682eb7ac44b94a1ebe34db54cb4cc",
+        "source": "next/service/tests/debug_service.rs"
+      },
+      "sidecars/.dockerignore": {
+        "sha256": "6e54a9b94a93c36c4014c5c3366ae013e0a042673ba6a180d81b14dfac25c2b6",
+        "source": "next/sidecars/.dockerignore"
+      },
+      "sidecars/Dockerfile": {
+        "sha256": "f15f1252a2943e1b2f4efeba26f39e324cf361d117c19aaf2d9210f9137166ac",
+        "source": "next/sidecars/Dockerfile"
+      },
+      "sidecars/README.md": {
+        "sha256": "b3c8e9885b96b2f59a60a73f157af77b0dcd8685efeb88ae2698ea536dded07b",
+        "source": "next/sidecars/README.md"
+      },
+      "sidecars/VALIDATION.md": {
+        "sha256": "ebd4e0352408571f84f1939313bf223f8c18357a02f3ef7c75f5108a54ab2f45",
+        "source": "next/sidecars/VALIDATION.md"
+      },
+      "sidecars/api.py": {
+        "sha256": "ef93dbfbf2a6e39d05938351080626ef965a36e41494a385a88bb42d439aee00",
+        "source": "next/sidecars/api.py"
+      },
+      "sidecars/compose.yaml": {
+        "sha256": "dffa93486029ac15552b7ec32b9b6c8ce49a49b61171923366dfe40ccf37d15f",
+        "source": "next/sidecars/compose.yaml"
+      },
+      "sidecars/engines.py": {
+        "sha256": "760b269c08afc39355405b598db5fd43fdddd1fd5c73a8944227e0a6f2c345cf",
+        "source": "next/sidecars/engines.py"
+      },
+      "sidecars/healthcheck.py": {
+        "sha256": "68ad500549fbd32e6a7d84d5b7bb5b4ce6e6633feaa03fe8f5272a8a9710faff",
+        "source": "next/sidecars/healthcheck.py"
+      },
+      "sidecars/requirements.txt": {
+        "sha256": "e606a0a68cc5721fd497bbe597cad4da9394fdaa6f042f419f192c45e6beef6c",
+        "source": "next/sidecars/requirements.txt"
+      },
+      "sidecars/serve.py": {
+        "sha256": "bda58d8a7c4bc4edc3e3fc84f3ffe023512fab760fa79cca5a9b90453c11f65e",
+        "source": "next/sidecars/serve.py"
+      },
+      "sidecars/tests/test_api.py": {
+        "sha256": "a0cc3db9ce2a133895ce8d26f5f4d39ca6c6f8777d840dc66d094370b92179f1",
+        "source": "next/sidecars/tests/test_api.py"
+      },
+      "sidecars/tests/test_engines.py": {
+        "sha256": "ba7781b4ce14cfa3b12ac0077fe5b078356b0b93eff66fb0aebd1d1103cbae52",
+        "source": "next/sidecars/tests/test_engines.py"
+      },
+      "sidecars/tests/test_native.py": {
+        "sha256": "efb968a12c45f6ae812a90aa84cc94dc4c06a90a239e43acb20e4c51862c37f6",
+        "source": "next/sidecars/tests/test_native.py"
+      },
+      "tooling/Makefile": {
+        "sha256": "2512a4ee60b72a1919401000eafc54732cf3f506c911b0f6c15e7eca249eb519",
+        "source": "next/Makefile"
+      },
+      "tooling/dagger_main.py": {
+        "sha256": "2af427949c87c62210340fe75f4668db42b52f5f3515132163420d7ad4584701",
+        "source": "next/dagger/src/smith_next/main.py"
+      }
+    }
+  },
+  "candidate_binding": {
+    "exported_files_and_modes_sha256": "e3255252af785bd61959f1d7f7e1aba80b68f3c32938aaa8aed3b1e2df234c9b",
+    "recipient_root": "next/installer/dist",
+    "manifest_sha256": "0d5c040893abaa4a275e8a62944f3a0cdd7cbc8a7ce6617d609873041b7872bd",
+    "checksum_list_sha256": "bce1d170ed213628a51194aa5ede18b5986ae262bacdac5dedddf4f2fe898f9f",
+    "zipapp_sha256": "24812f1ff04a7a862299a02260858819c1d38c9f4910bbda195d1baab0062d97",
+    "service_sha256": "21838ce9d66e1e1907fbba6793c90cf0cc0e12eb9d88ad62b95f13001623df16",
+    "client_manifest_sha256": "7a495e07cb2e59064205b8d85f669362cc66a41fdf5059bd31101dbbc51bbf54",
+    "recipient_manifest_file_count": 18,
+    "exclusion_policy": "reviewed-text-payload-paths-v1",
+    "models_bundled": false,
+    "voice_bundled": false,
+    "actual_client_files": 15,
+    "zip_members": [
+      "__main__.py",
+      "install.py",
+      "installer.py"
+    ],
+    "zip_code_matches_source": true,
+    "generated_entrypoint": "import installer\nraise SystemExit(installer.main())\n",
+    "recipient_readme_matches": "next/dagger/INSTALLER.md",
+    "exported_and_packaged_client_file_bytes_modes_identical": true,
+    "four_identical_0755_service_copies": [
+      "next/service/dist/smith-service",
+      "next/client/dist/smith_backend/smith-service",
+      "next/installer/dist/payload/service/smith-service",
+      "next/installer/dist/payload/client/smith_backend/smith-service"
+    ],
+    "provenance_limit": "Checksums bind the reviewed local candidate and detect accidental changes; they do not authenticate an owner-rewritable package. Independent trusted retention/signature, clean-source provenance and license/SBOM gates are still required before publication.",
+    "artifact_file_hashes": {
+      "next/client/dist/data/flutter_assets/AssetManifest.bin": {
+        "sha256": "f566cc6fccc657365c0197accf3a7d6f80f85209ff666ff774f4dcbc524aa842",
+        "mode": 420
+      },
+      "next/client/dist/data/flutter_assets/FontManifest.json": {
+        "sha256": "28b1eb2b3d2e1ad60b8c8b0f9100b1ccbf492f7fa97f5bebb51ea97e73926e7d",
+        "mode": 420
+      },
+      "next/client/dist/data/flutter_assets/NOTICES.Z": {
+        "sha256": "69e3de4a9bd6c4c7f86533bb69c01636430fbdc83dc45515b56fbf4dc1f45207",
+        "mode": 420
+      },
+      "next/client/dist/data/flutter_assets/NativeAssetsManifest.json": {
+        "sha256": "9548a31e4a048135c1d94f919328bfb62ae2c7bb3cab96557c7941daa97776cb",
+        "mode": 420
+      },
+      "next/client/dist/data/flutter_assets/fonts/MaterialIcons-Regular.otf": {
+        "sha256": "27589e5c5479077b25bae3454eb1b0fe2ad2d0febab88f8bdbfab44b1cb00f2e",
+        "mode": 420
+      },
+      "next/client/dist/data/flutter_assets/shaders/ink_sparkle.frag": {
+        "sha256": "1fe8436a743884cb65078fe8c7b38e18f5365f2a2961270916f426fd13c604af",
+        "mode": 420
+      },
+      "next/client/dist/data/flutter_assets/shaders/stretch_effect.frag": {
+        "sha256": "bc7599dbbbaab310efe41520574138d21fb18a88c8fe4495ed79315309336f6f",
+        "mode": 420
+      },
+      "next/client/dist/data/flutter_assets/version.json": {
+        "sha256": "0c6c30f9d459e2914d5f2ad5cc7f45910f638ba3a970b470c7758c0f95fca116",
+        "mode": 420
+      },
+      "next/client/dist/data/icudtl.dat": {
+        "sha256": "325a86063d26334c2eabe1743cea073b612540fbf3d8fc2ef0b5708e3763a8c7",
+        "mode": 420
+      },
+      "next/client/dist/lib/libapp.so": {
+        "sha256": "df02e70ae15a847d41331c1da7e83017dfc2c5f8513ebd66ef11356e26ce4f85",
+        "mode": 420
+      },
+      "next/client/dist/lib/libflutter_linux_gtk.so": {
+        "sha256": "c6992ba778360217695a8193828286ae73c971e0e1f47bdb1b98c5190497cb24",
+        "mode": 420
+      },
+      "next/client/dist/share/applications/dev.smith.smith_client.desktop": {
+        "sha256": "25f825eaaa693ad4cfa0480b83d2f054fc58919604150915a773b91cf6ed5621",
+        "mode": 420
+      },
+      "next/client/dist/share/pixmaps/dev.smith.smith_client.png": {
+        "sha256": "79afede7f466a59eaa01759d246fc0c9d05d63ec7d361c6c27e0a93c37d85e53",
+        "mode": 420
+      },
+      "next/client/dist/smith_backend/smith-service": {
+        "sha256": "21838ce9d66e1e1907fbba6793c90cf0cc0e12eb9d88ad62b95f13001623df16",
+        "mode": 493
+      },
+      "next/client/dist/smith_client": {
+        "sha256": "e2154cfb1f593cc44794d95e4f151abbb4330da8fb5878de4ae316a3dadb9aa1",
+        "mode": 493
+      },
+      "next/installer/dist/README.txt": {
+        "sha256": "82215e744de796c5a7ab1249f62982ef515fab2a71a86ffbbb2ecb7387cff9a9",
+        "mode": 420
+      },
+      "next/installer/dist/SHA256SUMS": {
+        "sha256": "bce1d170ed213628a51194aa5ede18b5986ae262bacdac5dedddf4f2fe898f9f",
+        "mode": 420
+      },
+      "next/installer/dist/manifest.json": {
+        "sha256": "0d5c040893abaa4a275e8a62944f3a0cdd7cbc8a7ce6617d609873041b7872bd",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/data/flutter_assets/AssetManifest.bin": {
+        "sha256": "f566cc6fccc657365c0197accf3a7d6f80f85209ff666ff774f4dcbc524aa842",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/data/flutter_assets/FontManifest.json": {
+        "sha256": "28b1eb2b3d2e1ad60b8c8b0f9100b1ccbf492f7fa97f5bebb51ea97e73926e7d",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/data/flutter_assets/NOTICES.Z": {
+        "sha256": "69e3de4a9bd6c4c7f86533bb69c01636430fbdc83dc45515b56fbf4dc1f45207",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/data/flutter_assets/NativeAssetsManifest.json": {
+        "sha256": "9548a31e4a048135c1d94f919328bfb62ae2c7bb3cab96557c7941daa97776cb",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/data/flutter_assets/fonts/MaterialIcons-Regular.otf": {
+        "sha256": "27589e5c5479077b25bae3454eb1b0fe2ad2d0febab88f8bdbfab44b1cb00f2e",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/data/flutter_assets/shaders/ink_sparkle.frag": {
+        "sha256": "1fe8436a743884cb65078fe8c7b38e18f5365f2a2961270916f426fd13c604af",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/data/flutter_assets/shaders/stretch_effect.frag": {
+        "sha256": "bc7599dbbbaab310efe41520574138d21fb18a88c8fe4495ed79315309336f6f",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/data/flutter_assets/version.json": {
+        "sha256": "0c6c30f9d459e2914d5f2ad5cc7f45910f638ba3a970b470c7758c0f95fca116",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/data/icudtl.dat": {
+        "sha256": "325a86063d26334c2eabe1743cea073b612540fbf3d8fc2ef0b5708e3763a8c7",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/lib/libapp.so": {
+        "sha256": "df02e70ae15a847d41331c1da7e83017dfc2c5f8513ebd66ef11356e26ce4f85",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/lib/libflutter_linux_gtk.so": {
+        "sha256": "c6992ba778360217695a8193828286ae73c971e0e1f47bdb1b98c5190497cb24",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/share/applications/dev.smith.smith_client.desktop": {
+        "sha256": "25f825eaaa693ad4cfa0480b83d2f054fc58919604150915a773b91cf6ed5621",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/share/pixmaps/dev.smith.smith_client.png": {
+        "sha256": "79afede7f466a59eaa01759d246fc0c9d05d63ec7d361c6c27e0a93c37d85e53",
+        "mode": 420
+      },
+      "next/installer/dist/payload/client/smith_backend/smith-service": {
+        "sha256": "21838ce9d66e1e1907fbba6793c90cf0cc0e12eb9d88ad62b95f13001623df16",
+        "mode": 493
+      },
+      "next/installer/dist/payload/client/smith_client": {
+        "sha256": "e2154cfb1f593cc44794d95e4f151abbb4330da8fb5878de4ae316a3dadb9aa1",
+        "mode": 493
+      },
+      "next/installer/dist/payload/service/smith-service": {
+        "sha256": "21838ce9d66e1e1907fbba6793c90cf0cc0e12eb9d88ad62b95f13001623df16",
+        "mode": 493
+      },
+      "next/installer/dist/smith-installer": {
+        "sha256": "24812f1ff04a7a862299a02260858819c1d38c9f4910bbda195d1baab0062d97",
+        "mode": 493
+      },
+      "next/service/dist/smith-service": {
+        "sha256": "21838ce9d66e1e1907fbba6793c90cf0cc0e12eb9d88ad62b95f13001623df16",
+        "mode": 493
+      }
+    },
+    "artifact_directories": {
+      "next/client/dist": {
+        "mode": 448
+      },
+      "next/client/dist/data": {
+        "mode": 493
+      },
+      "next/client/dist/data/flutter_assets": {
+        "mode": 493
+      },
+      "next/client/dist/data/flutter_assets/fonts": {
+        "mode": 493
+      },
+      "next/client/dist/data/flutter_assets/shaders": {
+        "mode": 493
+      },
+      "next/client/dist/lib": {
+        "mode": 493
+      },
+      "next/client/dist/share": {
+        "mode": 493
+      },
+      "next/client/dist/share/applications": {
+        "mode": 493
+      },
+      "next/client/dist/share/pixmaps": {
+        "mode": 493
+      },
+      "next/client/dist/smith_backend": {
+        "mode": 493
+      },
+      "next/installer/dist": {
+        "mode": 448
+      },
+      "next/installer/dist/payload": {
+        "mode": 493
+      },
+      "next/installer/dist/payload/client": {
+        "mode": 493
+      },
+      "next/installer/dist/payload/client/data": {
+        "mode": 493
+      },
+      "next/installer/dist/payload/client/data/flutter_assets": {
+        "mode": 493
+      },
+      "next/installer/dist/payload/client/data/flutter_assets/fonts": {
+        "mode": 493
+      },
+      "next/installer/dist/payload/client/data/flutter_assets/shaders": {
+        "mode": 493
+      },
+      "next/installer/dist/payload/client/lib": {
+        "mode": 493
+      },
+      "next/installer/dist/payload/client/share": {
+        "mode": 493
+      },
+      "next/installer/dist/payload/client/share/applications": {
+        "mode": 493
+      },
+      "next/installer/dist/payload/client/share/pixmaps": {
+        "mode": 493
+      },
+      "next/installer/dist/payload/client/smith_backend": {
+        "mode": 493
+      },
+      "next/installer/dist/payload/service": {
+        "mode": 493
+      }
+    },
+    "artifact_directory_and_file_tree_sha256": "323ec6b4f71e1497cf7a16d908f66e039bbfbee270e5e1204646c6122b706cb8"
+  },
+  "required_checks_evidence": [
+    {
+      "check": "Aggregate Make/Dagger test entrypoint",
+      "cwd": "next",
+      "command": [
+        "make",
+        "test"
+      ],
+      "started_at_utc": "2026-10-12T21:51:26.362318+00:00",
+      "ended_at_utc": "2026-10-12T21:51:30.030512+00:00",
+      "duration_seconds": 3.668,
+      "expected": "Aggregate selects text service/client and isolated publisher/orchestrator/package suites, with no retired sidecar input.",
+      "actual": "Text service, client and isolated installer/package tests passed. All three test-execution nodes were CACHED; not counted as fresh suite execution.",
+      "exit_code": 0,
+      "result": "pass, cache-explicit; supplemented by fresh native executions below",
+      "evidence_source": "Independent terminal result; next/Makefile and next/dagger/src/smith_next/main.py"
+    },
+    {
+      "check": "Full candidate build/export including recipient package",
+      "cwd": "next",
+      "command": [
+        "make",
+        "build"
+      ],
+      "expanded_functions": [
+        "build-service --source service",
+        "build-client --source client --service service",
+        "build-installer --installer dagger --client client --service service"
+      ],
+      "started_at_utc": "2026-10-12T21:51:55.422841+00:00",
+      "ended_at_utc": "2026-10-12T21:52:03.810101+00:00",
+      "duration_seconds": 8.387,
+      "expected": "Export standalone service, complete paired Flutter client and separate executable installer package.",
+      "actual": "All exports completed. Compilation/packaging nodes were CACHED; actual exported bytes/modes, checksum manifest, ZIP code and paired payload were independently checked and executed in allowed private scenarios.",
+      "exit_code": 0,
+      "result": "pass; not a clean-cache rebuild",
+      "evidence_source": "Independent terminal result; candidate_binding and generated artifact hashes in this document"
+    },
+    {
+      "check": "Fresh Rust formatting, Clippy and all-target tests",
+      "cwd": "next/service",
+      "commands": [
+        [
+          "cargo",
+          "fmt",
+          "--all",
+          "--check"
+        ],
+        [
+          "cargo",
+          "clippy",
+          "--all-targets",
+          "--locked",
+          "--offline",
+          "--",
+          "-D",
+          "warnings"
+        ],
+        [
+          "cargo",
+          "test",
+          "--all-targets",
+          "--locked",
+          "--offline"
+        ]
+      ],
+      "started_at_utc": "2026-10-12T21:52:24.390975+00:00",
+      "ended_at_utc": "2026-10-12T21:52:54.678872+00:00",
+      "duration_seconds": 30.288,
+      "expected": "Quality gates and real fresh test execution with fake managers/providers/private compiled daemons; compatibility, bounds, no replay and corruption preservation.",
+      "actual": "Formatting/Clippy passed. Tests: library 11 passed plus 1 intentionally ignored subprocess-only fixture, main 1 passed, application 24 passed, debug integration 18 passed. Total 54 passed, 0 failed. Default-parallel debug fixture and test-only executable writer/spawn fence regression passed; no ETXTBSY occurred.",
+      "exit_codes": [
+        0,
+        0,
+        0
+      ],
+      "result": "pass",
+      "evidence_source": "Independent terminal output; next/service/src and next/service/tests",
+      "ignored_fixture": "manager::tests::captured_helper_fixture is deliberately invoked only by captured-helper subprocess tests; not a skipped required live integration gate."
+    },
+    {
+      "check": "Fresh Python publisher/orchestrator/package tests",
+      "cwd": "next/dagger",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "environment": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "started_at_utc": "2026-10-12T21:52:25.680772+00:00",
+      "ended_at_utc": "2026-10-12T21:52:29.509994+00:00",
+      "duration_seconds": 3.829,
+      "expected": "Read-only dry-run/decline, no-clobber/identity/partial outcomes, separate lifecycle/model consent, bounded transport/cleanup and payload exclusions.",
+      "actual": "100 tests passed: 43 publisher, 46 wrapper, 11 package. No failures or skips. Actual isolated filesystem publisher and ZIP entrypoint tests ran, while helper/provider behavior was fake/injected.",
+      "exit_code": 0,
+      "result": "pass",
+      "evidence_source": "Independent terminal output; next/dagger/tests/test_install.py, test_setup.py and test_package.py"
+    },
+    {
+      "check": "Fresh Flutter locked dependency resolution, format, analyzer and all tests",
+      "cwd": "next/client",
+      "commands": [
+        [
+          "flutter",
+          "pub",
+          "get",
+          "--offline",
+          "--enforce-lockfile"
+        ],
+        [
+          "sh",
+          "scripts/test.sh"
+        ]
+      ],
+      "fixture": {
+        "SMITH_TEST_SERVICE": "absolute resolution of next/service/dist/smith-service",
+        "candidate_sha256": "21838ce9d66e1e1907fbba6793c90cf0cc0e12eb9d88ad62b95f13001623df16"
+      },
+      "started_at_utc": "2026-10-12T21:53:35.716172+00:00",
+      "ended_at_utc": "2026-10-12T21:53:56.352134+00:00",
+      "duration_seconds": 20.636,
+      "expected": "No wizard/voice execution, flag-independent verified readiness, outage-safe history/draft/replies, no resend and captured helper/real temporary Rust IPC safety.",
+      "actual": "Locked offline resolution succeeded; format checked 13 files with 0 changes; analyzer reported no issues; all 64 tests passed with the actual exported Rust candidate supplied to the private compiled socket fixture.",
+      "exit_codes": [
+        0,
+        0
+      ],
+      "result": "pass",
+      "evidence_source": "Independent terminal output; next/client/scripts/test.sh and next/client/test"
+    },
+    {
+      "check": "Native release build gates",
+      "commands": [
+        {
+          "cwd": "next/service",
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked",
+            "--offline"
+          ],
+          "started_at_utc": "2026-10-12T21:54:49.153190+00:00",
+          "ended_at_utc": "2026-10-12T21:54:49.222802+00:00",
+          "duration_seconds": 0.07,
+          "exit_code": 0
+        },
+        {
+          "cwd": "next/client",
+          "argv": [
+            "sh",
+            "scripts/build.sh",
+            "absolute resolution of next/service/dist/smith-service"
+          ],
+          "started_at_utc": "2026-10-12T21:54:48.893278+00:00",
+          "ended_at_utc": "2026-10-12T21:54:49.878428+00:00",
+          "duration_seconds": 0.985,
+          "exit_code": 0
+        }
+      ],
+      "expected": "Locked optimized backend and Linux release client build without runtime launch or installation.",
+      "actual": "Cargo release build passed using existing compilation fingerprints; Flutter Linux build passed and copied the exported paired service into generated build output. These native build outputs are supplementary checks, not substitutions for the Dagger-exported recipient candidate.",
+      "result": "pass; not a clean-cache build",
+      "evidence_source": "Independent terminal output; component scripts/build.sh"
+    },
+    {
+      "check": "Recipient checksums, modes, ZIP source identity and full payload tuple",
+      "scenario": "Run package.verify on a byte/mode-identical private copy of next/installer/dist; independently compare ZIP members to source, README, both client file/mode maps and all four helpers.",
+      "expected": "Reviewed 15-path complete Flutter payload, exactly paired helper bytes, explicit ZIP code only, valid file/mode manifest and SHA256SUMS.",
+      "actual": "Private package.verify passed with 18 manifested files. All ZIP members/source comparisons, README comparison, full exported-to-packaged client byte/mode comparison and four-helper comparisons passed.",
+      "exit_code": 0,
+      "result": "pass",
+      "evidence_source": "Independent terminal assertions; candidate_binding; next/dagger/package.py"
+    },
+    {
+      "check": "Actual executable recipient help/dry-run with private HOME/XDG and syscall observation",
+      "scenario": "Copy the exact exported package to a tempfile private extraction; create 0700 HOME/data/config/runtime/cache/state/TMPDIR roots. Execute the ZIP shebang with PATH=/usr/bin:/bin, PYTHONDONTWRITEBYTECODE=1, no PYTHONPATH and an invalid private D-Bus address. strace -f -qq observes execve/connect/bind/openat and path-mutation calls. Snapshot roots and payload bytes/modes before/after.",
+      "started_at_utc": "2026-10-12T21:54:48.663016+00:00",
+      "ended_at_utc": "2026-10-12T21:54:49.293805+00:00",
+      "duration_seconds": 0.631,
+      "cases": [
+        {
+          "argv": [
+            "smith-installer",
+            "--help"
+          ],
+          "exit_code": 0,
+          "expected": "Executable stdlib entrypoint documents no default model/implicit upgrade or OS/Ollama provision.",
+          "actual": "Help includes --dry-run, --model EXACT, --pull-model and --verify-inference; separate effects and exclusions are stated.",
+          "trace_sha256": "a9444e043bc570100887aa14294119ddfd16d745766ce3c7b485d233426f69b8"
+        },
+        {
+          "argv": [
+            "smith-installer",
+            "--dry-run"
+          ],
+          "exit_code": 0,
+          "expected": "Artifact-only inspection and no writes/locks/helpers/network.",
+          "actual": "Dry run: no mutation. Displayed client manifest 7a495e07... and helper 21838ce9... exactly match the candidate.",
+          "trace_sha256": "f9394eda20639b7fe568f8dba896c9e45f4d257f49489d85c3d53cfa8bfd38d5"
+        },
+        {
+          "argv": [
+            "smith-installer",
+            "--dry-run",
+            "--model",
+            "local:exact",
+            "--pull-model",
+            "--verify-inference"
+          ],
+          "synthetic_model_argument": true,
+          "exit_code": 0,
+          "expected": "Effect-request flags do not bypass dry-run or cause inventory/pull/inference.",
+          "actual": "Artifact-only dry run: no mutation; no provider or helper calls.",
+          "trace_sha256": "f0c58430208b5748458846bc7d1b77b1c4271b9d4348f1f6e2ced08fa45ab4ed"
+        },
+        {
+          "argv": [
+            "smith-installer",
+            "--dry-run"
+          ],
+          "environment_variant": "Nonexistent private XDG_DATA_HOME",
+          "expected_exit_code": 1,
+          "exit_code": 1,
+          "actual": "Installation stopped: Existing XDG data root required. No rollback assumed; inspect reported paths before retry. Missing root was not created."
+        }
+      ],
+      "syscall_results_for_three_traced_cases": {
+        "connect_or_bind_calls": 0,
+        "write_open_or_path_mutation_calls": 0,
+        "exec_paths": [
+          "private copy of next/installer/dist/smith-installer",
+          "/usr/bin/python3"
+        ],
+        "native_helper_manager_gui_execs": 0
+      },
+      "private_home_xdg_snapshots_unchanged": true,
+      "recipient_payload_unchanged": true,
+      "temporary_extraction_removed": true,
+      "raw_trace_retention": "Raw traces were private temporary files and removed with the fixture. Digests and observed syscall summaries are retained here, not a claim that full raw traces remain available.",
+      "result": "pass including expected prerequisite rejection",
+      "evidence_source": "Independent executable/strace/snapshot terminal assertions; exact candidate ZIP and payload"
+    },
+    {
+      "check": "Packaged Python-to-actual Rust library five-operation wire integration",
+      "scenario": "Compile a temporary stdio harness against the current offline Cargo-built smith_service/serde_json libraries. Application::open receives an in-process Fake Provider; no production Providers/SystemManager/helper. Import installer and install directly from the exact exported ZIP. Its Native runner exchanges actual serialized AppRequest/AppReply over captured private stdio. Use fake publication/manager facts and separate fake consent to select an observed review-only:exact model, then state/submit/poll.",
+      "started_at_utc": "2026-10-12T21:57:36.451665+00:00",
+      "ended_at_utc": "2026-10-12T21:57:36.757810+00:00",
+      "duration_seconds": 0.306,
+      "harness_source_sha256": "0935cf8d9444ba1e0a7df03f08d853d9bcfbd43b4fe4967a2177fe05f1d443c5",
+      "expected": "Actual production serialization of retired STT includes model:null; packaged existing-model installer reaches configure; all five operations retain text-only results without real provider calls.",
+      "actual": "Wrapper reached configure and persisted the synthetic observed exact model with voice:null/revision1. state/models/configure/submit/poll all succeeded with actual library serialization. STT model:null and STT/TTS RETIRED were accepted. Controlled fake generation returned assistant_text with audio:null/speech_error:null and exactly one durable turn pair. New speak/transcribe/speech-output calls were rejected before stdio. setup_complete=false was not a wrapper readiness gate.",
+      "exit_code": 0,
+      "result": "pass",
+      "native_helper_or_real_manager_executed": false,
+      "real_provider_constructed_or_invoked": false,
+      "temporary_fixture_removed": true,
+      "evidence_source": "Independent captured stdio harness assertions; next/service/src/app.rs/providers.rs and packaged next/dagger/installer.py"
+    },
+    {
+      "check": "Adversarial packaging exclusion on the actual candidate",
+      "scenario": "For each case, copy the actual complete package into a private temporary root, add one inert prohibited input, and call package.check_payload directly before exclusion declarations.",
+      "cases": [
+        "models/hidden.gguf",
+        "data/flutter_assets/nested/weights.safetensors",
+        "data/flutter_assets/voice/kokoro.onnx",
+        "data/flutter_assets/opaque.bin",
+        "reference/voice-chat-v1/README.md",
+        "empty-model-directory"
+      ],
+      "expected": "All files and even an empty unknown directory fail the reviewed path contract.",
+      "actual": "6/6 rejected with Unreviewed client payload input; model/voice/reference assets are excluded. No model weights or real reference source were used as fixtures.",
+      "exit_code": 0,
+      "result": "pass",
+      "evidence_source": "Independent private-copy assertions; next/dagger/package.py CLIENT_FILES/CLIENT_DIRS/check_payload"
+    },
+    {
+      "check": "Focused recovery/readiness and actual exported Rust socket regression",
+      "cwd": "next/client",
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "test/conversation_test.dart",
+        "test/rust_socket_integration_test.dart",
+        "--reporter",
+        "expanded"
+      ],
+      "fixture": "Absolute resolution of next/service/dist/smith-service; copied privately by the test, never installed or passed to a real manager",
+      "started_at_utc": "2026-10-12T21:59:48.963618+00:00",
+      "ended_at_utc": "2026-10-12T21:59:51.544267+00:00",
+      "duration_seconds": 2.581,
+      "expected": "M1/M2 recovery preserves verified replies without synthetic/duplicate history; flags true/false/null do not gate verified chat; identity conflicts still block; compiled private daemon detaches/restarts safely.",
+      "actual": "All 21 focused tests passed. Explicit M1/M2, flag variants, unverified-Core blocks, no automatic Retry/send, draft preservation, honest installer handoff and compiled fixture were included.",
+      "exit_code": 0,
+      "result": "pass",
+      "evidence_source": "Independent expanded test output; next/client/test/conversation_test.dart and rust_socket_integration_test.dart"
+    },
+    {
+      "check": "Documentation, explicit input boundary and before/after identity",
+      "scenario": "Inspect canonical SCOPE/ARCHITECTURE/PROCESS/DESIGN/HOST_PROFILE/as-built report, product reset and next READMEs; inspect Make/Dagger AST and actual ZIP/payload; verify archive and source maps before/after validation; git diff --check.",
+      "expected": "Implemented source direction and recipient prerequisites are distinguished from target/legacy/live/release claims; no archive/sidecar packaging surface; no source drift or whitespace diagnostic.",
+      "actual": "Affected canonical documents/product reset/READMEs reflect text-only conversation-first and separate prepared-Ubuntu installer. Missing Ollama/runtime/manager and implicit-upgrade limits are explicit. Dagger functions are only service/client/installer test/build plus aggregate. Core safety files match archived bytes, removed active files are absent, all 46 archive hashes match and the full reviewed binding is unchanged. git diff --check returned 0.",
+      "exit_code": 0,
+      "result": "pass",
+      "evidence_source": "Independent file inspection, AST/hash assertions and terminal git diff --check"
+    }
+  ],
+  "observations_not_hidden_as_passes": [
+    {
+      "classification": "Expected safety rejection in an unsuitable checkout location, not a product defect",
+      "command": [
+        "python3",
+        "dagger/package.py",
+        "--root",
+        "installer/dist",
+        "--verify"
+      ],
+      "cwd": "next",
+      "observed_exit_code": 1,
+      "actual": "Unsafe directory ancestor: next/installer, mode 0775, UID1000. The subsequent static ZIP/hash assertions succeeded; the shell command's final status must not be mistaken for package.verify success.",
+      "resolution": "Did not chmod or weaken the checkout/validator. A byte/mode-identical copy under a private extraction root passed package.verify and all executable help/dry-run checks. Runtime helper execution was not tested from the unsafe checkout."
+    },
+    {
+      "classification": "Cache reuse",
+      "actual": "Independent make test/make build invocations returned 0 with CACHED test/build nodes. Fresh source suite executions and independent exported-package checks are separately recorded; no claim of fresh Dagger test execution or clean compilation is made."
+    },
+    {
+      "classification": "Provider inventory is not inference",
+      "actual": "Source installer can publish/start Smith yet deliberately report no selected model or unavailable prerequisites. The app's legacy flag is not readiness, and observing an installed tag does not prove real inference. No real provider or installed-host success is inferred from these tests."
+    }
+  ],
+  "requirements_traceability": [
+    {
+      "requirement": "R1 conversation-first / setup flag ignored without weakened integrity",
+      "implementation": [
+        "next/client/lib/main.dart",
+        "next/client/lib/control_api.dart",
+        "next/client/lib/text_chat.dart",
+        "next/client/lib/chat_panel.dart"
+      ],
+      "evidence": "64 fresh client tests plus 21 focused tests; verified identity remains mandatory, flag variants do not gate chat, Retry never resends, M1/M2 provisional answers are separate from authoritative history.",
+      "result": "implemented and independently source-validated"
+    },
+    {
+      "requirement": "R2 independent installer / separate consent / prerequisite honesty / no implicit upgrade",
+      "implementation": [
+        "next/dagger/install.py",
+        "next/dagger/installer.py",
+        "next/dagger/package.py",
+        "next/dagger/INSTALLER.md"
+      ],
+      "evidence": "100 fresh Python tests, actual ZIP help/dry-run/expected missing-root rejection and syscall snapshots, actual Rust-library existing-model wire integration; mismatch blocks preserved publication, no global lifecycle --yes bypass or automatic OS/Ollama provisioning.",
+      "result": "implemented and independently isolated-validated; live installation/inference unverified"
+    },
+    {
+      "requirement": "R3 bounded durable text / valid voice-v1 compatibility / no retired execution or replay",
+      "implementation": [
+        "next/service/src/app.rs",
+        "next/service/src/providers.rs",
+        "next/service/tests/fixtures/voice-v1.json",
+        "next/service/tests/fixtures/voice-v1-requests.json"
+      ],
+      "evidence": "54 fresh Rust tests validate legacy preferences/history/results/IDs/tombstones, all running legacy kinds interrupt without replay, retained duplicates resolve originals, conflicts/expiry/capacity fail closed, corrupt data is preserved. No active audio transport/functions; five-operation wire integration retains only inert voice data.",
+      "result": "implemented and independently source/fake-validated"
+    },
+    {
+      "requirement": "R4 exact excluded archive / no default voice gate / paired recipient payload",
+      "implementation": [
+        "reference/voice-chat-v1/MANIFEST.json",
+        "next/Makefile",
+        "next/dagger/src/smith_next/main.py",
+        "next/dagger/package.py"
+      ],
+      "evidence": "46/46 frozen hashes, explicit input/AST inspection, make build exports, actual full-payload tuple/modes/checksums/ZIP identity and 6 independent forbidden-path adversarial cases.",
+      "result": "implemented and independently source/artifact-validated"
+    },
+    {
+      "requirement": "Canonical documentation updated without rewriting historical evidence",
+      "implementation": [
+        "docs/SCOPE.md",
+        "docs/ARCHITECTURE.md",
+        "docs/PROCESS.md",
+        "docs/DESIGN.md",
+        "docs/HOST_PROFILE.md",
+        "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+        "docs/plans/LOCAL-SMITH-PRODUCT-RESET.md",
+        "next/README.md"
+      ],
+      "evidence": "Inspected current text-reset paragraphs, historical headings and recipient/runtime/live approval caveats; documents are included in the unchanged reviewed binding. next/VALIDATION.md is intentionally not included or edited.",
+      "result": "implemented documentation checked against the reviewed source"
+    }
+  ],
+  "prior_review_context_and_independent_recheck": [
+    {
+      "review": "b10ccada",
+      "context": "User reported closed v1 compatibility/no-speech/default-flag, M1/M2 recovery and L1 test-only spawn fence findings.",
+      "independent_current_evidence": "Fresh Rust/default-parallel fixture tests and client full/focused M1/M2/identity/flag tests passed. Reviewed actual compatibility/admission, publication ownership fence and test-only executable I/O fence source.",
+      "residual": "The exact descriptor holder/cause in the historical natural ETXTBSY failure remains an inference, not a captured syscall observation. This review neither rewrites earlier evidence nor claims to have re-proved that historical attribution."
+    },
+    {
+      "review": "0b40",
+      "context": "User reported closed H1 production STT model schema, M1 remote/tool metadata, M2 ambiguous duplicates and P1 payload policy findings.",
+      "independent_current_evidence": "Fresh 46 wrapper/11 package tests passed; actual library-to-packaged-Python integration accepted STT model:null and reached configure. Remote/tool/duplicate negative tests passed; actual package rejects 6 added forbidden file/directory cases before declarations.",
+      "residual": "Fake metadata and wire validation are not installed Ollama-version, download or real-inference evidence."
+    },
+    {
+      "context": "Parent latest make test PASS52s, installer/build PASS42.4s and earlier full make build PASS.",
+      "use": "Context only; the current independent command statuses/cache observations, fresh native suites, artifact identities and private executable scenarios above determine this review."
+    }
+  ],
+  "evidence_gaps": {
+    "missing_required_checks_within_approved_source_scope": [],
+    "outside_scope_not_executed": [
+      "Real user-manager registration/start/stop/reload, installed binary mismatch/upgrade execution and clean-host dependency installation",
+      "Actual Ollama version/model compatibility, inference, pull/cancel/cache behavior, GPU behavior or real network-denied inference",
+      "Real graphical install-to-chat/close/reopen/menu/dock experience and logout/reboot/autostart/linger behavior",
+      "Clean-clone/clean-cache reconstruction, digest-pinned toolchain/OS inputs, complete licenses/SBOM, signed/authenticated release provenance and independently retained approval digest",
+      "Legacy release workflow remediation and human publication/deployment approval"
+    ],
+    "inspection_limit": "Hashes and scope cover listed source/policy/archive/artifact inputs, not unrelated legacy source, installed files, secrets or the entire host. No installed-host state was observed to assert an unchanged runtime guarantee."
+  },
+  "findings_by_severity": {
+    "critical": [],
+    "high": [],
+    "medium": [],
+    "low": []
+  },
+  "residual_gates": [
+    {
+      "gate": "New installed text-candidate rollout/upgrade",
+      "state": "closed awaiting separately bound human approval and candidate-specific stop/backup/replace/start/rollback evidence; never reuse the prior voice upgrade approval"
+    },
+    {
+      "gate": "Real provider/model integration",
+      "state": "unverified and not authorized here; validate actual versions, exact model/resource compatibility, explicit pull/cancel behavior and actual inference/network denial separately"
+    },
+    {
+      "gate": "Desktop/clean-host lifecycle",
+      "state": "unverified and separately approved; source/private IPC is not GUI/user-manager/clean-recipient evidence"
+    },
+    {
+      "gate": "Model/offline pack distribution",
+      "state": "future separately reviewed license/provenance/import policy; default package remains model/voice-free by reviewed payload paths"
+    },
+    {
+      "gate": "Production publication",
+      "state": "no-go: uncommitted/cached development candidate, missing clean-source/authenticity/licenses/SBOM/integration evidence and approvals; .github/workflows/release.yml still permits ungated legacy non-draft publication and was not changed or triggered"
+    },
+    {
+      "gate": "Historical ETXTBSY exact-cause assertion",
+      "state": "Do not claim exact natural-run attribution. Test-only mitigation and its current regression pass are evidence, not retroactive syscall proof."
+    }
+  ],
+  "final_decision": {
+    "verdict": "pass",
+    "verdict_scope": "Source-limited integrated assurance/adversarial review of the exact bound current text-reset source and development artifacts; all required checks within this approval scope are verified and passing.",
+    "source_gate_decision": "go",
+    "release_gate_decision": "no-go",
+    "blocking_findings_within_source_scope": 0,
+    "required_remediation_within_source_scope": [],
+    "required_before_external_effect": "Resolve applicable residual integration/provenance/workflow gates, independently retain the exact candidate/evidence digest, and obtain fresh effect-specific human approval. This report grants none.",
+    "accepted_risk_or_deployment_publication_approval": false
+  },
+  "review_completed_at_utc": "2026-10-12T22:06:15.978645+00:00"
+}

@@ -1,0 +1,41 @@
+{
+  "work_record": "LOCAL-SMITH-NEXT-NATIVE-RUNNER",
+  "date": "2026-10-13",
+  "branch": "feature/autonomy",
+  "base_revision": "04b72f5f5093d66294cb7e525dac0f4312dd0cbc",
+  "target": "uncommitted source and isolated build candidate",
+  "validation": [
+    {"command": "cargo test --locked --offline --manifest-path next/service/Cargo.toml --test runner", "result": "PASS", "tests": 25},
+    {"command": "cargo clippy --locked --offline --manifest-path next/service/Cargo.toml --all-targets -- -D warnings", "result": "PASS"},
+    {"command": "cargo test --locked --offline --manifest-path next/service/Cargo.toml", "result": "PASS"},
+    {"command": "cargo clippy --locked --offline --manifest-path next/installer/Cargo.toml --all-targets -- -D warnings", "result": "PASS"},
+    {"command": "cargo test --locked --offline --manifest-path next/installer/Cargo.toml", "result": "PASS"},
+    {"command": "DAGGER_NO_NAG=1 DAGGER_CLOUD_TOKEN= DAGGER_PROGRESS=plain make service/test", "cwd": "next", "result": "PASS"},
+    {"command": "DAGGER_NO_NAG=1 DAGGER_CLOUD_TOKEN= DAGGER_PROGRESS=plain make test build", "cwd": "next", "result": "PASS final run", "counts": {"service": 80, "installer": 204, "gtk_shell": 5, "flutter": 64, "package": 22}, "notes": "Actual ELF package and no-Python CLI gates included. Top-level ignored child fixtures are invoked by subprocess tests. Cache reuse is not hermetic or clean-clone evidence."}
+  ],
+  "documentation_refresh": {"command": "DAGGER_NO_NAG=1 DAGGER_CLOUD_TOKEN= DAGGER_PROGRESS=plain make installer/build", "cwd": "next", "result": "PASS after recipient README correction; installer ELF bytes unchanged, package manifest refreshed"},
+  "prior_attempts": [
+    "First aggregate failed: unchanged fixture_spawn_waits_until_executable_writer_is_closed timed out at tests/debug_service.rs:768. No test safeguards changed; subsequent isolated service and final aggregate passed.",
+    "Intermediate service-plus-aggregate command exceeded its 200-second tool budget after service PASS and partial build exports. Final bounded rerun exited zero and exported all candidates."
+  ],
+  "review": {
+    "session": "092f336f-2fec-4d2a-bda1-ac0003731980",
+    "initial": "FAIL: verified model path substitution, active native inference surviving owner teardown, verification ignoring cancellation/deadline",
+    "closure": "Scoped static PASS: all three blockers closed; reviewer inspected source/regression assertions, did not independently rerun tests",
+    "limits": "Not full integration/release assurance or deployment approval"
+  },
+  "sha256": {
+    "next/service/src/runner.rs": "10605ed0d2f2b458a9bc7505471583146264fe47a355928565acfdc791967338",
+    "next/service/src/providers.rs": "7cca3823d918c1d1b8c9ce10e646ac0dda13e0e3d871b0b60a973c0f1199a07f",
+    "next/service/src/app.rs": "c312bbdf79fea1e6348c4c8b3937e61e89da981ecf9d41d56b211694ebbfc239",
+    "next/service/tests/runner.rs": "89bcf2dd969c20acdac7d86258b932430d8fd650d88e59927a1364c9f2a0fd37",
+    "next/installer/src/catalog.rs": "8905b5c637214df1e1e26c3822f7baffb00dac974d12caf8ea530537d7036c09",
+    "next/service/dist/smith-service": "133e2b5876f7c9aef75dd757d41b2b03b10c7911a5a70c4fbee3a9aa46f0a00c",
+    "next/installer/dist/smith-installer": "3996915cff48fef57b89fae9a3edbc2aa87a0d3019f99049d98e7d61af9e4477",
+    "next/installer/dist/smith-installer-ui": "2b6236694ef6341c84cb2ad85c2f866567dccc631389957a6c836007b541ef28",
+    "next/installer/dist/manifest.json": "52556592a424595f9d1d9f2bc700d1b220c842c9031bf2e314e539684c2726c3"
+  },
+  "excluded_effects": ["installed app/service/state changes", "real user-manager operations", "model-weight downloads", "real GUI launch", "GPU changes", "autostart/linger", "commits or remote mutation"],
+  "remaining_gates": ["real-model inference and download/cancel integration", "GUI model provisioning (deferred)", "GPU acceleration", "clean-host runtime", "actual Rust 1.83 compilation", "model license review, SBOM and signed provenance", "candidate-bound live upgrade and operator QA"],
+  "trust_limits": ["Checksums are not authenticity", "Held model FD prevents pathname substitution, not hostile same-UID inode writes", "Verification cancellation is cooperative between reads; individual filesystem reads/fsync may stall"]
+}

@@ -1,0 +1,72 @@
+{
+  "work_record": "LOCAL-SMITH-NEXT-VOICE-CHAT",
+  "task": "T1",
+  "claim": "implemented source; developer self-check, not independent assurance or deployment approval",
+  "date": "2026-10-09",
+  "base_revision": "04b72f5f5093d66294cb7e525dac0f4312dd0cbc",
+  "branch": "feature/autonomy",
+  "scope": "next/service/** only, uncommitted worktree",
+  "environment": {"platform": "Linux x86_64", "rustc": "1.98.0", "effective_uid": 1000},
+  "validation": [
+    {"command": "cargo fmt --all --check", "expected": "no formatting differences", "actual": "passed", "exit": 0},
+    {"command": "cargo clippy --offline --locked --all-targets -- -D warnings", "expected": "no warnings or errors", "actual": "passed", "exit": 0},
+    {"command": "cargo test --offline --locked --all-targets", "expected": "application and lifecycle regressions pass", "actual": "50 passed, 0 failed, 1 existing captured-helper subprocess fixture ignored by design", "exit": 0},
+    {"command": "cargo build --offline --release --locked", "expected": "release service builds", "actual": "passed", "exit": 0},
+    {"command": "cargo metadata --locked --format-version 1 --offline --filter-platform x86_64-unknown-linux-gnu", "expected": "Linux dependency rust_version metadata does not exceed declared 1.83", "actual": "passed after Rust-version-compatible lockfile resolution; compilation used Rust 1.98.0, not an installed 1.83 toolchain", "exit": 0}
+  ],
+  "coverage": [
+    "All four text/speech input-output paths through injected fake providers; transcription never implicitly submits",
+    "Separate private app socket, current Controller managed facts, peer PID/UID and socket metadata checks, unchanged Core reply schema",
+    "Single worker admission, responsive state/poll, busy and configuration guards, persisted acknowledgement metadata",
+    "Restart interruption without replay, terminal preservation, instance mismatch, identical-ID deduplication, input conflict and expiry",
+    "Atomic synced preferences/history/job publication, bounded complete history pairs, corrupt/unsupported/unsafe state preservation",
+    "Transient audio, text retained on missing/failed TTS or oversized TTS input, deliberate synthesis without generation",
+    "Exact eligible local tags, remote/cloud rejection, tool-call/model-substitution rejection, WAV formats/durations and text limits",
+    "Exact 4 MiB buffered frame limit, truncated/multiple frames, finite unread helper output, stale app path Start rejection",
+    "Private ephemeral HTTP fixtures: redirects refused, chunked body bounds, finite request budgets; no configured production providers contacted",
+    "Existing fake-manager approval, runtime identity, socket, cancellation and lifecycle regression tests retained",
+    "Reviewer 0b5add83 F1: bounded worker-owner teardown, publication revocation under the commit mutex, retained join handle; gated last-handle drop/reopen regression preserves new state bytes after releasing the old worker and prevents stale synthesis",
+    "Reviewer 0b5add83 F2: more than one running durable job rejected before reconciliation, with invalid bytes preserved",
+    "Reviewer 0b5add83 F3: nested semantic and type checks for hexadecimal digests, unique bounded model/voice inventory, bounded provider and speech errors, readiness consistency, mandatory nullable fields, STT model metadata, and complete serialized reply bounds; corrupt fixtures preserved, invalid live inventory converted to bounded failure"
+  ],
+  "review_remediation": {
+    "reviewer": "0b5add83",
+    "findings": {"F1":"implemented with permanent gated-worker regression", "F2":"implemented with pre-reconciliation corruption regression", "F3":"implemented with nested semantic/type/size and maximal-valid-metadata regressions"},
+    "authority": "developer self-check only; independent confirmation pending",
+    "worker_shutdown": "The final application owner revokes publication under the commit mutex and disconnects admission. It retains the worker JoinHandle and waits up to 250 ms for exit, joining if finished. A still-blocked provider worker is detached only after fencing; it cannot publish old state or enter a later synthesis phase. This is not forcible cancellation of external inference.",
+    "validation_network": "Cargo checks, tests and release build used --offline; formatting performs no dependency resolution. HTTP tests used only private ephemeral loopback fixtures. No production provider, real manager, container or host installation effects."
+  },
+  "contract_notes_for_parent": {
+    "wire": "Frozen request, reply and operation result fields retained; no production endpoint environment override",
+    "retention": "32 retained jobs plus 1024 durable expired-ID tombstones. Eviction applies only to terminal jobs. Expired IDs return REQUEST_EXPIRED and cannot be admitted again. New work returns CAPACITY once durable expiry metadata is full; no automatic reset/maintenance API was added.",
+    "audio_after_restart": "Completed submit text survives with audio null and speech_error AUDIO_EXPIRED. Completed speak retains succeeded metadata but result null and error AUDIO_EXPIRED; deliberate replay requires a new request ID.",
+    "state_file": "Separate 0600 app-state.json, bounded to 16 MiB including JSON escaping and retained terminal results. Debug state.json is not reinterpreted.",
+    "provider_budgets": "Overall inventory 10 seconds, STT 90, generation 120 including tag revalidation, synthesis 60 including voice revalidation; 2-second connect and bounded response bodies. Timeout does not guarantee external inference stopped."
+  },
+  "pending": [
+    "Parent-owned canonical documentation and cross-component integration",
+    "Fresh independent assurance/adversarial review",
+    "Separately approved installed-host manager, provider/model and graphical/audio smoke"
+  ],
+  "effects_not_performed": ["normal-host installation or upgrade", "real user-manager action", "provider start or production inference", "container operation", "model download", "microphone capture", "commit", "publication"],
+  "documentation_update": {
+    "scope": "README.md and this validation record only; no code, dependency or test modifications",
+    "coverage": "Implemented app interface, separate preserved Core contract/flag, worker ownership fence and 250 ms join wait, bounded durable state, transient audio, explicit 32-job/1024-tombstone capacity, reqwest/base64 dependencies and provider constraints",
+    "validation": "Existing 12 code/dependency/test hashes verified unchanged; README hash captured and complete 13-entry hash manifest verified. Rust quality gates above are retained from the preceding source validation, not rerun for this documentation-only change."
+  },
+  "source_sha256": {
+    "README.md": "bc4deed55a3fd124fed7dd19a6a7a44384ca4e662b9207c37d3d506595410970",
+    "Cargo.toml": "434bed178e0a56ea93d188b2d454048be7a98c7aa9cf9fabf5897502182cca9c",
+    "Cargo.lock": "a7b535a1b02acf88c1b311a3549d5c38633d4ad590dfb755a0c9c5c28756714d",
+    "src/app.rs": "7a1838ba6399d3429b6c162ff7e11b48eb83af16cdb48c635480ecc734721730",
+    "src/app_transport.rs": "3df30ff112bd5627d013437c53d07cd55ca4496426a35faeacd317208161e4ee",
+    "src/providers.rs": "8806808ea002f79482504104825e8fa410efb125baa9ad55afa88fafd87a8603",
+    "src/control.rs": "8de09fe127a963114a26f70a8d3312e2645f69bc29692bd49e22382a2b78e619",
+    "src/filesystem.rs": "c1eee617fd1365a3e888796ee460b2b36746d98f09f03126c55ce6378d7b9766",
+    "src/lib.rs": "1f293cc7e20b21dfd1df8d7715da0c5adf021c9b34c847de62917d14db667014",
+    "src/main.rs": "e34e38d4910781f006fbc419c2b185a55b08a780c3166cd6b30889f7b8e20401",
+    "src/transport.rs": "8626ad11aca4b5472389e8f89856f73e71752598e1716a4dcdef74c6f67749b5",
+    "tests/application.rs": "7741bd3ba82196ad7a7770c1e466f63e377394216c5d72133069cb72c2cbb1a0",
+    "tests/debug_service.rs": "a54fd41a188f2e0fbf5e4a9a17363017d35682eb7ac44b94a1ebe34db54cb4cc"
+  }
+}

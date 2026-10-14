@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=smith
+Comment=Smith desktop client
+Exec=@BINARY_NAME@
+Icon=@APPLICATION_ID@
+StartupWMClass=@APPLICATION_ID@
+Terminal=false
+Categories=Utility;

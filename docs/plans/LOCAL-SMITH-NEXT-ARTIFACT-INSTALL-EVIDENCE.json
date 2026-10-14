@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "work_record": "LOCAL-SMITH-NEXT-ARTIFACT-INSTALL",
+  "review_type": "Independent focused final assurance and adversarial re-review",
+  "claim_class": "implemented source and isolated validation only",
+  "base_revision": "04b72f5f5093d66294cb7e525dac0f4312dd0cbc",
+  "target_revision": null,
+  "revision_note": "Reviewed uncommitted worktree; source identities below, not HEAD alone, bind this focused review.",
+  "validation_started_utc": "2026-10-08T04:47:12Z",
+  "scope": [
+    "Close M1 service-only final verification, including idempotent installation",
+    "Close L1 Dagger README and pipeline route documentation",
+    "Rerun installer regressions and aggregate Make/Dagger tests",
+    "Rerun build/export and dry-expand artifact-install routes",
+    "Preserve earlier H1/H2 closure under the documented concurrency refinement"
+  ],
+  "source_sha256": {
+    "AGENTS.md": "7d66c0b9febb4893906aef93c37123afcca59196e5e4664ba32ab850dec55f83",
+    "roles/assurance.md": "6639354d7cb9ea530f85aba74c82636c4c9dbc291b62d3b3c2ed49295e10ea60",
+    "next/install.py": "117695e17c58b281a2d4392e594cde251443d4e07077cbe39b1527787d8d897b",
+    "next/tests/test_install.py": "5f0006b87e2186060322df82460d7af4619374f4912ef2a9e9ae271315784287",
+    "next/Makefile": "bdeae7c6cbbd132df18875529956317629da729679ba425ec804b6130a04d544",
+    "next/dagger.toml": "987938c78b3fb6fd311c9688c702b7b6e7f4784865848b29513a6c2a9f995898",
+    "next/dagger/src/smith_next/main.py": "21fe79d7363064419f973215ed72630e351988ac9fa90ac584f76a84e172911f",
+    "next/dagger/README.md": "22ad863feb6f9a8159814de2a9c8f01c8d2be11084f8f986c9dda0d6a2f93f10",
+    "next/dagger/pipeline.md": "e67a7f7f01ccb6702bd23c50bf90b0d9a5429c38a3af4916835d6bb6795e020f",
+    "next/README.md": "4cef86647a42d324fa511cdef098a281cabae85863ba7d80e60900b81d5dddb0",
+    "docs/plans/LOCAL-SMITH-NEXT-ARTIFACT-INSTALL.md": "3db90ecfeaf22fb313e19cd4ef733617811c9f7ec300041a8b11e748d1307b6a",
+    "docs/SCOPE.md": "caa66f1041639ce1c22844930b3cdec2854c72b960fdf9d6f11feeac39d36e8e",
+    "docs/ARCHITECTURE.md": "19fb58c897146f4b079eaaae512f3a8f5e33303d4e2a4334a64e8be9f6d54b04",
+    "docs/PROCESS.md": "f1aa13a2b7e223b830e8e7bb86828719bb948a375312e9504e69c9742af6adf7",
+    "docs/DESIGN.md": "763e74c0b624ab62c02a503b6e8de269d6a0f4dc1f644c9d672051cae9d63670",
+    "docs/HOST_PROFILE.md": "e59c6ee21e93a87b26c883fe2248300369e9e7bc7c07e404d4e37954f236f3d0",
+    "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md": "5a33835c1d6e061fdcaafc5442428eafe84fdfdf77d170763271eab35566701d"
+  },
+  "checks": [
+    {
+      "name": "Installer regression suite",
+      "cwd": ".",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s next/tests -p test_install.py -v",
+      "timeout_ms": 120000,
+      "expected": "All isolated regressions pass without skipped root-only execution",
+      "actual": "Ran 43 tests in 2.036s; OK; no skips reported",
+      "exit_status": 0,
+      "result": "pass",
+      "evidence_source": "Reviewer terminal execution; tests at next/tests/test_install.py"
+    },
+    {
+      "name": "Aggregate Make/Dagger tests",
+      "cwd": "next",
+      "command": "make test",
+      "timeout_ms": 180000,
+      "expected": "Service, client and isolated installer checks/tests all pass",
+      "actual": "Dagger TRACE PASSED; test --service service --client client --installer .; reported 6.3s; Service, client and isolated installer tests passed.",
+      "exit_status": 0,
+      "result": "pass",
+      "evidence_source": "Reviewer terminal execution; next/Makefile and next/dagger/src/smith_next/main.py"
+    },
+    {
+      "name": "Build/export",
+      "cwd": "next",
+      "command": "make build",
+      "timeout_ms": 180000,
+      "expected": "Standalone service and paired client bundle export successfully",
+      "actual": "Dagger build-service and build-client passed; exported service/dist/smith-service and client/dist; cached build steps used",
+      "exit_status": 0,
+      "result": "pass",
+      "evidence_source": "Reviewer terminal execution; next/Makefile"
+    },
+    {
+      "name": "Install route expansion",
+      "cwd": "next",
+      "command": "make -n install client/install service/install installer/test",
+      "expected": "Dagger build/export precedes native installer with the correct explicit artifacts; isolated test uses test-installer",
+      "actual": "Expanded aggregate --client client/dist --service service/dist/smith-service; client-only --client client/dist; service-only --service service/dist/smith-service; dagger call test-installer --source .; no install recipe executed",
+      "exit_status": 0,
+      "result": "pass",
+      "evidence_source": "Reviewer terminal execution; next/Makefile"
+    },
+    {
+      "name": "Independent original M1 probes",
+      "cwd": ".",
+      "scenario": "Import the existing InstallerTests temporary-root fixture. Wrap Filesystem.publish, delegate to the original, then after /bin/smith-service publication either write foreign-service bytes at 0755 or unlink the binary. Run run_install(client=False, yes=True). Clean up each temporary fixture.",
+      "expected": "Both cases return 1 and omit Installation complete",
+      "actual": "Change: rc=1, success message=False. Delete: rc=1, success message=False. Probe assertions passed.",
+      "exit_status": 0,
+      "result": "pass",
+      "evidence_source": "Reviewer inline Python terminal execution; next/tests/test_install.py fixture"
+    },
+    {
+      "name": "M1 regression/source review",
+      "scenario": "Read service-only final fs.file comparison and new post-publication, existing-service-at-apply, and verified-idempotency regressions",
+      "expected": "Exact approved bytes/mode required on fresh and idempotent service-only paths; changed bytes/mode/deletion fail without success or destructive rollback",
+      "actual": "next/install.py checks fs.file(binary, 0755) against (approved helper, 0755) before service-only return. All three added tests passed, including bytes/mode/delete subcases; idempotent test preserves snapshot/inode and asserts no publication.",
+      "result": "pass",
+      "evidence_source": "next/install.py:469-477; next/tests/test_install.py:137-206"
+    },
+    {
+      "name": "L1 documentation review",
+      "scenario": "Compare Dagger README command examples and pipeline function table to actual Make/Dagger signatures",
+      "expected": "Aggregate includes required installer argument and table includes all three suites",
+      "actual": "README documents --installer . and test-installer; pipeline lists test-installer and all-three aggregate",
+      "result": "pass",
+      "evidence_source": "next/dagger/README.md:17-22; next/dagger/pipeline.md:21-28"
+    }
+  ],
+  "findings": [
+    {"id": "H1", "status": "closed", "basis": "Prior independent exchange/retention review and passing retained conflict regressions; no filesystem CAS or rollback guarantee is claimed."},
+    {"id": "H2", "status": "closed", "basis": "Client target/dependency reverification and passing retained regressions; remaining service-only portion closed by M1 fix."},
+    {"id": "M1", "status": "closed", "basis": "Exact service-only final comparison, 43-test suite, and independently rerun original change/delete probes."},
+    {"id": "L1", "status": "closed", "basis": "Dagger command example and pipeline table now match actual integration routes."}
+  ],
+  "limitations": [
+    "No normal-home artifact installation, artifact execution, GUI/menu/dock validation or real user-manager query/mutation was performed.",
+    "Native installer tests use disposable private roots as a non-root user. Component tests use container isolation, fake managers and captured foreground fixtures, not deployed-host lifecycle evidence.",
+    "Dagger used engine/cache and exported development artifacts; these results are not clean-cache, offline, hermetic-build, clean-host or release-provenance evidence.",
+    "The manifest covers focused installer/Make/Dagger/policy/documentation inputs, not every Rust/Flutter dependency or a complete distributable source/artifact manifest.",
+    "Multiple publications are not a global transaction. Exchange conflicts can leave current changed; displaced objects and stages are retained, cleanup separately scoped, and no rollback or arbitrary same-UID filesystem CAS protection is claimed.",
+    "Owner-controlled digests detect stale mixing and accidental changes, not adversarial rewriting. Consequential deployment/release approval must independently retain the evidence digest and bind exact artifacts and effects.",
+    "Only this evidence file was authorized for reviewer source-tree writing. No commit, remote mutation, deployment, host integration or accepted-risk approval is granted."
+  ],
+  "verdict": "pass",
+  "release_gate_decision": "go",
+  "decision_scope": "Bounded implemented-source and isolated-validation gate only; not host deployment or production release authorization",
+  "remaining_concrete_blockers_in_review_scope": [],
+  "required_remediation_in_review_scope": []
+}

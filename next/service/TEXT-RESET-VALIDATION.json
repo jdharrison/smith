@@ -1,0 +1,202 @@
+{
+  "work_record": "LOCAL-SMITH-NEXT-TEXT-RESET",
+  "task": "T2",
+  "req_ac": "R3 durable safety / retired compatibility",
+  "claim": "implemented source; developer self-check only, not independent assurance or deployment approval",
+  "recorded_at_utc": "2026-10-12T21:12:22.784566+00:00",
+  "base_revision": "04b72f5f5093d66294cb7e525dac0f4312dd0cbc",
+  "branch": "feature/autonomy",
+  "scope": "next/service/** only; uncommitted worktree",
+  "environment": {
+    "platform": "Linux x86_64",
+    "effective_uid": 1000,
+    "rustc": "rustc 1.98.0 (88d9e12ae 2026-08-18)",
+    "cargo": "cargo 1.98.0 (797e8a9bc 2026-08-05)",
+    "network": "Cargo --offline; tests use only private ephemeral loopback fixtures and injected providers/managers"
+  },
+  "archive": {
+    "manifest_sha256": "93f57832bd27d0a20f06d4432dba9a8bf2595a1c3f00cda6f5e48cce5f3bbf2d",
+    "files_verified": 46,
+    "before_edits": "All 46 archived hashes verified; service source matched the archive byte-for-byte before editing",
+    "after_edits": "All 46 archived hashes verified unchanged again after reviewer remediation; 7 Core/transport/identity source files unchanged byte-for-byte. Debug test-only fixture helpers changed to fence executable writers/spawns."
+  },
+  "validation": [
+    {
+      "command": "cargo fmt --all --check",
+      "started_at_utc": "2026-10-12T21:09:16.431905+00:00",
+      "expected": "exit 0; no formatting differences",
+      "actual": "passed",
+      "exit": 0
+    },
+    {
+      "command": "cargo clippy --offline --locked --all-targets -- -D warnings",
+      "started_at_utc": "2026-10-12T21:09:16.513996+00:00",
+      "expected": "exit 0; no warnings or errors",
+      "actual": "passed",
+      "exit": 0
+    },
+    {
+      "command": "cargo test --offline --locked --all-targets",
+      "started_at_utc": "2026-10-12T21:09:16.959652+00:00",
+      "expected": "exit 0; all native regressions pass",
+      "actual": "54 passed, 0 failed, 1 existing subprocess fixture ignored by design",
+      "exit": 0
+    },
+    {
+      "command": "cargo build --offline --release --locked",
+      "started_at_utc": "2026-10-12T21:09:45.624706+00:00",
+      "expected": "exit 0; locked release executable builds",
+      "actual": "passed",
+      "exit": 0
+    }
+  ],
+  "raw_log": {
+    "path": "TEXT-RESET-VALIDATION.log",
+    "sha256": "08cee4e20ec1643a92f5cc8f688e75d35a41fe998ea5943529ee01883560e6cc"
+  },
+  "quality_gate": {
+    "warnings": "none under -D warnings",
+    "errors": "none",
+    "formatting": "passed"
+  },
+  "protected_unchanged_files": [
+    "src/app_transport.rs",
+    "src/control.rs",
+    "src/filesystem.rs",
+    "src/lib.rs",
+    "src/main.rs",
+    "src/manager.rs",
+    "src/transport.rs"
+  ],
+  "compatibility": {
+    "core": "Schema 1, exact installed unit text, setup flag persistence/API, filesystem/root protections, managed binary/unit/MainPID/helper peer UID/PID/inode checks unchanged byte-for-byte; app readiness remains frontend-owned, not gated by the flag",
+    "live": "state, models, configure with explicit voice:null, submit output:chat, poll; unchanged envelope and result keys; new text result audio:null and speech_error:null; live voices:[] and static RETIRED STT/TTS observations",
+    "legacy": "Strict bounded voice-v1 config/revision/history/inventories/operations/errors/IDs/tombstones retained. Old writer persisted only null/expired audio; no executable audio structs, parser, base64 encoder/decoder or backend needed",
+    "identity": "Legacy fingerprint lookup precedes current admission validation. Retained exact duplicate returns original status without inventory/inference; changed input ID_CONFLICT; tombstones REQUEST_EXPIRED; fresh speech requests RETIRED without durable writes or worker dispatch",
+    "recovery": "All legacy running kinds/phases interrupted, no replay. Old terminal voice results remain pollable, including AUDIO_EXPIRED results; new text configuration explicitly clears inert voice while preserving old operations",
+    "provider": "Fixed numeric-loopback Ollama11434 only; zero speech endpoint URLs or transport methods; no proxies/redirects/retries/cloud/tools/provisioning Raw inventory name uniqueness is checked before eligibility filtering; excluded rows cannot hide conflicting exact-name identities.",
+    "dependencies": "Direct base64 dependency removed without other lockfile resolution changes; reqwest retains the preexisting transitive base64 for HTTP internals, not audio",
+    "bounds": "4MiB app,4095byte Core,one worker/no queue,16pairs64KiB context,32jobs/1024tombstones/CAPACITY,16MiB durable state unchanged"
+  },
+  "tests": {
+    "application_passed": 24,
+    "debug_service_passed": 18,
+    "lib_passed": 11,
+    "main_passed": 1,
+    "ignored": "One existing fake-manager helper fixture is invoked by parent-death/cancellation subprocess tests; not a skipped validation scenario",
+    "fixtures": [
+      "tests/fixtures/voice-v1.json",
+      "tests/fixtures/voice-v1-requests.json"
+    ],
+    "generic_old_coverage": "Retained corruption/bounds/capacity/context/identity/restart/dedup/worker-fence coverage; maximum legacy inventory stays pollable unchanged; removed only live voice/WAV tests after archive verification"
+  },
+  "release_binary_sha256": "7fd7fc7cce65e7b964fc537ac90605a2040cc9ca1e91350a5eb58a178b5b4ae1",
+  "source_sha256": {
+    "Cargo.toml": "570493aecebcb371a0c789b5f11909dd72008b590d32898b466f417b3e9e9d08",
+    "Cargo.lock": "63824e389420b2d3bc4089fdd6714a5eea8d8e518d82d9ac860d850336995d7f",
+    "README.md": "6cff0e151b6649d9d1d2686441904390cf9f92b488d270bb94623f98c67a0208",
+    "src/app.rs": "fc58b9862882700562e6a17a093582f9a6b382108985649c8445459e7fee8466",
+    "src/app_transport.rs": "3df30ff112bd5627d013437c53d07cd55ca4496426a35faeacd317208161e4ee",
+    "src/control.rs": "8de09fe127a963114a26f70a8d3312e2645f69bc29692bd49e22382a2b78e619",
+    "src/filesystem.rs": "c1eee617fd1365a3e888796ee460b2b36746d98f09f03126c55ce6378d7b9766",
+    "src/lib.rs": "1f293cc7e20b21dfd1df8d7715da0c5adf021c9b34c847de62917d14db667014",
+    "src/main.rs": "e34e38d4910781f006fbc419c2b185a55b08a780c3166cd6b30889f7b8e20401",
+    "src/manager.rs": "186b0ccd3112fb546ad23245648218fdb34766b1f9078966093dea25a7d282ea",
+    "src/providers.rs": "b0c90e650ba2fcce96061e60bea9081ff6c825378de56962da4483977164b3e8",
+    "src/transport.rs": "8626ad11aca4b5472389e8f89856f73e71752598e1716a4dcdef74c6f67749b5",
+    "tests/application.rs": "4baf46fb817492ef057bf98ff09a792643c87d5ad8eb284912011c09a757837d",
+    "tests/debug_service.rs": "ca16694a0397b4684d69bca8a64904b4f968a6f744b6cc2ebab34ebbc60d1df2",
+    "tests/fixtures/voice-v1-requests.json": "a297b04e9844490e890613764138f2ea3c7a2aa849cbb967ce5d9248b9a05e4b",
+    "tests/fixtures/voice-v1.json": "815d1fc4f7997e75dce99576be2b01aa224e435d31f3beaf41e74264a4dea45b",
+    "scripts/build.sh": "e9b5231fe1595c1bdfd7a7dad7b9898a02c1d5af0c612529c5571d974f0efc8b",
+    "scripts/test.sh": "7f489edad5545b0e86176a042a5a5370922307f9b4be45f275681f02b71a9997"
+  },
+  "effects_not_performed": [
+    "installed service/client changes",
+    "real systemd user-manager actions",
+    "production provider requests or inference",
+    "model or host data changes",
+    "container operations",
+    "model downloads",
+    "archive edits",
+    "frontend/installer/parent document edits",
+    "commits",
+    "remote effects"
+  ],
+  "pending": [
+    "Parent-owned canonical docs and aggregate pipelines/cross-component validation",
+    "Fresh independent assurance/adversarial review",
+    "Separately approved installed-host upgrade and real Ollama/desktop smoke"
+  ],
+  "review_remediation": {
+    "M2": {
+      "reviewer": "installer reviewer",
+      "status": "implemented; developer self-check",
+      "file": "src/providers.rs",
+      "change": "Raw-name/type/duplicate preflight over all bounded inventory entries before any eligibility filtering. Rejects exact-name ambiguity with PROVIDER_PROTOCOL in either order. Existing distinct-name eligibility filtering remains.",
+      "regression": "installed_inventory_rejects_raw_duplicate_names_before_eligibility_filtering",
+      "initial_failure": {
+        "command": "cargo test --offline --locked --test application installed_inventory_rejects_raw_duplicate_names_before_eligibility_filtering -- --exact",
+        "exit": 101,
+        "actual": "Regression returned Ok containing local:exact for a same-name conflicting remote row before the fix, verified in tool output"
+      },
+      "covered": "identical/digest-conflicting/remote/nested-remote/cloud/unsupported-format/null-format/wrong-type-format/model-mismatched duplicates in both orders; duplicate wholly excluded raw names"
+    },
+    "L1": {
+      "reviewer": "b10ccada",
+      "status": "test-only concrete writer-inheritance race fenced; exact natural failure holder inferred, not observed",
+      "initial_failure": "Reviewer-reported default-parallel ETXTBSY at old debug_service.rs:79 retained; independently reproduced on unchanged v1 fixture in run 3 of 6, exit 101 (16 pass/1 fail). Other five parallel repeats and all five targeted serial repeats passed.",
+      "syscall_evidence": "All three traced repeats passed, so tracing did not capture the failing holder. Traces show CLOEXEC writable copy descriptors and concurrent process creation.",
+      "controlled_probe": {
+        "writer_cloexec": true,
+        "parent_closed_writer_but_child_inherited_fd": {
+          "errno": 26,
+          "error": "ETXTBSY"
+        },
+        "after_child_exec_closed_inherited_writer": {
+          "exit": 0,
+          "stdout": "smith-next/1 smith-service/0.1.0"
+        },
+        "scenario": "Private copied executable; controlled sibling child holds inherited CLOEXEC writer before exec of the unrelated compiled source. Parent closes its writer. Copied executable deterministically returns ETXTBSY until captured sibling execs. No service or manager invocation.",
+        "probe_correction": "The first controlled probe tried to exec the same file held writable by its inherited descriptor: child also returned ETXTBSY. Corrected probe execs the unrelated source binary to close the inherited writer."
+      },
+      "fix": "Test-only mutual exclusion over executable copies, executable mutation/InstallBinary publication, and every fixture subprocess spawn through exec acknowledgement. No exec retry, whole-test serialization or production behavior change.",
+      "regression": "fixture_spawn_waits_until_executable_writer_is_closed; deterministic fence bypass fails with ETXTBSY, restored fence passes",
+      "after_fix": "All 18 debug fixture tests pass under default parallelism; six additional default-parallel runs passed without ETXTBSY. No retries, ignored assertions or whole-test serialization.",
+      "evidence_path": "TEXT-RESET-L1-INVESTIGATION.json"
+    },
+    "remediation_input_sha256": {
+      "Cargo.toml": "570493aecebcb371a0c789b5f11909dd72008b590d32898b466f417b3e9e9d08",
+      "Cargo.lock": "63824e389420b2d3bc4089fdd6714a5eea8d8e518d82d9ac860d850336995d7f",
+      "README.md": "ee47be6b7ede57ec1883e837bd10d8f122fffd69be99bcaef96d0d8f33d5942c",
+      "src/app.rs": "fc58b9862882700562e6a17a093582f9a6b382108985649c8445459e7fee8466",
+      "src/app_transport.rs": "3df30ff112bd5627d013437c53d07cd55ca4496426a35faeacd317208161e4ee",
+      "src/control.rs": "8de09fe127a963114a26f70a8d3312e2645f69bc29692bd49e22382a2b78e619",
+      "src/filesystem.rs": "c1eee617fd1365a3e888796ee460b2b36746d98f09f03126c55ce6378d7b9766",
+      "src/lib.rs": "1f293cc7e20b21dfd1df8d7715da0c5adf021c9b34c847de62917d14db667014",
+      "src/main.rs": "e34e38d4910781f006fbc419c2b185a55b08a780c3166cd6b30889f7b8e20401",
+      "src/manager.rs": "186b0ccd3112fb546ad23245648218fdb34766b1f9078966093dea25a7d282ea",
+      "src/providers.rs": "8b06e801821aa3882677be20c6267aae7b4fc358e7bb044b4cb71d4e9bd096ec",
+      "src/transport.rs": "8626ad11aca4b5472389e8f89856f73e71752598e1716a4dcdef74c6f67749b5",
+      "tests/application.rs": "72b1237541017a704d8ffd2a2fe8d406f11ed273df8e98f6851ed7a37f3e1362",
+      "tests/debug_service.rs": "a54fd41a188f2e0fbf5e4a9a17363017d35682eb7ac44b94a1ebe34db54cb4cc",
+      "tests/fixtures/voice-v1-requests.json": "a297b04e9844490e890613764138f2ea3c7a2aa849cbb967ce5d9248b9a05e4b",
+      "tests/fixtures/voice-v1.json": "815d1fc4f7997e75dce99576be2b01aa224e435d31f3beaf41e74264a4dea45b",
+      "scripts/build.sh": "e9b5231fe1595c1bdfd7a7dad7b9898a02c1d5af0c612529c5571d974f0efc8b",
+      "scripts/test.sh": "7f489edad5545b0e86176a042a5a5370922307f9b4be45f275681f02b71a9997"
+    },
+    "assurance": "Developer evidence only; independent confirmation remains pending"
+  },
+  "review_evidence_sha256": {
+    "TEXT-RESET-L1-INVESTIGATION.json": "499a03a430ecd85b38f6c71f044770b2032b83f1e01f82a56befd6f8c2df0fea",
+    "TEXT-RESET-L1-INVESTIGATION.log": "9f7ed502b5f797b981c1e6f52ba1447a5bd46ad9899d87061ff5f5a4d43bb1ef",
+    "TEXT-RESET-L1-POST-FIX.log": "c371efded7c568b1fa93941c69939e9ef14bc18a17a802d18fb751cab4c03d4b",
+    "TEXT-RESET-L1-REGRESSION.log": "6b9647807d10b51504c4c98db65bb0063d0f63f537c032cc2775dc55780a07fb",
+    "TEXT-RESET-L1-SYSCALLS-1-TEST.log": "c78f7ef5ec7f6ea5be8df77ce6bf016817b7a854784b1a05bb02d034dbccb138",
+    "TEXT-RESET-L1-SYSCALLS-1.log": "b1c2f222d25082dc82dec76558fa6d8c500f201d4bc4939fe3185356c9e8bff0",
+    "TEXT-RESET-L1-SYSCALLS-2-TEST.log": "24324b67df46711c191e9464aca9670cce864a76013565d425a4ffac945f5fc9",
+    "TEXT-RESET-L1-SYSCALLS-2.log": "f4452dba70ee12b1c90310bc9a4a174c5fbd6d93a7a425022c2354d2e32456bb",
+    "TEXT-RESET-L1-SYSCALLS-3-TEST.log": "0222269a2dcfa5f644fe2dc1eda6a2661027122b95fe5d9c4cc79c9d3e1204c9",
+    "TEXT-RESET-L1-SYSCALLS-3.log": "fc5979b90bfc97d987d31ab59969f007f529bbe3d46cc3ef52a908917d5c668b"
+  }
+}

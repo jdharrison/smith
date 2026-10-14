@@ -7,3 +7,22 @@ client/.pub-cache/
 client/.pub/
 client/build/
 client/**/doc/api/
+
+# Next-layout generated component outputs
+/next/__pycache__/
+/next/client/build/
+/next/client/dist/
+/next/client/.dart_tool/
+/next/client/.flutter-plugins-dependencies
+/next/client/.pub-cache/
+/next/client/.pub/
+/next/service/build/
+/next/service/dist/
+/next/service/target/
+/next/installer/dist/
+/next/installer/build/
+/next/installer/target/
+/next/dagger/sdk/
+/next/dagger/.venv/
+/next/dagger/**/__pycache__/
+/next/dagger/**/*.pyc
