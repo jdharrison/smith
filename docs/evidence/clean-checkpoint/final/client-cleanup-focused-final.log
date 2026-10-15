@@ -1,0 +1,65 @@
+00:00 +0: loading [REDACTED_HOME_PATH]
+00:00 +0: [REDACTED_HOME_PATH] display truncates scalar values, never authoritative titles
+00:00 +1: [REDACTED_HOME_PATH] old wire titles accepted; new renames limited to 40 runes
+00:00 +2: [REDACTED_HOME_PATH] historical FEFF titles survive details and lifecycle receipts
+00:00 +3: [REDACTED_HOME_PATH] incoming title boundaries match Rust Unicode White_Space
+00:00 +4: [REDACTED_HOME_PATH] Settings hides chats and preserves draft at 600.0
+00:00 +5: [REDACTED_HOME_PATH] Settings hides chats and preserves draft at 1280.0
+00:00 +6: [REDACTED_HOME_PATH] archive, menus, confirmation bounded; editor retains raw text
+00:01 +7: loading [REDACTED_HOME_PATH]
+00:01 +7: [REDACTED_HOME_PATH] production Boot during A mounts immediately and B remains usable
+00:02 +8: [REDACTED_HOME_PATH] draft and reading position survive switch, blank reuse and Settings
+00:03 +9: [REDACTED_HOME_PATH] Rename dialog captures revision at opening and rejects later metadata
+00:03 +10: [REDACTED_HOME_PATH] Delete dialog captures revision at opening and rejects later metadata
+00:03 +11: [REDACTED_HOME_PATH] Archive is immediate; restore does not select; Delete requires explicit confirmation
+00:03 +12: [REDACTED_HOME_PATH] multi-chat small 400x400 2x Settings and drawer preserve draft without overflow
+00:04 +13: loading [REDACTED_HOME_PATH]
+00:04 +13: [REDACTED_HOME_PATH] (setUpAll)
+00:04 +13: [REDACTED_HOME_PATH] bounded geometry, long lines and recovery at Size(400.0, 400.0) / 2x
+00:05 +14: [REDACTED_HOME_PATH] bounded geometry, long lines and recovery at Size(360.0, 800.0) / 2x
+00:05 +15: [REDACTED_HOME_PATH] bounded geometry, long lines and recovery at Size(1440.0, 900.0) / 2x
+00:05 +16: [REDACTED_HOME_PATH] bounded geometry, long lines and recovery at Size(4200.0, 2400.0) / 2x
+00:05 +17: [REDACTED_HOME_PATH] compact recovery shows full details and explicit actions without resending
+00:05 +18: [REDACTED_HOME_PATH] production 400x400 at 2x preserves draft through Settings and failure
+00:06 +19: [REDACTED_HOME_PATH] compact recovery revalidates identity replace=false resolve=false
+00:06 +20: [REDACTED_HOME_PATH] compact recovery revalidates identity replace=false resolve=true
+00:06 +21: [REDACTED_HOME_PATH] compact recovery revalidates identity replace=true resolve=false
+00:06 +22: [REDACTED_HOME_PATH] compact recovery revalidates identity replace=true resolve=true
+00:06 +23: [REDACTED_HOME_PATH] native selection, Enter variants, repeat, disabled send and IME
+00:06 +24: [REDACTED_HOME_PATH] one initial scroll; parent rebuild and edits preserve reading/selection
+00:06 +25: [REDACTED_HOME_PATH] replacement detaches old listener without disposing either controller
+00:06 +26: [REDACTED_HOME_PATH] desktop geometry snapshot and selectable message text
+00:06 +27: [REDACTED_HOME_PATH] real controller keeps a newer draft through terminal recovery
+00:06 +28: [REDACTED_HOME_PATH] expired confirmation cannot resolve a replaced controller
+00:06 +29: [REDACTED_HOME_PATH] provisional answers stay distinct without duplicating saved content
+00:06 +30: [REDACTED_HOME_PATH] (tearDownAll)
+00:06 +30: loading [REDACTED_HOME_PATH]
+00:07 +30: [REDACTED_HOME_PATH] M1 lost acknowledgement recovery does not duplicate saved turns when follow-up state fails
+00:07 +31: [REDACTED_HOME_PATH] M2 reattached submit retains verified answer without inventing user text when follow-up state fails
+00:07 +32: [REDACTED_HOME_PATH] poll instance mismatch keeps query-only identity until synchronization
+00:07 +33: [REDACTED_HOME_PATH] reattach queries active legacy work without executing or resending it
+00:07 +34: [REDACTED_HOME_PATH] malformed terminal response retains pending identity and draft
+00:07 +35: [REDACTED_HOME_PATH] Chat and Settings rail has exactly one selected mode
+00:08 +36: [REDACTED_HOME_PATH] Enter sends the focused composer exactly once
+00:08 +37: [REDACTED_HOME_PATH] Shift+Enter inserts a newline without sending
+00:08 +38: [REDACTED_HOME_PATH] Enter preserves the draft when sending is unavailable
+00:08 +39: [REDACTED_HOME_PATH] conversation connects without setup gate: true
+00:08 +40: [REDACTED_HOME_PATH] conversation connects without setup gate: false
+00:08 +41: [REDACTED_HOME_PATH] conversation connects without setup gate: null
+00:08 +42: [REDACTED_HOME_PATH] unverified Core never connects: missing/installed/running/ready/true
+00:08 +43: [REDACTED_HOME_PATH] unverified Core never connects: installed/missing/running/ready/true
+00:08 +44: [REDACTED_HOME_PATH] unverified Core never connects: installed/installed/stopped/unavailable/true
+00:08 +45: [REDACTED_HOME_PATH] unverified Core never connects: installed/installed/running/conflict/true
+00:09 +46: [REDACTED_HOME_PATH] unverified Core never connects: installed/installed/running/ready/false
+00:09 +47: [REDACTED_HOME_PATH] model configuration stays in the separate installer
+00:09 +48: [REDACTED_HOME_PATH] outage preserves visible history and editable draft; Retry never sends
+00:09 +49: [REDACTED_HOME_PATH] one failed inventory observation, no automatic retry or inference
+00:09 +50: [REDACTED_HOME_PATH] narrow enlarged text keeps Boot available without setup
+00:09 +51: [REDACTED_HOME_PATH] long history scrolls without moving the composer
+00:09 +52: [REDACTED_HOME_PATH] enlarged multiline recovery fits Size(360.0, 800.0) expired=false
+00:09 +53: [REDACTED_HOME_PATH] enlarged multiline recovery fits Size(360.0, 800.0) expired=true
+00:09 +54: [REDACTED_HOME_PATH] enlarged multiline recovery fits Size(800.0, 600.0) expired=false
+00:10 +55: [REDACTED_HOME_PATH] enlarged multiline recovery fits Size(800.0, 600.0) expired=true
+00:10 +56: [REDACTED_HOME_PATH] late submit preserves newer draft, text-only result survives failed state read
+00:10 +57: [REDACTED_HOME_PATH] unobserved selection cannot be configured or submitted
+00:10 +58: All tests passed!

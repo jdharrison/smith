@@ -1,0 +1,5 @@
+{
+  "historical_not_current_validation": true,
+  "redundant_intermediate_pngs_removed": 94,
+  "retained": "run/source/environment/stdio records and FAILED geometry images only; final complete matrix is in gdk1 and gdk2"
+}

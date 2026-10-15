@@ -1,0 +1,27 @@
+Smith native installer — Ubuntu 24.04 LTS x86_64, unprivileged user
+
+Usage: smith-installer [--bundle ROOT] [--dry-run] [--model EXACT]
+[--download-model] [--verify-inference]
+smith-installer --artifacts-only [--client BUNDLE] [--service BINARY]
+[--dry-run] [--yes]
+
+--bundle ROOT       Recipient package root (default: actual executable directory)
+--dry-run           Read-only artifact plan; no locks/writes, manager or provider
+--model EXACT       Exact eligible local name:tag; no default model
+--download-model    Offer separate curated GGUF download consent only if missing
+--models            List the pinned local model catalog (no discovery/download)
+--pull-model        Compatibility alias for --download-model
+--verify-inference  Offer separate fixed minimal inference, not a saved chat turn
+--artifacts-only    Developer artifact publication only; never register/start
+--client BUNDLE     Complete paired Flutter bundle, only with --artifacts-only
+--service BINARY    Native service artifact, only with --artifacts-only
+--yes              Artifact plan consent only; requires --artifacts-only
+-h, --help          Show help without operational discovery
+-V, --version       Show version without operational discovery
+
+Recipient confirmations are separate for artifacts, registration/reload, Start,
+exact-model download, saved preference and optional inference. No recipient --yes.
+CPU/Vulkan llama.cpp runtimes are bundled with CPU fallback; no Ollama, Python or Docker.
+No OS/GPU provisioning, upgrades, lingering changes or GUI launch.
+Use a prepared Ubuntu session and existing safe XDG roots.
+Later decline/failure preserves prior effects; no automatic retry or rollback.

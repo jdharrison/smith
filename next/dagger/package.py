@@ -18,10 +18,39 @@ CLIENT_FILES = {
     "data/flutter_assets/AssetManifest.bin", "data/flutter_assets/FontManifest.json",
     "data/flutter_assets/NativeAssetsManifest.json", "data/flutter_assets/NOTICES.Z",
     "data/flutter_assets/version.json", "data/flutter_assets/fonts/MaterialIcons-Regular.otf",
+    "data/flutter_assets/pubspec.yaml",
     "data/flutter_assets/shaders/ink_sparkle.frag",
     "data/flutter_assets/shaders/stretch_effect.frag",
     "share/applications/" + APP + ".desktop", "share/pixmaps/" + APP + ".png",
 }
+# Exact reviewed UI inputs only: directory membership never authorizes new assets.
+UI_ASSET_FILES = {
+    "data/flutter_assets/assets/README.md",
+    "data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf",
+    "data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf",
+    "data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf",
+    "data/flutter_assets/assets/fonts/jetbrains-mono/OFL.txt",
+    "data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf",
+    "data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf",
+    "data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf",
+    "data/flutter_assets/assets/fonts/ibm-plex-mono/OFL.txt",
+    "data/flutter_assets/assets/icons/chevron-right.svg",
+    "data/flutter_assets/assets/icons/message-square.svg",
+    "data/flutter_assets/assets/icons/settings.svg",
+    "data/flutter_assets/assets/icons/archive.svg",
+    "data/flutter_assets/assets/icons/plus.svg",
+    "data/flutter_assets/assets/icons/ellipsis-vertical.svg",
+    "data/flutter_assets/assets/icons/pencil.svg",
+    "data/flutter_assets/assets/icons/trash-2.svg",
+    "data/flutter_assets/assets/icons/send.svg",
+    "data/flutter_assets/assets/icons/x.svg",
+    "data/flutter_assets/assets/icons/menu.svg",
+    "data/flutter_assets/assets/icons/rotate-ccw.svg",
+    "data/flutter_assets/assets/icons/info.svg",
+    "data/flutter_assets/assets/icons/check.svg",
+    "data/flutter_assets/assets/icons/chevron-down.svg",
+}
+CLIENT_FILES |= UI_ASSET_FILES
 COMMON_RUNTIME_FILES = set(runtime.FILES) | {
     "libgomp.so.1", "LICENSE.llama.cpp", "LICENSE.libgomp", "LICENSE.GPL-3"
 }
@@ -124,11 +153,14 @@ def check_payload(root):
         name in CLIENT_FILES if entry["type"] == "file" else name in CLIENT_DIRS
         for name, entry in entries.items()
     ), "Unreviewed client payload input; model/voice/reference assets are excluded")
+    for name in sorted(UI_ASSET_FILES):
+        require(contents.get(name), "Missing or empty required UI asset: " + name)
     for name in ("smith_client", "smith_backend/smith-service"):
         require(entries.get(name, {}).get("mode") == 0o755 and contents.get(name),
                 "Missing executable in complete client payload")
         check_native(root / "payload/client" / name)
     for name in ("lib/libflutter_linux_gtk.so", "lib/libapp.so", "data/icudtl.dat",
+                 "data/flutter_assets/pubspec.yaml",
                  "share/applications/" + APP + ".desktop", "share/pixmaps/" + APP + ".png"):
         require(contents.get(name), "Incomplete client payload")
     for name in ("lib", "data", "data/flutter_assets"):

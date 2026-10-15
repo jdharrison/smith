@@ -1,0 +1,9 @@
+{
+  "command": "DAGGER_NO_NAG=1 DAGGER_CLOUD_TOKEN= DAGGER_PROGRESS=plain make installer/test",
+  "started_utc": "2026-10-15T18:41:29.990018+00:00",
+  "finished_utc": "2026-10-15T18:43:17.577146+00:00",
+  "elapsed_seconds": 107.59,
+  "exit_code": 0,
+  "timed_out": false,
+  "log": "installer/build/assurance-cleanup-20261015/installer-test.log"
+}

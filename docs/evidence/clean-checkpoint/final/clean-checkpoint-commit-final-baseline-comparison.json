@@ -1,0 +1,13 @@
+{
+  "entry_count": 1564,
+  "next_input_entries": 1167,
+  "preserved_prior_evidence_files": 10,
+  "changed_next_since_previous": [
+    "next/client/lib/ui/split_workspace.dart",
+    "next/client/test/goldens/ui-redesign/README.md",
+    "next/client/test/split_workspace_widget_test.dart"
+  ],
+  "package_inputs_changed": [],
+  "package_inputs_added": [],
+  "package_inputs_removed": []
+}

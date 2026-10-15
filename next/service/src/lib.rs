@@ -11,7 +11,10 @@ pub mod providers;
 pub mod runner;
 mod transport;
 
-pub use app_transport::{stdin_request as app_stdin_request, stdout_reply as app_stdout_reply};
+pub use app_transport::{
+    stdin_request as app_stdin_request, stdin_request_correlated as app_stdin_request_correlated,
+    stdout_reply as app_stdout_reply,
+};
 pub use control::{Action, Controller, Observation};
 pub use filesystem::Roots;
 pub use maintenance::MaintenanceLease;

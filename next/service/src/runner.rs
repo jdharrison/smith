@@ -43,7 +43,7 @@ const HEADER_LIMIT: usize = 16 * 1024;
 const BODY_LIMIT: usize = 1024 * 1024;
 const WIRE_LIMIT: usize = 2 * BODY_LIMIT + HEADER_LIMIT;
 const STDERR_LIMIT: usize = 16 * 1024;
-const EVIDENCE_LIMIT: usize = 64 * 1024 + 1;
+const EVIDENCE_LIMIT: usize = acceleration::MAX_EVIDENCE_BYTES + 1;
 const SOCKET_PATH_LIMIT: usize = 107;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1230,6 +1230,82 @@ fn estimate_tokens(messages: &[Message]) -> u32 {
     u32::try_from(bytes).unwrap_or(u32::MAX)
 }
 
+#[derive(Default)]
+struct StartupEvidence {
+    bytes: Vec<u8>,
+    stream: EvidenceStream,
+}
+
+#[derive(Default)]
+enum EvidenceStream {
+    #[default]
+    Open,
+    Closed,
+    Failed,
+}
+
+impl StartupEvidence {
+    fn extend(&mut self, chunk: &[u8]) {
+        let keep = EVIDENCE_LIMIT
+            .saturating_sub(self.bytes.len())
+            .min(chunk.len());
+        self.bytes.extend_from_slice(&chunk[..keep]);
+    }
+
+    fn actual_mode(&self) -> AppResult<ActualMode> {
+        let message = match self.stream {
+            EvidenceStream::Closed => Some("Vulkan startup evidence stream closed"),
+            EvidenceStream::Failed => Some("Cannot read Vulkan startup evidence"),
+            EvidenceStream::Open => None,
+        };
+        if let Some(message) = message {
+            return Err(error("GPU_PREPARATION", message));
+        }
+        let stderr = std::str::from_utf8(&self.bytes).map_err(|_| {
+            error(
+                "GPU_PREPARATION",
+                "Vulkan startup evidence is not valid UTF-8",
+            )
+        })?;
+        acceleration::actual_mode(Backend::Vulkan, stderr)
+            .map_err(|failure| error("GPU_PREPARATION", failure.message()))
+    }
+}
+
+fn capture_stderr(mut pipe: impl Read, sink: &Mutex<Vec<u8>>, evidence: &Mutex<StartupEvidence>) {
+    let mut chunk = [0; 4096];
+    loop {
+        let n = match pipe.read(&mut chunk) {
+            Ok(0) => {
+                if let Ok(mut captured) = evidence.lock() {
+                    captured.stream = EvidenceStream::Closed;
+                }
+                break;
+            }
+            Ok(n) => n,
+            Err(e) if e.kind() == ErrorKind::Interrupted => continue,
+            Err(_) => {
+                if let Ok(mut captured) = evidence.lock() {
+                    captured.stream = EvidenceStream::Failed;
+                }
+                break;
+            }
+        };
+        if let Ok(mut captured) = evidence.lock() {
+            captured.extend(&chunk[..n]);
+        }
+        // Drain even after the sticky startup-prefix limit; never block the child
+        // or forget earlier evidence by substituting the rolling diagnostic tail.
+        if let Ok(mut buf) = sink.lock() {
+            buf.extend_from_slice(&chunk[..n]);
+            if buf.len() > STDERR_LIMIT {
+                let excess = buf.len() - STDERR_LIMIT;
+                buf.drain(..excess);
+            }
+        }
+    }
+}
+
 pub struct Runner {
     child: Option<Child>,
     pid: i32,
@@ -1241,7 +1317,7 @@ pub struct Runner {
     lock: Option<File>,
     lease_return: Option<Arc<Mutex<Option<File>>>>,
     stderr: Arc<Mutex<Vec<u8>>>,
-    evidence_stderr: Arc<Mutex<Vec<u8>>>,
+    evidence_stderr: Arc<Mutex<StartupEvidence>>,
     cancelled: Cancellation,
 }
 
@@ -1365,7 +1441,7 @@ impl Runner {
             lock: Some(lock),
             lease_return,
             stderr: Arc::new(Mutex::new(Vec::new())),
-            evidence_stderr: Arc::new(Mutex::new(Vec::new())),
+            evidence_stderr: Arc::new(Mutex::new(StartupEvidence::default())),
             cancelled,
         };
         if runner.socket.as_os_str().len() > SOCKET_PATH_LIMIT {
@@ -1436,32 +1512,12 @@ impl Runner {
         runner.pid = child.id() as i32;
         let stderr = child.stderr.take();
         runner.child = Some(child);
-        if let Some(mut pipe) = stderr {
+        if let Some(pipe) = stderr {
             let sink = runner.stderr.clone();
             let evidence = runner.evidence_stderr.clone();
             if std::thread::Builder::new()
                 .name("smith-runner-stderr".into())
-                .spawn(move || {
-                    let mut chunk = [0; 4096];
-                    while let Ok(n) = pipe.read(&mut chunk) {
-                        if n == 0 {
-                            break;
-                        }
-                        if let Ok(mut buf) = evidence.lock() {
-                            if buf.len() < EVIDENCE_LIMIT {
-                                let keep = (EVIDENCE_LIMIT - buf.len()).min(n);
-                                buf.extend_from_slice(&chunk[..keep]);
-                            }
-                        }
-                        if let Ok(mut buf) = sink.lock() {
-                            buf.extend_from_slice(&chunk[..n]);
-                            if buf.len() > STDERR_LIMIT {
-                                let excess = buf.len() - STDERR_LIMIT;
-                                buf.drain(..excess);
-                            }
-                        }
-                    }
-                })
+                .spawn(move || capture_stderr(pipe, &sink, &evidence))
                 .is_err()
             {
                 let error = unavailable("Cannot capture runner diagnostics");
@@ -1481,44 +1537,61 @@ impl Runner {
             });
         }
         if config.backend == Backend::Vulkan {
-            let evidence_deadline = deadline.min(Instant::now() + Duration::from_secs(1));
-            loop {
-                let evidence = runner
-                    .evidence_stderr
-                    .lock()
-                    .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
-                    .unwrap_or_default();
-                match acceleration::actual_mode(config.backend, &evidence) {
-                    Ok(ActualMode::Gpu) => break,
-                    Ok(_) => {
-                        let error = error(
-                            "GPU_PREPARATION",
-                            "Vulkan runner did not confirm full model offload",
-                        );
-                        return Err(match runner.shutdown() {
-                            Ok(()) => error,
-                            Err(_) => unsafe_runtime("GPU runner cleanup could not be confirmed"),
-                        });
-                    }
-                    Err(acceleration::EvidenceError::Missing)
-                        if Instant::now() < evidence_deadline && runner.is_running() =>
-                    {
-                        std::thread::sleep(Duration::from_millis(10));
-                    }
-                    Err(_) => {
-                        let error = error(
-                            "GPU_PREPARATION",
-                            "Vulkan runner offload evidence is missing or invalid",
-                        );
-                        return Err(match runner.shutdown() {
-                            Ok(()) => error,
-                            Err(_) => unsafe_runtime("GPU runner cleanup could not be confirmed"),
-                        });
-                    }
-                }
+            if let Err(failure) = runner.wait_full_offload(deadline) {
+                return Err(match runner.shutdown() {
+                    Ok(()) => failure,
+                    Err(_) => unsafe_runtime("GPU runner cleanup could not be confirmed"),
+                });
             }
         }
         Ok(runner)
+    }
+
+    fn wait_full_offload(&self, deadline: Instant) -> AppResult<()> {
+        // Health is not a stderr-flush barrier. A valid candidate stays provisional
+        // through this fixed window so later captured duplicates/overflow count.
+        // This describes observed startup bytes, not all future runner output.
+        let evidence_deadline = deadline.min(Instant::now() + Duration::from_secs(1));
+        loop {
+            if (self.cancelled)() {
+                return Err(Http::Cancelled.app());
+            }
+            remaining(deadline)?;
+            if !self.is_running() {
+                return Err(error(
+                    "GPU_PREPARATION",
+                    "Vulkan runner exited before offload confirmation",
+                ));
+            }
+            let wait = evidence_deadline.saturating_duration_since(Instant::now());
+            if !wait.is_zero() {
+                std::thread::sleep(wait.min(Duration::from_millis(10)));
+                continue;
+            }
+            let mode = self
+                .evidence_stderr
+                .lock()
+                .map_err(|_| error("GPU_PREPARATION", "Cannot read Vulkan startup evidence"))?
+                .actual_mode();
+            // Budget/cancellation still take precedence over any evidence failure.
+            if (self.cancelled)() {
+                return Err(Http::Cancelled.app());
+            }
+            remaining(deadline)?;
+            if !self.is_running() {
+                return Err(error(
+                    "GPU_PREPARATION",
+                    "Vulkan runner exited before offload confirmation",
+                ));
+            }
+            return match mode? {
+                ActualMode::Gpu => Ok(()),
+                _ => Err(error(
+                    "GPU_PREPARATION",
+                    "Vulkan runner did not confirm full model offload",
+                )),
+            };
+        }
     }
 
     fn wait_ready(&mut self, deadline: Instant) -> AppResult<()> {
@@ -1815,6 +1888,90 @@ impl Drop for Runner {
 mod tests {
     use super::*;
     use std::os::unix::net::UnixListener;
+
+    #[test]
+    fn startup_capture_keeps_raw_prefix_limit_and_never_rolls_evidence() {
+        let record = b"load_tensors: offloaded 33/33 layers to GPU\n";
+        let mut evidence = StartupEvidence::default();
+        evidence.extend(record);
+        evidence.extend(&vec![
+            b'x';
+            acceleration::MAX_EVIDENCE_BYTES - record.len() - 1
+        ]);
+        evidence.extend(b"\n");
+        assert_eq!(evidence.actual_mode().unwrap(), ActualMode::Gpu);
+        evidence.extend(b"x");
+        assert_eq!(evidence.bytes.len(), EVIDENCE_LIMIT);
+        let overflow = evidence.actual_mode().unwrap_err();
+        assert_eq!(
+            overflow.message,
+            "Vulkan startup evidence exceeded its byte limit"
+        );
+        evidence.extend(&vec![b'z'; 128 * 1024]);
+        assert!(evidence.bytes.starts_with(record));
+        assert_eq!(evidence.bytes.len(), EVIDENCE_LIMIT);
+        assert_eq!(evidence.actual_mode().unwrap_err(), overflow);
+    }
+
+    #[test]
+    fn startup_capture_failure_cannot_accept_an_earlier_valid_record() {
+        struct FailedRead;
+        impl Read for FailedRead {
+            fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
+                Err(std::io::Error::other(
+                    "untrusted diagnostic must not escape",
+                ))
+            }
+        }
+        let record = b"load_tensors: offloaded 33/33 layers to GPU\n";
+        let reader = std::io::Cursor::new(record).chain(FailedRead);
+        let tail = Mutex::new(Vec::new());
+        let evidence = Mutex::new(StartupEvidence::default());
+        capture_stderr(reader, &tail, &evidence);
+        assert_eq!(*tail.lock().unwrap(), record);
+        assert_eq!(
+            evidence.lock().unwrap().actual_mode().unwrap_err(),
+            error("GPU_PREPARATION", "Cannot read Vulkan startup evidence")
+        );
+    }
+
+    #[test]
+    fn startup_capture_retries_interruption_but_records_eof() {
+        struct InterruptedRead {
+            interrupted: bool,
+            input: std::io::Cursor<&'static [u8]>,
+        }
+        impl Read for InterruptedRead {
+            fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+                if !self.interrupted {
+                    self.interrupted = true;
+                    return Err(std::io::Error::from(ErrorKind::Interrupted));
+                }
+                self.input.read(buf)
+            }
+        }
+        let record = b"load_tensors: offloaded 33/33 layers to GPU\n";
+        let reader = InterruptedRead {
+            interrupted: false,
+            input: std::io::Cursor::new(record),
+        };
+        let tail = Mutex::new(Vec::new());
+        let evidence = Mutex::new(StartupEvidence::default());
+        capture_stderr(reader, &tail, &evidence);
+        assert_eq!(*tail.lock().unwrap(), record);
+        assert_eq!(
+            evidence.lock().unwrap().actual_mode().unwrap_err(),
+            error("GPU_PREPARATION", "Vulkan startup evidence stream closed")
+        );
+        let invalid = StartupEvidence {
+            bytes: vec![0xff],
+            ..Default::default()
+        };
+        assert_eq!(
+            invalid.actual_mode().unwrap_err().message,
+            "Vulkan startup evidence is not valid UTF-8"
+        );
+    }
 
     fn respond(raw: &'static [u8]) -> std::result::Result<(u16, Vec<u8>), Http> {
         let (mut a, mut b) = UnixStream::pair().unwrap();

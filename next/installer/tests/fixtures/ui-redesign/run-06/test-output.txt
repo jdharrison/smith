@@ -1,0 +1,184 @@
+   Compiling pin-project-lite v0.2.17
+   Compiling futures-core v0.3.34
+   Compiling memchr v2.8.3
+   Compiling smallvec v1.16.2
+   Compiling once_cell v1.21.4
+   Compiling futures-sink v0.3.34
+   Compiling futures-task v0.3.34
+   Compiling slab v0.4.12
+   Compiling futures-io v0.3.34
+   Compiling stable_deref_trait v1.2.1
+   Compiling bytes v1.12.1
+   Compiling itoa v1.0.18
+   Compiling bitflags v2.13.2
+   Compiling serde_core v1.0.229
+   Compiling cfg-if v1.0.5
+   Compiling litemap v0.8.3
+   Compiling writeable v0.6.4
+   Compiling libc v0.2.189
+   Compiling percent-encoding v2.3.2
+   Compiling zeroize v1.9.0
+   Compiling untrusted v0.9.0
+   Compiling typenum v1.20.1
+   Compiling futures-channel v0.3.34
+   Compiling icu_normalizer_data v2.1.1
+   Compiling icu_properties_data v2.1.2
+   Compiling try-lock v0.2.5
+   Compiling tower-service v0.3.3
+   Compiling httparse v1.10.1
+   Compiling thiserror v1.0.69
+   Compiling subtle v2.6.1
+   Compiling utf8_iter v1.0.4
+   Compiling atomic-waker v1.1.2
+   Compiling zmij v1.0.23
+   Compiling zerofrom v0.1.8
+   Compiling sync_wrapper v1.0.2
+   Compiling tower-layer v0.3.3
+   Compiling base64 v0.22.1
+   Compiling tracing-core v0.1.36
+   Compiling ipnet v2.12.2
+   Compiling form_urlencoded v1.2.2
+   Compiling memoffset v0.9.1
+   Compiling want v0.3.2
+   Compiling rustls-pki-types v1.15.1
+   Compiling ryu v1.0.23
+   Compiling cpufeatures v0.2.17
+   Compiling log v0.4.34
+   Compiling field-offset v0.3.6
+   Compiling yoke v0.8.3
+   Compiling zerovec v0.11.8
+   Compiling zerotrie v0.2.5
+   Compiling futures-util v0.3.34
+   Compiling tracing v0.1.44
+   Compiling http v1.5.0
+   Compiling webpki-roots v1.0.9
+   Compiling generic-array v0.14.7
+   Compiling tinystr v0.8.4
+   Compiling potential_utf v0.1.6
+   Compiling icu_collections v2.1.1
+   Compiling icu_locale_core v2.1.1
+   Compiling mio v1.2.4
+   Compiling socket2 v0.6.5
+   Compiling getrandom v0.2.17
+   Compiling ring v0.17.14
+   Compiling http-body v1.1.0
+   Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.7
+   Compiling http-body-util v0.1.5
+   Compiling tokio v1.53.2
+   Compiling digest v0.10.7
+   Compiling sha2 v0.10.9
+   Compiling icu_provider v2.1.1
+   Compiling icu_normalizer v2.1.1
+   Compiling icu_properties v2.1.2
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling rustls-webpki v0.103.15
+   Compiling toml_datetime v0.6.3
+   Compiling serde_spanned v0.6.9
+   Compiling serde_urlencoded v0.7.1
+   Compiling toml_edit v0.20.2
+   Compiling toml_edit v0.19.15
+   Compiling idna_adapter v1.2.1
+   Compiling idna v1.1.0
+   Compiling smith-service v0.1.0 (/src/service)
+   Compiling futures-executor v0.3.34
+   Compiling rustls v0.23.45
+   Compiling url v2.5.8
+   Compiling proc-macro-crate v1.3.1
+   Compiling toml v0.8.2
+   Compiling proc-macro-crate v2.0.2
+   Compiling gtk3-macros v0.18.2
+   Compiling glib-macros v0.18.5
+   Compiling system-deps v6.2.2
+   Compiling hyper v1.12.0
+   Compiling tower v0.5.3
+   Compiling tower-http v0.6.11
+   Compiling glib-sys v0.18.1
+   Compiling gobject-sys v0.18.0
+   Compiling gio-sys v0.18.1
+   Compiling cairo-sys-rs v0.18.2
+   Compiling gdk-pixbuf-sys v0.18.0
+   Compiling pango-sys v0.18.0
+   Compiling gdk-sys v0.18.2
+   Compiling atk-sys v0.18.2
+   Compiling gtk-sys v0.18.2
+   Compiling gtk v0.18.2
+   Compiling hyper-util v0.1.20
+   Compiling tokio-rustls v0.26.4
+   Compiling hyper-rustls v0.27.9
+   Compiling glib v0.18.5
+   Compiling reqwest v0.12.28
+   Compiling gio v0.18.4
+   Compiling cairo-rs v0.18.5
+   Compiling atk v0.18.2
+   Compiling pango v0.18.3
+   Compiling gdk-pixbuf v0.18.5
+   Compiling gdk v0.18.2
+   Compiling smith-installer v0.1.0 (/src/installer)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 24.69s
+     Running unittests src/ui.rs (target/debug/deps/smith_installer_ui-e29e2a5407a5aa04)
+
+running 9 tests
+test appearance::tests::font_bytes_are_pinned_and_memfds_are_sealed_and_reused ... ok
+test appearance::tests::pango_resolves_real_400_500_600_faces_from_memory_not_installed_fonts ... ok
+test appearance::tests::png_assets_are_pinned_nonempty_and_24px_without_display_or_svg_loader ... ok
+test tests::completion_requires_verified_report_not_worker_exit_or_inference ... ok
+test tests::exact_consent_text_is_not_truncated_or_silently_sanitized ... ok
+test tests::gtk_widget_smoke_and_session_transitions ... FAILED
+test tests::gui_argument_and_display_preflight_are_read_only_and_fail_closed ... ok
+test tests::help_and_version_are_finite_documents_without_operational_discovery ... ok
+test tests::licenses_are_embedded_and_display_free ... ok
+
+failures:
+
+---- tests::gtk_widget_smoke_and_session_transitions stdout ----
+visual checkpoint landing 720x560 text1; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0); scroll Rectangle { x: 0, y: 63, width: 720, height: 497 }/(46, 46); primary Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0)
+visual checkpoint checking 720x560 text1; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 479, width: 720, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 720, height: 416 }/(46, 46); primary Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0)
+visual checkpoint review 720x560 text1; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 479, width: 720, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 720, height: 416 }/(46, 46); primary Rectangle { x: 622, y: 496, width: 82, height: 48 }/(48, 48)
+visual checkpoint confirmation-exact 720x560 text1; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 479, width: 720, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 720, height: 416 }/(46, 46); primary Rectangle { x: 502, y: 496, width: 202, height: 48 }/(48, 48)
+visual checkpoint model 720x560 text1; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 479, width: 720, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 720, height: 416 }/(46, 46); primary Rectangle { x: 582, y: 496, width: 122, height: 48 }/(48, 48)
+visual checkpoint progress-download 720x560 text1; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 479, width: 720, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 720, height: 416 }/(46, 46); primary Rectangle { x: 582, y: 496, width: 122, height: 48 }/(0, 0)
+visual checkpoint progress-indeterminate 720x560 text1; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 479, width: 720, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 720, height: 416 }/(46, 46); primary Rectangle { x: 582, y: 496, width: 122, height: 48 }/(0, 0)
+visual checkpoint success 720x560 text1; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 479, width: 720, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 720, height: 416 }/(46, 46); primary Rectangle { x: 638, y: 496, width: 66, height: 48 }/(48, 48)
+visual checkpoint partial-failure 720x560 text1; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 479, width: 720, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 720, height: 416 }/(46, 46); primary Rectangle { x: 638, y: 496, width: 66, height: 48 }/(48, 48)
+visual checkpoint landing 720x560 text2; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0); scroll Rectangle { x: 0, y: 92, width: 720, height: 468 }/(46, 46); primary Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0)
+visual checkpoint checking 720x560 text2; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 471, width: 720, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 92, width: 720, height: 379 }/(46, 46); primary Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0)
+visual checkpoint review 720x560 text2; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 471, width: 720, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 92, width: 720, height: 379 }/(46, 46); primary Rectangle { x: 559, y: 488, width: 145, height: 56 }/(56, 56)
+visual checkpoint confirmation-exact 720x560 text2; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 471, width: 720, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 92, width: 720, height: 379 }/(46, 46); primary Rectangle { x: 304, y: 488, width: 400, height: 56 }/(56, 56)
+visual checkpoint model 720x560 text2; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 471, width: 720, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 92, width: 720, height: 379 }/(46, 46); primary Rectangle { x: 474, y: 488, width: 230, height: 56 }/(56, 56)
+visual checkpoint progress-download 720x560 text2; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 471, width: 720, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 92, width: 720, height: 379 }/(46, 46); primary Rectangle { x: 474, y: 488, width: 230, height: 56 }/(0, 0)
+visual checkpoint progress-indeterminate 720x560 text2; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 471, width: 720, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 92, width: 720, height: 379 }/(46, 46); primary Rectangle { x: 474, y: 488, width: 230, height: 56 }/(0, 0)
+visual checkpoint success 720x560 text2; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 471, width: 720, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 92, width: 720, height: 379 }/(46, 46); primary Rectangle { x: 593, y: 488, width: 111, height: 56 }/(56, 56)
+visual checkpoint partial-failure 720x560 text2; window Rectangle { x: 0, y: 0, width: 720, height: 560 }; footer Rectangle { x: 0, y: 471, width: 720, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 92, width: 720, height: 379 }/(46, 46); primary Rectangle { x: 593, y: 488, width: 111, height: 56 }/(56, 56)
+visual checkpoint landing 480x420 text1; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0); scroll Rectangle { x: 0, y: 63, width: 480, height: 357 }/(46, 46); primary Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0)
+visual checkpoint checking 480x420 text1; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 339, width: 480, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 480, height: 276 }/(46, 46); primary Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0)
+visual checkpoint review 480x420 text1; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 339, width: 480, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 480, height: 276 }/(46, 46); primary Rectangle { x: 382, y: 356, width: 82, height: 48 }/(48, 48)
+visual checkpoint confirmation-exact 480x420 text1; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 339, width: 480, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 480, height: 276 }/(46, 46); primary Rectangle { x: 262, y: 356, width: 202, height: 48 }/(48, 48)
+visual checkpoint model 480x420 text1; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 339, width: 480, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 480, height: 276 }/(46, 46); primary Rectangle { x: 342, y: 356, width: 122, height: 48 }/(48, 48)
+visual checkpoint progress-download 480x420 text1; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 339, width: 480, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 480, height: 276 }/(46, 46); primary Rectangle { x: 342, y: 356, width: 122, height: 48 }/(0, 0)
+visual checkpoint progress-indeterminate 480x420 text1; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 339, width: 480, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 480, height: 276 }/(46, 46); primary Rectangle { x: 342, y: 356, width: 122, height: 48 }/(0, 0)
+visual checkpoint success 480x420 text1; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 339, width: 480, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 480, height: 276 }/(46, 46); primary Rectangle { x: 398, y: 356, width: 66, height: 48 }/(48, 48)
+visual checkpoint partial-failure 480x420 text1; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 339, width: 480, height: 81 }/(81, 81); scroll Rectangle { x: 0, y: 63, width: 480, height: 276 }/(46, 46); primary Rectangle { x: 398, y: 356, width: 66, height: 48 }/(48, 48)
+visual checkpoint landing 480x420 text2; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0); scroll Rectangle { x: 0, y: 99, width: 480, height: 321 }/(46, 46); primary Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0)
+visual checkpoint checking 480x420 text2; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 331, width: 480, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 99, width: 480, height: 232 }/(46, 46); primary Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0)
+visual checkpoint review 480x420 text2; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 331, width: 480, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 99, width: 480, height: 232 }/(46, 46); primary Rectangle { x: 319, y: 348, width: 145, height: 56 }/(56, 56)
+visual checkpoint confirmation-exact 480x420 text2; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 251, width: 480, height: 169 }/(169, 169); scroll Rectangle { x: 0, y: 99, width: 480, height: 152 }/(46, 46); primary Rectangle { x: 16, y: 348, width: 448, height: 56 }/(56, 56)
+visual checkpoint model 480x420 text2; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 251, width: 480, height: 169 }/(169, 169); scroll Rectangle { x: 0, y: 99, width: 480, height: 152 }/(46, 46); primary Rectangle { x: 16, y: 348, width: 448, height: 56 }/(56, 56)
+visual checkpoint progress-download 480x420 text2; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 331, width: 480, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 99, width: 480, height: 232 }/(46, 46); primary Rectangle { x: 16, y: 348, width: 448, height: 56 }/(0, 0)
+visual checkpoint progress-indeterminate 480x420 text2; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 331, width: 480, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 99, width: 480, height: 232 }/(46, 46); primary Rectangle { x: 16, y: 348, width: 448, height: 56 }/(0, 0)
+visual checkpoint success 480x420 text2; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 331, width: 480, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 99, width: 480, height: 232 }/(46, 46); primary Rectangle { x: 353, y: 348, width: 111, height: 56 }/(56, 56)
+visual checkpoint partial-failure 480x420 text2; window Rectangle { x: 0, y: 0, width: 480, height: 420 }; footer Rectangle { x: 0, y: 331, width: 480, height: 89 }/(89, 89); scroll Rectangle { x: 0, y: 99, width: 480, height: 232 }/(46, 46); primary Rectangle { x: 353, y: 348, width: 111, height: 56 }/(56, 56)
+visual checkpoint landing 1024x420 text1; window Rectangle { x: 0, y: 0, width: 1024, height: 420 }; footer Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0); scroll Rectangle { x: 0, y: 63, width: 1024, height: 357 }/(46, 46); primary Rectangle { x: -1, y: -1, width: 1, height: 1 }/(0, 0)
+
+thread 'tests::gtk_widget_smoke_and_session_transitions' (4817) panicked at src/ui.rs:2116:13:
+unbounded reading column
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tests::gtk_widget_smoke_and_session_transitions
+
+test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.97s
+
+error: test failed, to rerun pass `--bin smith-installer-ui`

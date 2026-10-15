@@ -8,6 +8,11 @@ client/.pub/
 client/build/
 client/**/doc/api/
 
+# Generated diagnostics and Python bytecode (preserve locally, do not commit)
+__pycache__/
+*.py[cod]
+/next/client/test/failures/
+
 # Next-layout generated component outputs
 /next/__pycache__/
 /next/client/build/

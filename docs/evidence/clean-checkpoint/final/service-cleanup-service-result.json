@@ -1,0 +1,10 @@
+{
+  "command": "DAGGER_NO_NAG=1 DAGGER_CLOUD_TOKEN= DAGGER_PROGRESS=plain make service/test",
+  "started_utc": "2026-10-15T18:40:08.900726+00:00",
+  "finished_utc": "2026-10-15T18:41:18.422500+00:00",
+  "elapsed_seconds": 69.52,
+  "exit_code": 0,
+  "timed_out": false,
+  "input_files": 1050,
+  "log": "service/build/assurance-cleanup-20261015/service-test.log"
+}

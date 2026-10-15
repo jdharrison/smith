@@ -8,6 +8,10 @@ The user approved local source implementation and tests. That approval excludes 
 
 Risk class: **elevated**, covering native driver trust, subprocess capabilities, backend selection/fallback, persistent preferences, packaging and operator reporting. Permission expansion would require separately scoped critical review.
 
+## Bounded startup-correction amendment
+
+[LOCAL-SMITH-NEXT-GPU-STARTUP-FIX](LOCAL-SMITH-NEXT-GPU-STARTUP-FIX.md) records the operator's subsequent source-fix approval, independent analyses, logging/framing/diagnostic contract and validation. It corrects a mismatch with pinned `b11429` defaults; it does not complete deferred preferences/device selection/UI or authorize deployment/inference. Its preceding separately approved non-model host observations refine the historical capability unknowns below without proving model offload or performance.
+
 ## Implemented baseline and evidence
 
 ### 2026-10-14 first implementation checkpoint

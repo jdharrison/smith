@@ -110,6 +110,7 @@ struct Fake {
     started: AtomicBool,
     inventory_override: Option<Inventory>,
     messages: Mutex<Vec<Message>>,
+    calls: Mutex<Vec<Vec<Message>>>,
 }
 impl Default for Fake {
     fn default() -> Self {
@@ -124,6 +125,7 @@ impl Default for Fake {
             started: AtomicBool::new(false),
             inventory_override: None,
             messages: Mutex::new(vec![]),
+            calls: Mutex::new(vec![]),
         }
     }
 }
@@ -181,6 +183,7 @@ impl Provider for Fake {
         assert_eq!(model, "local:exact");
         assert!(messages.iter().map(|m| m.content.len()).sum::<usize>() <= MAX_CONTEXT);
         *self.messages.lock().unwrap() = messages.to_vec();
+        self.calls.lock().unwrap().push(messages.to_vec());
         self.chats.fetch_add(1, Ordering::SeqCst);
         self.started.store(true, Ordering::SeqCst);
         let mut blocked = self.gated.lock().unwrap();
@@ -327,6 +330,7 @@ fn new_running_model_kinds_interrupt_without_replay_on_restart() {
         let mut state: Value = serde_json::from_slice(&fs::read(f.state_path()).unwrap()).unwrap();
         state["jobs"].as_array_mut().unwrap().push(json!({
             "fingerprint":"b".repeat(64),
+            "version":1,"conversation_id":null,"history_revision":null,"task":null,"accepted_ms":0,
             "operation":{"request_id":id(9),"kind":kind,"status":"running","phase":phase,"config_revision":1,"result":null,"error":null}
         }));
         f.write(&serde_json::to_vec(&state).unwrap());
@@ -1011,7 +1015,7 @@ fn strict_requests_ids_exact_tags_and_text_limits() {
         "INVALID_REQUEST"
     );
     let mut req = request("state", json!({}));
-    req.schema_version = 2;
+    req.schema_version = 3;
     assert!(app.call(req).is_err());
     for bad in [
         "ABCDEFABCDEFABCDEFABCDEFABCDEFABCD",
@@ -1092,6 +1096,405 @@ fn unsafe_destination_change_blocks_admission_without_inference() {
         "STATE_UNAVAILABLE"
     );
 }
+fn request2(op: &str, args: Value) -> AppRequest {
+    let mut r = request(op, args);
+    r.schema_version = 2;
+    r
+}
+fn call2(app: &Application, op: &str, args: Value) -> Value {
+    app.call(request2(op, args)).unwrap()
+}
+fn done2(app: &Application, n: usize) -> Value {
+    let deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        let v = call2(
+            app,
+            "poll",
+            json!({"request_id":id(n),"instance_id":app.instance_id}),
+        );
+        if !["running", "queued"].contains(&v["status"].as_str().unwrap()) {
+            return v;
+        }
+        assert!(Instant::now() < deadline);
+        std::thread::sleep(Duration::from_millis(2));
+    }
+}
+fn new2(app: &Application, n: usize, text: &str) -> Value {
+    call2(
+        app,
+        "submit_new",
+        json!({"request_id":id(n),"text":text,"output":"chat","expected_config_revision":1}),
+    )
+}
+fn get2(app: &Application, target: &Value) -> Value {
+    call2(app, "conversation_get", json!({"conversation_id":target}))
+}
+
+#[test]
+fn multi_chat_title_derived_once_preserves_full_prompt_and_restart() {
+    let f = Fixture::new();
+    let provider = Arc::new(Fake::default());
+    let app = Application::open(&f.roots, provider.clone()).unwrap();
+    setup(&app);
+    let prompt = format!(" \tHello\n\u{202e}{} original suffix\r\n", "🦀".repeat(45));
+    let expected = format!("Hello {}", "🦀".repeat(34));
+    let a = new2(&app, 100, &prompt);
+    assert_eq!(done2(&app, 100)["status"], "succeeded");
+    let target = &a["conversation_id"];
+    let detail = get2(&app, target);
+    assert_eq!(detail["conversation"]["title"], expected);
+    assert_eq!(detail["history"][0]["content"], prompt);
+    assert_eq!(provider.calls.lock().unwrap()[0][0].content, prompt);
+    let disk: Value = serde_json::from_slice(&fs::read(f.state_path()).unwrap()).unwrap();
+    let job = disk["jobs"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|j| j["operation"]["request_id"] == id(100))
+        .unwrap();
+    assert_eq!(job["task"]["Submit"]["text"], prompt);
+    let replay = new2(&app, 100, &prompt);
+    assert_eq!(replay["conversation_id"], *target);
+    assert_eq!(provider.chats.load(Ordering::SeqCst), 1);
+    call2(
+        &app,
+        "submit",
+        json!({"request_id":id(101),"conversation_id":target,
+        "text":"Followup must not rename","output":"chat","expected_config_revision":1,"expected_history_revision":1}),
+    );
+    done2(&app, 101);
+    assert_eq!(get2(&app, target)["conversation"]["title"], expected);
+    drop(app);
+    let app = Application::open(&f.roots, Arc::new(Fake::default())).unwrap();
+    assert_eq!(get2(&app, target)["conversation"]["title"], expected);
+}
+
+#[test]
+fn multi_chat_atomic_admission_fifo_capacity_and_isolated_context() {
+    let f = Fixture::new();
+    let provider = Arc::new(Fake::default());
+    let app = Application::open(&f.roots, provider.clone()).unwrap();
+    setup(&app);
+    *provider.gated.lock().unwrap() = true;
+    let a = new2(&app, 100, "private A");
+    provider.wait_started();
+    let b = new2(&app, 101, "private B");
+    let c = new2(&app, 102, "private C");
+    let d = new2(&app, 103, "private D");
+    for v in [&b, &c, &d] {
+        assert_eq!(v["status"], "queued");
+    }
+    assert_eq!(provider.chats.load(Ordering::SeqCst), 1);
+    let before = fs::read(f.state_path()).unwrap();
+    assert_eq!(
+        app.call(request2(
+            "submit_new",
+            json!({"request_id":id(104),"text":"E","output":"chat","expected_config_revision":1})
+        ))
+        .unwrap_err()
+        .code,
+        "BUSY"
+    );
+    assert_eq!(before, fs::read(f.state_path()).unwrap());
+    assert_eq!(
+        call2(&app, "state", json!({}))["conversations"]
+            .as_array()
+            .unwrap()
+            .len(),
+        4
+    );
+    for req in [
+        request("models", json!({"request_id":id(105)})),
+        request("configure", json!({"model":"local:exact","voice":null})),
+        request(
+            "submit",
+            json!({"request_id":id(106),"text":"v1","output":"chat"}),
+        ),
+    ] {
+        assert_eq!(app.call(req).unwrap_err().code, "BUSY");
+    }
+    provider.release();
+    for n in 100..104 {
+        assert_eq!(done2(&app, n)["status"], "succeeded");
+    }
+    let calls = provider.calls.lock().unwrap();
+    assert_eq!(calls.len(), 4);
+    for (i, s) in ["private A", "private B", "private C", "private D"]
+        .iter()
+        .enumerate()
+    {
+        assert_eq!(calls[i].len(), 1);
+        assert_eq!(calls[i][0].content, *s);
+    }
+    drop(calls);
+    let target = &a["conversation_id"];
+    call2(
+        &app,
+        "submit",
+        json!({"request_id":id(107),"conversation_id":target,"text":"A followup","output":"chat","expected_config_revision":1,"expected_history_revision":1}),
+    );
+    done2(&app, 107);
+    let calls = provider.calls.lock().unwrap();
+    assert_eq!(calls[4].len(), 3);
+    assert_eq!(calls[4][0].content, "private A");
+    assert_eq!(get2(&app, target)["conversation"]["history_revision"], 2);
+}
+#[test]
+fn multi_chat_lifecycle_receipts_delete_residue_and_no_missing_target_alias() {
+    let f = Fixture::new();
+    let provider = Arc::new(Fake::default());
+    let app = Application::open(&f.roots, provider.clone()).unwrap();
+    setup(&app);
+    let a = new2(&app, 100, "erase this prompt");
+    done2(&app, 100);
+    let target = a["conversation_id"].clone();
+    let b = new2(&app, 101, "keep this prompt");
+    done2(&app, 101);
+    let rename = json!({"request_id":id(102),"conversation_id":target,"expected_metadata_revision":0,"title":"Erase this title"});
+    let receipt = call2(&app, "conversation_rename", rename.clone());
+    assert_eq!(receipt, call2(&app, "conversation_rename", rename));
+    assert_eq!(done2(&app, 102)["result"], receipt);
+    call2(
+        &app,
+        "conversation_archive",
+        json!({"request_id":id(103),"conversation_id":target,"expected_metadata_revision":1}),
+    );
+    assert_eq!(app.call(request2("submit",json!({"request_id":id(104),"conversation_id":target,"text":"no","output":"chat","expected_config_revision":1,"expected_history_revision":1}))).unwrap_err().code,"CONVERSATION_ARCHIVED");
+    call2(
+        &app,
+        "conversation_restore",
+        json!({"request_id":id(105),"conversation_id":target,"expected_metadata_revision":2}),
+    );
+    let stale = json!({"request_id":id(106),"conversation_id":target,"expected_metadata_revision":2,"expected_history_revision":1});
+    assert_eq!(
+        app.call(request2("conversation_delete", stale))
+            .unwrap_err()
+            .code,
+        "STALE_REVISION"
+    );
+    let delete = json!({"request_id":id(107),"conversation_id":target,"expected_metadata_revision":3,"expected_history_revision":1});
+    let receipt = call2(&app, "conversation_delete", delete.clone());
+    assert_eq!(
+        receipt,
+        json!({"request_id":id(107),"conversation_id":target,"deleted":true})
+    );
+    assert_eq!(receipt, call2(&app, "conversation_delete", delete));
+    assert_eq!(done2(&app, 107)["result"], receipt);
+    assert!(app
+        .call(request2(
+            "conversation_get",
+            json!({"conversation_id":target})
+        ))
+        .is_err());
+    assert_eq!(
+        get2(&app, &b["conversation_id"])["history"][0]["content"],
+        "keep this prompt"
+    );
+    let bytes = fs::read_to_string(f.state_path()).unwrap();
+    assert!(!bytes.contains("erase this prompt"));
+    assert!(!bytes.contains("Erase this title"));
+    let disk: Value = serde_json::from_str(&bytes).unwrap();
+    assert_eq!(disk["expired_ids"].as_array().unwrap().len(), 4);
+    assert_eq!(app.call(request2("submit_new",json!({"request_id":id(100),"text":"erase this prompt","output":"chat","expected_config_revision":1}))).unwrap_err().code,"REQUEST_EXPIRED");
+    drop(app);
+    let app = Application::open(&f.roots, provider).unwrap();
+    assert_eq!(done2(&app, 107)["result"], receipt);
+}
+#[test]
+fn multi_chat_target_busy_rename_and_unrelated_management() {
+    let f = Fixture::new();
+    let p = Arc::new(Fake::default());
+    let app = Application::open(&f.roots, p.clone()).unwrap();
+    setup(&app);
+    let a = new2(&app, 100, "A");
+    done2(&app, 100);
+    *p.gated.lock().unwrap() = true;
+    let b = new2(&app, 101, "B");
+    call2(
+        &app,
+        "conversation_archive",
+        json!({"request_id":id(102),"conversation_id":a["conversation_id"],"expected_metadata_revision":0}),
+    );
+    for op in ["conversation_archive", "conversation_delete"] {
+        let mut args = json!({"request_id":id(103),"conversation_id":b["conversation_id"],"expected_metadata_revision":0});
+        if op == "conversation_delete" {
+            args["expected_history_revision"] = json!(0);
+        }
+        assert_eq!(app.call(request2(op, args)).unwrap_err().code, "BUSY");
+    }
+    call2(
+        &app,
+        "conversation_rename",
+        json!({"request_id":id(104),"conversation_id":b["conversation_id"],"expected_metadata_revision":0,"title":"Renamed while working"}),
+    );
+    p.release();
+    assert_eq!(done2(&app, 101)["status"], "succeeded");
+    assert_eq!(
+        get2(&app, &b["conversation_id"])["conversation"]["title"],
+        "Renamed while working"
+    );
+}
+#[test]
+fn multi_chat_restart_interrupts_every_pending_and_resets_inventory() {
+    let f = Fixture::new();
+    let p = Arc::new(Fake::default());
+    let app = Application::open(&f.roots, p.clone()).unwrap();
+    setup(&app);
+    *p.gated.lock().unwrap() = true;
+    new2(&app, 100, "A");
+    p.wait_started();
+    for n in 101..104 {
+        new2(&app, n, "queued secret");
+    }
+    assert_eq!(call2(&app, "state", json!({}))["inventory_observed"], true);
+    drop(app);
+    let p2 = Arc::new(Fake::default());
+    let app = Application::open(&f.roots, p2.clone()).unwrap();
+    for n in 100..104 {
+        assert_eq!(done2(&app, n)["status"], "interrupted");
+    }
+    let before = fs::read(f.state_path()).unwrap();
+    p.release();
+    std::thread::sleep(Duration::from_millis(30));
+    assert_eq!(before, fs::read(f.state_path()).unwrap());
+    assert_eq!(p2.chats.load(Ordering::SeqCst), 0);
+    assert_eq!(call2(&app, "state", json!({}))["inventory_observed"], false);
+    assert!(fs::read_to_string(f.state_path())
+        .unwrap()
+        .contains("queued secret"));
+}
+#[test]
+fn multi_chat_strict_corruption_preserved_and_first_submit_rejection_atomic() {
+    let f = Fixture::new();
+    let p = Arc::new(Fake::default());
+    let app = Application::open(&f.roots, p.clone()).unwrap();
+    assert_eq!(
+        app.call(request2(
+            "submit_new",
+            json!({"request_id":id(100),"text":"A","output":"chat","expected_config_revision":0})
+        ))
+        .unwrap_err()
+        .code,
+        "MODEL_UNAVAILABLE"
+    );
+    assert!(call2(&app, "state", json!({}))["conversations"]
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert!(!f.state_path().exists());
+    setup(&app);
+    let a = new2(&app, 101, "A");
+    done2(&app, 101);
+    for title in [" ", "a\nb", "a\u{202e}b", &"é".repeat(129)] {
+        assert!(app.call(request2("conversation_rename",json!({"request_id":id(102),"conversation_id":a["conversation_id"],"expected_metadata_revision":0,"title":title}))).is_err());
+    }
+    drop(app);
+    let disk: Value = serde_json::from_slice(&fs::read(f.state_path()).unwrap()).unwrap();
+    for (pointer, value) in [
+        ("/conversations/0/history_revision", json!(-1)),
+        ("/conversations/0/title", json!("bad\nname")),
+        ("/jobs/1/conversation_id", json!(id(999))),
+        ("/jobs/1/operation/kind", json!("unknown")),
+        ("/jobs/1/operation/status", json!("unknown")),
+    ] {
+        let mut bad = disk.clone();
+        *bad.pointer_mut(pointer).unwrap() = value;
+        let bytes = serde_json::to_vec(&bad).unwrap();
+        f.write(&bytes);
+        assert!(Application::open(&f.roots, p.clone()).is_err(), "{pointer}");
+        assert_eq!(bytes, fs::read(f.state_path()).unwrap());
+    }
+}
+#[test]
+fn multi_chat_delete_preflights_tombstones_and_conversation_limit() {
+    let f = Fixture::new();
+    let p = Arc::new(Fake::default());
+    let app = Application::open(&f.roots, p.clone()).unwrap();
+    setup(&app);
+    let a = new2(&app, 100, "retained secret");
+    done2(&app, 100);
+    drop(app);
+    let mut disk: Value = serde_json::from_slice(&fs::read(f.state_path()).unwrap()).unwrap();
+    disk["expired_ids"] = json!((1000..2024).map(id).collect::<Vec<_>>());
+    f.write(&serde_json::to_vec(&disk).unwrap());
+    let app = Application::open(&f.roots, p).unwrap();
+    let before = fs::read(f.state_path()).unwrap();
+    assert_eq!(app.call(request2("conversation_delete",json!({"request_id":id(102),"conversation_id":a["conversation_id"],"expected_metadata_revision":0,"expected_history_revision":1}))).unwrap_err().code,"CAPACITY");
+    assert_eq!(before, fs::read(f.state_path()).unwrap());
+    assert_eq!(
+        get2(&app, &a["conversation_id"])["history"][0]["content"],
+        "retained secret"
+    );
+}
+#[test]
+fn multi_chat_duplicate_versions_and_v1_projection_remain_exact() {
+    let f = Fixture::new();
+    let p = Arc::new(Fake::default());
+    let app = Application::open(&f.roots, p.clone()).unwrap();
+    setup(&app);
+    let a = new2(&app, 100, "A");
+    done2(&app, 100);
+    assert_eq!(
+        new2(&app, 100, "A")["conversation_id"],
+        a["conversation_id"]
+    );
+    assert_eq!(p.chats.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        app.call(request2("models", json!({"request_id":id(1)})))
+            .unwrap_err()
+            .code,
+        "ID_CONFLICT"
+    );
+    let state = call(&app, "state", json!({}));
+    let mut keys = state
+        .as_object()
+        .unwrap()
+        .keys()
+        .map(String::as_str)
+        .collect::<Vec<_>>();
+    keys.sort();
+    assert_eq!(
+        keys,
+        vec!["active", "config", "history", "providers", "retention"]
+    );
+    let state = call2(&app, "state", json!({}));
+    let mut keys = state
+        .as_object()
+        .unwrap()
+        .keys()
+        .map(String::as_str)
+        .collect::<Vec<_>>();
+    keys.sort();
+    assert_eq!(
+        keys,
+        vec![
+            "config",
+            "conversations",
+            "inventory",
+            "inventory_observed",
+            "operations",
+            "retention",
+            "revision"
+        ]
+    );
+    for summary in state["operations"].as_array().unwrap() {
+        assert_eq!(summary.as_object().unwrap().len(), 6);
+        assert!(summary.get("result").is_none());
+    }
+    call(
+        &app,
+        "submit",
+        json!({"request_id":id(101),"text":"legacy","output":"chat"}),
+    );
+    finished(&app, 101);
+    let legacy = call(&app, "state", json!({}));
+    assert_eq!(legacy["history"][0]["content"], "legacy");
+    assert_eq!(
+        get2(&app, &a["conversation_id"])["history"][0]["content"],
+        "A"
+    );
+}
+
 fn legacy_requests() -> Vec<Value> {
     serde_json::from_str(include_str!("fixtures/voice-v1-requests.json")).unwrap()
 }

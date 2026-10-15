@@ -16,7 +16,7 @@ Future<void> tick() async {
 
 void main() {
   test('M3 expired unknown acknowledgement requires explicit local resolution, never resend', () async {
-    final api = FakeAppApi();
+    final api = LegacyFakeAppApi();
     final c = ChatController(api);
     await c.synchronize();
 
@@ -67,7 +67,7 @@ void main() {
   testWidgets(
     'M3 expired resolution requires confirmation and never resubmits',
     (tester) async {
-      final api = FakeAppApi();
+      final api = LegacyFakeAppApi();
       final c = ChatController(api);
       await c.synchronize();
 
@@ -106,7 +106,7 @@ void main() {
   test(
     'unknown admission is queried, never resent; reopen reads saved history',
     () async {
-      final api = FakeAppApi();
+      final api = LegacyFakeAppApi();
       final c = ChatController(api);
       await c.synchronize();
 
@@ -130,7 +130,7 @@ void main() {
     },
   );
   test('restart does not resend unknown work', () async {
-    final api = FakeAppApi();
+    final api = LegacyFakeAppApi();
     final c = ChatController(api);
     await c.synchronize();
 
@@ -146,7 +146,7 @@ void main() {
     c.dispose();
   });
   test('poll deadline is finite and retains query-only operation', () async {
-    final api = FakeAppApi();
+    final api = LegacyFakeAppApi();
     final c = ChatController(
       api,
       operationBudget: const Duration(milliseconds: 5),

@@ -84,13 +84,7 @@ impl Installer {
     /// Resolve relevant roots without creating files or contacting a manager/provider.
     pub fn new(client: Option<PathBuf>, service: Option<PathBuf>) -> Result<Self> {
         let home = std::env::var_os("HOME").map(PathBuf::from);
-        let data = match std::env::var_os("XDG_DATA_HOME") {
-            Some(data) => PathBuf::from(data),
-            None => home
-                .as_ref()
-                .ok_or("Existing XDG data root required (or HOME for its default)")?
-                .join(".local/share"),
-        };
+        let data = data_root()?;
         Self::with_roots(client, service, home, data)
     }
 
@@ -188,33 +182,7 @@ impl Installer {
     }
 
     pub(crate) fn current_state(&self, fs: &mut Filesystem) -> Result<Option<Selector>> {
-        let fd = fs.directory(&self.client_root, false, false)?;
-        let Some(fd) = fd else {
-            return Ok(None);
-        };
-        let current = fs::selector_at(fd.as_raw_fd(), "current")?;
-        let Some(current) = current else {
-            fs.trace.insert(self.current.clone(), Fact::Missing);
-            return Ok(None);
-        };
-        let target = current.target.as_bytes();
-        require(
-            target.len() == 73
-                && target.starts_with(b"releases/")
-                && target[9..]
-                    .iter()
-                    .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(c)),
-            "Unmanaged current target",
-        )?;
-        verify_release(fs, &self.client_root.join(&current.target))?;
-        // Check again after reading the entire target; a selector is never trusted by name.
-        require(
-            fs::selector_at(fd.as_raw_fd(), "current")?.as_ref() == Some(&current),
-            "Current selector changed during verification",
-        )?;
-        fs.trace
-            .insert(self.current.clone(), Fact::Selector(current.clone()));
-        Ok(Some(current))
+        verified_current(fs, &self.client_root)
     }
 
     fn inspect(&self, fs: &mut Filesystem) -> Result<Plan> {
@@ -874,6 +842,92 @@ impl Installer {
     }
 }
 
+pub(crate) fn data_root() -> Result<PathBuf> {
+    match std::env::var_os("XDG_DATA_HOME") {
+        Some(data) => Ok(PathBuf::from(data)),
+        None => std::env::var_os("HOME")
+            .map(|home| PathBuf::from(home).join(".local/share"))
+            .ok_or_else(|| "Existing XDG data root required (or HOME for its default)".into()),
+    }
+}
+
+fn verified_current(fs: &mut Filesystem, client_root: &Path) -> Result<Option<Selector>> {
+    let Some(fd) = fs.directory(client_root, false, false)? else {
+        return Ok(None);
+    };
+    let Some(current) = fs::selector_at(fd.as_raw_fd(), "current")? else {
+        fs.trace.insert(client_root.join("current"), Fact::Missing);
+        return Ok(None);
+    };
+    let target = current.target.as_bytes();
+    require(
+        target.len() == 73
+            && target.starts_with(b"releases/")
+            && target[9..]
+                .iter()
+                .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(c)),
+        "Unmanaged current target",
+    )?;
+    verify_release(fs, &client_root.join(&current.target))?;
+    require(
+        fs::selector_at(fd.as_raw_fd(), "current")?.as_ref() == Some(&current),
+        "Current selector changed during verification",
+    )?;
+    fs.trace
+        .insert(client_root.join("current"), Fact::Selector(current.clone()));
+    Ok(Some(current))
+}
+
+/// A freshly checked installed release, never an installer payload or PATH entry.
+#[derive(Debug)]
+pub(crate) struct InstalledClient {
+    pub(crate) executable: PathBuf,
+    pub(crate) release_dir: PathBuf,
+}
+
+pub(crate) fn resolve_installed_client(data: &Path) -> Result<InstalledClient> {
+    require_unprivileged(fs::effective_uid())?;
+    let mut fs = Filesystem::new(Rc::new(RefCell::new(Vec::new())));
+    require(
+        fs.directory(data, false, false)?.is_some(),
+        "Existing XDG data root required",
+    )?;
+    let base = data.join("smith-next");
+    let client_root = base.join("client");
+    for path in [&base, &client_root, &client_root.join("releases")] {
+        require(
+            fs.directory(path, false, true)?.is_some(),
+            "Incomplete installed client namespaces",
+        )?;
+    }
+    let selector =
+        verified_current(&mut fs, &client_root)?.ok_or("No selected installed client")?;
+    let release_dir = client_root.join(&selector.target);
+    let executable = release_dir.join("smith_client");
+    let verified = fs.trace.get(&executable).cloned();
+    require(
+        fs.file(&executable, Some(0o755))?
+            .is_some_and(|file| !file.bytes.is_empty()),
+        "Selected release lacks a safe client",
+    )?;
+    require(
+        matches!((verified.as_ref(), fs.trace.get(&executable)),
+            (Some(Fact::TreeEntry(before)), Some(Fact::File(after, _))) if before == after),
+        "Installed client changed after release verification",
+    )?;
+    let fd = fs
+        .directory(&client_root, false, true)?
+        .ok_or("Installed client disappeared")?;
+    require(
+        fs::selector_at(fd.as_raw_fd(), "current")?.as_ref() == Some(&selector),
+        "Current selector changed before launch",
+    )?;
+    Ok(InstalledClient {
+        executable,
+        release_dir,
+    })
+}
+
 fn verify_release(fs: &mut Filesystem, path: &Path) -> Result<()> {
     require(
         fs.directory(path, false, true)?.is_some(),
@@ -903,6 +957,125 @@ mod tests {
     use crate::fs::testing::{with_hook, Event};
     use std::fs as stdfs;
     use std::os::unix::fs::{symlink, MetadataExt};
+
+    #[test]
+    fn launch_resolution_is_installed_only_and_read_only() {
+        let f = Fixture::new();
+        let before = f.snapshot();
+        assert!(resolve_installed_client(&f.data).is_err());
+        assert_eq!(f.snapshot(), before);
+        installed(&f, true, true);
+        // The package is not needed to open the installed client.
+        stdfs::remove_dir_all(&f.bundle).unwrap();
+        let before = f.snapshot();
+        let target = resolve_installed_client(&f.data).unwrap();
+        let release = f
+            .current()
+            .parent()
+            .unwrap()
+            .join(stdfs::read_link(f.current()).unwrap());
+        assert_eq!(target.release_dir, release);
+        assert_eq!(target.executable, release.join("smith_client"));
+        assert!(!target.executable.starts_with(&f.bundle));
+        assert_eq!(f.snapshot(), before);
+    }
+
+    #[test]
+    fn launch_resolution_rejects_unmanaged_selectors_without_writes() {
+        for target in [
+            "/tmp/foreign",
+            "../bundle",
+            "releases/../bundle",
+            "releases/abc",
+            &format!("releases/{}", "A".repeat(64)),
+            &format!("releases/{}", "0".repeat(64)),
+        ] {
+            let f = Fixture::new();
+            installed(&f, true, true);
+            stdfs::remove_file(f.current()).unwrap();
+            symlink(target, f.current()).unwrap();
+            let before = f.snapshot();
+            assert!(resolve_installed_client(&f.data).is_err(), "{target}");
+            assert_eq!(f.snapshot(), before);
+        }
+        for regular in [false, true] {
+            let f = Fixture::new();
+            installed(&f, true, true);
+            stdfs::remove_file(f.current()).unwrap();
+            if regular {
+                write(&f.current(), b"foreign", 0o600);
+            }
+            let before = f.snapshot();
+            assert!(resolve_installed_client(&f.data).is_err());
+            assert_eq!(f.snapshot(), before);
+        }
+    }
+
+    #[test]
+    fn launch_resolution_rejects_unsafe_or_modified_installed_files() {
+        for case in 0..10 {
+            let f = Fixture::new();
+            installed(&f, true, true);
+            let release = stdfs::canonicalize(f.current()).unwrap();
+            let executable = release.join("smith_client");
+            match case {
+                0 => stdfs::remove_file(&executable).unwrap(),
+                1 => write(&executable, b"", 0o755),
+                2 => chmod(&executable, 0o644),
+                3 => chmod(&executable, 0o777),
+                4 => write(&executable, b"tampered", 0o755),
+                5 => {
+                    stdfs::remove_file(&executable).unwrap();
+                    symlink(&f.service, &executable).unwrap();
+                }
+                6 => {
+                    stdfs::remove_file(&executable).unwrap();
+                    stdfs::hard_link(&f.service, &executable).unwrap();
+                }
+                7 => write(&release.join(MANIFEST), b"{}", 0o600),
+                8 => chmod(&f.data.join("smith-next/client/releases"), 0o755),
+                9 => {
+                    let retained = f.data.join("retained-client");
+                    stdfs::rename(f.data.join("smith-next/client"), &retained).unwrap();
+                    symlink(&retained, f.data.join("smith-next/client")).unwrap();
+                }
+                _ => unreachable!(),
+            }
+            let before = f.snapshot();
+            assert!(resolve_installed_client(&f.data).is_err(), "case {case}");
+            assert_eq!(f.snapshot(), before);
+        }
+    }
+
+    #[test]
+    fn launch_resolution_rejects_selector_and_executable_drift() {
+        for selector_drift in [true, false] {
+            let f = Fixture::new();
+            installed(&f, true, true);
+            let current = f.current();
+            let executable = stdfs::canonicalize(&current).unwrap().join("smith_client");
+            let mut reads = 0;
+            let result = with_hook(
+                move |event| {
+                    if matches!(event, Event::BeforeRead(name) if name == "smith_client") {
+                        reads += 1;
+                        if reads == 2 {
+                            if selector_drift {
+                                let target = stdfs::read_link(&current).unwrap();
+                                stdfs::remove_file(&current).unwrap();
+                                symlink(target, &current).unwrap();
+                            } else {
+                                write(&executable, b"changed-after-manifest", 0o755);
+                            }
+                        }
+                    }
+                    Ok(())
+                },
+                || resolve_installed_client(&f.data),
+            );
+            assert!(result.is_err());
+        }
+    }
 
     fn run(f: &Fixture, client: bool, service: bool) -> (Result<Outcome>, String) {
         let mut output = Vec::new();

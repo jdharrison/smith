@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'control_api.dart';
+import 'app_v2.dart';
 import 'native_control.dart';
 
 const appFrameLimit = 4 * 1024 * 1024;
@@ -25,14 +26,32 @@ class AppReply {
   final String instanceId;
   final Map<String, dynamic> result;
   static AppReply parse(String text, String callId) {
+    if (utf8.encode(text).length > appFrameLimit + 1 ||
+        !_idPattern.hasMatch(callId)) {
+      throw const AppFailure(
+        'PROTOCOL',
+        'Invalid app frame bounds or correlation.',
+      );
+    }
     final dynamic v;
     try {
       v = jsonDecode(text);
     } on Object {
       throw const AppFailure('PROTOCOL', 'Invalid app reply.');
     }
+    exact(v, [
+      'schema_version',
+      'service',
+      'protocol',
+      'call_id',
+      'pid',
+      'instance_id',
+      'ok',
+      'result',
+      'error',
+    ]);
     if (v is! Map<String, dynamic> ||
-        v['schema_version'] != 1 ||
+        v['schema_version'] != 2 ||
         v['service'] != 'smith-next' ||
         v['protocol'] != 'app' ||
         v['call_id'] != callId ||
@@ -51,16 +70,20 @@ class AppReply {
           e['message'] is! String) {
         throw const AppFailure('PROTOCOL', 'Invalid app error.');
       }
+      wireError(e);
       throw AppFailure(e['code'], e['message']);
     }
     if (v['error'] != null || v['result'] is! Map<String, dynamic>) {
       throw const AppFailure('PROTOCOL', 'Invalid app result.');
     }
     final result = v['result'] as Map<String, dynamic>;
-    _validateModelOperation(result);
-    if (result['active'] is Map<String, dynamic>) {
-      _validateModelOperation(result['active'] as Map<String, dynamic>);
+    if (['verify_model', 'remove_model'].contains(result['kind']) &&
+        result.containsKey('result')) {
+      final modelOperation = Map<String, dynamic>.of(result)
+        ..remove('conversation_id');
+      _validateModelOperation(modelOperation);
     }
+
     return AppReply(v['instance_id'], result);
   }
 }
@@ -99,8 +122,7 @@ void _validateModelOperation(Map<String, dynamic> operation) {
       ]) &&
       operation['request_id'] is String &&
       _idPattern.hasMatch(operation['request_id']) &&
-      operation['config_revision'] is int &&
-      operation['config_revision'] >= 0;
+      wireConfigRevision(operation['config_revision']);
   final status = operation['status'];
   final result = operation['result'];
   if (status == 'running') {
@@ -179,22 +201,55 @@ class NativeAppApi implements AppApi {
   NativeAppApi({AppExecutor? executor})
     : _executor = executor ?? NativeAppExecutor();
   final AppExecutor _executor;
+  Future<void> _tail = Future<void>.value();
+  int _waiting = 0;
+  bool _closed = false;
   @override
-  Future<AppReply> call(String op, Map<String, dynamic> args) async {
-    if (!['state', 'models', 'configure', 'submit', 'poll'].contains(op)) {
+  Future<AppReply> call(String op, Map<String, dynamic> args) {
+    if (_closed || _waiting >= 32) {
+      return Future.error(
+        const AppFailure('CAPACITY', 'Application exchange queue unavailable.'),
+      );
+    }
+    _waiting++;
+    final next = _tail.then((_) {
+      if (_closed) throw const AppFailure('CLOSED', 'Client detached.');
+      return _exchange(op, args);
+    });
+    _tail = next
+        .then<void>((_) {}, onError: (Object _, StackTrace _) {})
+        .whenComplete(() => _waiting--);
+    return next;
+  }
+
+  Future<AppReply> _exchange(String op, Map<String, dynamic> args) async {
+    if (![
+      'state',
+      'models',
+      'configure',
+      'submit',
+      'submit_new',
+      'poll',
+      'conversation_get',
+      'conversation_rename',
+      'conversation_archive',
+      'conversation_restore',
+      'conversation_delete',
+    ].contains(op)) {
       throw const AppFailure('OP', 'Unsupported app operation.');
     }
     if ((op == 'configure' && args['voice'] != null) ||
-        (op == 'submit' && args['output'] != 'chat')) {
+        (['submit', 'submit_new'].contains(op) && args['output'] != 'chat')) {
       throw const AppFailure(
         'OP',
         'Only text chat and voice:null configuration are supported.',
       );
     }
+    validateV2Arguments(op, args);
     final id = appId();
     final payload = utf8.encode(
       jsonEncode({
-        'schema_version': 1,
+        'schema_version': 2,
         'service': 'smith-next',
         'protocol': 'app',
         'call_id': id,
@@ -206,12 +261,21 @@ class NativeAppApi implements AppApi {
       throw const AppFailure('LIMIT', 'App request exceeds 4 MiB.');
     }
     try {
-      return AppReply.parse(await _executor.exchange([...payload, 10]), id);
+      final reply = AppReply.parse(
+        await _executor.exchange([...payload, 10]),
+        id,
+      );
+      validateV2(op, reply.result);
+      return reply;
     } on ControlFailure catch (e) {
       throw AppFailure('TRANSPORT', e.message, unknown: e.outcomeUnknown);
     }
   }
 
   @override
-  void dispose() => _executor.dispose();
+  void dispose() {
+    if (_closed) return;
+    _closed = true;
+    _executor.dispose();
+  }
 }

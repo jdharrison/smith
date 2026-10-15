@@ -4,13 +4,25 @@ import 'package:flutter/material.dart';
 
 import 'app_api.dart';
 
+/// A process-local presentation receipt, never authoritative service history.
+class LocalTextSend {
+  LocalTextSend(this.text, {this.historyRevision = 0});
+  final String text;
+  final int historyRevision;
+  String status = 'Sending…';
+  bool active = true;
+}
+
 class ChatController extends ChangeNotifier {
   ChatController(
     this.api, {
     this.pollInterval = const Duration(milliseconds: 500),
     this.operationBudget = const Duration(seconds: 210),
+    this.ownsApi = true,
   });
   final AppApi api;
+  final bool ownsApi;
+  double? scrollOffset;
   final Duration pollInterval;
   final Duration operationBudget;
   String draft = '';
@@ -20,7 +32,8 @@ class ChatController extends ChangeNotifier {
   String phase = 'Ready';
   bool stale = true;
   bool connected = true;
-  bool get canSend =>
+  bool get canSend => canSubmit && draft.trim().isNotEmpty;
+  bool get canSubmit =>
       connected &&
       !stale &&
       !busy &&
@@ -28,8 +41,7 @@ class ChatController extends ChangeNotifier {
       inventoryObserved &&
       models.contains(config['model']) &&
       providers['llm'] is Map &&
-      providers['llm']['ready'] == true &&
-      draft.trim().isNotEmpty;
+      providers['llm']['ready'] == true;
 
   void unavailable() {
     connected = false;
@@ -53,6 +65,7 @@ class ChatController extends ChangeNotifier {
   // Verified terminal answers are not service history and may lack user text.
   // Retain them by request identity until a later state read succeeds.
   final Map<String, String> provisionalAnswers = {};
+  final Map<String, LocalTextSend> localSends = {};
   List<String> models = [];
   void _notify() {
     if (!_closed) notifyListeners();
@@ -339,7 +352,7 @@ class ChatController extends ChangeNotifier {
   @override
   void dispose() {
     _closed = true;
-    api.dispose();
+    if (ownsApi) api.dispose();
     super.dispose();
   }
 }

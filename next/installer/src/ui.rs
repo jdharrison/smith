@@ -1,7 +1,10 @@
 //! Optional GTK3 recipient shell. The worker owns all publication/Core state;
 //! this binary only displays reviews and sends explicit, request-bound decisions.
+pub mod appearance;
+
 use gtk::glib::{self, ControlFlow, Propagation};
 use gtk::prelude::*;
+use smith_installer::launch::{DesktopLauncher, LaunchResult, NativeLauncher};
 use smith_installer::wizard::{Choices, Command, Event, Report, Scope, Session, StepState};
 use smith_installer::{consent, Result};
 use std::cell::RefCell;
@@ -20,10 +23,11 @@ const TEXT_LIMIT: usize = 4096;
 const REOPEN_GUIDANCE: &str = "Cancellation remains active for this installer process. Close and reopen the installer before management, upgrade or uninstall. Accepted/uncertain effects remain; no cancellation flag was cleared.";
 const HELP: &str = "Smith graphical installer — prepared Ubuntu 24.04 LTS x86_64\n\n\
 Usage: smith-installer-ui [--bundle ROOT]\n\
-       smith-installer-ui --help | --version\n\n\
+       smith-installer-ui --help | --version | --licenses\n\n\
   --bundle ROOT  Complete recipient package (default: actual executable directory)\n\
   -h, --help     Print this finite document; no display or operational discovery\n\
-  -V, --version  Print version; no display or operational discovery\n\n\
+  -V, --version  Print version; no display or operational discovery\n\
+      --licenses Print bundled appearance notices; no display or discovery\n\n\
 Requires compatible GTK3 libraries and a graphical session for installation.\n\
 Includes the Smith app, menu/icon, user command and standalone service binary.\n\
 Install approves only the exact displayed artifact review. Register Smith service\n\
@@ -35,51 +39,77 @@ No automatic app launch or rollback; stopping preserves accepted/uncertain effec
 The headless smith-installer CLI is separate and unchanged.\n";
 const CSS: &str = "
 window.smith-installer, window.smith-stop-dialog {
-    background-color: #101713;
-    color: #edf4ee;
+    background-color: #031514;
+    color: #E3F0EE;
+    font-family: 'JetBrains Mono';
+    font-size: 1.05em;
 }
 .smith-installer scrolledwindow, .smith-installer viewport, .smith-installer stack {
-    background-color: #101713;
+    background-color: transparent;
 }
-.smith-installer expander { color: #edf4ee; }
-.smith-installer label, .smith-stop-dialog label { color: #edf4ee; }
-.smith-installer .title { font-size: 22px; font-weight: bold; }
-.smith-installer .section { font-weight: bold; color: #b9e8c8; }
+.smith-installer label, .smith-stop-dialog label { color: #E3F0EE; }
+.smith-installer .brand { color: #00E9C6; font-size: 1.57em; font-weight: 600; }
+.smith-installer .title { font-size: 1.57em; font-weight: 600; }
+.smith-installer .section { font-weight: 500; color: #00E9C6; }
+.smith-installer .secondary { color: #99B5B2; }
+.smith-installer label selection, .smith-stop-dialog label selection {
+    background-color: #063D34;
+    color: #E3F0EE;
+}
+.smith-installer .metadata { color: #99B5B2; font-size: 0.86em; }
+.smith-installer .panel {
+    background-color: #04201D;
+    border: 1px solid #164A43;
+    border-radius: 6px;
+    padding: 16px;
+}
 .smith-installer button, .smith-stop-dialog button {
     background-image: none;
-    background-color: #243a2d;
-    color: #edf4ee;
-    border-color: #527a60;
-    padding: 8px 14px;
+    background-color: #092A27;
+    color: #E3F0EE;
+    border: 1px solid #0B6557;
+    border-radius: 6px;
+    box-shadow: none;
+    padding: 8px 12px;
+    min-height: 30px;
+    min-width: 30px;
 }
-.smith-installer button.suggested-action { background-color: #285e3b; }
-.smith-installer button.landing-action { font-size: 18px; font-weight: bold; }
-.smith-installer button:hover, .smith-stop-dialog button:hover { background-color: #365d43; }
-.smith-installer button:disabled { background-color: #202923; color: #a8b2aa; }
-.smith-installer button:disabled label { color: #a8b2aa; }
-.smith-installer button:focus, .smith-stop-dialog button:focus { outline-color: #b9e8c8; }
-.smith-installer check { background-color: #18261d; border-color: #80ae90; }
-.smith-installer check:checked { background-color: #347349; color: #ffffff; }
-.smith-installer checkbutton:disabled label { color: #a8b2aa; }
-.smith-installer progressbar trough { background-color: #202e25; }
-.smith-installer progressbar progress { background-color: #73ba8a; }
+.smith-installer button.suggested-action { background-color: #063D34; border-color: #00E9C6; }
+.smith-installer button.suggested-action label { color: #00E9C6; }
+.smith-installer button.landing-action { font-size: 1.14em; font-weight: 500; }
+.smith-installer button.destructive-action { border-color: #FF4D58; }
+.smith-installer button:hover, .smith-stop-dialog button:hover { background-color: #063D34; }
+.smith-installer button:disabled { background-color: #04201D; color: #789290; border-color: #164A43; }
+.smith-installer button:disabled label { color: #789290; }
+.smith-installer button:focus, .smith-stop-dialog button:focus {
+    outline: 2px solid #00FFE0;
+    outline-offset: 2px;
+}
+.smith-installer check { background-color: #04201D; border: 1px solid #0B6557; }
+.smith-installer check:checked { background-color: #00E9C6; color: #031514; }
+.smith-installer checkbutton:disabled label { color: #789290; }
+.smith-installer progressbar trough { background-color: #092A27; min-height: 6px; border-radius: 4px; }
+.smith-installer progressbar progress { background-color: #00E9C6; min-height: 6px; border-radius: 4px; }
+.smith-installer separator { background-color: #164A43; min-height: 1px; }
 ";
 
 #[derive(Debug, PartialEq, Eq)]
 enum Launch {
     Help,
     Version,
+    Licenses,
     Gui { bundle: Option<PathBuf> },
 }
 
 // Parsing is deliberately independent of executable/display/root discovery.
 fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Launch> {
     let mut args = args.into_iter();
-    let (mut bundle, mut help, mut version) = (None, false, false);
+    let (mut bundle, mut help, mut version, mut licenses) = (None, false, false, false);
     while let Some(argument) = args.next() {
         match argument.to_str() {
             Some("--help" | "-h") if !help => help = true,
             Some("--version" | "-V") if !version => version = true,
+            Some("--licenses") if !licenses => licenses = true,
             Some("--bundle") if bundle.is_none() => {
                 let value = args.next().ok_or("--bundle requires ROOT")?;
                 if value.is_empty() || value.to_str().is_some_and(|s| s.starts_with('-')) {
@@ -101,6 +131,8 @@ fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Launch> {
         Launch::Help
     } else if version {
         Launch::Version
+    } else if licenses {
+        Launch::Licenses
     } else {
         Launch::Gui { bundle }
     })
@@ -116,6 +148,13 @@ fn dispatch(
         Launch::Version => document(&format!(
             "smith-installer-ui {}\n",
             env!("CARGO_PKG_VERSION")
+        ))
+        .map(|()| 0),
+        Launch::Licenses => document(concat!(
+            "Smith installer appearance notices\n\n",
+            include_str!("../assets/fonts/jetbrains-mono/OFL.txt"),
+            "\n\n",
+            include_str!("../assets/ICONS-NOTICE.txt"),
         ))
         .map(|()| 0),
         Launch::Gui { bundle } => graphical(bundle),
@@ -226,6 +265,7 @@ struct Widgets {
     results: gtk::Box,
     outcome: gtk::Label,
     inference: gtk::Label,
+    launch_status: gtk::Label,
     details: gtk::Label,
     footer_shell: gtk::Box,
     refresh: gtk::Button,
@@ -260,19 +300,41 @@ fn section(value: &str) -> gtk::Label {
 impl Widgets {
     fn new() -> Self {
         let window = gtk::Window::new(gtk::WindowType::Toplevel);
-        window.set_title("Smith Installer");
+        window.set_title("smith - installer");
         window.set_default_size(720, 560);
         window.set_resizable(true);
         window.style_context().add_class("smith-installer");
 
         let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        let header = gtk::Box::new(gtk::Orientation::Horizontal, 16);
+        header.set_border_width(16);
+        let brand = label("> SMITH");
+        brand.set_selectable(false);
+        brand.style_context().add_class("brand");
+        let version = label(concat!("INSTALLER · v", env!("CARGO_PKG_VERSION")));
+        version.set_xalign(1.0);
+        version.style_context().add_class("metadata");
+        for caption in [&brand, &version] {
+            caption.set_line_wrap_mode(gtk::pango::WrapMode::Word);
+            caption.set_width_chars(-1);
+        }
+        header.pack_start(&brand, true, true, 0);
+        header.pack_end(&version, true, true, 0);
+        root.pack_start(&header, false, false, 0);
+        root.pack_start(
+            &gtk::Separator::new(gtk::Orientation::Horizontal),
+            false,
+            false,
+            0,
+        );
         let scroll = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
         scroll.set_policy(gtk::PolicyType::Never, gtk::PolicyType::Automatic);
         let body = gtk::Box::new(gtk::Orientation::Vertical, 16);
         body.set_border_width(24);
         let heading = label("Set up Smith");
         heading.style_context().add_class("title");
-        let introduction = label("Install or update the Smith app and service, or remove its active integration while keeping your data.");
+        let introduction = label("Install or update Smith. Uninstall keeps your data.");
+        introduction.style_context().add_class("secondary");
         body.pack_start(&heading, false, false, 0);
         body.pack_start(&introduction, false, false, 0);
 
@@ -281,60 +343,95 @@ impl Widgets {
         let landing = gtk::Box::new(gtk::Orientation::Vertical, 16);
         let upgrade = gtk::Button::with_label("INSTALL / UPGRADE");
         let uninstall = gtk::Button::with_label("UNINSTALL");
+        upgrade.set_image(Some(&appearance::icon_image(appearance::Icon::Archive)));
+        uninstall.set_image(Some(&appearance::icon_image(appearance::Icon::Trash)));
+        uninstall.style_context().add_class("destructive-action");
         for button in [&upgrade, &uninstall] {
             button.set_size_request(-1, 88);
+            button.set_always_show_image(true);
             button.style_context().add_class("landing-action");
             landing.pack_start(button, false, false, 0);
         }
         stack.add_named(&landing, "landing");
         let choices = gtk::Box::new(gtk::Orientation::Vertical, 12);
-        choices.pack_start(&section("Install Smith"), false, false, 0);
-        choices.pack_start(&label("Install the reviewed Smith app and service with the normal defaults: register it, enable it at login, then start it now. Each exact effect still requires its own confirmation; lingering is unchanged."), false, false, 0);
+        choices.style_context().add_class("panel");
+        choices.pack_start(&section("Package contents"), false, false, 0);
         let register = gtk::CheckButton::with_label("Register Smith service");
         register.set_active(true);
         let start = gtk::CheckButton::with_label("Start now");
         start.set_active(true);
         let recipe = label("");
         let review = label("Reading the package and preparing a read-only review…");
-        let artifact_details = gtk::Expander::new(Some("Reviewed artifact details"));
-        artifact_details.add(&review);
-        choices.pack_start(&artifact_details, false, false, 0);
+        choices.pack_start(&review, false, false, 0);
         stack.add_named(&choices, "review");
         let model_page = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        model_page.style_context().add_class("panel");
         let model = gtk::ComboBoxText::new();
+        model.set_size_request(-1, 48);
+        // A catalog row must wrap rather than impose its full single-line
+        // width on the toplevel, especially at 200% text size.
+        for cell in model.cells() {
+            if let Ok(cell) = cell.downcast::<gtk::CellRendererText>() {
+                cell.set_wrap_mode(gtk::pango::WrapMode::WordChar);
+                cell.set_wrap_width(240);
+                model.connect_size_allocate(move |_, allocation| {
+                    let width = (allocation.width() - 64).clamp(80, 560);
+                    if cell.wrap_width() != width {
+                        cell.set_wrap_width(width);
+                    }
+                });
+            }
+        }
         let remove = gtk::CheckButton::with_label("Remove this installed model (destructive)");
+        remove.set_size_request(-1, 48);
+        if let Some(child) = remove.child().and_then(|w| w.downcast::<gtk::Label>().ok()) {
+            child.set_line_wrap(true);
+            child.set_line_wrap_mode(gtk::pango::WrapMode::Word);
+            child.set_max_width_chars(28);
+        }
         let model_facts = label("");
-        model_page.pack_start(&section("Choose a model"), false, false, 0);
+        model_page.pack_start(&section("Local model"), false, false, 0);
         model_page.pack_start(&model, false, false, 0);
         model_page.pack_start(&model_facts, false, false, 0);
         model_page.pack_start(&remove, false, false, 0);
-        model_page.pack_start(&label("Downloads, checked preference changes, service inference and destructive removal each require separate exact-model confirmation. Existing selection is preserved. CPU performance is unmeasured."), false, false, 0);
+        model_page.pack_start(&label("Download, selection changes, testing and removal each need separate approval. CPU performance is unmeasured."), false, false, 0);
         stack.add_named(&model_page, "model");
 
         let working = gtk::Box::new(gtk::Orientation::Vertical, 12);
         let stage = label("Preparing installation…");
         let elapsed = label("");
+        elapsed.style_context().add_class("metadata");
         let progress = gtk::ProgressBar::new();
         working.pack_start(&stage, false, false, 0);
         working.pack_start(&progress, false, false, 0);
         working.pack_start(&elapsed, false, false, 0);
         let confirmation = gtk::Box::new(gtk::Orientation::Vertical, 12);
         confirmation.set_no_show_all(true);
+        confirmation.style_context().add_class("panel");
         let confirmation_title = section("");
         let effects = label("");
         confirmation.pack_start(&confirmation_title, false, false, 0);
-        confirmation.pack_start(&label("Confirm only these exact effects, or Stop here and preserve earlier outcomes. This preparation expires; it will not be renewed automatically."), false, false, 0);
+        confirmation.pack_start(&label("Approve these effects only. Stop here keeps earlier changes. Expired approvals are not renewed."), false, false, 0);
         confirmation.pack_start(&effects, false, false, 0);
         working.pack_start(&confirmation, false, false, 0);
         stack.add_named(&working, "working");
 
         let terminal = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        terminal.style_context().add_class("panel");
         let results = gtk::Box::new(gtk::Orientation::Vertical, 10);
         let outcome = label("");
         let inference = label("");
+        inference.style_context().add_class("metadata");
         terminal.pack_start(&results, false, false, 0);
         terminal.pack_start(&outcome, false, false, 0);
         terminal.pack_start(&inference, false, false, 0);
+        let launch_status = label("");
+        launch_status.set_no_show_all(true);
+        terminal.pack_start(&launch_status, false, false, 0);
+        let manage = gtk::Button::with_label("Manage models");
+        manage.set_no_show_all(true);
+        manage.set_halign(gtk::Align::Start);
+        terminal.pack_start(&manage, false, false, 0);
         stack.add_named(&terminal, "terminal");
         body.pack_start(&stack, false, false, 0);
 
@@ -343,8 +440,22 @@ impl Widgets {
         // surface can expose them without creating below-the-fold UI here.
         let details = label("");
         scroll.add(&body);
+        let content = body.clone();
+        scroll.connect_size_allocate(move |_, allocation| {
+            let margin = ((allocation.width() - 688) / 2).max(0);
+            let gutter = if allocation.width() < 600 { 16 } else { 24 };
+            if content.margin_start() != margin || content.border_width() != gutter {
+                let content = content.clone();
+                glib::idle_add_local_once(move || {
+                    content.set_margin_start(margin);
+                    content.set_margin_end(margin);
+                    content.set_border_width(gutter);
+                });
+            }
+        });
         root.pack_start(&scroll, true, true, 0);
         let footer_shell = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        footer_shell.set_no_show_all(true);
         footer_shell.pack_start(
             &gtk::Separator::new(gtk::Orientation::Horizontal),
             false,
@@ -354,8 +465,15 @@ impl Widgets {
         let footer = gtk::Box::new(gtk::Orientation::Horizontal, 12);
         footer.set_border_width(16);
         let refresh = gtk::Button::with_label("Refresh review");
-        let manage = gtk::Button::with_label("Manage models");
         let secondary = gtk::Button::with_label("Cancel");
+        if let Some(child) = secondary
+            .child()
+            .and_then(|w| w.downcast::<gtk::Label>().ok())
+        {
+            child.set_line_wrap(true);
+            child.set_line_wrap_mode(gtk::pango::WrapMode::Word);
+            child.set_max_width_chars(28);
+        }
         let primary = gtk::Button::with_label("Install");
         primary.style_context().add_class("suggested-action");
         primary.set_sensitive(false);
@@ -368,6 +486,26 @@ impl Widgets {
         );
         footer.pack_start(&secondary, false, false, 0);
         footer.pack_start(&primary, false, false, 0);
+        // Keep both actions reachable with long labels or enlarged text.
+        let actions = footer.clone();
+        let first = secondary.clone();
+        let last = primary.clone();
+        footer_shell.connect_size_allocate(move |_, allocation| {
+            let needed = first.preferred_width().1 + last.preferred_width().1 + 44;
+            let orientation = if allocation.width() < needed {
+                gtk::Orientation::Vertical
+            } else {
+                gtk::Orientation::Horizontal
+            };
+            if actions.orientation() != orientation {
+                // Changing request geometry inside allocation can lose GTK's
+                // resize invalidation, leaving the taller footer clipped.
+                let actions = actions.clone();
+                glib::idle_add_local_once(move || actions.set_orientation(orientation));
+            }
+        });
+        footer.show_all();
+        footer_shell.children()[0].show();
         footer_shell.pack_start(&footer, false, false, 0);
         root.pack_start(&footer_shell, false, false, 0);
         window.add(&root);
@@ -390,6 +528,7 @@ impl Widgets {
             results,
             outcome,
             inference,
+            launch_status,
             details,
             footer_shell,
             refresh,
@@ -422,7 +561,10 @@ impl Widgets {
             .and_then(|child| child.downcast::<gtk::Label>().ok())
         {
             label.set_line_wrap(true);
-            label.set_line_wrap_mode(gtk::pango::WrapMode::WordChar);
+            // WordChar gives the footer a one-character minimum width, which
+            // can request a many-line minimum height before responsive reflow.
+            label.set_line_wrap_mode(gtk::pango::WrapMode::Word);
+            label.set_width_chars(-1);
             label.set_max_width_chars(28);
         }
     }
@@ -455,10 +597,18 @@ struct Controller {
     model_request: Option<u64>,
     cancellation: Box<dyn Fn() -> bool>,
     restart_blocked: bool,
+    launcher: Box<dyn DesktopLauncher>,
+    launch_pending: Option<LaunchResult>,
+    launch_requested: bool,
+    close_after_launch: bool,
 }
 
 impl Controller {
-    fn new(ui: Widgets, session: Option<Box<dyn SessionIo>>) -> Self {
+    fn new(
+        ui: Widgets,
+        session: Option<Box<dyn SessionIo>>,
+        launcher: Box<dyn DesktopLauncher>,
+    ) -> Self {
         let controller = Self {
             ui,
             session,
@@ -486,6 +636,10 @@ impl Controller {
             model_request: None,
             cancellation: Box::new(consent::cancelled),
             restart_blocked: false,
+            launcher,
+            launch_pending: None,
+            launch_requested: false,
+            close_after_launch: false,
         };
         controller.render();
         controller
@@ -539,7 +693,7 @@ impl Controller {
         } else if self.review_id.is_some() {
             self.phase = Phase::Review;
             self.ui.heading.set_text("Install Smith");
-            self.ui.introduction.set_text("Install the reviewed Smith app and service. Registration, login Enable and Start use the fixed normal recipe and retain separate exact confirmations.");
+            self.ui.introduction.set_text("Install the app and service below. Registration, login startup and Start are approved separately.");
             self.render();
         } else {
             self.independent_action(Command::Upgrade);
@@ -599,7 +753,7 @@ impl Controller {
         self.independent_action(Command::ManageModels);
     }
     fn independent_action(&mut self, command: Command) {
-        if self.management_blocked() {
+        if self.management_blocked() || self.launch_pending.is_some() || self.quit {
             self.render();
             return;
         }
@@ -610,6 +764,9 @@ impl Controller {
             match Session::spawn(bundle) {
                 Ok(session) => {
                     self.session = Some(Box::new(session));
+                    self.launch_requested = false;
+                    self.close_after_launch = false;
+                    self.ui.launch_status.set_text("");
                     self.report = None;
                     self.fault = None;
                     self.pending = None;
@@ -950,6 +1107,7 @@ impl Controller {
     // A tick never waits for a message or joins a running worker. Drain a bounded
     // batch before interpreting worker exit, so queued final evidence is retained.
     fn tick(&mut self, interrupted: bool) -> bool {
+        self.poll_launch();
         self.restart_blocked |= interrupted || (self.cancellation)();
         if self.phase == Phase::Terminal && self.management_blocked() {
             self.render();
@@ -1123,15 +1281,15 @@ impl Controller {
             );
         }
         self.ui.outcome.set_text(if complete && self.active_scope == Scope::Uninstall {
-            "Uninstall complete. ALL app/Core state, preferences, history, model data, releases and backups are retained. Disk usage is not purged."
+            "ALL app/Core state, preferences, history, models, releases and backups are kept. Disk usage is not purged."
         } else if complete && self.active_scope == Scope::Upgrade {
-            "Upgrade complete; no model download or readiness check. Choose Manage models separately to continue. Keep the complete package."
+            "Models were not downloaded or tested. Keep the package for maintenance."
         } else if complete {
-            "Selected effects are verified; see the exact model check/removal result below. Keep the complete recipient package for future management."
+            "Keep the package for future maintenance."
         } else if self.choices.is_some() {
-            "Completed and uncertain effects are preserved; stopping is not rollback. No automatic retry or cleanup was performed. Keep the package and inspect the reported outcomes before attempting repair."
+            "Completed and uncertain effects remain; stopping is not rollback. No retry or cleanup. Inspect the outcomes above before repair."
         } else {
-            "Install was not authorized. No artifact or service effect was requested by this window. Keep the package and correct the reported problem before reopening the installer."
+            "Install was not authorized. No artifact or service effect was requested. Correct the problem before reopening."
         });
         let checked = complete
             && self.report.as_ref().is_some_and(|r| {
@@ -1141,10 +1299,85 @@ impl Controller {
                         && s.detail.contains("inference verified")
                 })
             });
-        self.ui.inference.set_text(if checked { "Inference: Verified through Smith service.\nThe Smith app is not opened automatically." } else { "Model inference not verified by this session.\nThe Smith app is not opened automatically." });
+        self.ui.inference.set_text(if checked { "Inference: Verified through Smith service.\nThe Smith app is not opened automatically." } else if complete && matches!(self.active_scope, Scope::Uninstall | Scope::ModelRemoval) { "" } else { "Model inference not verified by this session.\nThe Smith app is not opened automatically." });
+        self.ui
+            .inference
+            .set_visible(!self.ui.inference.text().is_empty());
         self.ui.results.show_all();
         self.quit |= self.close_after_join;
         self.render();
+    }
+
+    fn launch_eligible(&self) -> bool {
+        self.phase == Phase::Terminal
+            && self.session.is_none()
+            && self.complete()
+            && !self.stopped_by_user
+            && !self.management_blocked()
+            && self
+                .report
+                .as_ref()
+                .is_some_and(|report| matches!(report.scope, Scope::Installation | Scope::Upgrade))
+    }
+
+    fn launch(&mut self) {
+        if !self.launch_eligible()
+            || self.launch_pending.is_some()
+            || self.launch_requested
+            || self.quit
+        {
+            return;
+        }
+        // Reserve this completion context before returning to GTK. The launcher
+        // only starts a background task; validation never runs in this callback.
+        self.launch_requested = true;
+        match self.launcher.start() {
+            Ok(receiver) => {
+                self.launch_pending = Some(receiver);
+                self.ui
+                    .launch_status
+                    .set_text("Checking installed Smith before launch…");
+            }
+            Err(error) => self.launch_finished(Err(error)),
+        }
+        self.render();
+    }
+
+    fn launch_finished(&mut self, result: Result<()>) {
+        self.launch_pending = None;
+        self.launch_requested = result.is_ok();
+        self.ui.launch_status.set_text(&match result {
+            Ok(()) => "Launch requested. You can close the installer; Smith stays open independently.".into(),
+            Err(error) => text(&format!("Could not launch Smith: {error}\nInstallation result is unchanged. Retry explicitly or close the installer."), TEXT_LIMIT),
+        });
+        self.quit |= self.close_after_launch;
+        self.render();
+    }
+
+    fn poll_launch(&mut self) {
+        let result = self
+            .launch_pending
+            .as_ref()
+            .map(|receiver| receiver.try_recv());
+        match result {
+            Some(Ok(result)) => self.launch_finished(result),
+            Some(Err(std::sync::mpsc::TryRecvError::Disconnected)) => {
+                self.launch_finished(Err("Launch worker ended without a dispatch result.".into()));
+            }
+            _ => {}
+        }
+    }
+
+    fn close_terminal(&mut self) {
+        if self.launch_pending.is_some() {
+            self.close_after_launch = true;
+            self.ui
+                .launch_status
+                .set_text("Waiting for the launch request before closing…");
+            self.render();
+        } else {
+            self.quit = true;
+        }
     }
 
     fn complete(&self) -> bool {
@@ -1181,6 +1414,10 @@ impl Controller {
         if terminal && self.management_blocked() {
             self.ui.outcome.set_text(REOPEN_GUIDANCE);
         }
+        let confirming = self.phase == Phase::Confirmation;
+        self.ui.stage.set_visible(!confirming);
+        self.ui.progress.set_visible(!confirming);
+        self.ui.elapsed.set_visible(!confirming);
         self.ui.landing.set_visible(landing);
         self.ui.register.set_visible(false);
         self.ui.start.set_visible(false);
@@ -1197,6 +1434,9 @@ impl Controller {
             .set_sensitive(landing && !self.management_blocked());
         self.ui.manage.set_visible(false);
         self.ui.manage.set_sensitive(false);
+        self.ui
+            .launch_status
+            .set_visible(terminal && !self.ui.launch_status.text().is_empty());
         self.ui.refresh.set_visible(false);
         self.ui.footer_shell.set_visible(!landing);
         self.ui.secondary.set_visible(!landing);
@@ -1226,17 +1466,21 @@ impl Controller {
         match self.phase {
             Phase::Landing => {
                 self.ui.heading.set_text("Set up Smith");
-                self.ui.introduction.set_text("Install or update the Smith app and service, or remove its active integration while keeping your data.");
+                self.ui
+                    .introduction
+                    .set_text("Install or update Smith. Uninstall keeps your data.");
                 self.ui.primary.set_visible(false);
                 self.ui.secondary.set_visible(false);
             }
             Phase::Inspecting => {
                 self.ui.heading.set_text("Checking Smith");
-                self.ui.introduction.set_text(if self.active_scope == Scope::Uninstall {
-                    "Preparing the independently checked uninstall flow. No effect starts while Smith is being inspected."
-                } else {
-                    "Reviewing the package and existing Smith installation. No effect starts while Smith is being inspected."
-                });
+                self.ui
+                    .introduction
+                    .set_text(if self.active_scope == Scope::Uninstall {
+                        "Checking the installed state. Nothing changes yet."
+                    } else {
+                        "Checking the package and installed state. Nothing changes yet."
+                    });
                 self.ui
                     .stage
                     .set_text(if self.active_scope == Scope::Uninstall {
@@ -1262,36 +1506,43 @@ impl Controller {
             Phase::Model => {
                 self.ui.primary.set_visible(true);
                 self.ui.heading.set_text("Model choice");
-                self.ui.introduction.set_text("Choose/install a model, then check it through the Smith service. Nothing is changed merely by opening this step.");
-                self.ui.primary_label("Continue with exact model");
+                self.ui
+                    .introduction
+                    .set_text("Choose a model to review. Selection alone changes nothing.");
+                self.ui.primary_label("Review model");
                 self.ui.primary.set_sensitive(
                     self.model_request.is_some() && self.ui.model.active_id().is_some(),
                 );
                 self.ui.secondary.set_label("Cancel model operation…");
             }
             Phase::Working => {
-                self.ui.primary.set_visible(true);
+                self.ui.primary.set_visible(false);
                 self.ui.heading.set_text(match self.active_scope {
                     Scope::Upgrade => "Upgrading Smith",
                     Scope::Uninstall => "Uninstalling Smith",
                     Scope::ModelCheck | Scope::ModelRemoval => "Managing models",
                     Scope::Installation => "Installing Smith",
                 });
-                self.ui.introduction.set_text("Only explicitly requested and separately confirmed effects may proceed. Completed and uncertain effects are preserved on failure/cancellation; no rollback or retry.");
+                self.ui
+                    .introduction
+                    .set_text("Working on this step. Cancelling does not undo earlier changes.");
                 self.ui.primary_label("Installing…");
                 self.ui.primary.set_sensitive(false);
                 self.ui.secondary.set_label("Cancel operation…");
             }
             Phase::Confirmation => {
+                self.ui
+                    .introduction
+                    .set_text("Review the next action before approving it.");
                 self.ui.primary.set_visible(true);
                 if let Some(pending) = &self.pending {
-                    self.ui.primary_label(&format!("Confirm {}", pending.title));
+                    self.ui.primary_label(&pending.title);
                 }
                 self.ui.primary.set_sensitive(self.pending.is_some());
                 self.ui.secondary.set_label("Stop here");
             }
             Phase::Stopping | Phase::Finishing => {
-                self.ui.primary.set_visible(true);
+                self.ui.primary.set_visible(false);
                 let stopping = self.phase == Phase::Stopping;
                 self.ui.heading.set_text(if stopping {
                     "Cancelling operation…"
@@ -1299,9 +1550,9 @@ impl Controller {
                     "Finishing operation…"
                 });
                 self.ui.stage.set_text(if stopping {
-                    "Waiting for the installer worker to stop. Accepted effects remain; filesystem writes may take time. This window stays responsive and will not abandon the worker."
+                    "Waiting for the installer to stop safely. Earlier changes remain; writes may take time."
                 } else {
-                    "Waiting for the installer worker to exit before showing its final result."
+                    "Waiting for the installer to finish safely."
                 });
                 self.ui.primary_label(if stopping {
                     "Stopping…"
@@ -1313,14 +1564,28 @@ impl Controller {
             Phase::Terminal => {
                 self.ui.primary.set_visible(true);
                 self.ui.primary_label("Close");
-                self.ui.primary.set_sensitive(self.session.is_none());
-                self.ui.secondary.set_visible(
-                    !self.management_blocked() && self.bundle.is_some() && self.session.is_none(),
-                );
-                self.ui.secondary.set_label("Manage models");
                 self.ui
-                    .secondary
-                    .set_sensitive(self.ui.secondary.is_visible());
+                    .primary
+                    .set_sensitive(self.session.is_none() && !self.close_after_launch);
+                let manage =
+                    !self.management_blocked() && self.bundle.is_some() && self.session.is_none();
+                if self.launch_eligible() {
+                    self.ui.secondary.set_visible(true);
+                    self.ui.secondary.set_label("Launch Smith");
+                    self.ui.secondary.set_sensitive(
+                        !self.launch_requested && self.launch_pending.is_none() && !self.quit,
+                    );
+                    self.ui.manage.set_visible(manage);
+                    self.ui
+                        .manage
+                        .set_sensitive(manage && self.launch_pending.is_none() && !self.quit);
+                } else {
+                    self.ui.secondary.set_visible(manage);
+                    self.ui.secondary.set_label("Manage models");
+                    self.ui
+                        .secondary
+                        .set_sensitive(manage && self.launch_pending.is_none() && !self.quit);
+                }
             }
         }
     }
@@ -1364,7 +1629,7 @@ fn text(value: &str, limit: usize) -> String {
 fn close_request(controller: &Rc<RefCell<Controller>>) {
     let phase = controller.borrow().phase;
     match phase {
-        Phase::Terminal => controller.borrow_mut().quit = true,
+        Phase::Terminal => controller.borrow_mut().close_terminal(),
         Phase::Landing | Phase::Inspecting | Phase::Review => controller.borrow_mut().stop(true),
         Phase::Stopping | Phase::Finishing => controller.borrow_mut().close_after_join = true,
         Phase::Model | Phase::Working | Phase::Confirmation => ask_stop(controller, true),
@@ -1422,7 +1687,7 @@ fn connect(controller: &Rc<RefCell<Controller>>) {
                 Phase::Review => state.install(),
                 Phase::Model => state.model_action(),
                 Phase::Confirmation => state.approve(),
-                Phase::Terminal => state.quit = true,
+                Phase::Terminal => state.close_terminal(),
                 _ => {}
             }
         }
@@ -1433,6 +1698,9 @@ fn connect(controller: &Rc<RefCell<Controller>>) {
             let phase = controller.borrow().phase;
             match phase {
                 Phase::Confirmation => controller.borrow_mut().decline(),
+                Phase::Terminal if controller.borrow().launch_eligible() => {
+                    controller.borrow_mut().launch()
+                }
                 Phase::Review | Phase::Terminal => controller.borrow_mut().manage(),
                 Phase::Inspecting => controller.borrow_mut().stop(false),
                 Phase::Working | Phase::Model => ask_stop(&controller, false),
@@ -1507,6 +1775,7 @@ fn run_gui(bundle: Option<PathBuf>) -> Result<i32> {
     // Install the composed signal handler before GTK can create any threads.
     consent::install_cancellation()?;
     gtk::init().map_err(|_| "Cannot open the graphical display. Use your desktop session or the separate smith-installer CLI.")?;
+    let _fonts = appearance::load_fonts()?;
     let css = gtk::CssProvider::new();
     css.load_from_data(CSS.as_bytes())
         .map_err(|_| "Cannot load installer style")?;
@@ -1532,7 +1801,11 @@ fn run_gui(bundle: Option<PathBuf>) -> Result<i32> {
         Ok(session) => (Some(Box::new(session) as Box<dyn SessionIo>), None),
         Err(error) => (None, Some(error)),
     };
-    let controller = Rc::new(RefCell::new(Controller::new(ui, session)));
+    let controller = Rc::new(RefCell::new(Controller::new(
+        ui,
+        session,
+        Box::new(NativeLauncher::from_environment()),
+    )));
     controller.borrow_mut().bundle = package;
     connect(&controller);
     controller.borrow().ui.window.show_all();
@@ -1553,6 +1826,10 @@ fn run_gui(bundle: Option<PathBuf>) -> Result<i32> {
     loop {
         gtk::main();
         if controller.borrow().session.is_none() {
+            if controller.borrow().launch_pending.is_some() {
+                controller.borrow_mut().close_terminal();
+                continue;
+            }
             break;
         }
         // Even an unexpected main-loop return must not detach an effect worker.
@@ -1611,6 +1888,28 @@ mod tests {
             |_| panic!("GUI discovery")
         )
         .is_err());
+    }
+
+    #[test]
+    fn licenses_are_embedded_and_display_free() {
+        let mut output = String::new();
+        assert_eq!(
+            dispatch(
+                args(&["--licenses"]).unwrap(),
+                |value| {
+                    output.push_str(value);
+                    Ok(())
+                },
+                |_| panic!("licenses must not initialize GTK or inspect a package"),
+            )
+            .unwrap(),
+            0
+        );
+        assert!(output.contains("SIL OPEN FONT LICENSE"));
+        assert!(output.contains("JetBrains"));
+        assert!(output.contains(include_str!("../assets/ICONS-NOTICE.txt")));
+        assert!(output.len() < 16 * 1024);
+        assert!(args(&["--licenses", "--licenses"]).is_err());
     }
 
     #[test]
@@ -1798,11 +2097,19 @@ mod tests {
         assert_allocated(&controller.ui.introduction, "introduction");
     }
 
+    struct NoLaunch;
+    impl DesktopLauncher for NoLaunch {
+        fn start(&self) -> Result<LaunchResult> {
+            panic!("test unexpectedly dispatched a desktop launch")
+        }
+    }
+
     fn fixture() -> (Rc<RefCell<Controller>>, Rc<RefCell<FakeData>>) {
         let data = Rc::new(RefCell::new(FakeData::default()));
         let controller = Rc::new(RefCell::new(Controller::new(
             Widgets::new(),
             Some(Box::new(FakeSession(data.clone()))),
+            Box::new(NoLaunch),
         )));
         connect(&controller);
         controller
@@ -1840,11 +2147,770 @@ mod tests {
         unsafe { controller.borrow().ui.window.destroy() };
     }
 
+    fn settle_layout() {
+        // GTK resize/style work is scheduled on the frame clock, not necessarily
+        // pending when a nonblocking main-context drain first returns.
+        for _ in 0..12 {
+            pump_gtk();
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        pump_gtk();
+    }
+
+    fn descendants(widget: &gtk::Widget) -> Vec<gtk::Widget> {
+        let mut result = vec![widget.clone()];
+        if let Some(container) = widget.downcast_ref::<gtk::Container>() {
+            for child in container.children() {
+                result.extend(descendants(&child));
+            }
+        }
+        result
+    }
+
+    fn body_scroll(ui: &Widgets) -> gtk::ScrolledWindow {
+        ui.stack
+            .ancestor(gtk::ScrolledWindow::static_type())
+            .expect("body remains scrollable")
+            .downcast()
+            .unwrap()
+    }
+
+    fn assert_in_window(widget: &gtk::Widget, window: &gtk::Window) {
+        let (x, y) = widget.translate_coordinates(window, 0, 0).unwrap();
+        let bounds = widget.allocation();
+        assert!(
+            x >= 0
+                && y >= 0
+                && x + bounds.width() <= window.allocated_width()
+                && y + bounds.height() <= window.allocated_height(),
+            "{} clipped: {x},{y} {bounds:?} in {:?}",
+            widget.type_().name(),
+            window.allocation()
+        );
+    }
+
+    fn assert_visual_frame(ui: &Widgets, width: i32, height: i32) {
+        assert_eq!(
+            (ui.window.allocated_width(), ui.window.allocated_height()),
+            (width, height),
+            "text scaling must not enlarge the requested window"
+        );
+        let scroll = body_scroll(ui);
+        assert_in_window(scroll.upcast_ref(), &ui.window);
+        assert!(scroll.allocated_height() >= 80, "footer consumed the body");
+        assert_eq!(scroll.hscrollbar_policy(), gtk::PolicyType::Never);
+        assert_eq!(ui.stack.transition_type(), gtk::StackTransitionType::None);
+        assert!(ui.details.parent().is_none());
+        assert!(ui.window.default_widget().is_none(), "no default approval");
+        for button in [&ui.primary, &ui.secondary] {
+            if button.is_visible() {
+                assert_in_window(button.upcast_ref(), &ui.window);
+                assert!(button.allocated_height() >= 48, "footer hit target <48px");
+                if button.is_sensitive() {
+                    assert_action(button, "footer action");
+                }
+            }
+        }
+        if ui.footer_shell.is_visible() {
+            assert_in_window(ui.footer_shell.upcast_ref(), &ui.window);
+        }
+        if ui.model.is_mapped() {
+            assert!(
+                ui.model.allocated_height() >= 48,
+                "model chooser hit target <48px"
+            );
+            assert!(
+                ui.remove.allocated_height() >= 48,
+                "model removal hit target <48px"
+            );
+        }
+        let viewport = scroll.child().unwrap();
+        let adjustment = scroll.vadjustment();
+        let body = viewport
+            .clone()
+            .downcast::<gtk::Container>()
+            .unwrap()
+            .children()[0]
+            .clone();
+        for widget in descendants(&body).into_iter().filter(|w| w.is_mapped()) {
+            let (x, y) = widget.translate_coordinates(&body, 0, 0).unwrap();
+            assert!(
+                x >= 0 && x + widget.allocated_width() <= body.allocated_width(),
+                "horizontal clipping in {}: {x} + {} > {}",
+                widget.type_().name(),
+                widget.allocated_width(),
+                body.allocated_width()
+            );
+            assert!(
+                y >= 0 && f64::from(y + widget.allocated_height()) <= adjustment.upper() + 1.0,
+                "body content cannot be reached by scrolling: {}",
+                widget.type_().name()
+            );
+            if let Some(label) = widget.downcast_ref::<gtk::Label>() {
+                assert_eq!(
+                    label.ellipsize(),
+                    gtk::pango::EllipsizeMode::None,
+                    "body text must remain complete: {}",
+                    label.text()
+                );
+                let (_, text_height) = label
+                    .layout()
+                    .expect("allocated label has a layout")
+                    .pixel_size();
+                assert!(
+                    text_height <= label.allocated_height(),
+                    "wrapped text clipped vertically: {} ({text_height} > {})",
+                    label.text(),
+                    label.allocated_height()
+                );
+            }
+        }
+        if width >= 1024 {
+            assert!(
+                ui.heading.allocated_width() <= 640,
+                "unbounded reading column"
+            );
+        }
+    }
+
+    fn capture_view(ui: &Widgets, name: &str, text_scale: i32) {
+        // This opt-in writer exists only in the test binary. Never consult a
+        // production display, package, manager, model or session for a fixture.
+        let Some(directory) = std::env::var_os("SMITH_UI_CAPTURE_DIR") else {
+            return;
+        };
+        use sha2::{Digest, Sha256};
+        let directory = PathBuf::from(directory);
+        assert!(
+            directory.is_absolute(),
+            "capture directory must be explicit and absolute"
+        );
+        std::fs::create_dir_all(&directory).unwrap();
+        let (width, height) = (ui.window.allocated_width(), ui.window.allocated_height());
+        let scale = ui.window.scale_factor();
+        let surface = gtk::cairo::ImageSurface::create(
+            gtk::cairo::Format::ARgb32,
+            width * scale,
+            height * scale,
+        )
+        .unwrap();
+        surface.set_device_scale(f64::from(scale), f64::from(scale));
+        let context = gtk::cairo::Context::new(&surface).unwrap();
+        ui.window.draw(&context);
+        surface.flush();
+        let pixbuf =
+            gtk::gdk::pixbuf_get_from_surface(&surface, 0, 0, width * scale, height * scale)
+                .expect("Widget.draw produced a readable Cairo surface");
+        let path = directory.join(format!("{name}.png"));
+        assert!(!path.exists(), "capture names must be unique");
+        pixbuf.savev(&path, "png", &[]).unwrap();
+        let bytes = std::fs::read(&path).unwrap();
+        let scroll = body_scroll(ui).vadjustment();
+        let settings = gtk::Settings::default().unwrap();
+        let metadata = serde_json::json!({
+            "synthetic": true,
+            "renderer": "GTK3 Widget.draw / Cairo ImageSurface / GdkPixbuf PNG",
+            "logical_size": [width, height],
+            "png_size": [pixbuf.width(), pixbuf.height()],
+            "gdk_scale_factor": scale,
+            "text_scale": text_scale,
+            "gtk_font_name": settings.property::<String>("gtk-font-name"),
+            "gtk_xft_dpi": settings.property::<i32>("gtk-xft-dpi"),
+            "font_family": appearance::FONT_FAMILY,
+            "heading_pango_font": ui.heading.pango_context().font_description().unwrap().to_string(),
+            "scroll": {"value": scroll.value(), "upper": scroll.upper(), "page_size": scroll.page_size()},
+            "png_bytes": bytes.len(),
+            "sha256": format!("{:x}", Sha256::digest(&bytes)),
+            "decorations": "client area only; no window manager in Xvfb",
+        });
+        std::fs::write(
+            directory.join(format!("{name}.json")),
+            serde_json::to_vec_pretty(&metadata).unwrap(),
+        )
+        .unwrap();
+    }
+
+    fn visual_checkpoint(
+        controller: &Rc<RefCell<Controller>>,
+        data: &Rc<RefCell<FakeData>>,
+        name: &str,
+        geometry: (i32, i32, i32),
+        all_scroll_positions: bool,
+    ) {
+        let commands = data.borrow().commands.clone();
+        let (width, height, text_scale) = geometry;
+        settle_layout();
+        let ui = &controller.borrow().ui;
+        eprintln!("visual checkpoint {name} {width}x{height} text{text_scale}; window {:?}; footer {:?}/{:?}; scroll {:?}/{:?}; primary {:?}/{:?}", ui.window.allocation(), ui.footer_shell.allocation(), ui.footer_shell.preferred_height(), body_scroll(ui).allocation(), body_scroll(ui).preferred_height(), ui.primary.allocation(), ui.primary.preferred_height());
+        if (ui.window.allocated_width(), ui.window.allocated_height()) != (width, height) {
+            capture_view(
+                ui,
+                &format!("FAILED-{name}-{width}x{height}-text{text_scale}"),
+                text_scale,
+            );
+        }
+        assert_visual_frame(ui, width, height);
+        let adjustment = body_scroll(ui).vadjustment();
+        let end = (adjustment.upper() - adjustment.page_size()).max(0.0);
+        let mut value = 0.0;
+        let mut page = 0;
+        loop {
+            adjustment.set_value(value);
+            settle_layout();
+            assert!(
+                (adjustment.value() - value).abs() < 1.0,
+                "body scroll is unreachable"
+            );
+            assert_visual_frame(ui, width, height);
+            capture_view(
+                ui,
+                &format!("{name}-{width}x{height}-text{text_scale}-scroll{page:02}"),
+                text_scale,
+            );
+            if !all_scroll_positions || value >= end {
+                break;
+            }
+            value = (value + adjustment.page_size() * 0.85).min(end);
+            page += 1;
+            assert!(page < 64, "unbounded synthetic capture");
+        }
+        adjustment.set_value(end);
+        settle_layout();
+        assert_visual_frame(ui, width, height);
+        adjustment.set_value(0.0);
+        assert_eq!(
+            data.borrow().commands,
+            commands,
+            "resize/draw/scroll authorized an effect"
+        );
+    }
+
+    fn finish_visual_fixture(
+        controller: &Rc<RefCell<Controller>>,
+        data: &Rc<RefCell<FakeData>>,
+        result: Report,
+    ) {
+        data.borrow_mut()
+            .events
+            .push_back(Event::Finished { report: result });
+        controller.borrow_mut().tick(false);
+        assert_eq!(data.borrow().joins, 0, "a report is not worker exit");
+        assert!(
+            !controller.borrow().ui.primary.is_visible(),
+            "no premature Close"
+        );
+        data.borrow_mut().finished = true;
+        controller.borrow_mut().tick(false);
+        assert_eq!(data.borrow().joins, 1);
+    }
+
+    fn visual_matrix() {
+        let settings = gtk::Settings::default().unwrap();
+        let original_font = settings.property::<String>("gtk-font-name");
+        let original_dpi = settings.property::<i32>("gtk-xft-dpi");
+        settings.set_property("gtk-xft-dpi", 96 * 1024);
+        settings.set_property("gtk-enable-animations", false);
+        settings.set_property("gtk-cursor-blink", false);
+        for geometry in [
+            (720, 560, 1),
+            (720, 560, 2),
+            (480, 420, 1),
+            (480, 420, 2),
+            (1024, 420, 1),
+            (1440, 900, 1),
+            (2560, 1080, 1),
+        ] {
+            let (width, height, text_scale) = geometry;
+            settings.set_property("gtk-font-name", format!("Sans {}", 10 * text_scale));
+            let (controller, data) = fixture();
+            controller.borrow().ui.window.resize(width, height);
+            controller.borrow().ui.upgrade.grab_focus();
+            let check = |name, full| visual_checkpoint(&controller, &data, name, geometry, full);
+            check("landing", true);
+            {
+                let state = controller.borrow();
+                let labels: Vec<_> = descendants(state.ui.window.upcast_ref())
+                    .into_iter()
+                    .filter_map(|w| w.downcast::<gtk::Label>().ok())
+                    .collect();
+                assert!(labels.iter().any(|l| l.text() == "> SMITH"));
+                assert!(labels
+                    .iter()
+                    .any(|l| l.text() == concat!("INSTALLER · v", env!("CARGO_PKG_VERSION"))));
+                assert_eq!(
+                    state
+                        .ui
+                        .heading
+                        .pango_context()
+                        .font_description()
+                        .unwrap()
+                        .family()
+                        .as_deref(),
+                    Some(appearance::FONT_FAMILY)
+                );
+                for button in [&state.ui.upgrade, &state.ui.uninstall] {
+                    assert!(button.allocated_height() >= 88);
+                    assert!(button
+                        .image()
+                        .unwrap()
+                        .downcast::<gtk::Image>()
+                        .unwrap()
+                        .pixbuf()
+                        .is_some());
+                }
+            }
+            assert!(data.borrow().commands.is_empty());
+            controller.borrow_mut().choose_install_or_upgrade();
+            check("checking", false);
+            data.borrow_mut().events.push_back(Event::Review {
+                request_id: 600,
+                description: "Synthetic package review\nSmith app, menu/icon, user command and paired service.\nPublish only the reviewed files under /fixture/data/smith and /fixture/bin.\nRegister, enable at login, Start and every model action still require separate approvals.".into(),
+            });
+            controller.borrow_mut().tick(false);
+            check("review", true);
+            assert!(data.borrow().commands.is_empty());
+            controller.borrow_mut().install();
+            let effects = vec![
+                "Synthetic exact effect: write only /fixture/config/systemd/user/smith-next.service.".to_string(),
+                "Packaged service: /fixture/package/payload/service/smith-service; source SHA256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef.".into(),
+                "Reload the user manager only. Do not Start, enable at login, alter lingering, or change any other unit.".into(),
+                "Keep all existing conversations, preferences, downloaded models, releases, backups and preserved objects. This approval does not authorize model download, preference, inference or removal.".into(),
+                "Original prepared request 601 expires without renewal. If state or identity changes, stop and start a new explicit run. Literal text remains literal: <not markup> & no hidden effects. END OF EXACT EFFECTS.".into(),
+            ];
+            controller.borrow_mut().event(Event::Confirmation {
+                request_id: 601,
+                title: "Register Smith service".into(),
+                effects: effects.clone(),
+            });
+            check("confirmation-exact", true);
+            {
+                let state = controller.borrow();
+                assert_eq!(state.ui.effects.text(), effects.join("\n\n"));
+                assert_eq!(
+                    state.ui.introduction.text(),
+                    "Review the next action before approving it."
+                );
+                assert!(!state.ui.effects.uses_markup());
+                assert!(!state.ui.stage.is_visible());
+                assert!(!state.ui.progress.is_visible());
+                assert!(!state.ui.elapsed.is_visible());
+                assert_eq!(
+                    state.ui.window.focused_widget(),
+                    Some(state.ui.effects.clone().upcast())
+                );
+                assert_eq!(state.pending.as_ref().unwrap().request_id, 601);
+            }
+            assert_eq!(data.borrow().commands.len(), 1);
+            controller.borrow_mut().approve();
+            controller.borrow_mut().approve();
+            assert_eq!(data.borrow().commands.len(), 2);
+            assert_eq!(
+                data.borrow().commands[1],
+                Command::Approve { request_id: 601 }
+            );
+            controller.borrow_mut().event(Event::Models {
+                request_id: 602,
+                selected: None,
+                installed: vec![],
+            });
+            check("model", true);
+            assert_eq!(
+                controller
+                    .borrow()
+                    .ui
+                    .model
+                    .model()
+                    .unwrap()
+                    .iter_n_children(None),
+                smith_service::runner::CATALOG.len() as i32
+            );
+            let chooser = controller.borrow().ui.model.clone();
+            chooser.set_active_id(Some(smith_service::runner::CATALOG[0].name));
+            pump_gtk();
+            assert_eq!(
+                data.borrow().commands.len(),
+                2,
+                "selection is not model preparation or approval"
+            );
+            chooser.set_active_id(Some(smith_service::runner::DEFAULT_MODEL));
+            controller.borrow_mut().model_action();
+            assert_eq!(
+                controller.borrow().ui.introduction.text(),
+                "Working on this step. Cancelling does not undo earlier changes."
+            );
+            assert!(
+                matches!(&data.borrow().commands[2], Command::ModelAction { request_id: 602, model, remove: false } if model == smith_service::runner::DEFAULT_MODEL)
+            );
+            controller.borrow_mut().event(Event::Progress {
+                downloaded: 4_500_876_480,
+                total: 9_001_752_960,
+            });
+            controller.borrow().ui.elapsed.set_text("Elapsed: 42s");
+            check("progress-download", false);
+            assert_eq!(controller.borrow().ui.progress.fraction(), 0.5);
+            assert!(
+                !controller.borrow().ui.primary.is_visible(),
+                "no disabled pseudo-action during work"
+            );
+            controller.borrow_mut().event(Event::Stage {
+                message: "Hashing the downloaded model; no inference has been verified.".into(),
+            });
+            check("progress-indeterminate", false);
+            assert_eq!(controller.borrow().ui.progress.fraction(), 0.0);
+            let mut result = report(true, false, StepState::Completed);
+            result.message = "Smith artifacts and selected service operations completed. The exact model check was verified by the service.".into();
+            result.steps.push(StepResult {
+                label: "Model setup".into(),
+                state: StepState::Completed,
+                detail: "Exact model inference verified".into(),
+            });
+            finish_visual_fixture(&controller, &data, result);
+            check("success", true);
+            assert!(controller.borrow().ui.results.children().is_empty());
+            assert!(controller
+                .borrow()
+                .ui
+                .inference
+                .text()
+                .contains("Inference: Verified"));
+            let commands = data.borrow().commands.clone();
+            let close = controller.borrow().ui.primary.clone();
+            close.emit_clicked();
+            assert!(controller.borrow().quit);
+            assert_eq!(
+                data.borrow().commands,
+                commands,
+                "Close must not send consent"
+            );
+            destroy(controller);
+
+            let (controller, data) = fixture();
+            controller.borrow().ui.window.resize(width, height);
+            data.borrow_mut().events.push_back(review_event(610));
+            controller.borrow_mut().tick(false);
+            controller.borrow_mut().choose_install_or_upgrade();
+            controller.borrow_mut().install();
+            let mut partial = report(false, false, StepState::Completed);
+            partial.message = "Service Start could not be verified. Earlier artifact and registration effects remain; setup is incomplete.".into();
+            partial.steps = vec![
+                StepResult { label: "Smith artifacts".into(), state: StepState::Completed, detail: "The paired files were published. Existing releases and backup files are preserved.".into() },
+                StepResult { label: "Register service".into(), state: StepState::Completed, detail: "The exact reviewed user unit was written and reload was accepted.".into() },
+                StepResult { label: "Start now".into(), state: StepState::Uncertain, detail: "The manager accepted Start but the private service bridge could not be verified before the deadline. The service may still be running; cancelling observation does not stop accepted work.".into() },
+                StepResult { label: "Model setup".into(), state: StepState::Failed, detail: "Service readiness is unknown. No model was downloaded, selected, removed or tested. Inspect the service state before a new explicit run; there is no automatic retry, rollback or cleanup. END OF PARTIAL OUTCOMES.".into() },
+            ];
+            finish_visual_fixture(&controller, &data, partial);
+            visual_checkpoint(&controller, &data, "partial-failure", geometry, true);
+            assert_eq!(controller.borrow().ui.results.children().len(), 4);
+            assert!(controller
+                .borrow()
+                .ui
+                .outcome
+                .text()
+                .contains("not rollback"));
+            assert_eq!(controller.borrow().exit_code(), 1);
+            destroy(controller);
+        }
+        settings.set_property("gtk-font-name", "Sans 10");
+        visual_decisions_and_results();
+        settings.set_property("gtk-font-name", original_font);
+        settings.set_property("gtk-xft-dpi", original_dpi);
+    }
+
+    fn visual_decisions_and_results() {
+        let geometry = (720, 560, 1);
+        let (controller, data) = fixture();
+        controller.borrow().ui.window.resize(geometry.0, geometry.1);
+        data.borrow_mut().events.push_back(review_event(700));
+        controller.borrow_mut().tick(false);
+        controller.borrow_mut().choose_install_or_upgrade();
+        controller.borrow_mut().install();
+        for (index, (name, title, effect)) in [
+            ("enable", "Enable Smith at login", "Synthetic exact effect: enable only smith-next.service for the current user default.target. Do not Start now or change lingering."),
+            ("start", "Start Smith service", "Synthetic exact effect: Start the reviewed paired service now. Enablement is unchanged; no model inference is authorized."),
+            ("download", "Download model", "Synthetic exact effect: download Qwen3-14B Q4_K_M, 9001752960 bytes, from the exact reviewed HTTPS catalog revision. Verify its size and SHA256 before publication. No resume, preference change or inference."),
+            ("preference", "Save model preference", "Synthetic exact effect: select the checked Qwen3-14B model at the displayed expected configuration revision. Stale configuration must refuse; no inference."),
+            ("inference", "Test model", "Synthetic exact effect: run the fixed greeting through the verified Smith service with the selected model. No saved conversation is used or appended. This is inference, not acknowledgement of the download."),
+            ("removal", "Remove model permanently", "Synthetic destructive effect: remove only the reviewed non-selected, unloaded model and its marker. Preserve all conversations, preferences, other models and partial/orphan data on failure. No implicit unload or Stop."),
+            ("uninstall", "Unregister Smith service", "Synthetic destructive effect: disable and verify removal of owned login enablement, then unregister the exact owned smith-next.service. Preserve ALL app/Core data, models, releases, backups and preserved objects. Lingering and unrelated units are unchanged."),
+        ].into_iter().enumerate() {
+            let request_id = 701 + index as u64;
+            controller.borrow_mut().event(Event::Confirmation {
+                request_id, title: title.into(), effects: vec![effect.into()],
+            });
+            visual_checkpoint(&controller, &data, &format!("approval-{name}"), geometry, true);
+            assert_eq!(controller.borrow().ui.effects.text(), effect);
+            let window = controller.borrow().ui.window.clone();
+            let before = data.borrow().commands.clone();
+            // Each new request moves focus to the selectable exact effects, not
+            // the next approval. Repeated Enter/default activation cannot carry
+            // authority from the previous request into this one.
+            for _ in 0..20 {
+                window.activate_default();
+                window.activate_focus();
+            }
+            assert_eq!(data.borrow().commands, before, "held activation approved a new request");
+            let button = controller.borrow().ui.primary.clone();
+            button.grab_focus();
+            assert_eq!(window.focused_widget(), Some(button.clone().upcast()));
+            button.emit_clicked();
+            controller.borrow_mut().approve();
+            assert_eq!(data.borrow().commands.len(), before.len() + 1);
+            assert_eq!(data.borrow().commands.last(), Some(&Command::Approve { request_id }));
+        }
+        controller.borrow_mut().stop(false);
+        visual_checkpoint(&controller, &data, "cancelling", geometry, true);
+        finish_visual_fixture(
+            &controller,
+            &data,
+            report(false, true, StepState::Completed),
+        );
+        visual_checkpoint(&controller, &data, "cancelled-preserved", geometry, true);
+        destroy(controller);
+
+        for (name, scope, command, message) in [
+            ("upgrade", Scope::Upgrade, Command::Upgrade, "Paired artifacts upgraded and the service verified ready. Models were not checked."),
+            ("uninstall", Scope::Uninstall, Command::Uninstall, "Smith active integration was removed. Your data and preserved files remain."),
+            ("model-check", Scope::ModelCheck, Command::ManageModels, "The selected model check completed; no Smith artifacts were published."),
+            ("model-removal", Scope::ModelRemoval, Command::ManageModels, "The exact reviewed model was removed. Other models and all conversations remain."),
+        ] {
+            let (controller, data) = fixture();
+            controller.borrow_mut().bundle = Some(PathBuf::from("/fixture/package"));
+            controller.borrow().ui.window.resize(geometry.0, geometry.1);
+            data.borrow_mut().events.push_back(review_event(720));
+            controller.borrow_mut().tick(false);
+            controller.borrow_mut().independent_action(command);
+            let mut result = report(true, false, StepState::Completed);
+            result.scope = scope;
+            result.message = message.into();
+            finish_visual_fixture(&controller, &data, result);
+            visual_checkpoint(&controller, &data, &format!("success-{name}"), geometry, true);
+            assert_eq!(controller.borrow().ui.heading.text(), scope.completion_heading());
+            assert!(controller.borrow().ui.secondary.is_visible(), "management remains reachable");
+            let before = data.borrow().commands.clone();
+            let close = controller.borrow().ui.primary.clone();
+            close.emit_clicked();
+            assert_eq!(data.borrow().commands, before);
+            assert_eq!(data.borrow().joins, 1);
+            destroy(controller);
+        }
+    }
+
+    #[derive(Default)]
+    struct LaunchFake {
+        calls: usize,
+        replies: Vec<std::sync::mpsc::SyncSender<Result<()>>>,
+        start_error: bool,
+    }
+    struct FakeLauncher(Rc<RefCell<LaunchFake>>);
+    impl DesktopLauncher for FakeLauncher {
+        fn start(&self) -> Result<LaunchResult> {
+            let mut fake = self.0.borrow_mut();
+            fake.calls += 1;
+            if fake.start_error {
+                return Err("Cannot create launch thread".into());
+            }
+            let (sender, receiver) = std::sync::mpsc::sync_channel(1);
+            fake.replies.push(sender);
+            Ok(receiver)
+        }
+    }
+
+    fn launch_cases() {
+        for scope in [
+            Scope::Installation,
+            Scope::Upgrade,
+            Scope::Uninstall,
+            Scope::ModelCheck,
+            Scope::ModelRemoval,
+        ] {
+            let (controller, data) = fixture();
+            let fake = Rc::new(RefCell::new(LaunchFake::default()));
+            {
+                let mut state = controller.borrow_mut();
+                state.launcher = Box::new(FakeLauncher(fake.clone()));
+                state.bundle = Some(PathBuf::from("/fixture/package"));
+                state.choices = Some(Choices::smith_install());
+                state.active_scope = scope;
+                state.phase = Phase::Working;
+            }
+            let mut result = report(true, false, StepState::Completed);
+            result.scope = scope;
+            data.borrow_mut()
+                .events
+                .push_back(Event::Finished { report: result });
+            controller.borrow_mut().tick(false);
+            controller.borrow_mut().launch();
+            assert!(!controller.borrow().launch_eligible(), "worker not joined");
+            assert_eq!(fake.borrow().calls, 0);
+            data.borrow_mut().finished = true;
+            controller.borrow_mut().tick(false);
+            let eligible = matches!(scope, Scope::Installation | Scope::Upgrade);
+            assert_eq!(controller.borrow().launch_eligible(), eligible);
+            assert_eq!(fake.borrow().calls, 0, "completion never launches");
+            if !eligible {
+                controller.borrow_mut().launch();
+                assert_eq!(fake.borrow().calls, 0);
+                close_request(&controller);
+                destroy(controller);
+                continue;
+            }
+            settle_layout();
+            assert_action(&controller.borrow().ui.secondary, "Launch Smith");
+            assert_action(&controller.borrow().ui.primary, "Close");
+            assert!(controller.borrow().ui.manage.is_visible());
+            assert!(
+                !controller.borrow().ui.secondary.has_default(),
+                "launch is not default activation"
+            );
+            for phase in [
+                Phase::Landing,
+                Phase::Inspecting,
+                Phase::Review,
+                Phase::Model,
+                Phase::Working,
+                Phase::Confirmation,
+                Phase::Stopping,
+                Phase::Finishing,
+            ] {
+                controller.borrow_mut().phase = phase;
+                controller.borrow_mut().launch();
+                assert_eq!(fake.borrow().calls, 0);
+            }
+            controller.borrow_mut().phase = Phase::Terminal;
+            for case in 0..7 {
+                {
+                    let mut state = controller.borrow_mut();
+                    match case {
+                        0 => state.report.as_mut().unwrap().complete = false,
+                        1 => state.report.as_mut().unwrap().cancelled = true,
+                        2 => state.report.as_mut().unwrap().steps[0].state = StepState::Uncertain,
+                        3 => state.fault = Some("join/report failure".into()),
+                        4 => state.stopped_by_user = true,
+                        5 => state.restart_blocked = true,
+                        6 => state.choices = None,
+                        _ => unreachable!(),
+                    }
+                    state.render();
+                    assert!(!state.launch_eligible());
+                    assert_ne!(state.ui.secondary.label().as_deref(), Some("Launch Smith"));
+                    state.launch();
+                    state.report = Some(Report {
+                        scope,
+                        ..report(true, false, StepState::Completed)
+                    });
+                    state.fault = None;
+                    state.stopped_by_user = false;
+                    state.restart_blocked = false;
+                    state.choices = Some(Choices::smith_install());
+                }
+                assert_eq!(fake.borrow().calls, 0);
+            }
+            controller.borrow().render();
+            let launch = controller.borrow().ui.secondary.clone();
+            launch.emit_clicked();
+            launch.emit_clicked();
+            controller.borrow_mut().launch();
+            assert_eq!(fake.borrow().calls, 1);
+            assert!(controller.borrow().launch_pending.is_some());
+            assert!(!controller.borrow().ui.manage.is_sensitive());
+            controller.borrow_mut().manage();
+            assert!(
+                controller.borrow().session.is_none(),
+                "management blocked during dispatch"
+            );
+            fake.borrow_mut()
+                .replies
+                .pop()
+                .unwrap()
+                .send(Err("unsafe\u{1b}\u{202e} target".repeat(1000)))
+                .unwrap();
+            controller.borrow_mut().tick(false);
+            assert_eq!(controller.borrow().exit_code(), 0);
+            assert!(controller.borrow().complete());
+            assert!(!controller
+                .borrow()
+                .ui
+                .launch_status
+                .text()
+                .contains('\u{1b}'));
+            assert!(!controller
+                .borrow()
+                .ui
+                .launch_status
+                .text()
+                .contains('\u{202e}'));
+            assert!(controller.borrow().ui.launch_status.text().len() <= TEXT_LIMIT + 100);
+            assert!(controller.borrow().ui.secondary.is_sensitive());
+            launch.emit_clicked();
+            assert_eq!(fake.borrow().calls, 2);
+            fake.borrow_mut()
+                .replies
+                .pop()
+                .unwrap()
+                .send(Ok(()))
+                .unwrap();
+            controller.borrow_mut().tick(false);
+            assert!(controller
+                .borrow()
+                .ui
+                .launch_status
+                .text()
+                .contains("Launch requested"));
+            launch.emit_clicked();
+            assert_eq!(fake.borrow().calls, 2);
+            close_request(&controller);
+            assert!(controller.borrow().quit);
+            assert_eq!(controller.borrow().exit_code(), 0);
+            destroy(controller);
+        }
+        for success in [false, true] {
+            let (controller, data) = fixture();
+            let fake = Rc::new(RefCell::new(LaunchFake::default()));
+            {
+                let mut state = controller.borrow_mut();
+                state.launcher = Box::new(FakeLauncher(fake.clone()));
+                state.choices = Some(Choices::smith_install());
+            }
+            data.borrow_mut().events.push_back(Event::Finished {
+                report: report(true, false, StepState::Completed),
+            });
+            data.borrow_mut().finished = true;
+            controller.borrow_mut().tick(false);
+            fake.borrow_mut().start_error = true;
+            controller.borrow_mut().launch();
+            assert!(controller.borrow().launch_pending.is_none());
+            assert_eq!(controller.borrow().exit_code(), 0);
+            fake.borrow_mut().start_error = false;
+            controller.borrow_mut().launch();
+            let close = controller.borrow().ui.primary.clone();
+            close.emit_clicked();
+            close_request(&controller);
+            assert!(!controller.borrow().quit);
+            assert!(controller.borrow().close_after_launch);
+            if success {
+                fake.borrow_mut()
+                    .replies
+                    .pop()
+                    .unwrap()
+                    .send(Ok(()))
+                    .unwrap();
+            } else {
+                // A dead worker must release pending Close, not strand GTK.
+                fake.borrow_mut().replies.clear();
+            }
+            assert!(controller.borrow_mut().tick(false));
+            assert_eq!(controller.borrow().exit_code(), 0);
+            destroy(controller);
+        }
+    }
+
     // Keep all GTK scenarios in one test: GTK must stay on the initialization
     // thread. Run under isolated Xvfb; no production session/host effect is used.
     #[test]
     fn gtk_widget_smoke_and_session_transitions() {
         gtk::init().expect("GTK smoke requires an isolated Xvfb display");
+        let _fonts = appearance::load_fonts().unwrap();
+        appearance::tests::assert_gtk_images();
         let css = gtk::CssProvider::new();
         css.load_from_data(CSS.as_bytes()).expect("valid GTK3 CSS");
         gtk::StyleContext::add_provider_for_screen(
@@ -1876,6 +2942,10 @@ mod tests {
             assert!(controller.borrow().ui.upgrade.is_visible());
             assert!(controller.borrow().ui.uninstall.is_visible());
             controller.borrow_mut().independent_action(command.clone());
+            assert_eq!(
+                controller.borrow().ui.introduction.text(),
+                "Working on this step. Cancelling does not undo earlier changes."
+            );
             assert_eq!(data.borrow().commands, [command]);
             assert_eq!(controller.borrow().active_scope, scope);
             assert_eq!(
@@ -2025,7 +3095,7 @@ mod tests {
         assert!(!controller.borrow().ui.refresh.is_visible());
         assert_eq!(
             controller.borrow().ui.primary.label().as_deref(),
-            Some("Confirm Register Smith service")
+            Some("Register Smith service")
         );
         assert_eq!(
             controller.borrow().ui.secondary.label().as_deref(),
@@ -2775,5 +3845,8 @@ mod tests {
         data.borrow_mut().finished = true;
         controller.borrow_mut().tick(false);
         destroy(controller);
+
+        launch_cases();
+        visual_matrix();
     }
 }

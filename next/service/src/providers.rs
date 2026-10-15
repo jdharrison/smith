@@ -8,7 +8,7 @@ use crate::{Result, Roots};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, TryLockError};
 use std::time::{Duration, Instant};
 
 fn error(code: &str, msg: &str) -> AppError {
@@ -197,6 +197,7 @@ impl Default for ProviderOptions {
 struct Active {
     runner: Option<(String, Runner)>,
     used: Instant,
+    last_startup_fallback_reason: Option<AppError>,
 }
 pub struct Providers {
     roots: Roots,
@@ -222,7 +223,23 @@ impl Providers {
             active: Mutex::new(Active {
                 runner: None,
                 used: Instant::now(),
+                last_startup_fallback_reason: None,
             }),
+        }
+    }
+    /// Internal last-preparation history, not current execution mode or a wire API.
+    /// Only fixed runtime/preparation errors are retained; native stderr is never copied.
+    /// Reuse and idle unload preserve it; a fresh preparation or provider restart clears it.
+    pub fn last_startup_fallback_reason(&self) -> AppResult<Option<AppError>> {
+        match self.active.try_lock() {
+            Ok(active) => Ok(active.last_startup_fallback_reason.clone()),
+            Err(TryLockError::WouldBlock) => Err(error(
+                "DIAGNOSTICS_BUSY",
+                "Runner preparation or inference is in progress",
+            )),
+            Err(TryLockError::Poisoned(_)) => {
+                Err(error("LLM_UNAVAILABLE", "Local runner state unavailable"))
+            }
         }
     }
     fn records(&self) -> AppResult<Vec<runner::ModelRecord>> {
@@ -285,6 +302,7 @@ impl Provider for Providers {
             .as_ref()
             .is_some_and(|(sha, r)| *sha == record.sha256 && r.is_running());
         if !reusable {
+            active.last_startup_fallback_reason = None;
             // Model switch or crash: stop first so the single-runner lock is free.
             Self::stop(&mut active);
             let cancellation = self.cancelled.clone();
@@ -316,11 +334,18 @@ impl Provider for Providers {
                     config.backend = Backend::Vulkan;
                     match Runner::launch_verified(&config, &file, deadline, cancelled.clone()) {
                         Ok(started) => Some(started),
-                        Err(e) if e.code == "GPU_PREPARATION" => None,
+                        Err(e) if e.code == "GPU_PREPARATION" => {
+                            // This code is returned only after confirmed runner cleanup.
+                            active.last_startup_fallback_reason = Some(e);
+                            None
+                        }
                         Err(e) => return Err(e),
                     }
                 }
-                Err(e) if e.code == "RUNTIME_MISSING" => None,
+                Err(e) if e.code == "RUNTIME_MISSING" => {
+                    active.last_startup_fallback_reason = Some(e);
+                    None
+                }
                 Err(e) => return Err(e),
             };
             let started = if let Some(started) = gpu {

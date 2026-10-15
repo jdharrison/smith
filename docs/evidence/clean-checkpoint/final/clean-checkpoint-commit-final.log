@@ -1,0 +1,1084 @@
+{"command": "DAGGER_NO_NAG=1 DAGGER_CLOUD_TOKEN= DAGGER_PROGRESS=plain make client/test client/build", "utc_start": "2026-10-15T19:10:14.278901+00:00", "timeout_seconds": 600}
+dagger call test-client --source client --service service
+1   : connect
+1   : [0.0s] | cloud url=[REDACTED_DAGGER_TRACE]
+2   : ┆ starting engine
+3   : ┆ ┆ create container
+4   : ┆ ┆ ┆ exec docker ps -a --format {{.Names}}
+4   : ┆ ┆ ┆ [0.0s] | smith-searxng
+4   : ┆ ┆ ┆ [0.0s] | dagger-engine-v1.0.0-beta.14
+4   : ┆ ┆ ┆ [0.0s] | smith-agent-coding
+4   : ┆ ┆ ┆ [0.0s] | smith-brain
+4   : ┆ ┆ ┆ exec docker ps -a --format {{.Names}} DONE [0.0s]
+5   : ┆ ┆ ┆ exec docker start dagger-engine-v1.0.0-beta.14
+5   : ┆ ┆ ┆ [0.0s] | dagger-engine-v1.0.0-beta.14
+5   : ┆ ┆ ┆ exec docker start dagger-engine-v1.0.0-beta.14 DONE [0.0s]
+3   : ┆ ┆ create container DONE [0.0s]
+2   : ┆ starting engine DONE [0.0s]
+6   : ┆ connecting to engine
+6   : ┆ [0.0s] | 12:10:14 INF connected name=5a7b3ee62cfa client-version=v1.0.0-beta.14 server-version=v1.0.0-beta.14+06660c3c
+6   : ┆ connecting to engine DONE [0.0s]
+7   : ┆ starting session
+7   : ┆ starting session DONE [0.0s]
+1   : connect DONE [0.1s]
+
+8   : load workspace: .
+9   : ┆ loading type definitions
+9   : ┆ loading type definitions DONE [1.4s]
+8   : load workspace: . DONE [1.4s]
+
+10  : parsing command line arguments
+10  : parsing command line arguments DONE [2.3s]
+
+11  : smith: Smith!
+11  : smith CACHED [0.0s]
+
+12  : Smith.testClient(
+12  : ┆ source: Address.directory: Directory!
+12  : ┆ service: Address.directory: Directory!
+12  : ): String!
+13  : ┆ container(platform: "linux/amd64"): Container!
+13  : ┆ container CACHED [0.0s]
+14  : ┆ Container.from(address: "rust:1.98.0-bookworm"): Container!
+14  : ┆ Container.from DONE [0.0s]
+15  : ┆ withExec rustup component add rustfmt clippy
+15  : ┆ Container.withExec CACHED [0.0s]
+16  : ┆ Container.withDirectory(
+16  : ┆ ┆ path: "/src"
+16  : ┆ ┆ source: Address.directory: Directory!
+16  : ┆ ┆ exclude: ["target", "build", "dist", ".git"]
+16  : ┆ ): Container!
+16  : ┆ Container.withDirectory DONE [0.1s]
+17  : ┆ withExec install -d -m 0755 [REDACTED_HOME_PATH]
+18  : ┆ withExec chown -R 1000:1000 /src [REDACTED_HOME_PATH]
+17  : ┆ Container.withExec DONE [0.1s]
+19  : ┆ withEnvVariable HOME=[REDACTED_HOME_PATH]
+20  : ┆ withEnvVariable CARGO_HOME=[REDACTED_HOME_PATH]
+18  : ┆ Container.withExec DONE [0.2s]
+19  : ┆ Container.withEnvVariable DONE [0.2s]
+20  : ┆ Container.withEnvVariable DONE [0.2s]
+21  : ┆ user 1000:1000
+21  : ┆ Container.withUser DONE [0.2s]
+22  : ┆ withWorkdir /src
+22  : ┆ Container.withWorkdir DONE [0.2s]
+23  : ┆ withExec sh scripts/build.sh
+24  : ┆ Container.file(path: "/src/target/release/smith-service"): File!
+25  : ┆ Container.from(address: "ubuntu:24.04"): Container!
+25  : ┆ Container.from DONE [0.0s]
+26  : ┆ withEnvVariable DEBIAN_FRONTEND=noninteractive
+26  : ┆ Container.withEnvVariable CACHED [0.0s]
+27  : ┆ withEnvVariable CI=true
+27  : ┆ Container.withEnvVariable CACHED [0.0s]
+28  : ┆ withExec apt-get update
+28  : ┆ Container.withExec CACHED [0.0s]
+29  : ┆ withExec apt-get install --yes --no-install-recommends ca-certificates curl git unzip xz-utils clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev
+29  : ┆ Container.withExec CACHED [0.0s]
+30  : ┆ withExec git clone --depth 1 --branch 3.47.2 https://github.com/flutter/flutter.git /opt/flutter
+30  : ┆ Container.withExec CACHED [0.0s]
+31  : ┆ withEnvVariable PATH=/opt/flutter/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+31  : ┆ Container.withEnvVariable CACHED [0.0s]
+32  : ┆ withExec flutter --disable-analytics
+32  : ┆ Container.withExec CACHED [0.0s]
+33  : ┆ withExec dart --disable-analytics
+33  : ┆ Container.withExec CACHED [0.0s]
+34  : ┆ withExec flutter config --enable-linux-desktop
+34  : ┆ Container.withExec CACHED [0.0s]
+35  : ┆ Container.withFile(
+35  : ┆ ┆ path: "/opt/smith-service"
+35  : ┆ ┆ source: Container.file(path: "/src/target/release/smith-service"): File!
+35  : ┆ ┆ permissions: 493
+35  : ┆ ): Container!
+36  : ┆ withEnvVariable SMITH_TEST_SERVICE=/opt/smith-service
+37  : ┆ Container.withDirectory(
+37  : ┆ ┆ path: "/src"
+37  : ┆ ┆ source: Address.directory: Directory!
+37  : ┆ ┆ exclude: ["build", "dist", ".dart_tool", ".git", ".idea", ".pub-cache", ".pub", ".flutter-plugins-dependencies", "linux/flutter/ephemeral"]
+37  : ┆ ): Container!
+38  : ┆ withExec install -d -m 0755 [REDACTED_HOME_PATH]
+23  : ┆ withExec sh scripts/build.sh
+23  : ┆ [0.3s] |     Updating crates.io index
+23  : ┆ [0.6s] |  Downloading crates ...
+39  : ┆ withExec chown -R 1000:1000 /src /opt/flutter /opt/smith-service [REDACTED_HOME_PATH]
+40  : ┆ withEnvVariable HOME=[REDACTED_HOME_PATH]
+41  : ┆ user 1000:1000
+23  : ┆ withExec sh scripts/build.sh
+23  : ┆ [0.7s] |   Downloaded digest v0.10.7
+23  : ┆ [0.7s] |   Downloaded cpufeatures v0.2.17
+23  : ┆ [0.7s] |   Downloaded cfg-if v1.0.5
+23  : ┆ [0.7s] |   Downloaded crypto-common v0.1.7
+23  : ┆ [0.7s] |   Downloaded block-buffer v0.10.4
+23  : ┆ [0.7s] |   Downloaded unicode-ident v1.0.26
+23  : ┆ [0.7s] |   Downloaded quote v1.0.47
+23  : ┆ [0.7s] |   Downloaded version_check v0.9.5
+23  : ┆ [0.7s] |   Downloaded generic-array v0.14.7
+23  : ┆ [0.7s] |   Downloaded itoa v1.0.18
+23  : ┆ [0.7s] |   Downloaded zmij v1.0.23
+23  : ┆ [0.7s] |   Downloaded sha2 v0.10.9
+23  : ┆ [0.7s] |   Downloaded serde_core v1.0.229
+23  : ┆ [0.7s] |   Downloaded serde_derive v1.0.229
+23  : ┆ [0.7s] |   Downloaded serde v1.0.229
+23  : ┆ [0.7s] |   Downloaded proc-macro2 v1.0.107
+23  : ┆ [0.7s] |   Downloaded typenum v1.20.1
+23  : ┆ [0.7s] |   Downloaded memchr v2.8.3
+23  : ┆ [0.7s] |   Downloaded serde_json v1.0.151
+23  : ┆ [0.7s] |   Downloaded syn v3.0.6
+23  : ┆ [0.7s] |   Downloaded libc v0.2.189
+23  : ┆ [0.8s] |    Compiling version_check v0.9.5
+23  : ┆ [0.8s] |    Compiling proc-macro2 v1.0.107
+23  : ┆ [0.8s] |    Compiling quote v1.0.47
+23  : ┆ [0.8s] |    Compiling typenum v1.20.1
+23  : ┆ [0.8s] |    Compiling unicode-ident v1.0.26
+23  : ┆ [0.8s] |    Compiling serde_core v1.0.229
+23  : ┆ [0.8s] |    Compiling zmij v1.0.23
+23  : ┆ [0.8s] |    Compiling libc v0.2.189
+23  : ┆ [0.8s] |    Compiling serde_json v1.0.151
+23  : ┆ [0.8s] |    Compiling serde v1.0.229
+23  : ┆ [0.8s] |    Compiling cfg-if v1.0.5
+23  : ┆ [0.8s] |    Compiling cpufeatures v0.2.17
+23  : ┆ [0.8s] |    Compiling itoa v1.0.18
+23  : ┆ [0.8s] |    Compiling memchr v2.8.3
+42  : ┆ withWorkdir /src
+43  : ┆ withExec flutter pub get --enforce-lockfile
+44  : ┆ withExec sh scripts/test.sh
+45  : ┆ Container.stdout: String!
+23  : ┆ withExec sh scripts/build.sh
+23  : ┆ [0.9s] |    Compiling generic-array v0.14.7
+23  : ┆ [1.2s] |    Compiling syn v3.0.6
+23  : ┆ [1.3s] |    Compiling block-buffer v0.10.4
+23  : ┆ [1.3s] |    Compiling crypto-common v0.1.7
+23  : ┆ [1.4s] |    Compiling digest v0.10.7
+23  : ┆ [1.4s] |    Compiling sha2 v0.10.9
+23  : ┆ [1.9s] |    Compiling serde_derive v1.0.229
+23  : ┆ [2.9s] |    Compiling smith-service v0.1.0 (/src)
+23  : ┆ Container.withExec DONE [5.7s]
+24  : ┆ Container.file DONE [0.0s, waited on sh scripts/build.sh]
+35  : ┆ Container.withFile DONE [0.0s, waited on sh scripts/build.sh]
+36  : ┆ Container.withEnvVariable DONE [0.0s, waited on sh scripts/build.sh]
+37  : ┆ Container.withDirectory DONE [0.0s, waited on sh scripts/build.sh]
+23  : ┆ Container.withExec DONE [5.7s]
+23  : ┆ [5.7s] |     Finished `release` profile [optimized] target(s) in 5.43s
+38  : ┆ Container.withExec DONE [0.1s, waited on sh scripts/build.sh]
+39  : ┆ Container.withExec DONE [5.3s, waited on sh scripts/build.sh]
+40  : ┆ Container.withEnvVariable DONE [0.0s, waited on sh scripts/build.sh]
+41  : ┆ Container.withUser DONE [0.0s, waited on sh scripts/build.sh]
+42  : ┆ Container.withWorkdir DONE [0.0s, waited on sh scripts/build.sh]
+43  : ┆ withExec flutter pub get --enforce-lockfile
+43  : ┆ [11.5s] | [1/11] Material Fonts                                              187ms
+43  : ┆ [11.5s] | [2/11] Gradle Wrapper                                               17ms
+43  : ┆ [11.5s] | [3/11] Flutter SDK
+43  : ┆ [11.6s] |   ├─ [1/5] sky_engine                                               51ms
+43  : ┆ [11.7s] |   ├─ [2/5] flutter_gpu                                              20ms
+43  : ┆ [11.8s] |   ├─ [3/5] flutter_patched_sdk                                     118ms
+43  : ┆ [12.0s] |   ├─ [4/5] flutter_patched_sdk_product                             112ms
+43  : ┆ [12.6s] |   └─ [5/5] linux-x64                                               613ms
+43  : ┆ [13.1s] | [10/11] linux-x64/font-subset                                       56ms
+43  : ┆ [15.8s] | Resolving dependencies...
+43  : ┆ [16.1s] | Downloading packages...
+43  : ┆ [16.5s] |   flutter_svg 2.2.3 (2.3.0 available)
+43  : ┆ [16.5s] |   material_color_utilities 0.13.0 (0.13.1 available)
+43  : ┆ [16.5s] |   meta 1.18.3 (1.19.0 available)
+43  : ┆ [16.5s] |   petitparser 7.0.2 (7.1.0 available)
+43  : ┆ [16.5s] |   test_api 0.7.12 (0.7.15 available)
+43  : ┆ [16.5s] |   vector_math 2.4.0 (2.4.3 available)
+43  : ┆ [16.5s] |   vm_service 15.3.0 (15.4.0 available)
+43  : ┆ [16.5s] |   xml 7.0.1 (7.1.0 available)
+43  : ┆ [16.5s] | Got dependencies!
+43  : ┆ [16.5s] | 8 packages have newer versions incompatible with dependency constraints.
+43  : ┆ [16.5s] | Try `flutter pub outdated` for more information.
+43  : ┆ Container.withExec DONE [5.5s, waited on Container.file]
+44  : ┆ withExec sh scripts/test.sh
+44  : ┆ [17.0s] | Formatted 49 files (0 changed) in 0.24 seconds.
+44  : ┆ [22.4s] | Analyzing src...                                                
+44  : ┆ [22.4s] | No issues found! (ran in 5.0s)
+44  : ┆ [23.0s] | 00:00 +0: loading /src/test/chat_title_test.dart
+44  : ┆ [28.0s] | 00:00 +0: /src/test/chat_title_test.dart: display truncates scalar values, never authoritative titles
+44  : ┆ [28.0s] | 00:00 +1: /src/test/chat_title_test.dart: old wire titles accepted; new renames limited to 40 runes
+44  : ┆ [28.0s] | 00:00 +2: /src/test/chat_title_test.dart: historical FEFF titles survive details and lifecycle receipts
+44  : ┆ [28.0s] | 00:00 +3: /src/test/chat_title_test.dart: incoming title boundaries match Rust Unicode White_Space
+44  : ┆ [28.0s] | 00:00 +4: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+44  : ┆ [28.6s] | 00:00 +5: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+44  : ┆ [28.6s] | 00:00 +6: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+44  : ┆ [28.6s] | 00:00 +7: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+44  : ┆ [28.6s] | 00:00 +8: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+44  : ┆ [28.6s] | 00:00 +9: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+44  : ┆ [28.6s] | 00:00 +10: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+44  : ┆ [28.8s] | 00:00 +11: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.8s] | 00:00 +12: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.8s] | 00:00 +13: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.8s] | 00:00 +14: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.8s] | 00:00 +15: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.8s] | 00:00 +16: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.8s] | 00:00 +17: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.9s] | 00:00 +18: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.9s] | 00:00 +19: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.9s] | 00:00 +20: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.9s] | 00:00 +21: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.9s] | 00:00 +22: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.9s] | 00:00 +23: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.9s] | 00:00 +24: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.9s] | 00:00 +25: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.9s] | 00:00 +26: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [28.9s] | 00:00 +27: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.1s] | 00:01 +28: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.1s] | 00:01 +29: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.1s] | 00:01 +30: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.1s] | 00:01 +31: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.1s] | 00:01 +32: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.1s] | 00:01 +33: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.1s] | 00:01 +34: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.2s] | 00:01 +35: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.2s] | 00:01 +36: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.2s] | 00:01 +37: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.2s] | 00:01 +38: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.2s] | 00:01 +39: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.3s] | 00:01 +40: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.3s] | 00:01 +41: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.3s] | 00:01 +42: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.3s] | 00:01 +43: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.3s] | 00:01 +44: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.3s] | 00:01 +45: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.4s] | 00:01 +46: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.4s] | 00:01 +47: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.4s] | 00:01 +48: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.4s] | 00:01 +49: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.4s] | 00:01 +50: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.4s] | 00:01 +51: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.4s] | 00:01 +52: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.5s] | 00:01 +53: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.5s] | 00:01 +54: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.5s] | 00:01 +55: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.5s] | 00:01 +56: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +57: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +58: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +59: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +60: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +61: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +62: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +63: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +64: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +65: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +66: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +67: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +68: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +69: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +70: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +71: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +72: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +73: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.6s] | 00:01 +74: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+44  : ┆ [29.7s] | 00:01 +75: /src/test/optimistic_send_test.dart: reconciling B after failed A does not scroll back to A
+44  : ┆ [29.7s] | 00:01 +76: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [29.7s] | 00:01 +77: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [29.9s] | 00:01 +78: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [29.9s] | 00:01 +79: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [29.9s] | 00:01 +80: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [29.9s] | 00:01 +81: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [29.9s] | 00:01 +82: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [29.9s] | 00:01 +83: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [30.0s] | 00:02 +84: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [30.0s] | 00:02 +85: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [30.1s] | 00:02 +86: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [30.1s] | 00:02 +87: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [30.1s] | 00:02 +88: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [30.1s] | 00:02 +89: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+44  : ┆ [30.1s] | 00:02 +90: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.1s] | 00:02 +91: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.1s] | 00:02 +92: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.1s] | 00:02 +93: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.1s] | 00:02 +94: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.1s] | 00:02 +95: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.2s] | 00:02 +96: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.2s] | 00:02 +97: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.2s] | 00:02 +98: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.2s] | 00:02 +99: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.2s] | 00:02 +100: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.2s] | 00:02 +101: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.2s] | 00:02 +102: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.2s] | 00:02 +103: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.2s] | 00:02 +104: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+44  : ┆ [30.2s] | 00:02 +105: /src/test/connection_review_regression_test.dart: post-Boot Retry and heartbeat serialize (manual first: false)
+44  : ┆ [30.4s] | 00:02 +106: /src/test/connection_review_regression_test.dart: post-Boot Retry and heartbeat serialize (manual first: false)
+44  : ┆ [30.4s] | 00:02 +107: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.4s] | 00:02 +108: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.4s] | 00:02 +109: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.6s] | 00:02 +110: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.6s] | 00:02 +111: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.6s] | 00:02 +112: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.6s] | 00:02 +113: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.6s] | 00:02 +114: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.6s] | 00:02 +115: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.6s] | 00:02 +116: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.6s] | 00:02 +117: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.6s] | 00:02 +118: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.6s] | 00:02 +119: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+44  : ┆ [30.6s] | 00:02 +120: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+44  : ┆ [30.6s] | 00:02 +121: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+44  : ┆ [30.6s] | 00:02 +122: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+44  : ┆ [30.6s] | 00:02 +123: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+44  : ┆ [30.6s] | 00:02 +124: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+44  : ┆ [30.6s] | 00:02 +125: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+44  : ┆ [30.6s] | 00:02 +126: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+44  : ┆ [30.6s] | 00:02 +127: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [30.6s] | 00:02 +128: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [30.6s] | 00:02 +129: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [30.6s] | 00:02 +130: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [30.6s] | 00:02 +131: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [30.6s] | 00:02 +132: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [30.8s] | 00:02 +133: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [30.9s] | 00:02 +134: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [30.9s] | 00:02 +135: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [30.9s] | 00:02 +136: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.0s] | 00:03 +137: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.1s] | 00:03 +138: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.1s] | 00:03 +139: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.2s] | 00:03 +140: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.3s] | 00:03 +141: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.3s] | 00:03 +142: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.4s] | 00:03 +143: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.4s] | 00:03 +144: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.4s] | 00:03 +145: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.4s] | 00:03 +146: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.4s] | 00:03 +147: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.4s] | 00:03 +148: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.4s] | 00:03 +149: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+44  : ┆ [31.4s] | 00:03 +150: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.5s] | 00:03 +151: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.6s] | 00:03 +152: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.6s] | 00:03 +153: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.6s] | 00:03 +154: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.7s] | 00:03 +155: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.7s] | 00:03 +156: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.7s] | 00:03 +157: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.7s] | 00:03 +158: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.7s] | 00:03 +159: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.7s] | 00:03 +160: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.7s] | 00:03 +161: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.8s] | 00:03 +162: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.8s] | 00:03 +163: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.8s] | 00:03 +164: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.8s] | 00:03 +165: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.9s] | 00:03 +166: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.9s] | 00:03 +167: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.9s] | 00:03 +168: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.9s] | 00:03 +169: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.9s] | 00:03 +170: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [31.9s] | 00:03 +171: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.0s] | 00:04 +172: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.0s] | 00:04 +173: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.0s] | 00:04 +174: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.0s] | 00:04 +175: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.0s] | 00:04 +176: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.0s] | 00:04 +177: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.1s] | 00:04 +178: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.1s] | 00:04 +179: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.1s] | 00:04 +180: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.1s] | 00:04 +181: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.1s] | 00:04 +182: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.2s] | 00:04 +183: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.2s] | 00:04 +184: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.2s] | 00:04 +185: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.2s] | 00:04 +186: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.2s] | 00:04 +187: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.2s] | 00:04 +188: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.2s] | 00:04 +189: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.3s] | 00:04 +190: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.3s] | 00:04 +191: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.3s] | 00:04 +192: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.3s] | 00:04 +193: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.3s] | 00:04 +194: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.3s] | 00:04 +195: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.3s] | 00:04 +196: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.3s] | 00:04 +197: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.4s] | 00:04 +198: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.4s] | 00:04 +199: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.4s] | 00:04 +200: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.4s] | 00:04 +201: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.4s] | 00:04 +202: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+44  : ┆ [32.4s] | 00:04 +203: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.4s] | 00:04 +204: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.4s] | 00:04 +205: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.4s] | 00:04 +206: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.5s] | 00:04 +207: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.5s] | 00:04 +208: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.5s] | 00:04 +209: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.6s] | 00:04 +210: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.7s] | 00:04 +211: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.7s] | 00:04 +212: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.7s] | 00:04 +213: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.7s] | 00:04 +214: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.8s] | 00:04 +215: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.8s] | 00:04 +216: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.8s] | 00:04 +217: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.9s] | 00:04 +218: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.9s] | 00:04 +219: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.9s] | 00:04 +220: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.9s] | 00:04 +221: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [32.9s] | 00:04 +222: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.0s] | 00:05 +223: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.1s] | 00:05 +224: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.1s] | 00:05 +225: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.1s] | 00:05 +226: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.1s] | 00:05 +227: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.1s] | 00:05 +228: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.2s] | 00:05 +229: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.2s] | 00:05 +230: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.2s] | 00:05 +231: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.2s] | 00:05 +232: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.2s] | 00:05 +233: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.2s] | 00:05 +234: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.2s] | 00:05 +235: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.3s] | 00:05 +236: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.3s] | 00:05 +237: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.3s] | 00:05 +238: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.3s] | 00:05 +239: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.4s] | 00:05 +240: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.4s] | 00:05 +241: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.4s] | 00:05 +242: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.4s] | 00:05 +243: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.4s] | 00:05 +244: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.4s] | 00:05 +245: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.4s] | 00:05 +246: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.4s] | 00:05 +247: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.4s] | 00:05 +248: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.5s] | 00:05 +249: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.6s] | 00:05 +250: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.6s] | 00:05 +251: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.6s] | 00:05 +252: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.6s] | 00:05 +253: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.6s] | 00:05 +254: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.6s] | 00:05 +255: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.6s] | 00:05 +256: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.6s] | 00:05 +257: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.7s] | 00:05 +258: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.7s] | 00:05 +259: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.7s] | 00:05 +260: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.7s] | 00:05 +261: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.7s] | 00:05 +262: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.7s] | 00:05 +263: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.8s] | 00:05 +264: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.8s] | 00:05 +265: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.8s] | 00:05 +266: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.8s] | 00:05 +267: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.8s] | 00:05 +268: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.8s] | 00:05 +269: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.8s] | 00:05 +270: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [33.9s] | 00:05 +271: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.0s] | 00:06 +272: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.0s] | 00:06 +273: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.0s] | 00:06 +274: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.0s] | 00:06 +275: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.1s] | 00:06 +276: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.1s] | 00:06 +277: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.1s] | 00:06 +278: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.1s] | 00:06 +279: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.2s] | 00:06 +280: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.2s] | 00:06 +281: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.2s] | 00:06 +282: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.2s] | 00:06 +283: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.2s] | 00:06 +284: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.3s] | 00:06 +285: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.3s] | 00:06 +286: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.3s] | 00:06 +287: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.3s] | 00:06 +288: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.4s] | 00:06 +289: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.4s] | 00:06 +290: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.4s] | 00:06 +291: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.4s] | 00:06 +292: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.4s] | 00:06 +293: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.5s] | 00:06 +294: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.5s] | 00:06 +295: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.6s] | 00:06 +296: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.6s] | 00:06 +297: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.6s] | 00:06 +298: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.6s] | 00:06 +299: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.6s] | 00:06 +300: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.7s] | 00:06 +301: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.7s] | 00:06 +302: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.7s] | 00:06 +303: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.7s] | 00:06 +304: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.8s] | 00:06 +305: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.8s] | 00:06 +306: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.8s] | 00:06 +307: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.9s] | 00:06 +308: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [34.9s] | 00:06 +309: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.0s] | 00:07 +310: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.0s] | 00:07 +311: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.0s] | 00:07 +312: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.0s] | 00:07 +313: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.0s] | 00:07 +314: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.0s] | 00:07 +315: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.1s] | 00:07 +316: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.1s] | 00:07 +317: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.2s] | 00:07 +318: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.2s] | 00:07 +319: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.2s] | 00:07 +320: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.4s] | 00:07 +321: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.4s] | 00:07 +322: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.4s] | 00:07 +323: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.5s] | 00:07 +324: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.5s] | 00:07 +325: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.5s] | 00:07 +326: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.5s] | 00:07 +327: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.7s] | 00:07 +328: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [35.7s] | 00:07 +329: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [36.0s] | 00:08 +330: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [36.2s] | 00:08 +331: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [36.4s] | 00:08 +332: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+44  : ┆ [46.4s] | 00:18 +333: /src/test/native_control_test.dart: native nonzero preflight preserves error with empty effect paths
+44  : ┆ [46.4s] | 00:18 +334: /src/test/native_control_test.dart: TERM-resistant helper escalates once to KILL and confirms exit
+44  : ┆ [46.4s] | 00:18 +335: /src/test/native_control_test.dart: grace permits cooperative delayed exit without KILL
+44  : ┆ [46.4s] | 00:18 +336: /src/test/native_control_test.dart: cleanup unknown retains child and blocks adapter reuse
+44  : ┆ Container.withExec DONE [30.1s, waited on Container.withFile]
+45  : ┆ Container.stdout DONE [0.0s, waited on sh scripts/test.sh]
+12  : Smith.testClient DONE [48.0s]
+44  : ┆ Container.withExec DONE [30.1s, waited on Container.withFile]
+44  : ┆ [46.6s] | 00:18 +337: /src/test/native_control_test.dart: late TERM-resistant launch is drained and cleaned with TERM then KILL
+44  : ┆ [46.6s] | 00:18 +338: /src/test/native_control_test.dart: nonpositive cleanup budgets cannot remove bounded cleanup
+44  : ┆ [46.6s] | 00:18 +339: /src/test/native_control_test.dart: nonpositive test deadlines cannot remove the finite bound
+44  : ┆ [46.6s] | 00:18 +340: /src/test/native_control_test.dart: validation rejection never launches
+44  : ┆ [46.7s] | 00:18 +341: All tests passed!
+
+
+Formatted 49 files (0 changed) in 0.24 seconds.
+Analyzing src...                                                
+No issues found! (ran in 5.0s)
+00:00 +0: loading /src/test/chat_title_test.dart
+00:00 +0: /src/test/chat_title_test.dart: display truncates scalar values, never authoritative titles
+00:00 +1: /src/test/chat_title_test.dart: old wire titles accepted; new renames limited to 40 runes
+00:00 +2: /src/test/chat_title_test.dart: historical FEFF titles survive details and lifecycle receipts
+00:00 +3: /src/test/chat_title_test.dart: incoming title boundaries match Rust Unicode White_Space
+00:00 +4: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+00:00 +5: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+00:00 +6: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+00:00 +7: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+00:00 +8: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+00:00 +9: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+00:00 +10: /src/test/chat_title_test.dart: Settings hides chats and preserves draft at 600.0
+00:00 +11: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +12: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +13: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +14: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +15: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +16: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +17: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +18: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +19: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +20: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +21: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +22: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +23: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +24: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +25: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +26: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:00 +27: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +28: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +29: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +30: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +31: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +32: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +33: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +34: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +35: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +36: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +37: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +38: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +39: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +40: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +41: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +42: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +43: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +44: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +45: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +46: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +47: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +48: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +49: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +50: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +51: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +52: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +53: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +54: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +55: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +56: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +57: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +58: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +59: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +60: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +61: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +62: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +63: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +64: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +65: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +66: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +67: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +68: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +69: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +70: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +71: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +72: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +73: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +74: /src/test/multi_chat_widget_test.dart: production Boot during A mounts immediately and B remains usable
+00:01 +75: /src/test/optimistic_send_test.dart: reconciling B after failed A does not scroll back to A
+00:01 +76: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:01 +77: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:01 +78: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:01 +79: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:01 +80: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:01 +81: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:01 +82: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:01 +83: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:02 +84: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:02 +85: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:02 +86: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:02 +87: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:02 +88: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:02 +89: /src/test/connection_polling_test.dart: Boot starts heartbeat only after ready; Settings retains polling and draft
+00:02 +90: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +91: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +92: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +93: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +94: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +95: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +96: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +97: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +98: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +99: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +100: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +101: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +102: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +103: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +104: /src/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:02 +105: /src/test/connection_review_regression_test.dart: post-Boot Retry and heartbeat serialize (manual first: false)
+00:02 +106: /src/test/connection_review_regression_test.dart: post-Boot Retry and heartbeat serialize (manual first: false)
+00:02 +107: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +108: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +109: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +110: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +111: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +112: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +113: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +114: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +115: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +116: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +117: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +118: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +119: /src/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:02 +120: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+00:02 +121: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+00:02 +122: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+00:02 +123: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+00:02 +124: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+00:02 +125: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+00:02 +126: /src/test/multi_chat_widget_test.dart: draft and reading position survive switch, blank reuse and Settings
+00:02 +127: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:02 +128: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:02 +129: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:02 +130: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:02 +131: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:02 +132: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:02 +133: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:02 +134: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:02 +135: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:02 +136: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +137: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +138: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +139: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +140: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +141: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +142: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +143: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +144: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +145: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +146: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +147: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +148: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +149: /src/test/chat_scrollbar_test.dart: edge scrollbar at width 360.0 / text 1.0
+00:03 +150: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +151: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +152: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +153: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +154: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +155: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +156: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +157: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +158: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +159: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +160: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +161: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +162: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +163: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +164: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +165: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +166: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +167: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +168: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +169: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +170: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:03 +171: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +172: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +173: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +174: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +175: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +176: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +177: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +178: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +179: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +180: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +181: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +182: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +183: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +184: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +185: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +186: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +187: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +188: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +189: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +190: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +191: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +192: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +193: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +194: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +195: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +196: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +197: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +198: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +199: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +200: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +201: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +202: /src/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:04 +203: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +204: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +205: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +206: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +207: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +208: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +209: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +210: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +211: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +212: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +213: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +214: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +215: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +216: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +217: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +218: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +219: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +220: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +221: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:04 +222: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +223: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +224: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +225: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +226: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +227: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +228: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +229: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +230: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +231: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +232: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +233: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +234: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +235: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +236: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +237: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +238: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +239: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +240: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +241: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +242: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +243: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +244: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +245: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +246: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +247: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +248: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +249: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +250: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +251: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +252: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +253: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +254: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +255: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +256: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +257: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +258: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +259: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +260: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +261: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +262: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +263: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +264: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +265: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +266: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +267: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +268: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +269: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +270: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:05 +271: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +272: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +273: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +274: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +275: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +276: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +277: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +278: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +279: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +280: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +281: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +282: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +283: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +284: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +285: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +286: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +287: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +288: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +289: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +290: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +291: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +292: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +293: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +294: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +295: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +296: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +297: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +298: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +299: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +300: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +301: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +302: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +303: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +304: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +305: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +306: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +307: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +308: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:06 +309: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +310: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +311: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +312: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +313: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +314: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +315: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +316: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +317: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +318: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +319: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +320: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +321: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +322: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +323: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +324: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +325: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +326: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +327: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +328: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:07 +329: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:08 +330: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:08 +331: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:08 +332: /src/test/native_control_test.dart: default budget allows apply beyond the old 15-second deadline
+00:18 +333: /src/test/native_control_test.dart: native nonzero preflight preserves error with empty effect paths
+00:18 +334: /src/test/native_control_test.dart: TERM-resistant helper escalates once to KILL and confirms exit
+00:18 +335: /src/test/native_control_test.dart: grace permits cooperative delayed exit without KILL
+00:18 +336: /src/test/native_control_test.dart: cleanup unknown retains child and blocks adapter reuse
+00:18 +337: /src/test/native_control_test.dart: late TERM-resistant launch is drained and cleaned with TERM then KILL
+00:18 +338: /src/test/native_control_test.dart: nonpositive cleanup budgets cannot remove bounded cleanup
+00:18 +339: /src/test/native_control_test.dart: nonpositive test deadlines cannot remove the finite bound
+00:18 +340: /src/test/native_control_test.dart: validation rejection never launches
+00:18 +341: All tests passed!
+dagger call -o client/dist build-client --source client --service service
+1   : connect
+1   : [0.0s] | cloud url=[REDACTED_DAGGER_TRACE]
+2   : ┆ starting engine
+3   : ┆ ┆ create container
+4   : ┆ ┆ ┆ exec docker ps -a --format {{.Names}}
+4   : ┆ ┆ ┆ [0.0s] | smith-searxng
+4   : ┆ ┆ ┆ [0.0s] | dagger-engine-v1.0.0-beta.14
+4   : ┆ ┆ ┆ [0.0s] | smith-agent-coding
+4   : ┆ ┆ ┆ [0.0s] | smith-brain
+4   : ┆ ┆ ┆ exec docker ps -a --format {{.Names}} DONE [0.0s]
+5   : ┆ ┆ ┆ exec docker start dagger-engine-v1.0.0-beta.14
+5   : ┆ ┆ ┆ [0.0s] | dagger-engine-v1.0.0-beta.14
+5   : ┆ ┆ ┆ exec docker start dagger-engine-v1.0.0-beta.14 DONE [0.0s]
+3   : ┆ ┆ create container DONE [0.0s]
+2   : ┆ starting engine DONE [0.0s]
+6   : ┆ connecting to engine
+6   : ┆ [0.0s] | 12:11:06 INF connected name=5a7b3ee62cfa client-version=v1.0.0-beta.14 server-version=v1.0.0-beta.14+06660c3c
+6   : ┆ connecting to engine DONE [0.0s]
+7   : ┆ starting session
+7   : ┆ starting session DONE [0.0s]
+1   : connect DONE [0.1s]
+
+8   : load workspace: .
+9   : ┆ loading type definitions
+9   : ┆ loading type definitions DONE [2.0s]
+8   : load workspace: . DONE [2.0s]
+
+10  : parsing command line arguments
+10  : parsing command line arguments DONE [1.0s]
+
+11  : smith: Smith!
+11  : smith CACHED [0.0s]
+
+12  : Smith.buildClient(
+12  : ┆ source: Address.directory: Directory!
+12  : ┆ service: Address.directory: Directory!
+12  : ): Directory!
+13  : ┆ Directory.file(path: "runtime.py"): File!
+13  : ┆ Directory.file CACHED [0.0s]
+14  : ┆ container(platform: "linux/amd64"): Container!
+14  : ┆ container CACHED [0.0s]
+15  : ┆ Container.from(address: "rust:1.98.0-bookworm"): Container!
+15  : ┆ Container.from DONE [0.0s]
+16  : ┆ withExec rustup component add rustfmt clippy
+16  : ┆ Container.withExec CACHED [0.0s]
+17  : ┆ Container.withDirectory(
+17  : ┆ ┆ path: "/src"
+17  : ┆ ┆ source: Address.directory: Directory!
+17  : ┆ ┆ exclude: ["target", "build", "dist", ".git"]
+17  : ┆ ): Container!
+17  : ┆ Container.withDirectory CACHED [0.0s]
+18  : ┆ withExec install -d -m 0755 [REDACTED_HOME_PATH]
+18  : ┆ Container.withExec CACHED [0.0s]
+19  : ┆ withExec chown -R 1000:1000 /src [REDACTED_HOME_PATH]
+19  : ┆ Container.withExec CACHED [0.0s]
+20  : ┆ withEnvVariable HOME=[REDACTED_HOME_PATH]
+20  : ┆ Container.withEnvVariable CACHED [0.0s]
+21  : ┆ withEnvVariable CARGO_HOME=[REDACTED_HOME_PATH]
+21  : ┆ Container.withEnvVariable CACHED [0.0s]
+22  : ┆ user 1000:1000
+22  : ┆ Container.withUser CACHED [0.0s]
+23  : ┆ withWorkdir /src
+23  : ┆ Container.withWorkdir CACHED [0.0s]
+24  : ┆ withExec sh scripts/build.sh
+24  : ┆ Container.withExec CACHED [0.0s]
+25  : ┆ Container.file(path: "/src/target/release/smith-service"): File!
+25  : ┆ Container.file CACHED [0.0s]
+26  : ┆ Container.from(address: "ubuntu:24.04"): Container!
+26  : ┆ Container.from DONE [0.0s]
+27  : ┆ withExec apt-get update
+27  : ┆ Container.withExec CACHED [0.0s]
+28  : ┆ withExec apt-get install --yes --no-install-recommends curl ca-certificates python3 'libgomp1=14.2.0-4ubuntu2~24.04.1'
+28  : ┆ Container.withExec CACHED [0.0s]
+29  : ┆ Container.withFile(
+29  : ┆ ┆ path: "/tools/runtime.py"
+29  : ┆ ┆ source: Directory.file(path: "runtime.py"): File!
+29  : ┆ ): Container!
+29  : ┆ Container.withFile CACHED [0.0s]
+30  : ┆ withExec install -d -m 0755 /out
+30  : ┆ Container.withExec CACHED [0.0s]
+31  : ┆ withExec curl --fail --silent --show-error --location --proto =https --proto-redir =https --max-time 180 --output [REDACTED_TRANSIENT_PATH] https://github.com/ggml-org/llama.cpp/releases/download/b11429/llama-b11429-bin-ubuntu-x64.tar.gz
+31  : ┆ Container.withExec CACHED [0.0s]
+32  : ┆ withExec curl --fail --silent --show-error --location --proto =https --proto-redir =https --max-time 180 --output [REDACTED_TRANSIENT_PATH] https://github.com/ggml-org/llama.cpp/releases/download/b11429/llama-b11429-bin-ubuntu-vulkan-x64.tar.gz
+32  : ┆ Container.withExec CACHED [0.0s]
+33  : ┆ withExec python3 -B /tools/runtime.py --archive [REDACTED_TRANSIENT_PATH] --output /out/cpu --backend cpu
+33  : ┆ Container.withExec CACHED [0.0s]
+34  : ┆ withExec python3 -B /tools/runtime.py --archive [REDACTED_TRANSIENT_PATH] --output /out/vulkan --backend vulkan
+34  : ┆ Container.withExec CACHED [0.0s]
+35  : ┆ withExec env -i /out/cpu/llama-server --version
+35  : ┆ Container.withExec CACHED [0.0s]
+36  : ┆ Container.directory(path: "/out"): Directory!
+36  : ┆ Container.directory CACHED [0.0s]
+37  : ┆ withEnvVariable DEBIAN_FRONTEND=noninteractive
+37  : ┆ Container.withEnvVariable CACHED [0.0s]
+38  : ┆ withEnvVariable CI=true
+38  : ┆ Container.withEnvVariable CACHED [0.0s]
+39  : ┆ withExec apt-get update
+39  : ┆ Container.withExec CACHED [0.0s]
+40  : ┆ withExec apt-get install --yes --no-install-recommends ca-certificates curl git unzip xz-utils clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev
+40  : ┆ Container.withExec CACHED [0.0s]
+41  : ┆ withExec git clone --depth 1 --branch 3.47.2 https://github.com/flutter/flutter.git /opt/flutter
+41  : ┆ Container.withExec CACHED [0.0s]
+42  : ┆ withEnvVariable PATH=/opt/flutter/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+42  : ┆ Container.withEnvVariable CACHED [0.0s]
+43  : ┆ withExec flutter --disable-analytics
+43  : ┆ Container.withExec CACHED [0.0s]
+44  : ┆ withExec dart --disable-analytics
+44  : ┆ Container.withExec CACHED [0.0s]
+45  : ┆ withExec flutter config --enable-linux-desktop
+45  : ┆ Container.withExec CACHED [0.0s]
+46  : ┆ Container.withFile(
+46  : ┆ ┆ path: "/opt/smith-service"
+46  : ┆ ┆ source: Container.file(path: "/src/target/release/smith-service"): File!
+46  : ┆ ┆ permissions: 493
+46  : ┆ ): Container!
+46  : ┆ Container.withFile CACHED [0.0s]
+47  : ┆ withEnvVariable SMITH_TEST_SERVICE=/opt/smith-service
+47  : ┆ Container.withEnvVariable CACHED [0.0s]
+48  : ┆ Container.withDirectory(
+48  : ┆ ┆ path: "/src"
+48  : ┆ ┆ source: Address.directory: Directory!
+48  : ┆ ┆ exclude: ["build", "dist", ".dart_tool", ".git", ".idea", ".pub-cache", ".pub", ".flutter-plugins-dependencies", "linux/flutter/ephemeral"]
+48  : ┆ ): Container!
+48  : ┆ Container.withDirectory DONE [0.0s]
+49  : ┆ withExec install -d -m 0755 [REDACTED_HOME_PATH]
+49  : ┆ Container.withExec DONE [0.0s]
+50  : ┆ withExec chown -R 1000:1000 /src /opt/flutter /opt/smith-service [REDACTED_HOME_PATH]
+50  : ┆ Container.withExec DONE [0.0s]
+51  : ┆ withEnvVariable HOME=[REDACTED_HOME_PATH]
+51  : ┆ Container.withEnvVariable DONE [0.0s]
+52  : ┆ user 1000:1000
+52  : ┆ Container.withUser DONE [0.0s]
+53  : ┆ withWorkdir /src
+53  : ┆ Container.withWorkdir DONE [0.0s]
+54  : ┆ withExec flutter pub get --enforce-lockfile
+54  : ┆ Container.withExec DONE [0.0s]
+55  : ┆ Container.withDirectory(
+55  : ┆ ┆ path: "/opt/smith-runtime"
+55  : ┆ ┆ source: Container.directory(path: "/out"): Directory!
+55  : ┆ ): Container!
+55  : ┆ Container.withDirectory DONE [0.0s]
+56  : ┆ withExec sh scripts/build.sh /opt/smith-service /opt/smith-runtime
+56  : ┆ Container.withExec DONE [0.0s]
+57  : ┆ Container.directory(path: "/src/build/linux/x64/release/bundle"): Directory!
+57  : ┆ Container.directory DONE [0.0s]
+
+58  : Directory.export(path: "client/dist"): String!
+
+12  : Smith.buildClient(
+12  : ┆ source: Address.directory: Directory!
+12  : ┆ service: Address.directory: Directory!
+12  : ): Directory!
+54  : ┆ Container.withExec DONE [4.9s]
+54  : ┆ [4.9s] | [1/11] Material Fonts                                              258ms
+54  : ┆ [4.9s] | [2/11] Gradle Wrapper                                               30ms
+54  : ┆ [4.9s] | [3/11] Flutter SDK
+54  : ┆ [5.1s] |   ├─ [1/5] sky_engine                                              119ms
+54  : ┆ [5.2s] |   ├─ [2/5] flutter_gpu                                              79ms
+54  : ┆ [5.4s] |   ├─ [3/5] flutter_patched_sdk                                     194ms
+54  : ┆ [5.7s] |   ├─ [4/5] flutter_patched_sdk_product                             188ms
+54  : ┆ [6.3s] |   └─ [5/5] linux-x64                                               538ms
+54  : ┆ [6.9s] | [10/11] linux-x64/font-subset                                      207ms
+54  : ┆ [9.6s] | Resolving dependencies...
+54  : ┆ [9.9s] | Downloading packages...
+54  : ┆ [10.3s] |   flutter_svg 2.2.3 (2.3.0 available)
+54  : ┆ [10.3s] |   material_color_utilities 0.13.0 (0.13.1 available)
+54  : ┆ [10.3s] |   meta 1.18.3 (1.19.0 available)
+54  : ┆ [10.3s] |   petitparser 7.0.2 (7.1.0 available)
+54  : ┆ [10.3s] |   test_api 0.7.12 (0.7.15 available)
+54  : ┆ [10.3s] |   vector_math 2.4.0 (2.4.3 available)
+54  : ┆ [10.3s] |   vm_service 15.3.0 (15.4.0 available)
+54  : ┆ [10.3s] |   xml 7.0.1 (7.1.0 available)
+54  : ┆ [10.3s] | Got dependencies!
+54  : ┆ [10.3s] | 8 packages have newer versions incompatible with dependency constraints.
+54  : ┆ [10.3s] | Try `flutter pub outdated` for more information.
+56  : ┆ Container.withExec DONE [10.9s]
+56  : ┆ [10.6s] | [1/1] Linux SDK
+56  : ┆ [11.1s] |   ├─ [1/3] linux-x64-debug/linux-x64-flutter-gtk                   478ms
+56  : ┆ [11.5s] |   ├─ [2/3] linux-x64-profile/linux-x64-flutter-gtk                 148ms
+56  : ┆ [11.8s] |   └─ [3/3] linux-x64-release/linux-x64-flutter-gtk                 134ms
+56  : ┆ [11.9s] | Building Linux application...                                   
+56  : ┆ [28.0s] | 
+56  : ┆ [28.0s] | ✓ Built build/linux/x64/release/bundle/smith_client
+12  : Smith.buildClient DONE [29.5s]
+
+58  : Directory.export(path: "client/dist"): String!
+59  : ┆ export directory /src/build/linux/x64/release/bundle to host client/dist
+59  : ┆ export directory /src/build/linux/x64/release/bundle to host client/dist DONE [0.3s]
+58  : Directory.export DONE [28.3s]
+60  : ┆ downloading client/dist
+60  : ┆ downloading client/dist DONE [0.3s]
+
+
+Saved to "[REDACTED_HOME_PATH]".
+
+CHECKPOINT_RESULT {"command": "DAGGER_NO_NAG=1 DAGGER_CLOUD_TOKEN= DAGGER_PROGRESS=plain make client/test client/build", "utc_start": "2026-10-15T19:10:14.278901+00:00", "timeout_seconds": 600, "exit_code": 0, "elapsed_seconds": 84.986, "utc_end": "2026-10-15T19:11:39.264478+00:00"}

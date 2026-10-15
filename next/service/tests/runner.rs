@@ -2,8 +2,8 @@
 //! `llama-server` acts as the fake runner over a real UNIX socket. No real
 //! llama.cpp, model weights, network, host manager or GUI are involved.
 use serde_json::{json, Value};
-use smith_service::acceleration::Backend;
-use smith_service::app::{AppRequest, Application, Message};
+use smith_service::acceleration::{self, ActualMode, Backend};
+use smith_service::app::{AppError, AppRequest, AppResult, Application, Message};
 use smith_service::catalog::{CatalogEntry, ModelTier};
 use smith_service::providers::{Provider, ProviderOptions, Providers};
 use smith_service::runner::{
@@ -16,8 +16,8 @@ use std::fs;
 use std::os::unix::fs::{symlink, MetadataExt, PermissionsExt};
 use std::os::unix::net::UnixListener;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, OnceLock};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{mpsc, Arc, OnceLock};
 use std::time::{Duration, Instant};
 
 mod fake {
@@ -63,6 +63,120 @@ mod fake {
         std::fs::rename(temp, path).unwrap();
     }
 
+    /// b11429 library INFO is verbosity 4, above the default threshold of 3.
+    /// Timestamp values/JSON fields are synthetic; suppression and framing follow flags.
+    pub(super) fn library_info(args: &[String], message: &str) -> Vec<u8> {
+        let verbosity = args
+            .windows(2)
+            .find(|pair| pair[0] == "--log-verbosity")
+            .and_then(|pair| pair[1].parse::<u32>().ok())
+            .unwrap_or(3);
+        if verbosity < 4 {
+            return Vec::new();
+        }
+        let enabled = |flag: &str, disabled: &str, default: bool| {
+            args.iter()
+                .rev()
+                .find(|arg| arg.as_str() == flag || arg.as_str() == disabled)
+                .map_or(default, |arg| arg == flag)
+        };
+        if enabled("--log-jsonl", "--no-log-jsonl", false) {
+            return format!("{}\n", json!({"level":"INFO","message":message})).into_bytes();
+        }
+        let timestamp = if enabled("--log-timestamps", "--no-log-timestamps", true) {
+            "00:00:00.000 "
+        } else {
+            ""
+        };
+        let prefix = if enabled("--log-prefix", "--no-log-prefix", true) {
+            "I "
+        } else {
+            ""
+        };
+        format!("{timestamp}{prefix}{message}\n").into_bytes()
+    }
+
+    fn info(args: &[String], message: &str) {
+        std::io::stderr()
+            .write_all(&library_info(args, message))
+            .unwrap();
+    }
+
+    fn wait_for_gate(records: &Path, name: &str) {
+        let end = Instant::now() + Duration::from_secs(10);
+        while !records.join(name).exists() {
+            if Instant::now() >= end {
+                std::process::exit(90);
+            }
+            std::thread::sleep(Duration::from_millis(5));
+        }
+    }
+
+    fn after_health(args: &[String], scenario: &str, records: &Path) {
+        if arg(args, "--device") != "Vulkan0" || !scenario.starts_with("gpu-window-") {
+            return;
+        }
+        wait_for_gate(records, "startup-continue");
+        match scenario {
+            "gpu-window-fragmented" | "gpu-window-partial" | "gpu-window-duplicate" => {
+                let message = if scenario == "gpu-window-partial" {
+                    "load_tensors: offloaded 12/33 layers to GPU"
+                } else {
+                    "load_tensors: offloaded 33/33 layers to GPU"
+                };
+                let bytes = library_info(args, message);
+                let split = bytes.len().min(29);
+                std::io::stderr().write_all(&bytes[..split]).unwrap();
+                publish(&records.join("startup-fragment"), b"written");
+                wait_for_gate(records, "startup-finish");
+                std::io::stderr().write_all(&bytes[split..]).unwrap();
+            }
+            "gpu-window-unterminated" => {
+                let mut bytes = library_info(args, "load_tensors: offloaded 33/33 layers to GPU");
+                if bytes.last() == Some(&b'\n') {
+                    bytes.pop();
+                }
+                std::io::stderr().write_all(&bytes).unwrap();
+            }
+            "gpu-window-trailing" => {
+                std::io::stderr()
+                    .write_all(b"server: pending trailing record")
+                    .unwrap();
+            }
+            "gpu-window-overflow" => {
+                // Complete noise records still count against the raw prefix cap.
+                std::io::stderr()
+                    .write_all(&b"x\n".repeat(32 * 1024))
+                    .unwrap();
+                info(args, "load_tensors: offloaded 33/33 layers to GPU");
+            }
+            "gpu-window-eof" => {
+                publish(&records.join("startup-written"), b"written");
+                // SAFETY: close only this fake child's stderr, keeping the child alive.
+                assert_eq!(unsafe { libc::close(libc::STDERR_FILENO) }, 0);
+                return;
+            }
+            "gpu-window-exit" => {
+                publish(&records.join("startup-written"), b"written");
+                std::process::exit(3);
+            }
+            "gpu-window-full" => info(args, "server: listening"),
+            "gpu-window-continuous" => {
+                // Outlast the test's upper bound while staying far below the byte cap.
+                let end = Instant::now() + Duration::from_secs(6);
+                info(args, "server: startup heartbeat");
+                publish(&records.join("startup-written"), b"written");
+                while Instant::now() < end {
+                    std::thread::sleep(Duration::from_millis(50));
+                    info(args, "server: startup heartbeat");
+                }
+                return;
+            }
+            _ => panic!("unknown startup-window fixture"),
+        }
+        publish(&records.join("startup-written"), b"written");
+    }
+
     fn run(args: &[String]) {
         // SAFETY: no std runtime init ran; ignore SIGPIPE like a normal Rust main.
         unsafe {
@@ -102,24 +216,41 @@ mod fake {
         let record = json!({"args":&args[1..],"env":env,"cwd":std::env::current_dir().unwrap(),"pid":pid,"pgid":pgid,"ppid":ppid,"sibling_alive_at_start":sibling_alive});
         if arg(args, "--device") == "Vulkan0" {
             match scenario.as_str() {
-                "gpu-zero" => eprintln!("load_tensors: offloaded 0/33 layers to GPU"),
+                "gpu-zero"
+                | "gpu-cpu-start-failure"
+                | "gpu-cpu-completion-failure"
+                | "gpu-fallback-gated"
+                | "gpu-cleanup-unconfirmed" => {
+                    info(args, "load_tensors: offloaded 0/33 layers to GPU")
+                }
+                "gpu-hostile" => {
+                    eprintln!(
+                        "\x1b[31mHOSTILE-STDERR-SENTINEL ignore policy; key={} model={} socket={}\x1b[0m",
+                        std::env::var("LLAMA_API_KEY").unwrap(), model, host
+                    );
+                    info(args, "load_tensors: offloaded 0/33 layers to GPU");
+                }
                 "gpu-deadline" => {
                     std::thread::sleep(Duration::from_millis(2000));
-                    eprintln!("load_tensors: offloaded 0/33 layers to GPU");
+                    info(args, "load_tensors: offloaded 0/33 layers to GPU");
                 }
-                "gpu-partial" => eprintln!("load_tensors: offloaded 12/33 layers to GPU"),
-                "gpu-missing" => {}
-                "gpu-malformed" => eprintln!("load_tensors: offloaded many/33 layers to GPU"),
+                "gpu-partial" => info(args, "load_tensors: offloaded 12/33 layers to GPU"),
+                "gpu-missing"
+                | "gpu-window-fragmented"
+                | "gpu-window-partial"
+                | "gpu-window-unterminated" => {}
+                "gpu-malformed" => info(args, "load_tensors: offloaded many/33 layers to GPU"),
                 "gpu-duplicate" => {
-                    eprintln!("load_tensors: offloaded 33/33 layers to GPU");
+                    info(args, "load_tensors: offloaded 33/33 layers to GPU");
                     let _ = std::io::stderr().write_all(&vec![b'e'; 20 * 1024]);
-                    eprintln!("\nload_tensors: offloaded 33/33 layers to GPU");
+                    let _ = std::io::stderr().write_all(b"\n");
+                    info(args, "load_tensors: offloaded 33/33 layers to GPU");
                 }
                 "gpu-overflow" => {
-                    eprintln!("load_tensors: offloaded 33/33 layers to GPU");
+                    info(args, "load_tensors: offloaded 33/33 layers to GPU");
                     let _ = std::io::stderr().write_all(&vec![b'e'; 70 * 1024]);
                 }
-                _ => eprintln!("load_tensors: offloaded 33/33 layers to GPU"),
+                _ => info(args, "load_tensors: offloaded 33/33 layers to GPU"),
             }
         }
         publish(
@@ -127,7 +258,8 @@ mod fake {
             &serde_json::to_vec(&record).unwrap(),
         );
         if scenario == "gpu-deadline" && arg(args, "--device") == "none" {
-            std::thread::sleep(Duration::from_millis(2000));
+            // Fits a fresh eight-second budget, but not its remainder after GPU startup.
+            std::thread::sleep(Duration::from_secs(7));
         }
         match scenario.as_str() {
             "noisy" => {
@@ -139,6 +271,14 @@ mod fake {
             },
             "exit-early" => std::process::exit(3),
             "gpu-exit-early" if arg(args, "--device") == "Vulkan0" => std::process::exit(3),
+            "gpu-cpu-start-failure" if arg(args, "--device") == "none" => std::process::exit(3),
+            "gpu-cleanup-unconfirmed" if arg(args, "--device") == "Vulkan0" => {
+                std::fs::write(
+                    Path::new(host).parent().unwrap().join("unowned-note"),
+                    b"preserve",
+                )
+                .unwrap();
+            }
             s if s.starts_with("peer:") => {
                 // SAFETY: single-threaded at this point (pre-main hook).
                 let child = unsafe { libc::fork() };
@@ -154,7 +294,7 @@ mod fake {
             }
             _ => {}
         }
-        serve(host, &scenario, &records);
+        serve(args, host, &scenario, &records);
     }
 
     fn read_request(s: &mut UnixStream) -> Option<Request> {
@@ -219,12 +359,13 @@ mod fake {
         out.clear();
     }
 
-    fn serve(host: &str, scenario: &str, records: &Path) -> ! {
+    fn serve(args: &[String], host: &str, scenario: &str, records: &Path) -> ! {
         let listener = UnixListener::bind(host).unwrap();
         let key = std::env::var("LLAMA_API_KEY").unwrap_or_default();
         let started = Instant::now();
         let pid = std::process::id();
         let mut n = 0;
+        let mut healthy = false;
         for stream in listener.incoming() {
             let Ok(mut s) = stream else { continue };
             let Some((method, path, headers, body)) = read_request(&mut s) else {
@@ -252,6 +393,11 @@ mod fake {
                         );
                     } else {
                         reply(&mut s, 200, &json!({"status":"ok"}), false);
+                        if !healthy {
+                            healthy = true;
+                            publish(&records.join(format!("health-{pid}.txt")), b"ready");
+                            after_health(args, scenario, records);
+                        }
                     }
                 }
                 ("POST", "/apply-template" | "/tokenize") if scenario == "no-template" => {
@@ -280,8 +426,14 @@ mod fake {
                 ("POST", "/v1/chat/completions") => {
                     n += 1;
                     super::fake::publish(&records.join(format!("request-{pid}-{n}.json")), &body);
-                    if scenario == "crash" {
+                    if scenario == "crash"
+                        || (scenario == "gpu-cpu-completion-failure"
+                            && arg(args, "--device") == "none")
+                    {
                         std::process::exit(9);
+                    }
+                    if scenario == "gpu-fallback-gated" {
+                        wait_for_gate(records, "completion-release");
                     }
                     if scenario == "crash-once" && !records.join("crashed").exists() {
                         std::fs::write(records.join("crashed"), b"1").unwrap();
@@ -361,6 +513,140 @@ fn wait_gone(pid: u32) {
         assert!(Instant::now() < end, "process {pid} still alive");
         std::thread::sleep(Duration::from_millis(10));
     }
+}
+
+fn wait_for_file(path: &Path) {
+    let end = deadline(5);
+    while !path.exists() {
+        assert!(
+            Instant::now() < end,
+            "fake did not reach {}",
+            path.display()
+        );
+        std::thread::sleep(Duration::from_millis(5));
+    }
+}
+
+fn wait_for_health(f: &Fixture) -> u32 {
+    let end = deadline(5);
+    loop {
+        if let Some(pid) = f
+            .record_pids()
+            .into_iter()
+            .find(|pid| f.base.join(format!("records/health-{pid}.txt")).exists())
+        {
+            return pid;
+        }
+        assert!(Instant::now() < end, "fake did not report healthy");
+        std::thread::sleep(Duration::from_millis(5));
+    }
+}
+
+fn assert_backend_args(record: &Value, backend: Backend) {
+    let args = record["args"].as_array().unwrap();
+    let start = args.iter().position(|arg| arg == "--device").unwrap();
+    let expected: &[&str] = match backend {
+        Backend::Cpu => &["--device", "none", "--gpu-layers", "0", "--fit", "off"],
+        Backend::Vulkan => &[
+            "--device",
+            "Vulkan0",
+            "--split-mode",
+            "none",
+            "--gpu-layers",
+            "all",
+            "--fit",
+            "off",
+            "--log-verbosity",
+            "4",
+            "--no-log-prefix",
+            "--no-log-timestamps",
+            "--no-log-jsonl",
+        ],
+    };
+    assert_eq!(json!(&args[start..]), json!(expected));
+}
+
+fn startup_reason(provider: &Providers, f: &Fixture, code: &str) -> AppError {
+    let reason = provider
+        .last_startup_fallback_reason()
+        .unwrap()
+        .expect("retained fallback cause");
+    assert_eq!(reason.code, code);
+    assert!(!reason.message.is_empty() && reason.message.len() <= 1024);
+    assert!(!reason.message.chars().any(char::is_control));
+    for forbidden in [
+        "HOSTILE-STDERR-SENTINEL",
+        "ignore policy",
+        f.base.to_str().unwrap(),
+    ] {
+        assert!(
+            !reason.message.contains(forbidden),
+            "diagnostic must not disclose child output"
+        );
+    }
+    for pid in f.record_pids() {
+        let record = f.record(pid);
+        for variable in record["env"].as_array().unwrap() {
+            if let Some(key) = variable.as_str().unwrap().strip_prefix("LLAMA_API_KEY=") {
+                assert!(
+                    !reason.message.contains(key),
+                    "diagnostic must not disclose fake credentials"
+                );
+            }
+        }
+    }
+    reason
+}
+
+/// Keep the launching thread alive until the runner is returned/stopped: its
+/// Linux parent-death signal follows that thread, not an arbitrary test worker.
+fn observe_vulkan_window(f: &Fixture, scenario: &str) -> AppResult<Runner> {
+    let (record, _) = f.model("window:q4", scenario);
+    let mut config = f.config();
+    config.backend = Backend::Vulkan;
+    let returned = AtomicBool::new(false);
+    std::thread::scope(|scope| {
+        let observer = scope.spawn(|| {
+            let pid = wait_for_health(f);
+            let healthy = Instant::now();
+            std::thread::sleep(Duration::from_millis(100));
+            let mut premature = returned.load(Ordering::Acquire);
+            fs::write(f.base.join("records/startup-continue"), b"continue").unwrap();
+            if matches!(
+                scenario,
+                "gpu-window-fragmented" | "gpu-window-partial" | "gpu-window-duplicate"
+            ) {
+                wait_for_file(&f.base.join("records/startup-fragment"));
+                std::thread::sleep(Duration::from_millis(100));
+                premature |= returned.load(Ordering::Acquire);
+                fs::write(f.base.join("records/startup-finish"), b"finish").unwrap();
+            }
+            wait_for_file(&f.base.join("records/startup-written"));
+            (pid, healthy, premature)
+        });
+        let result = Runner::launch(&config, &f.model_path(&record), deadline(10));
+        let completed = Instant::now();
+        returned.store(true, Ordering::Release);
+        let (pid, healthy, premature) = observer.join().unwrap();
+        assert!(
+            !premature,
+            "{scenario}: startup returned before the gated evidence"
+        );
+        if !matches!(scenario, "gpu-window-eof" | "gpu-window-exit") {
+            assert!(
+                completed.saturating_duration_since(healthy) >= Duration::from_millis(900),
+                "{scenario}: a candidate must remain provisional for the full post-health window"
+            );
+        }
+        if scenario == "gpu-window-continuous" {
+            assert!(
+                completed.saturating_duration_since(healthy) < Duration::from_secs(4),
+                "complete unrelated records must not slide the observation window"
+            );
+        }
+        assert_backend_args(&f.record(pid), Backend::Vulkan);
+        result
+    })
 }
 
 /// One copied fake executable per test process (owner 0755, single link).
@@ -902,6 +1188,191 @@ fn spawn_uses_fixed_args_cleared_env_private_socket_and_own_group() {
     wait_gone(pid);
     assert!(!dir.exists());
     assert!(f.runner_dirs().is_empty());
+}
+
+#[test]
+fn fake_b11429_logger_suppresses_default_info_and_models_decorations() {
+    let old: Vec<String> = [
+        "--device",
+        "Vulkan0",
+        "--split-mode",
+        "none",
+        "--gpu-layers",
+        "all",
+        "--fit",
+        "off",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+    let message = "load_tensors: offloaded 33/33 layers to GPU";
+    assert!(
+        fake::library_info(&old, message).is_empty(),
+        "old launch must not confirm offload"
+    );
+    let mut plain = old;
+    plain.extend(
+        [
+            "--log-verbosity",
+            "4",
+            "--no-log-prefix",
+            "--no-log-timestamps",
+            "--no-log-jsonl",
+        ]
+        .into_iter()
+        .map(str::to_string),
+    );
+    let canonical = format!("{message}\n").into_bytes();
+    assert_eq!(fake::library_info(&plain, message), canonical);
+    for omitted in ["--no-log-prefix", "--no-log-timestamps"] {
+        let decorated: Vec<String> = plain
+            .iter()
+            .filter(|arg| arg.as_str() != omitted)
+            .cloned()
+            .collect();
+        let output = String::from_utf8(fake::library_info(&decorated, message)).unwrap();
+        assert_ne!(
+            acceleration::actual_mode(Backend::Vulkan, &output),
+            Ok(ActualMode::Gpu)
+        );
+    }
+    let mut jsonl: Vec<String> = plain
+        .into_iter()
+        .filter(|arg| arg != "--no-log-jsonl")
+        .collect();
+    jsonl.push("--log-jsonl".into());
+    let output = String::from_utf8(fake::library_info(&jsonl, message)).unwrap();
+    assert_ne!(
+        acceleration::actual_mode(Backend::Vulkan, &output),
+        Ok(ActualMode::Gpu)
+    );
+    jsonl.push("--no-log-jsonl".into());
+    assert_eq!(fake::library_info(&jsonl, message), canonical);
+}
+
+#[test]
+fn vulkan_startup_observes_full_window_and_accepts_only_complete_fragmented_evidence() {
+    for scenario in ["gpu-window-full", "gpu-window-fragmented"] {
+        let f = Fixture::new();
+        let mut runner = observe_vulkan_window(&f, scenario).unwrap();
+        assert_eq!(
+            runner.chat(&[user("hello")], 32, deadline(5)).unwrap(),
+            "reply:hello"
+        );
+        let pid = runner.pid();
+        runner.stop().unwrap();
+        wait_gone(pid);
+        assert!(f.runner_dirs().is_empty());
+    }
+}
+
+#[test]
+fn vulkan_startup_continuous_complete_records_do_not_slide_window() {
+    let f = Fixture::new();
+    let runner = observe_vulkan_window(&f, "gpu-window-continuous").unwrap();
+    assert!(
+        runner
+            .diagnostics()
+            .matches("server: startup heartbeat\n")
+            .count()
+            >= 2,
+        "the fake must actually emit continued complete records"
+    );
+    let pid = runner.pid();
+    runner.stop().unwrap();
+    wait_gone(pid);
+    assert!(f.runner_dirs().is_empty());
+}
+
+#[test]
+fn vulkan_startup_rejects_partial_unterminated_duplicate_and_overflow_during_window() {
+    for scenario in [
+        "gpu-window-partial",
+        "gpu-window-unterminated",
+        "gpu-window-trailing",
+        "gpu-window-duplicate",
+        "gpu-window-overflow",
+    ] {
+        let f = Fixture::new();
+        let error = observe_vulkan_window(&f, scenario)
+            .err()
+            .expect("invalid startup must fail");
+        assert_eq!(error.code, "GPU_PREPARATION", "{scenario}");
+        assert_eq!(f.record_pids().len(), 1);
+        for pid in f.record_pids() {
+            wait_gone(pid);
+            assert!(!f
+                .base
+                .join(format!("records/request-{pid}-1.json"))
+                .exists());
+        }
+        assert!(f.runner_dirs().is_empty());
+        f.start("ok").0.stop().unwrap();
+    }
+}
+
+#[test]
+fn vulkan_startup_rejects_child_exit_and_stderr_eof_after_health() {
+    for scenario in ["gpu-window-eof", "gpu-window-exit"] {
+        let f = Fixture::new();
+        let error = observe_vulkan_window(&f, scenario)
+            .err()
+            .expect("capture/liveness failure must fail");
+        assert_eq!(error.code, "GPU_PREPARATION", "{scenario}");
+        assert_eq!(f.record_pids().len(), 1);
+        wait_gone(f.record_pids()[0]);
+        assert!(f.runner_dirs().is_empty());
+    }
+}
+
+#[test]
+fn vulkan_post_health_window_obeys_cancellation_and_original_deadline() {
+    for cancel in [false, true] {
+        let f = Fixture::new();
+        let (record, _) = f.model("window-budget:q4", "ok");
+        let mut config = f.config();
+        config.backend = Backend::Vulkan;
+        let verified =
+            runner::verify_model_leased(&f.roots, &record, deadline(5), &|| false).unwrap();
+        let cancelled = Arc::new(AtomicBool::new(false));
+        let flag = cancelled.clone();
+        let cancellation: runner::Cancellation = Arc::new(move || flag.load(Ordering::Acquire));
+        std::thread::scope(|scope| {
+            let trigger = scope.spawn(|| {
+                let pid = wait_for_health(&f);
+                std::thread::sleep(Duration::from_millis(100));
+                if cancel {
+                    cancelled.store(true, Ordering::Release);
+                }
+                pid
+            });
+            let started = Instant::now();
+            let budget = if cancel {
+                Duration::from_secs(10)
+            } else {
+                Duration::from_millis(700)
+            };
+            let result =
+                Runner::launch_verified(&config, &verified, started + budget, cancellation);
+            let pid = trigger.join().unwrap();
+            let error = result
+                .err()
+                .expect("provisional evidence cannot bypass cancellation/deadline");
+            assert_eq!(
+                error.code,
+                if cancel {
+                    "RUNNER_CANCELLED"
+                } else {
+                    "PROVIDER_TIMEOUT"
+                }
+            );
+            assert!(started.elapsed() < Duration::from_secs(3));
+            wait_gone(pid);
+            assert!(f.runner_dirs().is_empty());
+        });
+        drop(verified);
+        f.start("ok").0.stop().unwrap();
+    }
 }
 
 #[test]
@@ -1609,27 +2080,44 @@ fn provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispa
     f.release_backends(&files, true);
     let (_, full) = f.model("gpu-full:q4", "ok");
     let full_provider = Providers::with_options(&f.roots, options(catalog(vec![full])));
+    assert_eq!(full_provider.last_startup_fallback_reason().unwrap(), None);
     assert_eq!(
         full_provider.chat("gpu-full:q4", &[user("hello")]).unwrap(),
         "reply:hello"
     );
     let first = f.record_pids();
     assert_eq!(first.len(), 1);
-    assert!(f.record(first[0])["args"]
-        .as_array()
-        .unwrap()
-        .windows(2)
-        .any(|pair| pair == [json!("--device"), json!("Vulkan0")]));
+    assert_backend_args(&f.record(first[0]), Backend::Vulkan);
+    assert_eq!(full_provider.last_startup_fallback_reason().unwrap(), None);
     full_provider.shutdown();
 
-    for (index, scenario) in [
-        "gpu-zero",
-        "gpu-partial",
-        "gpu-missing",
-        "gpu-malformed",
-        "gpu-duplicate",
-        "gpu-overflow",
-        "gpu-exit-early",
+    for (index, (scenario, expected_message)) in [
+        (
+            "gpu-zero",
+            "Vulkan offload evidence confirms zero GPU layers",
+        ),
+        (
+            "gpu-partial",
+            "Vulkan runner did not confirm full model offload",
+        ),
+        ("gpu-missing", "Vulkan offload evidence is missing"),
+        (
+            "gpu-malformed",
+            "Vulkan offload evidence has invalid layer counts",
+        ),
+        (
+            "gpu-duplicate",
+            "Vulkan offload evidence contains duplicate records",
+        ),
+        (
+            "gpu-overflow",
+            "Vulkan startup evidence exceeded its byte limit",
+        ),
+        ("gpu-exit-early", "Vulkan runner exited before readiness"),
+        (
+            "gpu-hostile",
+            "Vulkan offload evidence confirms zero GPU layers",
+        ),
     ]
     .into_iter()
     .enumerate()
@@ -1652,18 +2140,21 @@ fn provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispa
         );
         let cpu_record = f.record(cpu);
         assert_eq!(cpu_record["sibling_alive_at_start"], false);
-        let cpu_args = cpu_record["args"].as_array().unwrap().clone();
-        assert!(cpu_args
-            .windows(2)
-            .any(|pair| pair == [json!("--device"), json!("none")]));
+        assert_backend_args(&f.record(gpu), Backend::Vulkan);
+        assert_backend_args(&cpu_record, Backend::Cpu);
+        let reason = startup_reason(&provider, &f, "GPU_PREPARATION");
+        assert_eq!(reason.message, expected_message, "{scenario}");
         provider.shutdown();
     }
 
     let before_deadline = f.record_pids().len();
     let (_, deadline_entry) = f.model("gpu-deadline:q4", "gpu-deadline");
     let mut deadline_options = options(catalog(vec![deadline_entry]));
-    deadline_options.budget = Duration::from_millis(3000);
+    // Two seconds of GPU load plus the fixed one-second observation still leave
+    // ample verification/spawn time, but not the fake CPU's seven-second load.
+    deadline_options.budget = Duration::from_secs(8);
     let deadline_provider = Providers::with_options(&f.roots, deadline_options);
+    let deadline_started = Instant::now();
     assert_eq!(
         deadline_provider
             .chat("gpu-deadline:q4", &[user("hello")])
@@ -1672,11 +2163,16 @@ fn provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispa
         "PROVIDER_TIMEOUT",
         "CPU fallback must retain only the original deadline remainder"
     );
+    assert!(deadline_started.elapsed() < Duration::from_secs(10));
     let deadline_pids = f.record_pids();
     assert_eq!(deadline_pids.len(), before_deadline + 2);
     let deadline_cpu = *deadline_pids.last().unwrap();
     assert_eq!(f.record(deadline_cpu)["sibling_alive_at_start"], false);
     assert!(!pid_alive(deadline_cpu));
+    assert_eq!(
+        startup_reason(&deadline_provider, &f, "GPU_PREPARATION").message,
+        "Vulkan offload evidence confirms zero GPU layers"
+    );
 
     let before_crash = f.record_pids().len();
     let (_, crash) = f.model("gpu-crash:q4", "crash-once");
@@ -1689,6 +2185,7 @@ fn provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispa
         before_crash + 1,
         "completion failure must not replay on CPU"
     );
+    assert_eq!(crash_provider.last_startup_fallback_reason().unwrap(), None);
     crash_provider.shutdown();
 
     let cpu_only = Fixture::new();
@@ -1701,6 +2198,8 @@ fn provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispa
         "reply:hello"
     );
     assert_eq!(cpu_only.record_pids().len(), 1);
+    assert_backend_args(&cpu_only.record(cpu_only.record_pids()[0]), Backend::Cpu);
+    startup_reason(&provider, &cpu_only, "RUNTIME_MISSING");
     provider.shutdown();
 
     let tampered = Fixture::new();
@@ -1724,6 +2223,299 @@ fn provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispa
         tampered.record_pids().is_empty(),
         "tamper must not fall back"
     );
+    assert_eq!(provider.last_startup_fallback_reason().unwrap(), None);
+}
+
+#[test]
+fn provider_startup_fallback_reason_survives_success_reuse_and_idle_then_resets() {
+    use std::os::fd::AsRawFd;
+
+    for vulkan in [false, true] {
+        let f = Fixture::new();
+        f.release_backends(
+            &[("llama-server", fs::read(shared_exe()).unwrap(), 0o755)],
+            vulkan,
+        );
+        let (_, fallback) = f.model("fallback-history:q4", "gpu-hostile");
+        let (fresh_record, fresh) = f.model("fresh-history:q4", "ok");
+        let mut opts = options(catalog(vec![fallback, fresh]));
+        opts.idle = Duration::ZERO;
+        let provider = Providers::with_options(&f.roots, opts);
+        assert_eq!(provider.last_startup_fallback_reason().unwrap(), None);
+        provider.inventory().unwrap();
+        assert_eq!(provider.last_startup_fallback_reason().unwrap(), None);
+        assert!(
+            f.record_pids().is_empty(),
+            "diagnostics/inventory must not prepare a runner"
+        );
+
+        assert_eq!(
+            provider
+                .chat("fallback-history:q4", &[user("first")])
+                .unwrap(),
+            "reply:first"
+        );
+        let code = if vulkan {
+            "GPU_PREPARATION"
+        } else {
+            "RUNTIME_MISSING"
+        };
+        let retained = startup_reason(&provider, &f, code);
+        if vulkan {
+            assert_eq!(
+                retained.message,
+                "Vulkan offload evidence confirms zero GPU layers"
+            );
+        }
+        let pids = f.record_pids();
+        assert_eq!(pids.len(), if vulkan { 2 } else { 1 });
+        let cpu = *pids.iter().find(|pid| pid_alive(**pid)).unwrap();
+        assert_backend_args(&f.record(cpu), Backend::Cpu);
+        assert_eq!(f.record(cpu)["sibling_alive_at_start"], false);
+
+        assert_eq!(
+            provider
+                .chat("fallback-history:q4", &[user("reuse")])
+                .unwrap(),
+            "reply:reuse"
+        );
+        assert_eq!(f.record_pids(), pids, "reused CPU must not retry Vulkan");
+        assert_eq!(
+            provider.last_startup_fallback_reason().unwrap(),
+            Some(retained.clone())
+        );
+        let inventory = serde_json::to_value(provider.inventory().unwrap()).unwrap();
+        assert_eq!(
+            inventory
+                .as_object()
+                .unwrap()
+                .keys()
+                .map(String::as_str)
+                .collect::<Vec<_>>(),
+            ["models", "providers", "voices"]
+        );
+        assert_eq!(
+            inventory["providers"]["llm"],
+            json!({"ready":true,"error":null})
+        );
+        assert_eq!(
+            provider.last_startup_fallback_reason().unwrap(),
+            Some(retained.clone())
+        );
+
+        provider.idle();
+        wait_gone(cpu);
+        assert_eq!(provider.idle_timeout(), None);
+        assert!(f.runner_dirs().is_empty());
+        assert_eq!(
+            provider.last_startup_fallback_reason().unwrap(),
+            Some(retained)
+        );
+
+        {
+            // Parallel tests can fork with this fixture's carried lease still open.
+            // Child exit/directory cleanup alone do not prove those inherited
+            // descriptions have reached CLOEXEC; observe the actual lease first.
+            let lock = fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(runner::lock_path(&f.roots))
+                .unwrap();
+            let end = deadline(5);
+            loop {
+                // SAFETY: flock uses only this owned, live fixture descriptor.
+                if unsafe { libc::flock(lock.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0 {
+                    // SAFETY: release our acquired lock explicitly so another fork
+                    // inheriting the probe descriptor cannot prolong its ownership.
+                    assert_eq!(unsafe { libc::flock(lock.as_raw_fd(), libc::LOCK_UN) }, 0);
+                    break;
+                }
+                let error = std::io::Error::last_os_error();
+                assert_eq!(error.kind(), std::io::ErrorKind::WouldBlock, "{error}");
+                assert!(
+                    Instant::now() < end,
+                    "idle fixture runner lease remained held"
+                );
+                std::thread::sleep(Duration::from_millis(5));
+            }
+        }
+
+        // Reset at fresh preparation, even if model verification fails before launch.
+        let original = fs::read(f.model_path(&fresh_record)).unwrap();
+        let mut corrupt = original.clone();
+        corrupt[0] ^= 1;
+        fs::write(f.model_path(&fresh_record), corrupt).unwrap();
+        assert_eq!(
+            provider
+                .chat("fresh-history:q4", &[user("fresh")])
+                .unwrap_err()
+                .code,
+            "MODEL_UNAVAILABLE"
+        );
+        assert_eq!(provider.last_startup_fallback_reason().unwrap(), None);
+        assert_eq!(f.record_pids(), pids);
+        fs::write(f.model_path(&fresh_record), original).unwrap();
+        f.real_release();
+        assert_eq!(
+            provider.chat("fresh-history:q4", &[user("fresh")]).unwrap(),
+            "reply:fresh"
+        );
+        assert_eq!(provider.last_startup_fallback_reason().unwrap(), None);
+        assert_eq!(f.record_pids().len(), pids.len() + 1);
+        provider.shutdown();
+    }
+}
+
+#[test]
+fn provider_startup_fallback_reason_survives_cpu_startup_and_completion_failure() {
+    for vulkan in [false, true] {
+        for scenario in ["gpu-cpu-start-failure", "gpu-cpu-completion-failure"] {
+            let f = Fixture::new();
+            f.release_backends(
+                &[("llama-server", fs::read(shared_exe()).unwrap(), 0o755)],
+                vulkan,
+            );
+            let (_, entry) = f.model("cpu-failure:q4", scenario);
+            let provider = Providers::with_options(&f.roots, options(catalog(vec![entry])));
+            let error = provider
+                .chat("cpu-failure:q4", &[user("fail")])
+                .unwrap_err();
+            assert_eq!(
+                error.code, "LLM_UNAVAILABLE",
+                "original CPU error is authoritative: {scenario}"
+            );
+            let code = if vulkan {
+                "GPU_PREPARATION"
+            } else {
+                "RUNTIME_MISSING"
+            };
+            let retained = startup_reason(&provider, &f, code);
+            if vulkan {
+                assert_eq!(
+                    retained.message,
+                    "Vulkan offload evidence confirms zero GPU layers"
+                );
+            }
+            let pids = f.record_pids();
+            assert_eq!(
+                pids.len(),
+                if vulkan { 2 } else { 1 },
+                "one fallback, no completion replay"
+            );
+            let cpu = *pids
+                .iter()
+                .find(|pid| {
+                    f.record(**pid)["args"]
+                        .as_array()
+                        .unwrap()
+                        .windows(2)
+                        .any(|pair| pair == [json!("--device"), json!("none")])
+                })
+                .unwrap();
+            assert_eq!(f.record(cpu)["sibling_alive_at_start"], false);
+            assert_eq!(
+                f.base
+                    .join(format!("records/request-{cpu}-1.json"))
+                    .exists(),
+                scenario == "gpu-cpu-completion-failure"
+            );
+            for pid in pids {
+                wait_gone(pid);
+            }
+            assert!(f.runner_dirs().is_empty());
+            provider.idle();
+            assert_eq!(
+                provider.last_startup_fallback_reason().unwrap(),
+                Some(retained)
+            );
+            provider.shutdown();
+        }
+    }
+}
+
+#[test]
+fn provider_startup_fallback_reason_requires_confirmed_cleanup() {
+    let f = Fixture::new();
+    f.real_release();
+    let (_, entry) = f.model("cleanup-unconfirmed:q4", "gpu-cleanup-unconfirmed");
+    let provider = Providers::with_options(&f.roots, options(catalog(vec![entry])));
+    assert_eq!(
+        provider
+            .chat("cleanup-unconfirmed:q4", &[user("fail")])
+            .unwrap_err()
+            .code,
+        "RUNTIME_UNSAFE"
+    );
+    let pids = f.record_pids();
+    assert_eq!(
+        pids.len(),
+        1,
+        "uncertain cleanup must not permit CPU fallback"
+    );
+    wait_gone(pids[0]);
+    assert_eq!(provider.last_startup_fallback_reason().unwrap(), None);
+    let dirs = f.runner_dirs();
+    assert_eq!(dirs.len(), 1);
+    assert_eq!(fs::read(dirs[0].join("unowned-note")).unwrap(), b"preserve");
+}
+
+#[test]
+fn provider_startup_fallback_reason_accessor_is_nonblocking_during_slow_inference() {
+    let f = Fixture::new();
+    f.real_release();
+    let (_, entry) = f.model("diagnostics-busy:q4", "gpu-fallback-gated");
+    let provider = Providers::with_options(&f.roots, options(catalog(vec![entry])));
+    std::thread::scope(|scope| {
+        let worker = scope.spawn(|| {
+            let result = provider.chat("diagnostics-busy:q4", &[user("held")]);
+            // Shut down on the child-owning thread before that thread exits.
+            provider.shutdown();
+            result
+        });
+        let end = deadline(10);
+        let cpu = loop {
+            if let Some(pid) = f.record_pids().into_iter().find(|pid| {
+                f.base
+                    .join(format!("records/request-{pid}-1.json"))
+                    .exists()
+            }) {
+                break pid;
+            }
+            if Instant::now() >= end {
+                provider.cancel_owned();
+                panic!("fake CPU did not enter gated inference");
+            }
+            std::thread::sleep(Duration::from_millis(5));
+        };
+        let (tx, rx) = mpsc::channel();
+        let accessor_provider = &provider;
+        let accessor = scope.spawn(move || {
+            tx.send(accessor_provider.last_startup_fallback_reason())
+                .unwrap();
+        });
+        let started = Instant::now();
+        let observed = rx.recv_timeout(Duration::from_millis(500));
+        let elapsed = started.elapsed();
+        // Always release/join before asserting, so a blocking-accessor regression
+        // fails promptly without hanging a scoped thread or leaking the runner.
+        fs::write(f.base.join("records/completion-release"), b"finish").unwrap();
+        let result = worker.join().unwrap();
+        accessor.join().unwrap();
+        assert_backend_args(&f.record(cpu), Backend::Cpu);
+        let busy = observed
+            .expect("diagnostics must not wait for inference")
+            .unwrap_err();
+        assert_eq!(busy.code, "DIAGNOSTICS_BUSY");
+        assert!(elapsed < Duration::from_millis(500));
+        assert_eq!(result.unwrap(), "reply:held");
+        wait_gone(cpu);
+        assert_eq!(f.record_pids().len(), 2);
+        assert_eq!(
+            startup_reason(&provider, &f, "GPU_PREPARATION").message,
+            "Vulkan offload evidence confirms zero GPU layers"
+        );
+        assert!(f.runner_dirs().is_empty());
+    });
 }
 
 fn id(n: usize) -> String {

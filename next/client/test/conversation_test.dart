@@ -8,6 +8,7 @@ import 'package:smith_client/app_api.dart';
 import 'package:smith_client/chat_panel.dart';
 import 'package:smith_client/main.dart';
 import 'package:smith_client/text_chat.dart';
+import 'package:smith_client/ui/smith_workspace.dart';
 
 import 'app_fakes.dart';
 import 'widget_test.dart' show FakeControlApi, profile;
@@ -16,7 +17,7 @@ void main() {
   testWidgets(
     'M1 lost acknowledgement recovery does not duplicate saved turns when follow-up state fails',
     (tester) async {
-      final api = FakeAppApi();
+      final api = LegacyFakeAppApi();
       final c = ChatController(api);
       await c.synchronize();
       await c.refreshModels();
@@ -76,7 +77,7 @@ void main() {
   testWidgets(
     'M2 reattached submit retains verified answer without inventing user text when follow-up state fails',
     (tester) async {
-      final api = FakeAppApi();
+      final api = LegacyFakeAppApi();
       api.active = {
         'request_id': testInstance,
         'kind': 'submit',
@@ -118,7 +119,7 @@ void main() {
         find.text('Verified answer · awaiting history sync'),
         findsOneWidget,
       );
-      expect(find.text('You'), findsNothing);
+      expect(find.text('YOU'), findsNothing);
       expect(find.textContaining('stale / unavailable'), findsOneWidget);
       api.stateFailure = false;
       api.stateFailureAfterPoll = false;
@@ -146,7 +147,7 @@ void main() {
   test(
     'poll instance mismatch keeps query-only identity until synchronization',
     () async {
-      final api = FakeAppApi();
+      final api = LegacyFakeAppApi();
       final c = ChatController(api);
       await c.synchronize();
       await c.refreshModels();
@@ -169,7 +170,7 @@ void main() {
   test(
     'reattach queries active legacy work without executing or resending it',
     () async {
-      final api = FakeAppApi();
+      final api = LegacyFakeAppApi();
       final job = <String, dynamic>{
         'request_id': testInstance,
         'kind': 'speak',
@@ -194,7 +195,7 @@ void main() {
   test(
     'malformed terminal response retains pending identity and draft',
     () async {
-      final api = FakeAppApi();
+      final api = LegacyFakeAppApi();
       final c = ChatController(api);
       await c.synchronize();
       await c.refreshModels();
@@ -219,21 +220,43 @@ void main() {
       c.dispose();
     },
   );
-  testWidgets('Chat is the only selected mode in the sidebar', (tester) async {
+  testWidgets('Chat and Settings rail has exactly one selected mode', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       SmithApp(controlApi: FakeControlApi(profile()), appApi: FakeAppApi()),
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('mode-sidebar')), findsOneWidget);
-    expect(find.byKey(const ValueKey('mode-chat-selected')), findsOneWidget);
-    expect(find.byTooltip('Chat'), findsOneWidget);
-    final semantics = tester.getSemantics(
-      find.byKey(const ValueKey('mode-chat-selected')),
+    expect(find.byType(SmithWorkspace), findsOneWidget);
+    final chat = find.byTooltip('Open chat history');
+    final settings = find.byTooltip('Settings');
+    expect(chat, findsOneWidget);
+    expect(settings, findsOneWidget);
+    expect(
+      tester.getSemantics(chat).flagsCollection.isSelected,
+      ui.Tristate.isTrue,
     );
-    expect(semantics.label, 'Chat');
-    expect(semantics.flagsCollection.isSelected, ui.Tristate.isTrue);
-    expect(find.byType(Icon), findsOneWidget);
+    expect(
+      tester.getSemantics(settings).flagsCollection.isSelected,
+      ui.Tristate.isFalse,
+    );
+    await tester.tap(settings);
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .getSemantics(find.byTooltip('Return to Chat'))
+          .flagsCollection
+          .isSelected,
+      ui.Tristate.isFalse,
+    );
+    expect(
+      tester
+          .getSemantics(find.byTooltip('Settings').first)
+          .flagsCollection
+          .isSelected,
+      ui.Tristate.isTrue,
+    );
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
@@ -312,9 +335,9 @@ void main() {
       await tester.pumpWidget(SmithApp(controlApi: core, appApi: api));
       await tester.pumpAndSettle();
       expect(core.calls, ['inspect']);
-      expect(api.calls, ['state', 'models', 'poll']);
-      expect(find.text('Connected to Smith'), findsOneWidget);
-      expect(find.text('Message'), findsOneWidget);
+      expect(api.calls, ['state', 'conversation_get', 'models', 'poll']);
+      expect(find.text('SYSTEM ONLINE'), findsOneWidget);
+      expect(find.text('Message Smith…'), findsOneWidget);
       for (final label in [
         'Core Home',
         'Setup',
@@ -378,24 +401,34 @@ void main() {
     expect(find.textContaining('No local model selected'), findsOneWidget);
     expect(
       tester
-          .widget<ElevatedButton>(find.widgetWithText(ElevatedButton, 'Send'))
+          .widget<IconButton>(
+            find.ancestor(
+              of: find.byTooltip('Send'),
+              matching: find.byType(IconButton),
+            ),
+          )
           .onPressed,
       isNull,
     );
     await tester.enterText(find.byType(TextField), 'waiting draft');
     api.config = {...api.config, 'model': 'local:exact'};
-    await tester.tap(find.text('Retry'));
+    tester.widget<SmithWorkspace>(find.byType(SmithWorkspace)).onRetry!();
     await tester.pumpAndSettle();
     expect(find.text('waiting draft'), findsOneWidget);
     expect(
       tester
-          .widget<ElevatedButton>(find.widgetWithText(ElevatedButton, 'Send'))
+          .widget<IconButton>(
+            find.ancestor(
+              of: find.byTooltip('Send'),
+              matching: find.byType(IconButton),
+            ),
+          )
           .onPressed,
       isNotNull,
     );
     expect(api.calls, isNot(contains('configure')));
     expect(api.calls, isNot(contains('submit')));
-    expect(core.calls, ['inspect', 'inspect']);
+    expect(core.calls, ['inspect']);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -404,27 +437,43 @@ void main() {
     (tester) async {
       final core = FakeControlApi(profile());
       final api = FakeAppApi()
-        ..history.add({'role': 'assistant', 'content': 'saved answer'});
+        ..history.addAll([
+          {'role': 'user', 'content': 'saved question'},
+          {'role': 'assistant', 'content': 'saved answer'},
+        ]);
       await tester.pumpWidget(SmithApp(controlApi: core, appApi: api));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'keep draft');
-      core.state = profile(runtime: 'unavailable', bridge: 'unavailable');
-      await tester.tap(find.text('Retry'));
+      api.stateFailure = true;
+      tester.widget<SmithWorkspace>(find.byType(SmithWorkspace)).onRetry!();
       await tester.pumpAndSettle();
       expect(find.text('saved answer'), findsOneWidget);
       expect(find.text('keep draft'), findsOneWidget);
-      expect(find.textContaining('stale / unavailable'), findsOneWidget);
+      expect(find.text('SYSTEM UNAVAILABLE'), findsOneWidget);
       expect(
         tester
-            .widget<ElevatedButton>(find.widgetWithText(ElevatedButton, 'Send'))
+            .widget<IconButton>(
+              find.ancestor(
+                of: find.byTooltip('Send'),
+                matching: find.byType(IconButton),
+              ),
+            )
             .onPressed,
         isNull,
       );
-      expect(api.calls, ['state', 'models', 'poll']);
-      core.state = profile(setup: false);
-      await tester.tap(find.text('Retry'));
+      expect(api.calls, [
+        'state',
+        'conversation_get',
+        'models',
+        'poll',
+        'state',
+      ]);
+      api.stateFailure = false;
+      tester.widget<SmithWorkspace>(find.byType(SmithWorkspace)).onRetry!();
       await tester.pumpAndSettle();
       expect(api.calls.where((op) => op == 'submit'), isEmpty);
+      expect(core.calls, ['inspect']);
+      expect(find.text('SYSTEM ONLINE'), findsOneWidget);
       expect(find.text('keep draft'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
     },
@@ -440,7 +489,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 5));
-      expect(api.calls, ['state', 'models', 'poll']);
+      expect(api.calls, ['state', 'conversation_get', 'models', 'poll']);
       expect(
         find.textContaining('Local model runtime unavailable'),
         findsOneWidget,
@@ -479,7 +528,7 @@ void main() {
     final api = FakeAppApi();
     for (var i = 0; i < 32; i++) {
       api.history.add({
-        'role': 'assistant',
+        'role': i.isEven ? 'user' : 'assistant',
         'content': 'Saved answer number $i',
       });
     }
@@ -527,6 +576,7 @@ void main() {
           SmithApp(controlApi: FakeControlApi(profile()), appApi: api),
         );
         await tester.pumpAndSettle();
+        final bootCallCount = api.calls.length;
         await tester.enterText(
           find.byType(TextField),
           'one\ntwo\nthree\nfour\nfive',
@@ -540,7 +590,7 @@ void main() {
             'phase': 'generation',
           };
           api.expiredPoll = true;
-          await tester.tap(find.text('Retry'));
+          await tester.pump(const Duration(seconds: 30));
           await tester.pumpAndSettle();
         }
         expect(tester.takeException(), isNull);
@@ -549,19 +599,39 @@ void main() {
           tester.widget<TextField>(find.byType(TextField)).controller!.text,
           enteredDraft,
         );
-        for (final control in [find.byType(TextField), find.text('Send')]) {
+        for (final control in [
+          find.byType(TextField),
+          find.byTooltip('Send'),
+        ]) {
           final rect = tester.getRect(control);
           expect(rect.top, greaterThanOrEqualTo(0));
           expect(rect.bottom, lessThanOrEqualTo(size.height));
           expect(control.hitTestable(), findsOneWidget);
         }
         if (expired) {
-          expect(
-            find.text('Resolve expired request').hitTestable(),
-            findsOneWidget,
-          );
-          await tester.tap(find.text('Resolve expired request'));
-          await tester.pumpAndSettle();
+          final controller = tester
+              .widget<ChatPanel>(find.byType(ChatPanel))
+              .controller;
+          expect(controller.pendingId, testInstance);
+          expect(controller.canAbandonExpiredRequest, isTrue);
+          Future<void> openResolution() async {
+            final details = find.byTooltip('View recovery details');
+            if (details.evaluate().isNotEmpty) {
+              await tester.ensureVisible(details);
+              await tester.pumpAndSettle();
+              expect(details.hitTestable(), findsOneWidget);
+              await tester.tap(details);
+              await tester.pumpAndSettle();
+            }
+            final resolve = find.text('Resolve expired request');
+            await tester.ensureVisible(resolve);
+            await tester.pumpAndSettle();
+            expect(resolve.hitTestable(), findsOneWidget);
+            await tester.tap(resolve);
+            await tester.pumpAndSettle();
+          }
+
+          await openResolution();
           expect(find.text('Keep pending').hitTestable(), findsOneWidget);
           await tester.tap(find.text('Keep pending'));
           await tester.pumpAndSettle();
@@ -569,24 +639,32 @@ void main() {
             tester.widget<TextField>(find.byType(TextField)).controller!.text,
             enteredDraft,
           );
-          await tester.tap(find.text('Resolve expired request'));
-          await tester.pumpAndSettle();
+          expect(controller.pendingId, testInstance);
+          await openResolution();
           await tester.tap(find.text('Forget request'));
           await tester.pumpAndSettle();
           expect(
             tester.widget<TextField>(find.byType(TextField)).controller!.text,
             enteredDraft,
           );
+          expect(controller.pendingId, isNull);
           expect(tester.takeException(), isNull);
         }
-        expect(api.calls, isNot(contains('submit')));
+        expect(
+          api.calls
+              .skip(bootCallCount)
+              .where(
+                (op) => !['state', 'conversation_get', 'poll'].contains(op),
+              ),
+          isEmpty,
+        );
         await tester.pumpWidget(const SizedBox());
       });
     }
   }
 
   test('late submit preserves newer draft, text-only result survives failed state read', () async {
-    final api = FakeAppApi();
+    final api = LegacyFakeAppApi();
     final c = ChatController(api);
     await c.synchronize();
     await c.refreshModels();
@@ -610,7 +688,7 @@ void main() {
   });
 
   test('unobserved selection cannot be configured or submitted', () async {
-    final api = FakeAppApi();
+    final api = LegacyFakeAppApi();
     final c = ChatController(api);
     await c.synchronize();
     c.edit('draft');

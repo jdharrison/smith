@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'control_api.dart';
 import 'native_control.dart';
 import 'text_chat.dart';
+import 'workspace_controller.dart';
+import 'ui/smith_theme.dart';
 
 const defaultBootObservationBudget = Duration(seconds: 15);
 const defaultBootPollInterval = Duration(milliseconds: 500);
@@ -183,6 +185,9 @@ class BootCoordinator extends ChangeNotifier {
       _set(
         const BootState(phase: BootPhase.ready, status: 'Connected to Smith'),
       );
+      if (chat is WorkspaceController) {
+        (chat as WorkspaceController).startConnectionObservation();
+      }
     }
   }
 
@@ -580,7 +585,7 @@ class BootMarkPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final path = _loop(size);
     final base = Paint()
-      ..color = const Color(0xFF66736B)
+      ..color = SmithColors.stroke
       ..style = PaintingStyle.stroke
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round
@@ -591,7 +596,7 @@ class BootMarkPainter extends CustomPainter {
     final segment = metric.length * 0.18;
     final start = metric.length * progress;
     final highlight = Paint()
-      ..color = const Color(0xFFE3E9E5)
+      ..color = SmithColors.accent
       ..style = PaintingStyle.stroke
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round

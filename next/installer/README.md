@@ -26,6 +26,16 @@ the bundled Vulkan-first/CPU-fallback runner and a separately installed curated 
 Docker are not recipient installer dependencies; Python may be used by builder
 package tooling only.
 
+## Terminal-inspired installer appearance
+
+**Implemented presentation-only redesign:** the native GTK3 shell matches the app's dark-teal/cyan palette, thin bordered panels, small radii and bundled JetBrains Mono. A `> SMITH` header shows the actual installer version from Cargo metadata. Package/install and uninstall actions use the supplied outline icon geometry. Font/icon bytes are embedded in the GUI executable, so appearance does not depend on an intact client payload or system-installed fonts; no runtime asset downloads or persistent font installation occur.
+
+All existing artifact, lifecycle and model approvals remain separate and request-bound. The model button now says **Review model**, not permission to download or select it. Exact effects are shown without an extra artifact-details disclosure click; approval buttons name their action. Preparation does not claim an action is approved, progress omits disabled pseudo-actions, and results retain the actual scope, failures, uncertainty and preserved effects with less repeated copy. Close acknowledges no effect and never launches the app.
+
+The resizable default is 720×560 with 480×420 narrow-layout coverage, enlarged text, wrapping model rows, reachable footer actions and a bounded wide-window reading column. Synthetic screenshots and executed isolated GTK evidence are indexed in [the fixture README](tests/fixtures/ui-redesign/README.md); they are not installed desktop, screen-reader or live-service evidence.
+
+`smith-installer-ui --licenses` prints the complete embedded font license/copyright and supplied-icon notice without initializing a display or discovering a package. Like `--help`/`--version`, it still requires the GUI ELF's native libraries. The CLI remains GTK-independent. See [asset provenance](assets/README.md), [the approved option-A plan](../../docs/plans/LOCAL-SMITH-NEXT-INSTALLER-REDESIGN.md) and [validation history](../VALIDATION.md). Supplied-icon redistribution rights remain unresolved; local source validation is not publication approval.
+
 ## Optional visual installer
 
 **Implemented source, validation pending:** [the bounded UI plan](../../docs/plans/LOCAL-SMITH-NEXT-INSTALLER-UI.md) adds `src/ui.rs`, a native GTK3 one-page shell over `src/wizard.rs`. From `next/`, preferred operator QA is `./installer/dist/smith-installer-ui`; run `make installer/build` first if the full package needs export. `make installer/ui` exports only `installer/build/smith-installer-ui`, not payloads. The GUI accepts `--bundle ROOT`, help and version; it has no CLI model/artifact/`--yes` options. GUI help/version does not initialize GTK or inspect a display, but GTK shared libraries are still required; normal use needs a graphical session.

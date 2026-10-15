@@ -13,6 +13,13 @@ use std::time::{Duration, Instant};
 const DEADLINE: Duration = Duration::from_secs(2);
 
 pub(crate) fn read_frame(stream: &mut UnixStream) -> Result<Vec<u8>> {
+    read_frame_correlated(stream, &mut 1, &mut String::new())
+}
+fn read_frame_correlated(
+    stream: &mut UnixStream,
+    version: &mut u32,
+    call: &mut String,
+) -> Result<Vec<u8>> {
     let deadline = Instant::now() + DEADLINE;
     let mut bytes = Vec::new();
     let mut chunk = [0; 8192];
@@ -31,10 +38,14 @@ pub(crate) fn read_frame(stream: &mut UnixStream) -> Result<Vec<u8>> {
             return Err("Truncated app frame".into());
         }
         if let Some(end) = chunk[..n].iter().position(|b| *b == b'\n') {
-            if bytes.len() + end > FRAME_LIMIT || end + 1 != n {
-                return Err("App frame limit or multiple frames rejected".into());
+            if bytes.len() + end > FRAME_LIMIT {
+                return Err("App frame limit rejected".into());
             }
             bytes.extend_from_slice(&chunk[..end]);
+            correlate(&bytes, version, call);
+            if end + 1 != n {
+                return Err("Multiple app frames rejected".into());
+            }
             return Ok(bytes);
         }
         if bytes.len() + n > FRAME_LIMIT {
@@ -91,7 +102,7 @@ pub(crate) fn request(roots: &Roots, pid: u32, request: &AppRequest) -> Result<A
     send(&mut stream, request)?;
     let reply: AppReply =
         serde_json::from_slice(&read_frame(&mut stream)?).map_err(|_| "Invalid app reply")?;
-    if reply.schema_version != 1
+    if reply.schema_version != request.schema_version
         || reply.service != "smith-next"
         || reply.protocol != "app"
         || reply.pid != pid
@@ -152,12 +163,13 @@ impl Listener {
                 match listener.accept() {
                     Ok((mut stream,_))=> {
                         if !peer(&stream).is_ok_and(|c|c.uid==filesystem::uid()) { continue; }
-                        let req=read_frame(&mut stream).and_then(|b|serde_json::from_slice::<AppRequest>(&b).map_err(|_|"Invalid app request".into()));
-                        let (call,result)=match req {
-                            Ok(req)=> { let call=req.call_id.clone(); let result=match &app { Ok(app)=>app.call(req),Err(_)=>Err(AppError::new("STATE_UNAVAILABLE","Application state is corrupt, unsupported or unsafe; preserved without reset")) }; (call,result) },
-                            Err(_)=>("".into(),Err(AppError::new("INVALID_REQUEST","Invalid, oversized or incomplete app frame"))),
+                        let mut version=1; let mut call=String::new();
+                                                let req=read_frame_correlated(&mut stream, &mut version, &mut call).and_then(|b| { serde_json::from_slice::<AppRequest>(&b).map_err(|_|"Invalid app request".into()) });
+                        let (version,call,result)=match req {
+                            Ok(req)=> { let version=req.schema_version; let call=req.call_id.clone(); let result=match &app { Ok(app)=>app.call(req),Err(_)=>Err(AppError::new("STATE_UNAVAILABLE","Application state is corrupt, unsupported or unsafe; preserved without reset")) }; (version,call,result) },
+                            Err(_)=>(version,call,Err(AppError::new("INVALID_REQUEST","Invalid, oversized or incomplete app frame"))),
                         };
-                        let _=send(&mut stream,&AppReply::from_result(&instance,&call,result));
+                        let _=send(&mut stream,&AppReply::from_versioned_result(version,&instance,&call,result));
                     }
                     Err(e) if e.kind()==std::io::ErrorKind::WouldBlock=>std::thread::sleep(Duration::from_millis(10)),
                     Err(e) if e.kind()==std::io::ErrorKind::Interrupted=>{},
@@ -181,6 +193,23 @@ impl Drop for Listener {
 }
 /// Read one stdin JSON line with a finite deadline and a 4 MiB payload bound.
 pub fn stdin_request() -> Result<AppRequest> {
+    stdin_request_correlated(&mut 1, &mut String::new())
+}
+fn correlate(bytes: &[u8], version: &mut u32, call: &mut String) {
+    if let Ok(v) = serde_json::from_slice::<serde_json::Value>(bytes) {
+        if let (Some(schema @ (1 | 2)), Some(id)) = (
+            v.get("schema_version").and_then(serde_json::Value::as_u64),
+            v.get("call_id").and_then(serde_json::Value::as_str),
+        ) {
+            if valid_id(id) {
+                *version = schema as u32;
+                *call = id.to_owned();
+            }
+        }
+    }
+}
+/// Preserve recognized envelope correlation even when strict request decoding fails.
+pub fn stdin_request_correlated(version: &mut u32, call: &mut String) -> Result<AppRequest> {
     use std::os::fd::AsRawFd;
     let stdin = std::io::stdin();
     let fd = stdin.as_raw_fd();
@@ -214,10 +243,14 @@ pub fn stdin_request() -> Result<AppRequest> {
         }
         let n = n as usize;
         if let Some(end) = chunk[..n].iter().position(|b| *b == b'\n') {
-            if bytes.len() + end > FRAME_LIMIT || end + 1 != n {
-                return Err("App stdin frame limit or multiple frames rejected".into());
+            if bytes.len() + end > FRAME_LIMIT {
+                return Err("App stdin frame limit rejected".into());
             }
             bytes.extend_from_slice(&chunk[..end]);
+            correlate(&bytes, version, call);
+            if end + 1 != n {
+                return Err("Multiple app stdin frames rejected".into());
+            }
             return serde_json::from_slice(&bytes).map_err(|_| "Invalid app stdin JSON".into());
         }
         if bytes.len() + n > FRAME_LIMIT {
@@ -322,6 +355,23 @@ mod tests {
         assert!(started.elapsed() < Duration::from_secs(3));
         // SAFETY: descriptor is still owned and open after the finite write attempt.
         assert_eq!(unsafe { libc::fcntl(fd, libc::F_GETFL) }, before);
+    }
+    #[test]
+    fn complete_first_envelope_correlates_rejected_trailing_frames() {
+        for suffix in ["\n", "{}\n"] {
+            let (mut writer, mut reader) = UnixStream::pair().unwrap();
+            let id = "1".repeat(32);
+            let bytes = format!(
+                "{}\n{suffix}",
+                serde_json::json!({"schema_version":2,"service":"smith-next","protocol":"app","call_id":id,"op":"submit_new","args":{}})
+            );
+            writer.write_all(bytes.as_bytes()).unwrap();
+            let mut version = 1;
+            let mut call = String::new();
+            assert!(read_frame_correlated(&mut reader, &mut version, &mut call).is_err());
+            assert_eq!(version, 2);
+            assert_eq!(call, id);
+        }
     }
     #[test]
     fn truncated_app_frame_is_not_a_request() {

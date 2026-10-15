@@ -1,0 +1,79 @@
+{
+  "scope": "Explicit installer launch, local dirty worktree",
+  "base": "2cc71a94fe924fbb9d324f29332e9f24c8c5991c",
+  "source": [
+    {
+      "path": "next/installer/src/artifact.rs",
+      "sha256": "b92e2a7bf94283e79a5b51ef244f482bdf4607bffcc6da408c2265c7a1f44c81",
+      "bytes": 75524
+    },
+    {
+      "path": "next/installer/src/launch.rs",
+      "sha256": "8c14a5ed6f3b3006d5333b4fb7830279064e1d95c5c2b307490c9dab67cadb2b",
+      "bytes": 9429
+    },
+    {
+      "path": "next/installer/src/ui.rs",
+      "sha256": "bd210964535087072115441e44c4cf39de82132cd61fff168cfbbae03fd44a69",
+      "bytes": 159236
+    },
+    {
+      "path": "next/installer/src/lib.rs",
+      "sha256": "0d62a145e81bcbd368ca28b6c58d9cab5e2b2336c7cab9ee036d2aed055f2c40",
+      "bytes": 457
+    },
+    {
+      "path": "next/installer/tests/fixtures/desktop.rs",
+      "sha256": "50581efee135b62efcf9f8bea4af4af919b885917dc686c188276dd647e6e441",
+      "bytes": 1197
+    }
+  ],
+  "logs": [
+    {
+      "path": "next/installer/build/launch-native-tests.log",
+      "sha256": "6296247f8057d4ebbec77abd0041b782ad7e00c703424c283180a5c0bbcf1a82",
+      "bytes": 496906
+    },
+    {
+      "path": "next/installer/build/launch-ui-test.log",
+      "sha256": "c2126c75d13c18f4ccd56b7464b5e4453346c269a3f5960c74f6446c5b5e798a",
+      "bytes": 308995
+    },
+    {
+      "path": "next/installer/build/launch-installer-test.log",
+      "sha256": "89768695ef4496cb8bdb4f72c44f2c8245a1ce12f3e053c70d49e5b0eef9fcaa",
+      "bytes": 1034032
+    },
+    {
+      "path": "next/installer/build/launch-final-installer-test.log",
+      "sha256": "3683a958ade56507980092379afa148ece249af3b4dcc159d5a69212a96cb14b",
+      "bytes": 1032332
+    }
+  ],
+  "parent_verified": [
+    {
+      "command": "cargo fmt --all --check",
+      "exit": 0
+    },
+    {
+      "command": "cargo clippy --locked --all-targets --features gui -- -D warnings",
+      "exit": 0
+    },
+    {
+      "command": "cargo test --locked launch:: -- --test-threads=1",
+      "exit": 0
+    },
+    {
+      "command": "DAGGER_NO_NAG=1 DAGGER_CLOUD_TOKEN= DAGGER_PROGRESS=plain make installer/test",
+      "cwd": "next",
+      "exit": 0,
+      "log": "next/installer/build/launch-final-installer-test.log"
+    }
+  ],
+  "limitations": [
+    "No installed app launch or deployment",
+    "No fresh full recipient package",
+    "Initial parallel native maintenance test failed; serial and isolated gates passed without unrelated remediation",
+    "Trusted-user point-in-time verification, not hostile same-UID atomic execution"
+  ]
+}

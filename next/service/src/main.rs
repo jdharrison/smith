@@ -36,12 +36,14 @@ fn main() {
 }
 fn run_app(args: &[String]) {
     let mut call_id = String::new();
+    let mut version = 1;
     let result = (|| -> smith_service::Result<smith_service::app::AppReply> {
         if args.len() != 1 {
             return Err("App accepts no arguments".into());
         }
-        let request = smith_service::app_stdin_request()?;
+        let request = smith_service::app_stdin_request_correlated(&mut version, &mut call_id)?;
         call_id = request.call_id.clone();
+        version = request.schema_version;
         production_preflight(unsafe { libc::geteuid() })?;
         smith_service::install_control_cancellation()?;
         let controller = Controller {
@@ -52,7 +54,8 @@ fn run_app(args: &[String]) {
         controller.app(request)
     })();
     let reply = result.unwrap_or_else(|_| {
-        smith_service::app::AppReply::from_result(
+        smith_service::app::AppReply::from_versioned_result(
+            version,
             "00000000000000000000000000000000",
             &call_id,
             Err(smith_service::app::AppError::new(

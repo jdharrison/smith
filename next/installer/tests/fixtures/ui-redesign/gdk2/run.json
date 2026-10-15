@@ -1,0 +1,28 @@
+{
+  "kind": "implemented-source self-check; synthetic GTK, not installed-host QA or approval",
+  "command": [
+    "python3",
+    "installer/scripts/capture-ui.py",
+    "--output",
+    "installer/tests/fixtures/ui-redesign/gdk2",
+    "--gdk-scale",
+    "2"
+  ],
+  "recipe": "SmithNext._installer_ui_tests(...).with_exec(['sh', 'scripts/test-ui.sh'])",
+  "recipe_sha256": "d0c11a84199e152274ffbeb46f8c8d89b98c57da6126b6bc810a69720d3c7514",
+  "gdk_scale": 2,
+  "base_revision": "2cc71a94fe924fbb9d324f29332e9f24c8c5991c",
+  "branch": "feature/autonomy",
+  "dagger_version": "version:     v1.0.0-beta.14\ncommit:      06660c3c\ndirty:       no\nplatform:    linux/amd64\nrunner-host: image://registry.dagger.io/engine:v1.0.0-beta.14",
+  "started_unix": 1792030498.3043025,
+  "elapsed_seconds": 111.38,
+  "source_inputs_stable": true,
+  "exit_code": 0,
+  "capture_count": 141,
+  "limitations": [
+    "Fake sessions, no real manager/model/installation",
+    "Client-area drawing, not a compositor screenshot",
+    "No fractional display scaling",
+    "No paired build/export or independent assurance"
+  ]
+}

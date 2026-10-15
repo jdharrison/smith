@@ -7,6 +7,7 @@ import 'package:smith_client/boot.dart';
 import 'package:smith_client/control_api.dart';
 import 'package:smith_client/main.dart';
 import 'package:smith_client/text_chat.dart';
+import 'package:smith_client/ui/smith_workspace.dart';
 
 import 'app_fakes.dart';
 import 'widget_test.dart' show FakeControlApi, profile;
@@ -82,24 +83,30 @@ void main() {
       final control = FakeControlApi(profile());
       control.pendingInspect = Completer<ControlReply>();
       final app = FakeAppApi()
-        ..history.add({'role': 'assistant', 'content': 'retained answer'});
+        ..history.addAll([
+          {'role': 'user', 'content': 'retained question'},
+          {'role': 'assistant', 'content': 'retained answer'},
+        ]);
 
       await tester.pumpWidget(SmithApp(controlApi: control, appApi: app));
       await tester.pump();
       expect(find.byKey(const ValueKey('boot-surface')), findsOneWidget);
       expect(find.byKey(const ValueKey('boot-mark')), findsOneWidget);
       expect(find.text('Starting Smith'), findsOneWidget);
-      expect(find.byKey(const ValueKey('mode-sidebar')), findsNothing);
+      expect(find.byType(SmithWorkspace), findsNothing);
       expect(find.byType(TextField), findsNothing);
       expect(find.text('Retry'), findsNothing);
-      expect(find.text('Send'), findsNothing);
+      expect(find.byTooltip('Retry observation'), findsNothing);
+      expect(find.byTooltip('Send'), findsNothing);
+      expect(app.calls, isEmpty);
+      await tester.pump(const Duration(seconds: 30));
       expect(app.calls, isEmpty);
 
       control.pendingInspect!.complete(bootReply(profile()));
       await tester.pumpAndSettle();
-      expect(app.calls, ['state', 'models', 'poll']);
+      expect(app.calls, ['state', 'conversation_get', 'models', 'poll']);
       expect(find.byKey(const ValueKey('boot-surface')), findsNothing);
-      expect(find.byKey(const ValueKey('mode-sidebar')), findsOneWidget);
+      expect(find.byType(SmithWorkspace), findsOneWidget);
       expect(find.text('retained answer'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
@@ -168,7 +175,7 @@ void main() {
         1,
       );
       expect(control.calls.last, 'inspect');
-      expect(app.calls, ['state', 'models', 'poll']);
+      expect(app.calls, ['state', 'conversation_get', 'models', 'poll']);
       expect(find.byType(TextField), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
     },
@@ -221,7 +228,7 @@ void main() {
     final control = BootControl(
       profile(runtime: 'stopped', bridge: 'unavailable'),
     );
-    final chat = ChatController(FakeAppApi())..connected = false;
+    final chat = ChatController(LegacyFakeAppApi())..connected = false;
     final coordinator = BootCoordinator(control: control, chat: chat);
 
     await tester.pumpWidget(

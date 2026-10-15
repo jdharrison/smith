@@ -6,6 +6,7 @@ pub mod catalog;
 pub mod cli;
 pub mod consent;
 pub mod fs;
+pub mod launch;
 pub mod maintenance;
 pub mod manifest;
 pub mod model;

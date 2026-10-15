@@ -1,0 +1,57 @@
+1   : connect
+1   : [0.0s] | cloud url=[REDACTED_DAGGER_TRACE]
+2   : ┆ starting engine
+3   : ┆ ┆ create container
+4   : ┆ ┆ ┆ exec docker ps -a --format {{.Names}}
+4   : ┆ ┆ ┆ [0.0s] | smith-searxng
+4   : ┆ ┆ ┆ [0.0s] | dagger-engine-v1.0.0-beta.14
+4   : ┆ ┆ ┆ [0.0s] | smith-agent-coding
+4   : ┆ ┆ ┆ [0.0s] | smith-brain
+4   : ┆ ┆ ┆ exec docker ps -a --format {{.Names}} DONE [0.0s]
+5   : ┆ ┆ ┆ exec docker start dagger-engine-v1.0.0-beta.14
+5   : ┆ ┆ ┆ [0.0s] | dagger-engine-v1.0.0-beta.14
+5   : ┆ ┆ ┆ exec docker start dagger-engine-v1.0.0-beta.14 DONE [0.0s]
+3   : ┆ ┆ create container DONE [0.0s]
+2   : ┆ starting engine DONE [0.0s]
+6   : ┆ connecting to engine
+6   : ┆ [0.0s] | 19:34:41 INF connected name=5a7b3ee62cfa client-version=v1.0.0-beta.14 server-version=v1.0.0-beta.14+06660c3c
+6   : ┆ connecting to engine DONE [0.0s]
+7   : ┆ starting session
+7   : ┆ starting session DONE [0.0s]
+1   : connect DONE [0.2s]
+Traceback (most recent call last):
+  File "[REDACTED_HOME_PATH]", line 37, in <module>
+    result = graphql('{ loadContainerFromID(id: ' + q(cid) + ') { withExec(args: ' + q(args) + ', expect: ANY) { stdout stderr exitCode } } }')['loadContainerFromID']['withExec']
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "installer/scripts/capture-ui.py", line 81, in graphql
+    raise RuntimeError("\n".join(e["message"] for e in result["errors"]))
+RuntimeError: Cannot query field "loadContainerFromID" on type "Query".
+
+8   : host: Host!
+8   : host CACHED [0.0s]
+
+9   : Host.file(path: "[REDACTED_HOME_PATH]"): File!
+9   : Host.file DONE [0.0s]
+
+10  : Host.file(path: "[REDACTED_HOME_PATH]"): File!
+10  : Host.file DONE [0.0s]
+
+11  : container(platform: "linux/amd64"): Container!
+11  : container CACHED [0.0s]
+
+12  : Container.from(address: "ubuntu:24.04"): Container!
+12  : Container.from DONE [0.0s]
+
+13  : Container.withFile(
+13  : ┆ path: "/fixture/smith-installer"
+13  : ┆ source: Host.file(path: "[REDACTED_HOME_PATH]"): File!
+13  : ┆ permissions: 493
+13  : ): Container!
+13  : Container.withFile DONE [0.0s]
+
+14  : withExec sh -c 'mkdir -p [REDACTED_HOME_PATH] chown 1000:1000 [REDACTED_HOME_PATH] test ! -e /usr/bin/python3; test ! -e /usr/local/bin/python3; test ! -e /usr/lib/x86_64-linux-gnu/libgtk-3.so.0'
+14  : Container.withExec DONE [0.0s]
+
+15  : user 1000:1000
+15  : Container.withUser DONE [0.0s]
+

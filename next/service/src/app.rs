@@ -9,6 +9,9 @@ use std::path::PathBuf;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
+#[path = "app_v2.rs"]
+mod v2;
+use v2::{Durable, Job};
 
 pub const FRAME_LIMIT: usize = 4 * 1024 * 1024;
 pub const MAX_JOBS: usize = 32;
@@ -84,7 +87,7 @@ pub struct AppRequest {
 }
 impl AppRequest {
     pub fn validate(&self) -> AppResult<()> {
-        if self.schema_version != 1
+        if ![1, 2].contains(&self.schema_version)
             || self.service != "smith-next"
             || self.protocol != "app"
             || !valid_id(&self.call_id)
@@ -109,12 +112,20 @@ pub struct AppReply {
 }
 impl AppReply {
     pub fn from_result(instance: &str, call: &str, result: AppResult<Value>) -> Self {
+        Self::from_versioned_result(1, instance, call, result)
+    }
+    pub fn from_versioned_result(
+        version: u32,
+        instance: &str,
+        call: &str,
+        result: AppResult<Value>,
+    ) -> Self {
         let (result, error) = match result {
             Ok(v) => (Some(v), None),
             Err(e) => (None, Some(e)),
         };
         Self {
-            schema_version: 1,
+            schema_version: version,
             service: "smith-next".into(),
             protocol: "app".into(),
             pid: std::process::id(),
@@ -154,20 +165,20 @@ pub struct Operation {
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Job {
+struct LegacyJob {
     operation: Operation,
     fingerprint: String,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Durable {
+struct LegacyDurable {
     schema_version: u32,
     config: Config,
     history: Vec<Message>,
-    jobs: Vec<Job>,
+    jobs: Vec<LegacyJob>,
     expired_ids: Vec<String>,
 }
-impl Default for Durable {
+impl Default for LegacyDurable {
     fn default() -> Self {
         Self {
             schema_version: 1,
@@ -178,7 +189,7 @@ impl Default for Durable {
         }
     }
 }
-impl Durable {
+impl LegacyDurable {
     fn validate(&self) -> Result<()> {
         let mut ids = HashSet::new();
         if self.schema_version != 1
@@ -264,7 +275,7 @@ impl Durable {
         Ok(())
     }
 }
-fn state_result(durable: &Durable, inventory: &Inventory) -> Value {
+fn state_result(durable: &LegacyDurable, inventory: &Inventory) -> Value {
     json!({"config":durable.config,"history":durable.history,"active":durable.jobs.iter().find(|j|j.operation.status=="running").map(|j|&j.operation),"providers":inventory.providers,"retention":{"max_turn_pairs":16,"max_context_bytes":MAX_CONTEXT,"max_terminal_jobs":MAX_JOBS,"max_expired_ids":MAX_EXPIRED_IDS,"capacity_policy":"reject_when_expiry_metadata_full","audio":"transient","missing_request_code":"REQUEST_EXPIRED"}})
 }
 fn valid_operation(o: &Operation) -> bool {
@@ -398,11 +409,12 @@ struct Inner {
     inventory: Inventory,
     fault: bool,
     owned: bool,
+    inventory_observed: bool,
 }
 struct WorkerOwner {
     provider: Arc<dyn Provider>,
     inner: Arc<Mutex<Inner>>,
-    sender: Option<mpsc::SyncSender<Work>>,
+    sender: Option<mpsc::SyncSender<()>>,
     thread: Option<JoinHandle<()>>,
 }
 impl Drop for WorkerOwner {
@@ -444,7 +456,11 @@ struct Work {
     task: Task,
     config: Config,
     history: Vec<Message>,
+    conversation_id: Option<String>,
+    history_revision: Option<u64>,
 }
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 enum Task {
     Models,
     Submit { text: String },
@@ -480,7 +496,7 @@ struct CheckedConfigArgs {
     voice: Option<String>,
     expected_revision: u64,
 }
-#[derive(Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ModelArgs {
     request_id: String,
@@ -513,15 +529,14 @@ impl Application {
     pub fn open(roots: &Roots, provider: Arc<dyn Provider>) -> Result<Self> {
         let path = roots.data.join("smith-next/app-state.json");
         filesystem::check_directory(&roots.data.join("smith-next"), true)?;
-        let mut durable: Durable = match filesystem::read_file(&path, 0o600, STATE_LIMIT)? {
-            Some(bytes) => serde_json::from_slice(&bytes)
-                .map_err(|_| "Corrupt application state; preserved without reset")?,
-            None => Durable::default(),
+        let (mut durable, migrated) = match filesystem::read_file(&path, 0o600, STATE_LIMIT)? {
+            Some(bytes) => Durable::load(&bytes)?,
+            None => (Durable::default(), false),
         };
         durable.validate()?;
-        let mut changed = false;
+        let mut changed = migrated;
         for j in &mut durable.jobs {
-            if j.operation.status == "running" {
+            if v2::pending(&j.operation) {
                 j.operation.status = "interrupted".into();
                 j.operation.phase = "complete".into();
                 j.operation.result = None;
@@ -533,6 +548,10 @@ impl Application {
             }
         }
         if changed {
+            durable.revision = durable
+                .revision
+                .checked_add(1)
+                .ok_or("State revision exhausted; preserved")?;
             persist(&path, &durable)?;
         }
         let (sender, receiver) = mpsc::sync_channel(1);
@@ -541,6 +560,7 @@ impl Application {
             inventory: Inventory::default(),
             fault: false,
             owned: true,
+            inventory_observed: false,
         }));
         let instance_id = new_id()?;
         let worker = Self {
@@ -556,7 +576,15 @@ impl Application {
                 // This thread is the only runner owner: idle stop uses its own
                 // receive timeout and shutdown happens here on exit.
                 loop {
-                    let work = match provider.idle_timeout() {
+                    match worker.next_work() {
+                        Ok(Some(work)) => {
+                            worker.run(work, provider.as_ref());
+                            continue;
+                        }
+                        Ok(None) => {}
+                        Err(_) => break,
+                    }
+                    match provider.idle_timeout() {
                         Some(wait) => match receiver.recv_timeout(wait) {
                             Ok(work) => work,
                             Err(mpsc::RecvTimeoutError::Timeout) => {
@@ -573,7 +601,6 @@ impl Application {
                     if !worker.inner.lock().is_ok_and(|inner| inner.owned) {
                         break;
                     }
-                    worker.run(work, provider.as_ref());
                 }
                 provider.shutdown();
             })
@@ -598,6 +625,12 @@ impl Application {
         if serde_json::to_vec(&req).map_err(|_| invalid())?.len() > FRAME_LIMIT {
             return Err(invalid());
         }
+        if req.schema_version == 2 {
+            return self.call_v2(req);
+        }
+        self.call_common(req)
+    }
+    fn call_common(&self, req: AppRequest) -> AppResult<Value> {
         // Legacy identities are resolved before today's admission validation. No task
         // is constructed or dispatched for a retained request, even if retired.
         if [
@@ -618,7 +651,7 @@ impl Application {
             if !valid_id(id) {
                 return Err(invalid());
             }
-            let fingerprint = fingerprint(&req.op, &req.args)?;
+            let fingerprint = v2::request_fingerprint(req.schema_version, &req.op, &req.args)?;
             let inner = self.inner.lock().map_err(|_| storage())?;
             if let Some(result) = retained(&inner, id, &fingerprint)? {
                 return Ok(result);
@@ -631,7 +664,7 @@ impl Application {
                 if inner.fault {
                     return Err(storage());
                 }
-                Ok(state_result(&inner.durable, &inner.inventory))
+                Ok(state_result(&inner.durable.legacy(), &inner.inventory))
             }
             "poll" => {
                 let a: PollArgs = decode(req.args)?;
@@ -652,7 +685,7 @@ impl Application {
                     .durable
                     .jobs
                     .iter()
-                    .find(|j| j.operation.request_id == a.request_id)
+                    .find(|j| j.operation.request_id == a.request_id && j.version == 1)
                     .map(|j| json!(j.operation))
                     .ok_or_else(|| {
                         AppError::new(
@@ -705,7 +738,12 @@ impl Application {
                 next.config = Config {
                     model: Some(a.model),
                     voice: a.voice,
-                    revision: next.config.revision.checked_add(1).ok_or_else(storage)?,
+                    revision: next.config.revision.checked_add(1).ok_or_else(|| {
+                        AppError::new(
+                            "CONFIG_REVISION_EXHAUSTED",
+                            "Configuration revision exhausted; no change was made",
+                        )
+                    })?,
                 };
                 self.commit(&mut inner, next)?;
                 Ok(json!(inner.durable.config))
@@ -721,11 +759,17 @@ impl Application {
                 } else {
                     Task::Remove(a)
                 };
-                self.admit(id, &req.op, req.args, Some(task))
+                self.admit(id, &req.op, req.args, Some(task), req.schema_version)
             }
             "models" => {
                 let a: IdArgs = decode(req.args.clone())?;
-                self.admit(a.request_id, "models", req.args, Some(Task::Models))
+                self.admit(
+                    a.request_id,
+                    "models",
+                    req.args,
+                    Some(Task::Models),
+                    req.schema_version,
+                )
             }
             "submit" => {
                 let a: SubmitArgs = decode(req.args.clone())?;
@@ -734,7 +778,7 @@ impl Application {
                     return Err(invalid());
                 }
                 let task = (a.output == "chat").then_some(Task::Submit { text: a.text });
-                self.admit(a.request_id, "submit", req.args, task)
+                self.admit(a.request_id, "submit", req.args, task, req.schema_version)
             }
             "transcribe" | "speak" => {
                 let id = req
@@ -742,12 +786,14 @@ impl Application {
                     .get("request_id")
                     .and_then(Value::as_str)
                     .ok_or_else(invalid)?;
-                self.admit(id.into(), &req.op, req.args, None)
+                self.admit(id.into(), &req.op, req.args, None, req.schema_version)
             }
             _ => Err(invalid()),
         }
     }
-    fn commit(&self, inner: &mut Inner, next: Durable) -> AppResult<()> {
+    fn commit(&self, inner: &mut Inner, mut next: Durable) -> AppResult<()> {
+        next.revision = next.revision.checked_add(1).ok_or_else(v2::capacity)?;
+        next.preflight()?;
         if !inner.owned {
             return Err(storage());
         }
@@ -758,11 +804,26 @@ impl Application {
         inner.durable = next;
         Ok(())
     }
-    fn admit(&self, id: String, kind: &str, args: Value, task: Option<Task>) -> AppResult<Value> {
+    fn commit_worker(&self, inner: &mut Inner, next: Durable) -> AppResult<()> {
+        self.commit(inner, next).map_err(|_| {
+            // Accepted work already owns capacity. Any transition failure is an
+            // invariant/storage fault, never an idle queue or a replay invitation.
+            inner.fault = true;
+            storage()
+        })
+    }
+    fn admit(
+        &self,
+        id: String,
+        kind: &str,
+        args: Value,
+        task: Option<Task>,
+        version: u32,
+    ) -> AppResult<Value> {
         if !valid_id(&id) {
             return Err(invalid());
         }
-        let fingerprint = fingerprint(kind, &args)?;
+        let fingerprint = v2::request_fingerprint(version, kind, &args)?;
         let mut inner = self.inner.lock().map_err(|_| storage())?;
         if let Some(result) = retained(&inner, &id, &fingerprint)? {
             return Ok(result);
@@ -827,33 +888,31 @@ impl Application {
             result: None,
             error: None,
         };
-        let work = Work {
-            id,
-            task,
-            config: inner.durable.config.clone(),
-            history: inner.durable.history.clone(),
-        };
         let mut next = inner.durable.clone();
-        if next.jobs.len() == MAX_JOBS {
-            let expired = next.jobs.remove(0);
-            next.expired_ids.push(expired.operation.request_id);
+        let conversation_id = if matches!(task, Task::Submit { .. }) {
+            Some(next.legacy_target()?)
+        } else {
+            None
+        };
+        let history_revision = conversation_id
+            .as_ref()
+            .and_then(|id| next.conversations.iter().find(|c| &c.conversation_id == id))
+            .map(|c| c.history_revision);
+        if history_revision.is_some_and(|r| r >= v2::MAX_REVISION) {
+            return Err(v2::capacity());
         }
+        next.make_room()?;
         next.jobs.push(Job {
             operation: operation.clone(),
             fingerprint,
+            version,
+            conversation_id,
+            history_revision,
+            task: Some(task),
+            accepted_ms: v2::now_ms(),
         });
         self.commit(&mut inner, next)?;
-        if self
-            .owner
-            .as_ref()
-            .and_then(|owner| owner.sender.as_ref())
-            .ok_or_else(storage)?
-            .try_send(work)
-            .is_err()
-        {
-            inner.fault = true;
-            return Err(storage());
-        }
+        self.wake()?;
         Ok(admission(&operation))
     }
     fn run(&self, work: Work, provider: &dyn Provider) {
@@ -915,23 +974,45 @@ impl Application {
         })()
         .map_err(bounded_error);
         if let Ok(mut inner) = self.inner.lock() {
-            if inner.fault || !inner.owned {
+            if inner.fault
+                || !inner.owned
+                || work.conversation_id.as_ref().is_some_and(|id| {
+                    !inner.durable.conversations.iter().any(|c| {
+                        &c.conversation_id == id
+                            && Some(c.history_revision) == work.history_revision
+                    })
+                })
+                || !inner.durable.jobs.iter().any(|j| {
+                    j.operation.request_id == work.id
+                        && j.operation.status == "running"
+                        && j.conversation_id == work.conversation_id
+                        && j.history_revision == work.history_revision
+                })
+            {
                 return;
             }
             let mut next = inner.durable.clone();
             if let Some((user, assistant)) = turn {
-                next.history.push(Message {
+                let Some(conversation) = next.conversations.iter_mut().find(|c| {
+                    Some(&c.conversation_id) == work.conversation_id.as_ref()
+                        && Some(c.history_revision) == work.history_revision
+                }) else {
+                    return;
+                };
+                conversation.history_revision += 1;
+                let history = &mut conversation.history;
+                history.push(Message {
                     role: "user".into(),
                     content: user,
                 });
-                next.history.push(Message {
+                history.push(Message {
                     role: "assistant".into(),
                     content: assistant,
                 });
-                while next.history.len() > 32
-                    || next.history.iter().map(|m| m.content.len()).sum::<usize>() > MAX_CONTEXT
+                while history.len() > 32
+                    || history.iter().map(|m| m.content.len()).sum::<usize>() > MAX_CONTEXT
                 {
-                    next.history.drain(..2);
+                    history.drain(..2);
                 }
             }
             if let Some(job) = next
@@ -963,13 +1044,14 @@ impl Application {
                     inventory = None;
                 }
             }
-            if self.commit(&mut inner, next).is_ok() {
+            if self.commit_worker(&mut inner, next).is_ok() {
                 if let Task::Remove(a) = &work.task {
                     // Even partial removal may have unpublished the marker.
                     inner.inventory.models.retain(|m| m.name != a.model);
                 }
                 if let Some(found) = inventory {
                     inner.inventory = found;
+                    inner.inventory_observed = true;
                 }
             }
         }
@@ -1012,11 +1094,7 @@ fn retained(inner: &Inner, id: &str, fingerprint: &str) -> AppResult<Option<Valu
     Ok(None)
 }
 fn busy(inner: &Inner) -> bool {
-    inner
-        .durable
-        .jobs
-        .iter()
-        .any(|j| j.operation.status == "running")
+    inner.durable.jobs.iter().any(|j| v2::pending(&j.operation))
 }
 fn admission(o: &Operation) -> Value {
     json!({"request_id":o.request_id,"status":o.status,"phase":o.phase,"config_revision":o.config_revision})

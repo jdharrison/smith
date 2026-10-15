@@ -22,11 +22,15 @@ next/
 
 Smith opens into a minimal Boot loader while it observes the login-enabled service. No chat controls mount until exact enabled/bridge-ready facts are observed and conversation state synchronizes. Exact enabled+safely-stopped state may offer separately confirmed **Start Smith**; disabled, missing, conflict and unknown states remain observation/setup guidance. The legacy `setup_complete` boolean is not chat readiness; executable, unit, enablement, manager, peer and saved-state integrity checks still apply.
 
-A selected exact curated local model is required. One bounded installed-model inventory observation runs per attachment/Retry; it never performs inference or downloads. Provisioning and selection belong to the separate installer.
+A selected exact curated local model is required. The workspace adopts current-service-instance inventory on reattach; missing inventory is observed when work is idle or through explicit Retry, never by inference or download. Provisioning and selection belong to the separate installer.
 
 Only explicit **Send** submits text. Accepted work belongs to the service and may continue after desktop close. Uncertain acknowledgements are queried, never automatically resent. Verified terminal answers remain visible through synchronization outages without duplicating authoritative history or inventing user messages.
 
-Preferences, successful conversation context and operation metadata are private and durable. Retention is bounded to 16 complete turn pairs/64 KiB, 32 jobs and 1024 expired-ID tombstones; capacity exhaustion is reported rather than erasing replay protection. Restart interrupts unfinished jobs without replay. This is not an unlimited transcript archive.
+**Multi-chat is implemented in source:** New chat opens/reuses an unsaved draft and becomes durable when its first message is accepted. Switch between isolated chats; Rename/Archive/Delete live in each row's menu, and Archived chats allows Reactivate/Rename/Delete. Delete requires confirmation and removes current-store content, not backups or secure memory/disk remnants. Target unfinished/uncertain work blocks archive/delete, while unrelated chats remain usable.
+
+Up to four chat requests can be outstanding: one generating and three FIFO queued, not simultaneous inference. Histories, titles, lifecycle and accepted jobs are durable; drafts and reading positions remain process-local. Each chat retains at most16 complete turn pairs/64 KiB, with32 saved chats total,32 retained operations and1024 expired-ID tombstones. Encoded storage/completion headroom is bounded; capacity refusal never erases replay protection. Restart interrupts queued/running jobs without replay. Archive is not unlimited history.
+
+Desktop app protocol/storage are v2 with strict valid-v1 migration; the native installer retains its exact v1 interface. Before a separately approved live upgrade, retain an exact pre-migration state snapshot and paired-artifact restore procedure: old binaries cannot read v2 state. See [multi-chat plan](../docs/plans/LOCAL-SMITH-NEXT-MULTI-CHAT.md) and [validation](VALIDATION.md).
 
 ## Developer commands
 

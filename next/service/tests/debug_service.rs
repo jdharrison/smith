@@ -286,6 +286,69 @@ fn app_cli_stdin_envelope_is_separate_and_never_uses_endpoint_argv() {
     let reply: smith_service::app::AppReply = serde_json::from_slice(&output.stdout).unwrap();
     assert!(!reply.ok);
 }
+#[test]
+fn app_v2_helper_correlates_preflight_and_strict_decode_failures() {
+    for (malformed, suffix) in [(false, ""), (true, ""), (false, "\n"), (false, "{}\n")] {
+        let mut request = serde_json::to_value(app_state_request()).unwrap();
+        request["schema_version"] = serde_json::json!(2);
+        if malformed {
+            request["unknown"] = serde_json::json!(true);
+        }
+        let mut child = spawn_fixture(
+            Command::new(env!("CARGO_BIN_EXE_smith-service"))
+                .arg("app")
+                .env_clear()
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped()),
+        )
+        .unwrap();
+        let mut bytes = serde_json::to_vec(&request).unwrap();
+        bytes.push(b'\n');
+        bytes.extend_from_slice(suffix.as_bytes());
+        child.stdin.take().unwrap().write_all(&bytes).unwrap();
+        let output = child.wait_with_output().unwrap();
+        assert!(!output.status.success());
+        let reply: smith_service::app::AppReply = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(reply.schema_version, 2);
+        assert_eq!(reply.call_id, app_state_request().call_id);
+        assert!(!reply.ok);
+    }
+}
+#[test]
+fn v2_trailing_frames_execute_neither_request_and_keep_correlation() {
+    let fixture = Fixture::new();
+    let c = fixture.controller();
+    apply(&c, Action::InstallBinary);
+    apply(&c, Action::InstallUnit);
+    apply(&c, Action::Enable);
+    apply(&c, Action::Start);
+    for suffix in ["\n", "{\"schema_version\":2,\"op\":\"models\"}\n"] {
+        let mut request = app_state_request();
+        request.schema_version = 2;
+        request.op = "models".into();
+        request.args = serde_json::json!({"request_id":"11111111111111111111111111111111"});
+        let mut bytes = serde_json::to_vec(&request).unwrap();
+        bytes.push(b'\n');
+        bytes.extend_from_slice(suffix.as_bytes());
+        let mut stream = UnixStream::connect(fixture.roots.app_socket()).unwrap();
+        stream
+            .set_read_timeout(Some(Duration::from_secs(3)))
+            .unwrap();
+        stream.write_all(&bytes).unwrap();
+        let mut bytes = Vec::new();
+        stream.read_to_end(&mut bytes).unwrap();
+        let reply: smith_service::app::AppReply = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(reply.schema_version, 2);
+        assert_eq!(reply.call_id, request.call_id);
+        assert_eq!(reply.error.unwrap().code, "INVALID_REQUEST");
+        let mut state = app_state_request();
+        state.schema_version = 2;
+        assert_eq!(
+            c.app(state).unwrap().result.unwrap()["operations"],
+            serde_json::json!([])
+        );
+    }
+}
 fn app_state_request() -> smith_service::app::AppRequest {
     smith_service::app::AppRequest {
         schema_version: 1,
@@ -312,6 +375,20 @@ fn separate_app_socket_verified_by_current_controller_facts_preserves_control() 
     assert_eq!(reply.protocol, "app");
     assert_eq!(reply.instance_id.len(), 32);
     assert_eq!(reply.result.unwrap()["history"], serde_json::json!([]));
+    let mut v2 = app_state_request();
+    v2.schema_version = 2;
+    let reply = c.app(v2.clone()).unwrap();
+    assert_eq!(reply.schema_version, 2);
+    assert!(reply.ok);
+    assert_eq!(
+        reply.result.unwrap()["conversations"],
+        serde_json::json!([])
+    );
+    v2.op = "conversation_get".into();
+    v2.args = serde_json::json!({"conversation_id":"bad"});
+    let reply = c.app(v2).unwrap();
+    assert_eq!(reply.schema_version, 2);
+    assert_eq!(reply.error.unwrap().code, "INVALID_REQUEST");
     assert_eq!(
         fs::metadata(fixture.roots.app_socket()).unwrap().mode() & 0o777,
         0o600
@@ -352,6 +429,11 @@ fn app_peer_conflict_and_corrupt_state_fail_closed_without_changing_core() {
     apply(&c, Action::Start);
     let reply = c.app(app_state_request()).unwrap();
     assert!(!reply.ok);
+    assert_eq!(reply.error.unwrap().code, "STATE_UNAVAILABLE");
+    let mut v2 = app_state_request();
+    v2.schema_version = 2;
+    let reply = c.app(v2).unwrap();
+    assert_eq!(reply.schema_version, 2);
     assert_eq!(reply.error.unwrap().code, "STATE_UNAVAILABLE");
     assert_eq!(fs::read(&app_state).unwrap(), b"corrupt-preserve");
     assert_eq!(c.inspect().bridge_state, "ready");

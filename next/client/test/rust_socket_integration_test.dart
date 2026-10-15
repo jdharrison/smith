@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smith_client/app_api.dart';
+import 'package:smith_client/app_v2.dart';
+import 'package:smith_client/workspace_controller.dart';
 
 import 'widget_test.dart' show profile, reply;
 
@@ -210,7 +212,16 @@ Future<void> _waitForSocket(String path, _CapturedChild child) async {
   );
 }
 
-Future<AppReply> _appState(String path, int pid) async {
+// The optional v1 branch is installer-contract fixture coverage only. The
+// production parser accepts v2 exclusively; it is never used as a fallback.
+Future<AppReply> _appState(
+  String path,
+  int pid, {
+  bool installerV1 = false,
+  String op = 'state',
+  Map<String, dynamic> args = const {},
+  void Function(String)? inspectFrame,
+}) async {
   final socket = await Socket.connect(
     InternetAddress(path, type: InternetAddressType.unix),
     0,
@@ -244,21 +255,278 @@ Future<AppReply> _appState(String path, int pid) async {
   try {
     socket.add(
       utf8.encode(
-        '${jsonEncode({'schema_version': 1, 'service': 'smith-next', 'protocol': 'app', 'call_id': id, 'op': 'state', 'args': {}})}\n',
+        '${jsonEncode({'schema_version': installerV1 ? 1 : 2, 'service': 'smith-next', 'protocol': 'app', 'call_id': id, 'op': op, 'args': args})}\n',
       ),
     );
     await socket.flush().timeout(_ioDeadline);
     final text = await done.future.timeout(_ioDeadline);
+    inspectFrame?.call(text);
     expect(jsonDecode(text)['pid'], pid);
-    return AppReply.parse(text, id);
+    if (installerV1) {
+      final envelope = jsonDecode(text) as Map<String, dynamic>;
+      expect(envelope.keys.toSet(), {
+        'schema_version',
+        'service',
+        'protocol',
+        'pid',
+        'instance_id',
+        'call_id',
+        'ok',
+        'result',
+        'error',
+      });
+      expect(envelope['schema_version'], 1);
+      expect(envelope['service'], 'smith-next');
+      expect(envelope['protocol'], 'app');
+      expect(envelope['call_id'], id);
+      expect(envelope['ok'], true);
+      expect(envelope['error'], isNull);
+      final result = Map<String, dynamic>.from(envelope['result']);
+      expect(result.keys.toSet(), {
+        'config',
+        'history',
+        'active',
+        'providers',
+        'retention',
+      });
+      expect(result['active'], isNull);
+      expect(result['history'], isA<List>());
+      expect(() => AppReply.parse(text, id), throwsA(isA<AppFailure>()));
+      return AppReply(envelope['instance_id'], result);
+    }
+    final reply = AppReply.parse(text, id);
+    validateV2(op, reply.result);
+    return reply;
   } finally {
     socket.destroy();
     await sub.cancel();
   }
 }
 
+class _SocketAppApi implements AppApi {
+  _SocketAppApi(this.path, this.pid);
+  final String path;
+  final int pid;
+  @override
+  Future<AppReply> call(String op, Map<String, dynamic> args) =>
+      _appState(path, pid, op: op, args: args);
+  @override
+  void dispose() {}
+}
+
+Future<void> _legacyFixture(
+  String source,
+  String revision,
+  Future<void> Function(String path, int pid) check,
+) async {
+  expect(Platform.isLinux, isTrue);
+  expect(source.startsWith('/'), isTrue);
+  expect(
+    await FileSystemEntity.type(source, followLinks: false),
+    FileSystemEntityType.file,
+  );
+  final root = await Directory.systemTemp.createTemp('smith-dart-legacy-');
+  _CapturedChild? child;
+  try {
+    await _utility('/usr/bin/chmod', ['0700', root.path]);
+    for (final name in ['data', 'config', 'runtime', 'data/smith-next']) {
+      final directory = Directory('${root.path}/$name');
+      await directory.create();
+      await _utility('/usr/bin/chmod', ['0700', directory.path]);
+    }
+    final binary = await File(source).copy('${root.path}/smith-service');
+    await _utility('/usr/bin/chmod', ['0755', binary.path]);
+    Map<String, dynamic> job(
+      String id,
+      String kind, {
+      String status = 'succeeded',
+      dynamic result,
+      dynamic error,
+    }) => {
+      'fingerprint': 'a' * 64,
+      'operation': {
+        'request_id': id,
+        'kind': kind,
+        'status': status,
+        'phase': status == 'running' ? 'generation' : 'complete',
+        'config_revision': '__CONFIG_REVISION__',
+        'result': result,
+        'error': error,
+      },
+    };
+    const audioExpired = {
+      'code': 'AUDIO_EXPIRED',
+      'message': 'Legacy audio expired',
+    };
+    final state = {
+      'schema_version': 1,
+      'config': {
+        'model': null,
+        'voice': 'inert-legacy-voice',
+        'revision': '__CONFIG_REVISION__',
+      },
+      'history': [
+        {'role': 'user', 'content': ''},
+        {'role': 'assistant', 'content': ''},
+      ],
+      'jobs': [
+        job(
+          '11111111111111111111111111111111',
+          'submit',
+          result: {
+            'assistant_text': 'Saved legacy answer',
+            'audio': null,
+            'speech_error': audioExpired,
+          },
+        ),
+        job('22222222222222222222222222222222', 'speak', error: audioExpired),
+        job('33333333333333333333333333333333', 'submit', status: 'running'),
+      ],
+      'expired_ids': <String>[],
+    };
+    // Dart native ints cannot encode u64::MAX. The legacy file contains a
+    // numeric JSON token, not the new v2 string representation.
+    final file = File('${root.path}/data/smith-next/app-state.json');
+    await file.writeAsString(
+      jsonEncode(state).replaceAll('"__CONFIG_REVISION__"', revision),
+      flush: true,
+    );
+    await _utility('/usr/bin/chmod', ['0600', file.path]);
+    child = _CapturedChild(
+      await Process.start(
+        binary.path,
+        [
+          'serve',
+          '--data-root',
+          '${root.path}/data',
+          '--config-root',
+          '${root.path}/config',
+          '--runtime-root',
+          '${root.path}/runtime',
+        ],
+        runInShell: false,
+        includeParentEnvironment: false,
+      ),
+    );
+    await child.process.stdin.close().timeout(_ioDeadline);
+    await _waitForSocket('${root.path}/runtime/smith-next/service.sock', child);
+    await check('${root.path}/runtime/smith-next/app.sock', child.process.pid);
+    expect(await child.stop(), 0);
+    expect(child.failure, isNull);
+  } finally {
+    if (child != null) await child.stop();
+    if (child == null || child.exited) await root.delete(recursive: true);
+  }
+}
+
 void main() {
   final source = Platform.environment['SMITH_TEST_SERVICE'];
+  for (final revision in ['1', '9007199254740992', '18446744073709551615']) {
+    test(
+      'real Rust migrated inert voice, interrupted job and config revision $revision',
+      () async {
+        await _legacyFixture(source!, revision, (path, pid) async {
+          final expectedRevision = revision == '1' ? 1 : revision;
+          final state = await _appState(path, pid);
+          expect(state.result['config']['revision'], expectedRevision);
+          final operations = state.result['operations'] as List;
+          expect(operations, hasLength(3));
+          for (final o in operations) {
+            expect(o['config_revision'], expectedRevision);
+          }
+          final conversation =
+              state.result['conversations'].single['conversation_id'];
+          final detail = await _appState(
+            path,
+            pid,
+            op: 'conversation_get',
+            args: {'conversation_id': conversation},
+          );
+          expect((detail.result['history'] as List).map((m) => m['content']), [
+            '',
+            '',
+          ]);
+          for (final id in [
+            '11111111111111111111111111111111',
+            '22222222222222222222222222222222',
+          ]) {
+            final poll = await _appState(
+              path,
+              pid,
+              op: 'poll',
+              args: {'request_id': id, 'instance_id': state.instanceId},
+            );
+            expect(poll.result['config_revision'], expectedRevision);
+            if (poll.result['kind'] == 'submit') {
+              expect(
+                poll.result['result']['assistant_text'],
+                'Saved legacy answer',
+              );
+              expect(
+                poll.result['result']['speech_error']['code'],
+                'AUDIO_EXPIRED',
+              );
+            } else {
+              expect(poll.result['result'], isNull);
+              expect(poll.result['error']['code'], 'AUDIO_EXPIRED');
+            }
+          }
+          final workspace = WorkspaceController(
+            _SocketAppApi(path, pid),
+            pollInterval: const Duration(days: 1),
+          );
+          try {
+            await workspace.synchronize();
+            expect(workspace.stale, false, reason: workspace.error);
+            expect(workspace.selected.error, contains('INTERRUPTED'));
+            expect(workspace.selected.pendingId, isNull);
+          } finally {
+            workspace.dispose();
+          }
+          await _appState(
+            path,
+            pid,
+            installerV1: true,
+            inspectFrame: (text) {
+              expect(text, contains('"revision":$revision'));
+              expect(text, isNot(contains('"revision":"$revision"')));
+            },
+          );
+          // Model=null forces definitive admission rejection before any worker or
+          // inference. MODEL_UNAVAILABLE proves the exact revision echo parsed.
+          for (final op in ['submit', 'submit_new']) {
+            await expectLater(
+              _appState(
+                path,
+                pid,
+                op: op,
+                args: {
+                  'request_id': appId(),
+                  'text': 'Not admitted; no model',
+                  'output': 'chat',
+                  'expected_config_revision': expectedRevision,
+                  if (op == 'submit') 'conversation_id': conversation,
+                  if (op == 'submit')
+                    'expected_history_revision':
+                        detail.result['conversation']['history_revision'],
+                },
+              ),
+              throwsA(
+                isA<AppFailure>().having(
+                  (e) => e.code,
+                  'code',
+                  'MODEL_UNAVAILABLE',
+                ),
+              ),
+            );
+          }
+        });
+      },
+      skip: source == null
+          ? 'SMITH_TEST_SERVICE required for isolated Rust migration fixture.'
+          : false,
+    );
+  }
   test(
     'real Rust Unix socket: explicit completion survives detach and restart',
     () async {
@@ -335,10 +603,19 @@ void main() {
 
         final first = await launch();
         final appPath = '${roots[2]}/smith-next/app.sock';
+        final installerState = await _appState(
+          appPath,
+          first.process.pid,
+          installerV1: true,
+        );
         final appFirst = await _appState(appPath, first.process.pid);
+        expect(installerState.result['history'], isEmpty);
+        expect(installerState.instanceId, appFirst.instanceId);
+        expect(installerState.result['config'], appFirst.result['config']);
         expect(appFirst.result['config'], isA<Map>());
-        expect(appFirst.result['history'], isEmpty);
-        expect(appFirst.result['active'], isNull);
+        expect(appFirst.result['conversations'], isEmpty);
+        expect(appFirst.result['operations'], isEmpty);
+        expect(appFirst.result['inventory_observed'], isFalse);
         await _request(
           socketPath,
           'identity',
@@ -396,7 +673,7 @@ void main() {
         final appSecond = await _appState(appPath, second.process.pid);
         expect(appSecond.instanceId, isNot(appFirst.instanceId));
         expect(appSecond.result['config'], appFirst.result['config']);
-        expect(appSecond.result['history'], isEmpty);
+        expect(appSecond.result['conversations'], isEmpty);
         await _request(
           socketPath,
           'identity',

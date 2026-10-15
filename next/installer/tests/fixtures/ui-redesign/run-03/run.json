@@ -1,0 +1,25 @@
+{
+  "kind": "implemented-source self-check; synthetic GTK, not installed-host QA or approval",
+  "command": [
+    "python3",
+    "installer/scripts/capture-ui.py",
+    "--output",
+    "installer/tests/fixtures/ui-redesign/run-03",
+    "--gdk-scale",
+    "1"
+  ],
+  "recipe": "SmithNext._installer_ui_tests(...).with_exec(['sh', 'scripts/test-ui.sh'])",
+  "recipe_sha256": "d0c11a84199e152274ffbeb46f8c8d89b98c57da6126b6bc810a69720d3c7514",
+  "gdk_scale": 1,
+  "started_unix": 1792029708.2140076,
+  "elapsed_seconds": 83.06,
+  "source_inputs_stable": true,
+  "exit_code": 101,
+  "capture_count": 21,
+  "limitations": [
+    "Fake sessions, no real manager/model/installation",
+    "Client-area drawing, not a compositor screenshot",
+    "No fractional display scaling",
+    "No paired build/export or independent assurance"
+  ]
+}

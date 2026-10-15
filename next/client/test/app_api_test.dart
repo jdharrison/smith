@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smith_client/app_api.dart';
+import 'package:smith_client/app_v2.dart';
 import 'package:smith_client/control_api.dart';
 import 'package:smith_client/native_control.dart';
 
@@ -11,14 +12,14 @@ import 'app_fakes.dart';
 import 'native_control_test.dart' show FakeProcess, flush;
 
 Map<String, dynamic> envelope(String id, {bool ok = true}) => {
-  'schema_version': 1,
+  'schema_version': 2,
   'service': 'smith-next',
   'protocol': 'app',
   'pid': 123,
   'instance_id': testInstance,
   'call_id': id,
   'ok': ok,
-  'result': ok ? {'config': {}, 'history': []} : null,
+  'result': ok ? FakeAppApi().state : null,
   'error': ok ? null : {'code': 'BUSY', 'message': 'busy'},
 };
 
@@ -57,6 +58,75 @@ class ReplyExecutor implements AppExecutor {
 }
 
 void main() {
+  test('v2 rejects missing nullable fields, unknown keys and malformed conversation data', () {
+    final api = FakeAppApi();
+    validateV2('state', api.state);
+    for (final change in <String, dynamic>{
+      'conversation_id': 'not-an-id',
+      'title': 'bad\u061c',
+      'archived': 'false',
+      'metadata_revision': -1,
+      'history_revision': 9007199254740992,
+      'sequence': 1.5,
+      'origin_request_id': 'bad',
+      'extra': true,
+    }.entries) {
+      final state = {
+        ...api.state,
+        'conversations': [
+          {...api.summaries[testConversation]!, change.key: change.value},
+        ],
+      };
+      expect(() => validateV2('state', state), throwsA(isA<AppFailure>()));
+    }
+    final missing = Map<String, dynamic>.from(api.summaries[testConversation]!)
+      ..remove('origin_request_id');
+    expect(
+      () => validateV2('conversation_get', {
+        'conversation': missing,
+        'history': [],
+      }),
+      throwsA(isA<AppFailure>()),
+    );
+    final v1 = envelope(testInstance)..['schema_version'] = 1;
+    expect(
+      () => AppReply.parse(jsonEncode(v1), testInstance),
+      throwsA(isA<AppFailure>()),
+    );
+    final extra = envelope(testInstance)..['extra'] = null;
+    expect(
+      () => AppReply.parse(jsonEncode(extra), testInstance),
+      throwsA(isA<AppFailure>()),
+    );
+  });
+  test('v2 outgoing operations require exact frozen argument keys', () {
+    validateV2Arguments('submit_new', {
+      'request_id': testInstance,
+      'text': 'hello',
+      'output': 'chat',
+      'expected_config_revision': 1,
+    });
+    expect(
+      () => validateV2Arguments('submit_new', {
+        'request_id': testInstance,
+        'text': 'hello',
+        'output': 'chat',
+      }),
+      throwsA(isA<AppFailure>()),
+    );
+    expect(
+      () => validateV2Arguments('conversation_delete', {
+        'request_id': testInstance,
+        'conversation_id': testConversation,
+        'expected_metadata_revision': 0,
+      }),
+      throwsA(isA<AppFailure>()),
+    );
+    expect(
+      () => validateV2Arguments('state', {'conversation_id': testConversation}),
+      throwsA(isA<AppFailure>()),
+    );
+  });
   test(
     'installer model operations are observation-only with strict results',
     () async {
@@ -164,20 +234,32 @@ void main() {
         },
       );
       final api = NativeAppApi(executor: NativeAppExecutor(helper: helper));
-      final work = api.call('submit', {
+      final work = api.call('poll', {
         'request_id': testInstance,
-        'text': 'private prompt',
-        'output': 'chat',
+        'instance_id': testInstance,
       });
       final frame = await child.received.future;
       final request = jsonDecode(frame);
       expect(argv, ['app']);
       expect(frame.endsWith('\n'), true);
-      expect(request['args']['text'], 'private prompt');
+      expect(request['args']['request_id'], testInstance);
       final reply = envelope(request['call_id']);
-      reply['result'] = {'text': 'x' * 20000};
+      reply['result'] = {
+        'request_id': testInstance,
+        'conversation_id': testConversation,
+        'kind': 'submit',
+        'status': 'succeeded',
+        'phase': 'complete',
+        'config_revision': 1,
+        'result': {
+          'assistant_text': 'x' * 20000,
+          'audio': null,
+          'speech_error': null,
+        },
+        'error': null,
+      };
       child.finish(jsonEncode(reply));
-      expect((await work).result['text'].length, 20000);
+      expect((await work).result['result']['assistant_text'].length, 20000);
       expect(helperOutputLimit, 16384);
       api.dispose();
       expect(child.signals, isEmpty);

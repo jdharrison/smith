@@ -35,12 +35,19 @@ class PackageTests(unittest.TestCase):
             ("smith_client", 0o755), ("smith_backend/smith-service", 0o755),
             ("lib/libflutter_linux_gtk.so", 0o644), ("lib/libapp.so", 0o644),
             ("data/icudtl.dat", 0o644), ("data/flutter_assets/AssetManifest.bin", 0o644),
+            ("data/flutter_assets/pubspec.yaml", 0o644),
             ("share/applications/" + package.APP + ".desktop", 0o644),
             ("share/pixmaps/" + package.APP + ".png", 0o644),
         ):
             path = client / name
             path.write_bytes(synthetic_elf() if mode == 0o755 else b"synthetic")
             path.chmod(mode)
+        # Synthetic content tests package policy, not font/SVG decoding or licensing.
+        for name in package.UI_ASSET_FILES:
+            path = client / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"synthetic UI asset fixture")
+            path.chmod(0o644)
         native_runtime = client / "smith_backend/runtime"
         native_runtime.mkdir(mode=0o755)
         for backend, names in package.BACKEND_RUNTIME_FILES.items():
@@ -126,6 +133,83 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(record["service_sha256"], hashlib.sha256(synthetic_elf()).hexdigest())
         self.assertEqual((self.root / "smith-installer").read_bytes()[:4], b"\x7fELF")
         self.assertFalse(any(p.suffix in (".py", ".pyz") for p in self.root.rglob("*")))
+
+    def test_exact_ui_asset_contract_and_manifest_coverage(self):
+        prefix = "data/flutter_assets/assets/"
+        expected = {prefix + "README.md"}
+        for directory, family in (("jetbrains-mono", "JetBrainsMono"),
+                                  ("ibm-plex-mono", "IBMPlexMono")):
+            expected.add(prefix + "fonts/" + directory + "/OFL.txt")
+            for weight in ("Regular", "Medium", "SemiBold"):
+                expected.add(prefix + "fonts/" + directory + "/" + family + "-" + weight + ".ttf")
+        for icon in ("chevron-right", "message-square", "settings", "archive", "plus",
+                     "ellipsis-vertical", "pencil", "trash-2", "send", "x", "menu",
+                     "rotate-ccw", "info", "check", "chevron-down"):
+            expected.add(prefix + "icons/" + icon + ".svg")
+        self.assertEqual(len(expected), 24)
+        self.assertEqual(package.UI_ASSET_FILES, expected)
+        self.assertEqual({name for name in package.CLIENT_FILES if name.startswith(prefix)}, expected)
+        self.assemble()
+        record = json.loads((self.root / "manifest.json").read_text())
+        for name in expected:
+            with self.subTest(asset=name):
+                meta = record["files"]["payload/client/" + name]
+                self.assertEqual(meta["mode"], 0o644)
+                self.assertEqual(meta["sha256"],
+                                 hashlib.sha256(b"synthetic UI asset fixture").hexdigest())
+        package.verify(self.root)
+
+    def test_every_ui_asset_is_required_and_nonempty(self):
+        for name in sorted(package.UI_ASSET_FILES):
+            path = self.root / "payload/client" / name
+            original = path.read_bytes()
+            for absent in (True, False):
+                with self.subTest(asset=name, absent=absent):
+                    if absent:
+                        path.unlink()
+                    else:
+                        path.write_bytes(b"")
+                    try:
+                        with self.assertRaisesRegex(ValueError, "Missing or empty required UI asset"):
+                            package.check_payload(self.root)
+                    finally:
+                        path.write_bytes(original)
+                        path.chmod(0o644)
+
+    def test_declared_version_asset_is_required_and_nonempty(self):
+        path = self.root / "payload/client/data/flutter_assets/pubspec.yaml"
+        for absent in (True, False):
+            with self.subTest(absent=absent):
+                if absent:
+                    path.unlink()
+                else:
+                    path.write_bytes(b"")
+                with self.assertRaisesRegex(ValueError, "Incomplete client payload"):
+                    package.check_payload(self.root)
+                path.write_bytes(b"version: 0.1.0+1\n")
+                path.chmod(0o644)
+
+    def test_ui_asset_tamper_blocks_verification(self):
+        self.assemble()
+        path = self.root / "payload/client/data/flutter_assets/assets/icons/check.svg"
+        path.write_bytes(b"altered icon")
+        with self.assertRaisesRegex(ValueError, "manifest mismatch"):
+            package.verify(self.root)
+
+    def test_ui_asset_size_limit_is_preserved(self):
+        self.assertEqual(package.MAX_FILE, 128 * 1024 * 1024)
+        path = self.root / "payload/client/data/flutter_assets/assets/README.md"
+        with path.open("wb") as handle:
+            handle.truncate(package.MAX_FILE + 1)
+        with self.assertRaisesRegex(ValueError, "Unsafe or oversized package file"):
+            package.check_payload(self.root)
+
+    def test_ui_asset_link_is_rejected(self):
+        path = self.root / "payload/client/data/flutter_assets/assets/icons/check.svg"
+        path.unlink()
+        path.symlink_to("send.svg")
+        with self.assertRaisesRegex(ValueError, "Unsafe package input"):
+            package.check_payload(self.root)
 
     def test_native_help_runs_without_interpreter_or_build_tools(self):
         self.native_required()
@@ -295,6 +379,26 @@ class PackageTests(unittest.TestCase):
 
     def test_unreviewed_opaque_asset_is_rejected(self):
         self.prohibited_payload("data/flutter_assets/opaque.bin")
+
+    def test_unknown_icon_is_rejected(self):
+        self.prohibited_payload("data/flutter_assets/assets/icons/activity.svg")
+
+    def test_unreviewed_font_weight_is_rejected(self):
+        self.prohibited_payload("data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Bold.ttf")
+
+    def test_model_weights_inside_ui_assets_are_rejected(self):
+        self.prohibited_payload("data/flutter_assets/assets/fonts/ibm-plex-mono/model.gguf")
+
+    def test_opaque_file_inside_approved_icon_directory_is_rejected(self):
+        self.prohibited_payload("data/flutter_assets/assets/icons/opaque.bin")
+
+    def test_raster_reference_is_rejected(self):
+        self.prohibited_payload("data/flutter_assets/assets/reference.png")
+
+    def test_empty_unreviewed_ui_directory_is_rejected(self):
+        (self.root / "payload/client/data/flutter_assets/assets/weights").mkdir(mode=0o755)
+        with self.assertRaisesRegex(ValueError, "Unreviewed client payload"):
+            self.assemble()
 
     def test_empty_model_directory_is_rejected(self):
         (self.root / "payload/client/models").mkdir(mode=0o755)

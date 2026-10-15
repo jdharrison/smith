@@ -1,0 +1,660 @@
+dagger call test-service --source service
+
+1   : connect
+1   : [0.0s] | cloud url=[REDACTED_DAGGER_TRACE]
+2   : ┆ starting engine
+3   : ┆ ┆ create container
+4   : ┆ ┆ ┆ exec docker ps -a --format {{.Names}}
+4   : ┆ ┆ ┆ [0.0s] | smith-searxng
+4   : ┆ ┆ ┆ [0.0s] | dagger-engine-v1.0.0-beta.14
+4   : ┆ ┆ ┆ [0.0s] | smith-agent-coding
+4   : ┆ ┆ ┆ [0.0s] | smith-brain
+4   : ┆ ┆ ┆ exec docker ps -a --format {{.Names}} DONE [0.0s]
+5   : ┆ ┆ ┆ exec docker start dagger-engine-v1.0.0-beta.14
+5   : ┆ ┆ ┆ [0.0s] | dagger-engine-v1.0.0-beta.14
+5   : ┆ ┆ ┆ exec docker start dagger-engine-v1.0.0-beta.14 DONE [0.0s]
+3   : ┆ ┆ create container DONE [0.0s]
+2   : ┆ starting engine DONE [0.0s]
+6   : ┆ connecting to engine
+6   : ┆ [0.1s] | 22:12:03 INF connected name=5a7b3ee62cfa client-version=v1.0.0-beta.14 server-version=v1.0.0-beta.14+06660c3c
+6   : ┆ connecting to engine DONE [0.1s]
+7   : ┆ starting session
+7   : ┆ starting session DONE [0.0s]
+1   : connect DONE [0.2s]
+
+8   : load workspace: .
+9   : ┆ loading type definitions
+9   : ┆ loading type definitions DONE [2.0s]
+8   : load workspace: . DONE [2.0s]
+
+10  : parsing command line arguments
+10  : parsing command line arguments DONE [2.5s]
+
+11  : smith: Smith!
+11  : smith CACHED [0.0s]
+
+12  : Smith.testService(
+12  : ┆ source: Address.directory: Directory!
+12  : ): String!
+13  : ┆ container(platform: "linux/amd64"): Container!
+13  : ┆ container CACHED [0.0s]
+14  : ┆ Container.from(address: "rust:1.98.0-bookworm"): Container!
+14  : ┆ Container.from DONE [0.0s]
+15  : ┆ withExec rustup component add rustfmt clippy
+15  : ┆ Container.withExec CACHED [0.0s]
+16  : ┆ Container.withDirectory(
+16  : ┆ ┆ path: "/src"
+16  : ┆ ┆ source: Address.directory: Directory!
+16  : ┆ ┆ exclude: ["target", "build", "dist", ".git"]
+16  : ┆ ): Container!
+17  : ┆ withExec install -d -m 0755 [REDACTED_HOME_PATH]
+16  : ┆ Container.withDirectory DONE [0.1s]
+18  : ┆ withExec chown -R 1000:1000 /src [REDACTED_HOME_PATH]
+19  : ┆ withEnvVariable HOME=[REDACTED_HOME_PATH]
+20  : ┆ withEnvVariable CARGO_HOME=[REDACTED_HOME_PATH]
+21  : ┆ user 1000:1000
+17  : ┆ Container.withExec DONE [0.1s]
+18  : ┆ Container.withExec DONE [0.2s]
+19  : ┆ Container.withEnvVariable DONE [0.2s]
+20  : ┆ Container.withEnvVariable DONE [0.2s]
+21  : ┆ Container.withUser DONE [0.2s]
+22  : ┆ withWorkdir /src
+22  : ┆ Container.withWorkdir DONE [0.2s]
+23  : ┆ withExec sh scripts/test.sh
+24  : ┆ Container.stdout: String!
+23  : ┆ withExec sh scripts/test.sh
+23  : ┆ [0.6s] |     Updating crates.io index
+23  : ┆ [0.9s] |  Downloading crates ...
+23  : ┆ [1.1s] |   Downloaded cfg-if v1.0.5
+23  : ┆ [1.1s] |   Downloaded digest v0.10.7
+23  : ┆ [1.1s] |   Downloaded block-buffer v0.10.4
+23  : ┆ [1.1s] |   Downloaded cpufeatures v0.2.17
+23  : ┆ [1.1s] |   Downloaded typenum v1.20.1
+23  : ┆ [1.1s] |   Downloaded generic-array v0.14.7
+23  : ┆ [1.1s] |   Downloaded itoa v1.0.18
+23  : ┆ [1.1s] |   Downloaded sha2 v0.10.9
+23  : ┆ [1.1s] |   Downloaded zmij v1.0.23
+23  : ┆ [1.1s] |   Downloaded version_check v0.9.5
+23  : ┆ [1.1s] |   Downloaded unicode-ident v1.0.26
+23  : ┆ [1.1s] |   Downloaded crypto-common v0.1.7
+23  : ┆ [1.1s] |   Downloaded serde_derive v1.0.229
+23  : ┆ [1.1s] |   Downloaded proc-macro2 v1.0.107
+23  : ┆ [1.1s] |   Downloaded serde v1.0.229
+23  : ┆ [1.1s] |   Downloaded memchr v2.8.3
+23  : ┆ [1.1s] |   Downloaded serde_core v1.0.229
+23  : ┆ [1.2s] |   Downloaded serde_json v1.0.151
+23  : ┆ [1.2s] |   Downloaded syn v3.0.6
+23  : ┆ [1.2s] |   Downloaded libc v0.2.189
+23  : ┆ [1.2s] |   Downloaded quote v1.0.47
+23  : ┆ [1.2s] |    Compiling version_check v0.9.5
+23  : ┆ [1.2s] |    Compiling proc-macro2 v1.0.107
+23  : ┆ [1.2s] |    Compiling unicode-ident v1.0.26
+23  : ┆ [1.2s] |    Compiling quote v1.0.47
+23  : ┆ [1.2s] |     Checking typenum v1.20.1
+23  : ┆ [1.2s] |    Compiling serde_core v1.0.229
+23  : ┆ [1.2s] |    Compiling zmij v1.0.23
+23  : ┆ [1.2s] |    Compiling serde v1.0.229
+23  : ┆ [1.2s] |    Compiling serde_json v1.0.151
+23  : ┆ [1.2s] |    Compiling libc v0.2.189
+23  : ┆ [1.2s] |     Checking cpufeatures v0.2.17
+23  : ┆ [1.2s] |     Checking cfg-if v1.0.5
+23  : ┆ [1.2s] |     Checking memchr v2.8.3
+23  : ┆ [1.2s] |     Checking itoa v1.0.18
+23  : ┆ [1.5s] |    Compiling generic-array v0.14.7
+23  : ┆ [2.2s] |     Checking block-buffer v0.10.4
+23  : ┆ [2.2s] |     Checking crypto-common v0.1.7
+23  : ┆ [2.2s] |     Checking digest v0.10.7
+23  : ┆ [2.3s] |     Checking sha2 v0.10.9
+23  : ┆ [2.3s] |    Compiling syn v3.0.6
+23  : ┆ [3.2s] |    Compiling serde_derive v1.0.229
+23  : ┆ [4.6s] |     Checking smith-service v0.1.0 (/src)
+23  : ┆ [6.2s] |     Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.57s
+23  : ┆ [6.2s] |    Compiling typenum v1.20.1
+23  : ┆ [6.2s] |    Compiling itoa v1.0.18
+23  : ┆ [6.2s] |    Compiling cfg-if v1.0.5
+23  : ┆ [6.2s] |    Compiling memchr v2.8.3
+23  : ┆ [6.2s] |    Compiling cpufeatures v0.2.17
+23  : ┆ [6.2s] |    Compiling serde_core v1.0.229
+23  : ┆ [6.2s] |    Compiling zmij v1.0.23
+23  : ┆ [6.2s] |    Compiling libc v0.2.189
+23  : ┆ [6.5s] |    Compiling generic-array v0.14.7
+23  : ┆ [6.8s] |    Compiling block-buffer v0.10.4
+23  : ┆ [6.8s] |    Compiling crypto-common v0.1.7
+23  : ┆ [6.8s] |    Compiling digest v0.10.7
+23  : ┆ [6.9s] |    Compiling sha2 v0.10.9
+23  : ┆ [7.3s] |    Compiling serde_json v1.0.151
+23  : ┆ [7.3s] |    Compiling serde v1.0.229
+23  : ┆ [7.7s] |    Compiling smith-service v0.1.0 (/src)
+23  : ┆ [10.7s] |     Finished `test` profile [unoptimized + debuginfo] target(s) in 4.55s
+23  : ┆ [10.7s] |      Running unittests src/lib.rs (target/debug/deps/smith_service-cd3d2bcd9ca2fc89)
+23  : ┆ [10.7s] | 
+23  : ┆ [10.7s] | running 61 tests
+23  : ┆ [10.8s] | test acceleration::tests::cpu_mode_is_independent_of_vulkan_evidence ... ok
+23  : ┆ [10.8s] | test acceleration::tests::duplicate_evidence_is_an_error ... ok
+23  : ┆ [10.8s] | test acceleration::tests::decorated_pinned_logs_are_not_silently_reinterpreted ... ok
+23  : ┆ [10.8s] | test acceleration::tests::full_offload_is_gpu ... ok
+23  : ┆ [10.8s] | test acceleration::tests::launch_flags_are_exact ... ok
+23  : ┆ [10.8s] | test acceleration::tests::incomplete_records_never_establish_or_prematurely_reject_offload ... ok
+23  : ┆ [10.8s] | test acceleration::tests::evidence_limit_counts_all_bytes_and_keeps_earlier_records ... ok
+23  : ┆ [10.8s] | test acceleration::tests::malformed_evidence_is_an_error ... ok
+23  : ┆ [10.8s] | test acceleration::tests::missing_evidence_is_an_error ... ok
+23  : ┆ [10.8s] | test acceleration::tests::offloaded_layers_cannot_exceed_total ... ok
+23  : ┆ [10.8s] | test acceleration::tests::partial_offload_is_gpu_and_cpu ... ok
+23  : ┆ [10.8s] | test acceleration::tests::unrelated_lines_are_ignored ... ok
+23  : ┆ [10.8s] | test acceleration::tests::zero_offload_is_an_error ... ok
+23  : ┆ [10.8s] | test app::v2::tests::assurance_legacy_valid_revision_must_migrate ... ok
+23  : ┆ [10.8s] | test app::v2::tests::conversation_limit_and_deleted_legacy_target_never_remap ... ok
+23  : ┆ [10.8s] | test app::v2::tests::assurance_last_sequence_and_late_completion_after_dispose ... ok
+23  : ┆ [10.8s] | test app::v2::tests::assurance_duplicate_origins_must_fail_validation ... ok
+23  : ┆ [10.8s] | test app::v2::tests::assurance_delete_receipt_must_not_describe_existing_target ... ok
+23  : ┆ [10.8s] | test app::v2::tests::global_worker_occupancy_blocks_v2_submit_without_creation ... ok
+23  : ┆ [10.8s] | test app::v2::tests::title_scalar_boundaries_and_sanitization ... ok
+23  : ┆ [10.8s] | test app::v2::tests::completion_is_fenced_by_running_request_target_and_revision ... ok
+23  : ┆ [10.8s] | test manager::tests::captured_helper_fixture ... ignored, fixture invoked only by captured-helper subprocess tests
+23  : ┆ [10.8s] | test app::v2::tests::unexpected_dispatch_capacity_failure_is_reported_and_fenced ... ok
+23  : ┆ [10.8s] | test app::v2::tests::terminal_eviction_skips_pending_and_never_forgets_replay_id ... ok
+23  : ┆ [10.8s] | test manager::tests::enable_and_disable_are_fixed_and_never_change_runtime ... ok
+23  : ┆ [10.8s] | test app::v2::tests::title_generation_removes_feff_before_truncation_without_changing_stored_validity ... ok
+23  : ┆ [10.8s] | test app::v2::tests::expired_submit_new_origin_remains_valid_without_retained_job ... ok
+23  : ┆ [10.8s] | test app::v2::tests::independent_r2_origin_must_match_retained_target ... ok
+23  : ┆ [10.8s] | test manager::tests::maintenance_properties_require_exact_additional_facts_and_safe_groups ... ok
+23  : ┆ [10.8s] | test app_transport::tests::complete_first_envelope_correlates_rejected_trailing_frames ... ok
+23  : ┆ [10.8s] | test catalog::tests::catalog_is_curated_pinned_and_default_first ... ok
+23  : ┆ [10.8s] | test maintenance::tests::original_consent_is_monotonic_expiring_and_cannot_be_substituted ... ok
+23  : ┆ [10.8s] | test app_transport::tests::truncated_app_frame_is_not_a_request ... ok
+23  : ┆ [10.8s] | test manager::tests::properties_fail_closed ... ok
+23  : ┆ [10.8s] | test runner::tests::messages_must_alternate_and_end_with_user ... ok
+23  : ┆ [10.8s] | test runner::tests::startup_capture_failure_cannot_accept_an_earlier_valid_record ... ok
+23  : ┆ [10.8s] | test runner::tests::startup_capture_retries_interruption_but_records_eof ... ok
+23  : ┆ [10.8s] | test runner::tests::completion_is_content_only_with_identity_and_no_tools ... ok
+23  : ┆ [10.8s] | test app::v2::tests::migration_preserves_legacy_ids_without_inventing_submitted_text ... ok
+23  : ┆ [10.8s] | test manager::tests::parent_changed_before_guard_armed_prevents_exec ... ok
+23  : ┆ [10.8s] | test runner::tests::startup_capture_keeps_raw_prefix_limit_and_never_rolls_evidence ... ok
+23  : ┆ [10.8s] | test runner::tests::http_reader_accepts_length_chunked_and_eof_bodies ... ok
+23  : ┆ [10.8s] | test app::v2::tests::fake_clock_expiry_before_dispatch_and_fifo_running_is_durable ... ok
+23  : ┆ [10.8s] | test app::v2::tests::retained_origin_must_be_v2_submit_new_not_another_kind_or_version ... ok
+23  : ┆ [10.8s] | test app::v2::tests::retained_submit_new_requires_its_target_origin ... ok
+23  : ┆ [10.8s] | test app::v2::tests::v2_configuration_revision_parser_requires_canonical_representation ... ok
+23  : ┆ [10.8s] | test app::v2::tests::all_expired_jobs_terminate_without_a_provider_or_pending_eviction ... ok
+23  : ┆ [10.8s] | test app::v2::tests::title_legacy_disk_and_receipt_replay_remain_compatible ... ok
+23  : ┆ [10.8s] | test runner::tests::http_reader_rejects_ambiguous_truncated_and_oversized_responses ... ok
+23  : ┆ [10.8s] | test app::v2::tests::assurance_reserved_revision_must_allow_dispatch ... ok
+23  : ┆ [10.8s] | test manager::tests::abrupt_helper_death_kills_captured_direct_fake_manager_child ... ok
+23  : ┆ [10.8s] | test manager::tests::cooperative_helper_termination_cleans_captured_fake_manager_group ... ok
+23  : ┆ [10.8s] | test app_transport::tests::app_frames_accept_exact_4mib_payload_but_reject_overflow_and_multiple ... ok
+23  : ┆ [10.8s] | test app::v2::tests::full_u64_config_revision_migration_wire_echo_and_exhaustion ... ok
+23  : ┆ [10.9s] | test runner::tests::http_reader_deadline_is_absolute ... ok
+23  : ┆ [11.1s] | test manager::tests::injected_fake_command_deadline_output_and_pipe_cleanup_are_bounded ... ok
+23  : ┆ [11.4s] | test app::v2::tests::encoded_capacity_reserves_completion_and_refusal_does_not_latch_fault ... ok
+23  : ┆ [11.6s] | test app::v2::tests::assurance_legacy_maximum_escaped_results_migrate ... ok
+23  : ┆ [12.8s] | test app_transport::tests::blocked_helper_output_has_finite_budget_and_restores_flags ... ok
+23  : ┆ [12.9s] | test app::v2::tests::assurance_exact_byte_reservation_must_allow_dispatch ... ok
+23  : ┆ [17.1s] | test app::v2::tests::four_jobs_at_exact_byte_and_revision_capacity_all_complete ... ok
+23  : ┆ [17.1s] | 
+23  : ┆ [17.1s] | test result: ok. 60 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 6.38s
+23  : ┆ [17.1s] | 
+23  : ┆ [17.1s] |      Running unittests src/main.rs (target/debug/deps/smith_service-327dc096bf49e975)
+23  : ┆ [17.1s] | 
+23  : ┆ [17.1s] | running 1 test
+23  : ┆ [17.1s] | test tests::production_preflight_rejects_root_and_accepts_unprivileged_identity ... ok
+23  : ┆ [17.1s] | 
+23  : ┆ [17.1s] | test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+23  : ┆ [17.1s] | 
+23  : ┆ [17.1s] |      Running tests/application.rs (target/debug/deps/application-a656d3e673db9f48)
+23  : ┆ [17.1s] | 
+23  : ┆ [17.1s] | running 35 tests
+23  : ┆ [17.1s] | test corrupt_unsupported_symlink_and_unsafe_app_state_preserved ... ok
+23  : ┆ [17.1s] | test production_source_has_no_speech_transport_or_audio_execution ... ok
+23  : ┆ [17.1s] | test legacy_null_audio_is_strict_and_corrupt_migration_never_rewrites ... ok
+23  : ┆ [17.1s] | test live_text_inventory_retires_speech_and_configure_requires_explicit_null ... ok
+23  : ┆ [17.1s] | test retired_requests_reject_without_execution_and_tombstones_win ... ok
+23  : ┆ [17.1s] | test checked_configuration_and_removal_fail_closed_before_dispatch ... ok
+23  : ┆ [17.1s] | test corrupt_nested_result_and_inconsistent_operation_status_are_preserved ... ok
+23  : ┆ [17.1s] | test unsafe_destination_change_blocks_admission_without_inference ... ok
+23  : ┆ [17.1s] | test long_text_answer_is_not_truncated_or_regenerated ... ok
+23  : ┆ [17.1s] | test failed_generation_does_not_append_partial_history ... ok
+23  : ┆ [17.1s] | test active_worker_keeps_state_poll_responsive_and_blocks_queue_and_config ... ok
+23  : ┆ [17.1s] | test strict_requests_ids_exact_tags_and_text_limits ... ok
+23  : ┆ [17.1s] | test multiple_running_jobs_are_corrupt_before_reconciliation_and_preserved ... ok
+23  : ┆ [17.1s] | test multi_chat_strict_corruption_preserved_and_first_submit_rejection_atomic ... ok
+23  : ┆ [17.1s] | test multi_chat_duplicate_versions_and_v1_projection_remain_exact ... ok
+23  : ┆ [17.2s] | test multi_chat_target_busy_rename_and_unrelated_management ... ok
+23  : ┆ [17.2s] | test model_verification_is_durable_bound_and_does_not_append_history ... ok
+23  : ┆ [17.2s] | test successful_removal_uses_serial_worker_and_durable_duplicate_result ... ok
+23  : ┆ [17.2s] | test restart_interrupts_pending_preserves_terminal_and_never_replays ... ok
+23  : ┆ [17.2s] | test multi_chat_title_derived_once_preserves_full_prompt_and_restart ... ok
+23  : ┆ [17.2s] | test multi_chat_delete_preflights_tombstones_and_conversation_limit ... ok
+23  : ┆ [17.2s] | test multi_chat_lifecycle_receipts_delete_residue_and_no_missing_target_alias ... ok
+23  : ┆ [17.2s] | test multi_chat_atomic_admission_fifo_capacity_and_isolated_context ... ok
+23  : ┆ [17.2s] | test voice_v1_migration_preserves_preferences_history_results_ids_and_no_replay ... ok
+23  : ┆ [17.2s] | test new_running_model_kinds_interrupt_without_replay_on_restart ... ok
+23  : ┆ [17.2s] | test verification_rejects_empty_final_and_wrong_digest ... ok
+23  : ┆ [17.2s] | test invalid_live_inventory_is_bounded_failure_not_persisted_corruption ... ok
+23  : ┆ [17.2s] | test every_legacy_running_kind_interrupts_without_replay ... ok
+23  : ┆ [17.3s] | test maximal_valid_inventory_metadata_stays_pollable_across_restart ... ok
+23  : ┆ [17.4s] | test durable_identifier_capacity_is_explicit_not_silent_forgetting ... ok
+23  : ┆ [17.4s] | test dropped_gated_worker_cannot_publish_into_reopened_roots ... ok
+23  : ┆ [17.4s] | test multi_chat_restart_interrupts_every_pending_and_resets_inventory ... ok
+23  : ┆ [17.5s] | test operation_and_speech_errors_require_bounded_semantics_and_nullable_fields ... ok
+23  : ┆ [18.1s] | test nested_inventory_semantic_type_and_size_corruption_is_preserved ... ok
+23  : ┆ [18.1s] | test history_is_bounded_in_complete_pairs_and_evicted_ids_cannot_resurrect ... ok
+23  : ┆ [18.1s] | 
+23  : ┆ [18.1s] | test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.96s
+23  : ┆ [18.1s] | 
+23  : ┆ [18.1s] |      Running tests/debug_service.rs (target/debug/deps/debug_service-e6705fe31ae65f52)
+23  : ┆ [18.1s] | 
+23  : ┆ [18.1s] | running 21 tests
+23  : ┆ [18.3s] | test app_cli_stdin_envelope_is_separate_and_never_uses_endpoint_argv ... ok
+23  : ┆ [18.3s] | test compiled_identity_is_finite_and_ambient_manager_override_is_not_a_control_option ... ok
+23  : ┆ [18.3s] | test fixture_spawn_waits_until_executable_writer_is_closed ... ok
+23  : ┆ [18.3s] | test app_v2_helper_correlates_preflight_and_strict_decode_failures ... ok
+23  : ┆ [18.4s] | test duplicate_daemon_does_not_adopt_or_remove_verified_socket ... ok
+23  : ┆ [18.4s] | test root_normalization_state_types_and_links_fail_closed ... ok
+23  : ┆ [18.5s] | test unsafe_roots_files_units_sockets_and_corrupt_state_fail_closed ... ok
+23  : ┆ [20.5s] | test real_socket_rejects_wrong_pid_bounded_frames_and_persists_on_client_detach ... ok
+23  : ┆ [22.7s] | test pending_reload_rejects_foreign_overridden_transient_and_ambiguous_runtime ... ok
+23  : ┆ [24.8s] | test stale_app_path_blocks_start_without_adoption_or_removal ... ok
+23  : ┆ [27.2s] | test strict_enablement_rejects_runtime_link_alias_mask_indirect_and_disagreement ... ok
+23  : ┆ [27.3s] | test concurrent_apply_is_rejected_without_effects ... ok
+23  : ┆ [29.7s] | test loaded_pending_reload_repairs_only_with_separate_consent_and_retries_failure ... ok
+23  : ┆ [30.7s] | test app_buffered_large_frame_and_unknown_fields_are_rejected_without_provider_work ... ok
+23  : ┆ [30.8s] | test v2_trailing_frames_execute_neither_request_and_keep_correlation ... ok
+23  : ┆ [30.9s] | test app_peer_conflict_and_corrupt_state_fail_closed_without_changing_core ... ok
+23  : ┆ [31.1s] | test separate_app_socket_verified_by_current_controller_facts_preserves_control ... ok
+23  : ┆ [31.1s] | test manager_fragment_binary_and_pid_drift_block_bridge_adoption ... ok
+23  : ┆ [31.4s] | test action_time_source_paths_snapshot_and_replay_bindings ... ok
+23  : ┆ [31.9s] | test separate_consented_lifecycle_and_exact_json_contract ... ok
+23  : ┆ [32.7s] | test partial_manager_failure_preserves_files_and_never_falls_back ... ok
+23  : ┆ [32.7s] | 
+23  : ┆ [32.7s] | test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.65s
+23  : ┆ [32.7s] | 
+23  : ┆ [32.8s] |      Running tests/maintenance.rs (target/debug/deps/maintenance-572482f942163391)
+23  : ┆ [32.8s] | 
+23  : ┆ [32.8s] | running 11 tests
+23  : ┆ [32.8s] | test old_manager_implementations_default_to_refusal_and_foreign_pid_never_stopped ... ok
+23  : ┆ [32.8s] | test candidate_locked_apply_uses_held_lease_and_original_token ... ok
+23  : ┆ [32.8s] | test lease_rejects_other_roots_and_replaced_data_directory ... ok
+23  : ┆ [32.8s] | test exact_legacy_static_unit_is_recognized_and_preserved ... ok
+23  : ┆ [32.8s] | test unregister_preserves_old_unit_and_all_corrupt_state_under_held_lease ... ok
+23  : ┆ [32.8s] | test reload_failure_or_unconfirmed_removal_keeps_retained_evidence_without_retry ... ok
+23  : ┆ [32.8s] | test remaining_children_and_either_socket_block_preparation_or_apply ... ok
+23  : ┆ [32.8s] | test enabled_current_unit_is_disabled_before_unregister_and_failure_preserves_it ... ok
+23  : ┆ [32.8s] | test consent_drift_wrong_token_and_backup_collision_have_no_effects ... ok
+23  : ┆ [32.8s] | test foreign_enabled_unknown_transient_and_pending_overrides_refused ... ok
+23  : ┆ [32.8s] | test stop_verifies_old_proc_bytes_and_refuses_remaining_group_sockets_or_failure ... ok
+23  : ┆ [32.8s] | 
+23  : ┆ [32.8s] | test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+23  : ┆ [32.8s] | 
+23  : ┆ [32.8s] |      Running tests/runner.rs (target/debug/deps/runner-2ec0aee362667769)
+23  : ┆ [32.8s] | 
+23  : ┆ [32.8s] | running 41 tests
+23  : ┆ [32.8s] | test fake_b11429_logger_suppresses_default_info_and_models_decorations ... ok
+23  : ┆ [32.8s] | test models_dir_is_part_of_private_root_validation ... ok
+23  : ┆ [32.8s] | test model_removal_is_exact_safe_and_blocked_by_preverification_lease ... ok
+23  : ┆ [32.8s] | test removal_stopping_after_marker_unlink_reports_partial_and_preserves_orphan ... ok
+23  : ┆ [32.8s] | test verify_model_hashes_held_descriptor_and_rejects_tampering ... ok
+23  : ┆ [32.8s] | test provider_inventory_reports_runtime_state_and_curated_models ... ok
+23  : ┆ [32.8s] | test removal_revalidates_held_directory_files_and_install_lock_before_unlink ... ok
+23  : ┆ [32.8s] | test list_models_accepts_only_exact_canonical_catalog_records ... ok
+23  : ┆ [32.8s] | test removal_rejects_lock_content_symlink_and_hardlink_without_unpublishing ... ok
+23  : ┆ [32.8s] | test runtime_executable_verifies_selected_release_against_manifest ... ok
+23  : ┆ [32.9s] | test runner_rejects_unsafe_inputs_before_spawning ... ok
+23  : ┆ [32.9s] | test peer_pid_mismatch_is_fatal_and_group_is_killed ... ok
+23  : ┆ [32.9s] | test stderr_capture_is_bounded ... ok
+23  : ┆ [32.9s] | test crash_during_request_is_reported_and_runner_not_reused ... ok
+23  : ┆ [32.9s] | test spawn_uses_fixed_args_cleared_env_private_socket_and_own_group ... ok
+23  : ┆ [32.9s] | test verification_checks_deadline_and_cancellation_between_reads ... ok
+23  : ┆ [32.9s] | test verified_model_descriptor_survives_path_replacement ... ok
+23  : ┆ [33.0s] | test list_models_rejects_duplicate_names_and_excess_records ... ok
+23  : ┆ [33.0s] | test stale_runner_dirs_are_removed_only_when_dead_and_exact ... ok
+23  : ┆ [33.0s] | test carried_lease_is_consumed_once_and_loaded_runner_blocks_all_removal ... ok
+23  : ┆ [33.0s] | test identity_mismatch_and_tool_calls_are_rejected_and_stop_the_runner ... ok
+23  : ┆ [33.0s] | test chunked_responses_and_server_context_errors ... ok
+23  : ┆ [33.0s] | test single_runner_lock_contention_is_runner_busy_without_waiting ... ok
+23  : ┆ [33.0s] | test context_trims_oldest_pairs_in_request_only_or_reports_limit ... ok
+23  : ┆ [33.0s] | test explicit_cancellation_stops_a_blocked_completion_without_waiting_for_deadline ... ok
+23  : ┆ [33.4s] | test deadline_expiry_stops_runner_mid_generation ... ok
+23  : ┆ [33.8s] | test vulkan_post_health_window_obeys_cancellation_and_original_deadline ... ok
+23  : ┆ [33.9s] | test vulkan_startup_continuous_complete_records_do_not_slide_window ... ok
+23  : ┆ [34.1s] | test vulkan_startup_rejects_child_exit_and_stderr_eof_after_health ... ok
+23  : ┆ [34.1s] | test readiness_waits_for_load_and_bounded_failures_clean_up ... ok
+23  : ┆ [35.0s] | test vulkan_startup_observes_full_window_and_accepts_only_complete_fragmented_evidence ... ok
+23  : ┆ [35.0s] | test drop_and_stop_escalation_clean_up_child_dir_and_lock ... ok
+23  : ┆ [35.1s] | test provider_startup_fallback_reason_survives_success_reuse_and_idle_then_resets ... FAILED
+23  : ┆ [35.6s] | test provider_startup_fallback_reason_requires_confirmed_cleanup ... ok
+23  : ┆ [36.2s] | test app_reports_busy_lock_saved_ollama_model_and_tampered_model ... ok
+23  : ┆ [36.2s] | test provider_startup_fallback_reason_accessor_is_nonblocking_during_slow_inference ... ok
+23  : ┆ [36.4s] | test application_teardown_cancels_active_native_inference_and_joins_cleanup ... ok
+23  : ┆ [38.3s] | test vulkan_startup_rejects_partial_unterminated_duplicate_and_overflow_during_window ... ok
+23  : ┆ [41.4s] | test provider_startup_fallback_reason_survives_cpu_startup_and_completion_failure ... ok
+23  : ┆ [42.3s] | test app_worker_owns_runner_restart_switch_idle_and_shutdown ... ok
+23  : ┆ [1m3s] | test provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch ... ok
+23  : ┆ [1m3s] | 
+23  : ┆ [1m3s] | failures:
+23  : ┆ [1m3s] | 
+23  : ┆ [1m3s] | ---- provider_startup_fallback_reason_survives_success_reuse_and_idle_then_resets stdout ----
+23  : ┆ [1m3s] | 
+23  : ┆ [1m3s] | thread 'provider_startup_fallback_reason_survives_success_reuse_and_idle_then_resets' (2195) panicked at tests/runner.rs:2318:9:
+23  : ┆ [1m3s] | assertion `left == right` failed
+23  : ┆ [1m3s] |   left: "RUNNER_BUSY"
+23  : ┆ [1m3s] |  right: "MODEL_UNAVAILABLE"
+23  : ┆ [1m3s] | note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+23  : ┆ [1m3s] | 
+23  : ┆ [1m3s] | 
+23  : ┆ [1m3s] | failures:
+23  : ┆ [1m3s] |     provider_startup_fallback_reason_survives_success_reuse_and_idle_then_resets
+23  : ┆ [1m3s] | 
+23  : ┆ [1m3s] | test result: FAILED. 40 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.88s
+23  : ┆ [1m3s] | 
+23  : ┆ Container.withExec ERROR [1m3s]
+24  : ┆ Container.stdout ERROR [0.0s, waited on sh scripts/test.sh]
+24  : ┆ ! exit code: 101
+12  : Smith.testService ERROR [1m5s]
+12  : ! exit code: 101
+23  : ┆ Container.withExec ERROR [1m3s]
+23  : ┆ [1m3s] | error: test failed, to rerun pass `--test runner`
+12  : Smith.testService ERROR [1m5s]
+12  : ! exit code: 101
+12  : [1m4s] | ERROR [dagger.mod]: API error while executing function
+12  : [1m4s] | Traceback (most recent call last):
+12  : [1m4s] |   File "/src/xxh3:064aefd024757755/next/dagger/src/smith_next/main.py", line 71, in test_service
+12  : [1m4s] |     return await (
+12  : [1m4s] |            ^^^^^^^
+12  : [1m4s] |     ...<3 lines>...
+12  : [1m4s] |     )
+12  : [1m4s] |     ^
+12  : [1m4s] |   File "<@beartype(dagger.client.gen.Container.stdout) at 0x7caaac7e8d50>", line 11, in stdout
+12  : [1m4s] |   File "/src/xxh3:064aefd024757755/next/dagger/sdk/src/dagger/client/gen.py", line 2194, in stdout
+12  : [1m4s] |     return await _ctx.execute(str)
+12  : [1m4s] |            ^^^^^^^^^^^^^^^^^^^^^^^
+12  : [1m4s] |   File "/src/xxh3:064aefd024757755/next/dagger/sdk/src/dagger/client/_core.py", line 232, in execute
+12  : [1m4s] |     raise error from e
+12  : [1m4s] | dagger.ExecError: exit code: 101 [traceparent:9aeba510d05cc670e75971839de609bc-a037b145a49525be]
+
+
+Error: exit code: 101
+Stdout:
+running 61 tests
+test acceleration::tests::cpu_mode_is_independent_of_vulkan_evidence ... ok
+test acceleration::tests::duplicate_evidence_is_an_error ... ok
+test acceleration::tests::decorated_pinned_logs_are_not_silently_reinterpreted ... ok
+test acceleration::tests::full_offload_is_gpu ... ok
+test acceleration::tests::launch_flags_are_exact ... ok
+test acceleration::tests::incomplete_records_never_establish_or_prematurely_reject_offload ... ok
+test acceleration::tests::evidence_limit_counts_all_bytes_and_keeps_earlier_records ... ok
+test acceleration::tests::malformed_evidence_is_an_error ... ok
+test acceleration::tests::missing_evidence_is_an_error ... ok
+test acceleration::tests::offloaded_layers_cannot_exceed_total ... ok
+test acceleration::tests::partial_offload_is_gpu_and_cpu ... ok
+test acceleration::tests::unrelated_lines_are_ignored ... ok
+test acceleration::tests::zero_offload_is_an_error ... ok
+test app::v2::tests::assurance_legacy_valid_revision_must_migrate ... ok
+test app::v2::tests::conversation_limit_and_deleted_legacy_target_never_remap ... ok
+test app::v2::tests::assurance_last_sequence_and_late_completion_after_dispose ... ok
+test app::v2::tests::assurance_duplicate_origins_must_fail_validation ... ok
+test app::v2::tests::assurance_delete_receipt_must_not_describe_existing_target ... ok
+test app::v2::tests::global_worker_occupancy_blocks_v2_submit_without_creation ... ok
+test app::v2::tests::title_scalar_boundaries_and_sanitization ... ok
+test app::v2::tests::completion_is_fenced_by_running_request_target_and_revision ... ok
+test manager::tests::captured_helper_fixture ... ignored, fixture invoked only by captured-helper subprocess tests
+test app::v2::tests::unexpected_dispatch_capacity_failure_is_reported_and_fenced ... ok
+test app::v2::tests::terminal_eviction_skips_pending_and_never_forgets_replay_id ... ok
+test manager::tests::enable_and_disable_are_fixed_and_never_change_runtime ... ok
+test app::v2::tests::title_generation_removes_feff_before_truncation_without_changing_stored_validity ... ok
+test app::v2::tests::expired_submit_new_origin_remains_valid_without_retained_job ... ok
+test app::v2::tests::independent_r2_origin_must_match_retained_target ... ok
+test manager::tests::maintenance_properties_require_exact_additional_facts_and_safe_groups ... ok
+test app_transport::tests::complete_first_envelope_correlates_rejected_trailing_frames ... ok
+test catalog::tests::catalog_is_curated_pinned_and_default_first ... ok
+test maintenance::tests::original_consent_is_monotonic_expiring_and_cannot_be_substituted ... ok
+test app_transport::tests::truncated_app_frame_is_not_a_request ... ok
+test manager::tests::properties_fail_closed ... ok
+test runner::tests::messages_must_alternate_and_end_with_user ... ok
+test runner::tests::startup_capture_failure_cannot_accept_an_earlier_valid_record ... ok
+test runner::tests::startup_capture_retries_interruption_but_records_eof ... ok
+test runner::tests::completion_is_content_only_with_identity_and_no_tools ... ok
+test app::v2::tests::migration_preserves_legacy_ids_without_inventing_submitted_text ... ok
+test manager::tests::parent_changed_before_guard_armed_prevents_exec ... ok
+test runner::tests::startup_capture_keeps_raw_prefix_limit_and_never_rolls_evidence ... ok
+test runner::tests::http_reader_accepts_length_chunked_and_eof_bodies ... ok
+test app::v2::tests::fake_clock_expiry_before_dispatch_and_fifo_running_is_durable ... ok
+test app::v2::tests::retained_origin_must_be_v2_submit_new_not_another_kind_or_version ... ok
+test app::v2::tests::retained_submit_new_requires_its_target_origin ... ok
+test app::v2::tests::v2_configuration_revision_parser_requires_canonical_representation ... ok
+test app::v2::tests::all_expired_jobs_terminate_without_a_provider_or_pending_eviction ... ok
+test app::v2::tests::title_legacy_disk_and_receipt_replay_remain_compatible ... ok
+test runner::tests::http_reader_rejects_ambiguous_truncated_and_oversized_responses ... ok
+test app::v2::tests::assurance_reserved_revision_must_allow_dispatch ... ok
+test manager::tests::abrupt_helper_death_kills_captured_direct_fake_manager_child ... ok
+test manager::tests::cooperative_helper_termination_cleans_captured_fake_manager_group ... ok
+test app_transport::tests::app_frames_accept_exact_4mib_payload_but_reject_overflow_and_multiple ... ok
+test app::v2::tests::full_u64_config_revision_migration_wire_echo_and_exhaustion ... ok
+test runner::tests::http_reader_deadline_is_absolute ... ok
+test manager::tests::injected_fake_command_deadline_output_and_pipe_cleanup_are_bounded ... ok
+test app::v2::tests::encoded_capacity_reserves_completion_and_refusal_does_not_latch_fault ... ok
+test app::v2::tests::assurance_legacy_maximum_escaped_results_migrate ... ok
+test app_transport::tests::blocked_helper_output_has_finite_budget_and_restores_flags ... ok
+test app::v2::tests::assurance_exact_byte_reservation_must_allow_dispatch ... ok
+test app::v2::tests::four_jobs_at_exact_byte_and_revision_capacity_all_complete ... ok
+
+test result: ok. 60 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 6.38s
+
+
+running 1 test
+test tests::production_preflight_rejects_root_and_accepts_unprivileged_identity ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 35 tests
+test corrupt_unsupported_symlink_and_unsafe_app_state_preserved ... ok
+test production_source_has_no_speech_transport_or_audio_execution ... ok
+test legacy_null_audio_is_strict_and_corrupt_migration_never_rewrites ... ok
+test live_text_inventory_retires_speech_and_configure_requires_explicit_null ... ok
+test retired_requests_reject_without_execution_and_tombstones_win ... ok
+test checked_configuration_and_removal_fail_closed_before_dispatch ... ok
+test corrupt_nested_result_and_inconsistent_operation_status_are_preserved ... ok
+test unsafe_destination_change_blocks_admission_without_inference ... ok
+test long_text_answer_is_not_truncated_or_regenerated ... ok
+test failed_generation_does_not_append_partial_history ... ok
+test active_worker_keeps_state_poll_responsive_and_blocks_queue_and_config ... ok
+test strict_requests_ids_exact_tags_and_text_limits ... ok
+test multiple_running_jobs_are_corrupt_before_reconciliation_and_preserved ... ok
+test multi_chat_strict_corruption_preserved_and_first_submit_rejection_atomic ... ok
+test multi_chat_duplicate_versions_and_v1_projection_remain_exact ... ok
+test multi_chat_target_busy_rename_and_unrelated_management ... ok
+test model_verification_is_durable_bound_and_does_not_append_history ... ok
+test successful_removal_uses_serial_worker_and_durable_duplicate_result ... ok
+test restart_interrupts_pending_preserves_terminal_and_never_replays ... ok
+test multi_chat_title_derived_once_preserves_full_prompt_and_restart ... ok
+test multi_chat_delete_preflights_tombstones_and_conversation_limit ... ok
+test multi_chat_lifecycle_receipts_delete_residue_and_no_missing_target_alias ... ok
+test multi_chat_atomic_admission_fifo_capacity_and_isolated_context ... ok
+test voice_v1_migration_preserves_preferences_history_results_ids_and_no_replay ... ok
+test new_running_model_kinds_interrupt_without_replay_on_restart ... ok
+test verification_rejects_empty_final_and_wrong_digest ... ok
+test invalid_live_inventory_is_bounded_failure_not_persisted_corruption ... ok
+test every_legacy_running_kind_interrupts_without_replay ... ok
+test maximal_valid_inventory_metadata_stays_pollable_across_restart ... ok
+test durable_identifier_capacity_is_explicit_not_silent_forgetting ... ok
+test dropped_gated_worker_cannot_publish_into_reopened_roots ... ok
+test multi_chat_restart_interrupts_every_pending_and_resets_inventory ... ok
+test operation_and_speech_errors_require_bounded_semantics_and_nullable_fields ... ok
+test nested_inventory_semantic_type_and_size_corruption_is_preserved ... ok
+test history_is_bounded_in_complete_pairs_and_evicted_ids_cannot_resurrect ... ok
+
+test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.96s
+
+
+running 21 tests
+test app_cli_stdin_envelope_is_separate_and_never_uses_endpoint_argv ... ok
+test compiled_identity_is_finite_and_ambient_manager_override_is_not_a_control_option ... ok
+test fixture_spawn_waits_until_executable_writer_is_closed ... ok
+test app_v2_helper_correlates_preflight_and_strict_decode_failures ... ok
+test duplicate_daemon_does_not_adopt_or_remove_verified_socket ... ok
+test root_normalization_state_types_and_links_fail_closed ... ok
+test unsafe_roots_files_units_sockets_and_corrupt_state_fail_closed ... ok
+test real_socket_rejects_wrong_pid_bounded_frames_and_persists_on_client_detach ... ok
+test pending_reload_rejects_foreign_overridden_transient_and_ambiguous_runtime ... ok
+test stale_app_path_blocks_start_without_adoption_or_removal ... ok
+test strict_enablement_rejects_runtime_link_alias_mask_indirect_and_disagreement ... ok
+test concurrent_apply_is_rejected_without_effects ... ok
+test loaded_pending_reload_repairs_only_with_separate_consent_and_retries_failure ... ok
+test app_buffered_large_frame_and_unknown_fields_are_rejected_without_provider_work ... ok
+test v2_trailing_frames_execute_neither_request_and_keep_correlation ... ok
+test app_peer_conflict_and_corrupt_state_fail_closed_without_changing_core ... ok
+test separate_app_socket_verified_by_current_controller_facts_preserves_control ... ok
+test manager_fragment_binary_and_pid_drift_block_bridge_adoption ... ok
+test action_time_source_paths_snapshot_and_replay_bindings ... ok
+test separate_consented_lifecycle_and_exact_json_contract ... ok
+test partial_manager_failure_preserves_files_and_never_falls_back ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.65s
+
+
+running 11 tests
+test old_manager_implementations_default_to_refusal_and_foreign_pid_never_stopped ... ok
+test candidate_locked_apply_uses_held_lease_and_original_token ... ok
+test lease_rejects_other_roots_and_replaced_data_directory ... ok
+test exact_legacy_static_unit_is_recognized_and_preserved ... ok
+test unregister_preserves_old_unit_and_all_corrupt_state_under_held_lease ... ok
+test reload_failure_or_unconfirmed_removal_keeps_retained_evidence_without_retry ... ok
+test remaining_children_and_either_socket_block_preparation_or_apply ... ok
+test enabled_current_unit_is_disabled_before_unregister_and_failure_preserves_it ... ok
+test consent_drift_wrong_token_and_backup_collision_have_no_effects ... ok
+test foreign_enabled_unknown_transient_and_pending_overrides_refused ... ok
+test stop_verifies_old_proc_bytes_and_refuses_remaining_group_sockets_or_failure ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+
+running 41 tests
+test fake_b11429_logger_suppresses_default_info_and_models_decorations ... ok
+test models_dir_is_part_of_private_root_validation ... ok
+test model_removal_is_exact_safe_and_blocked_by_preverification_lease ... ok
+test removal_stopping_after_marker_unlink_reports_partial_and_preserves_orphan ... ok
+test verify_model_hashes_held_descriptor_and_rejects_tampering ... ok
+test provider_inventory_reports_runtime_state_and_curated_models ... ok
+test removal_revalidates_held_directory_files_and_install_lock_before_unlink ... ok
+test list_models_accepts_only_exact_canonical_catalog_records ... ok
+test removal_rejects_lock_content_symlink_and_hardlink_without_unpublishing ... ok
+test runtime_executable_verifies_selected_release_against_manifest ... ok
+test runner_rejects_unsafe_inputs_before_spawning ... ok
+test peer_pid_mismatch_is_fatal_and_group_is_killed ... ok
+test stderr_capture_is_bounded ... ok
+test crash_during_request_is_reported_and_runner_not_reused ... ok
+test spawn_uses_fixed_args_cleared_env_private_socket_and_own_group ... ok
+test verification_checks_deadline_and_cancellation_between_reads ... ok
+test verified_model_descriptor_survives_path_replacement ... ok
+test list_models_rejects_duplicate_names_and_excess_records ... ok
+test stale_runner_dirs_are_removed_only_when_dead_and_exact ... ok
+test carried_lease_is_consumed_once_and_loaded_runner_blocks_all_removal ... ok
+test identity_mismatch_and_tool_calls_are_rejected_and_stop_the_runner ... ok
+test chunked_responses_and_server_context_errors ... ok
+test single_runner_lock_contention_is_runner_busy_without_waiting ... ok
+test context_trims_oldest_pairs_in_request_only_or_reports_limit ... ok
+test explicit_cancellation_stops_a_blocked_completion_without_waiting_for_deadline ... ok
+test deadline_expiry_stops_runner_mid_generation ... ok
+test vulkan_post_health_window_obeys_cancellation_and_original_deadline ... ok
+test vulkan_startup_continuous_complete_records_do_not_slide_window ... ok
+test vulkan_startup_rejects_child_exit_and_stderr_eof_after_health ... ok
+test readiness_waits_for_load_and_bounded_failures_clean_up ... ok
+test vulkan_startup_observes_full_window_and_accepts_only_complete_fragmented_evidence ... ok
+test drop_and_stop_escalation_clean_up_child_dir_and_lock ... ok
+test provider_startup_fallback_reason_survives_success_reuse_and_idle_then_resets ... FAILED
+test provider_startup_fallback_reason_requires_confirmed_cleanup ... ok
+test app_reports_busy_lock_saved_ollama_model_and_tampered_model ... ok
+test provider_startup_fallback_reason_accessor_is_nonblocking_during_slow_inference ... ok
+test application_teardown_cancels_active_native_inference_and_joins_cleanup ... ok
+test vulkan_startup_rejects_partial_unterminated_duplicate_and_overflow_during_window ... ok
+test provider_startup_fallback_reason_survives_cpu_startup_and_completion_failure ... ok
+test app_worker_owns_runner_restart_switch_idle_and_shutdown ... ok
+test provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch ... ok
+
+failures:
+
+---- provider_startup_fallback_reason_survives_success_reuse_and_idle_then_resets stdout ----
+
+thread 'provider_startup_fallback_reason_survives_success_reuse_and_idle_then_resets' (2195) panicked at tests/runner.rs:2318:9:
+assertion `left == right` failed
+  left: "RUNNER_BUSY"
+ right: "MODEL_UNAVAILABLE"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    provider_startup_fallback_reason_survives_success_reuse_and_idle_then_resets
+
+test result: FAILED. 40 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.88s
+Stderr:
+Updating crates.io index
+ Downloading crates ...
+  Downloaded cfg-if v1.0.5
+  Downloaded digest v0.10.7
+  Downloaded block-buffer v0.10.4
+  Downloaded cpufeatures v0.2.17
+  Downloaded typenum v1.20.1
+  Downloaded generic-array v0.14.7
+  Downloaded itoa v1.0.18
+  Downloaded sha2 v0.10.9
+  Downloaded zmij v1.0.23
+  Downloaded version_check v0.9.5
+  Downloaded unicode-ident v1.0.26
+  Downloaded crypto-common v0.1.7
+  Downloaded serde_derive v1.0.229
+  Downloaded proc-macro2 v1.0.107
+  Downloaded serde v1.0.229
+  Downloaded memchr v2.8.3
+  Downloaded serde_core v1.0.229
+  Downloaded serde_json v1.0.151
+  Downloaded syn v3.0.6
+  Downloaded libc v0.2.189
+  Downloaded quote v1.0.47
+   Compiling version_check v0.9.5
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.26
+   Compiling quote v1.0.47
+    Checking typenum v1.20.1
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling libc v0.2.189
+    Checking cpufeatures v0.2.17
+    Checking cfg-if v1.0.5
+    Checking memchr v2.8.3
+    Checking itoa v1.0.18
+   Compiling generic-array v0.14.7
+    Checking block-buffer v0.10.4
+    Checking crypto-common v0.1.7
+    Checking digest v0.10.7
+    Checking sha2 v0.10.9
+   Compiling syn v3.0.6
+   Compiling serde_derive v1.0.229
+    Checking smith-service v0.1.0 (/src)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.57s
+   Compiling typenum v1.20.1
+   Compiling itoa v1.0.18
+   Compiling cfg-if v1.0.5
+   Compiling memchr v2.8.3
+   Compiling cpufeatures v0.2.17
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling libc v0.2.189
+   Compiling generic-array v0.14.7
+   Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.7
+   Compiling digest v0.10.7
+   Compiling sha2 v0.10.9
+   Compiling serde_json v1.0.151
+   Compiling serde v1.0.229
+   Compiling smith-service v0.1.0 (/src)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.55s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-cd3d2bcd9ca2fc89)
+     Running unittests src/main.rs (target/debug/deps/smith_service-327dc096bf49e975)
+     Running tests/application.rs (target/debug/deps/application-a656d3e673db9f48)
+     Running tests/debug_service.rs (target/debug/deps/debug_service-e6705fe31ae65f52)
+     Running tests/maintenance.rs (target/debug/deps/maintenance-572482f942163391)
+     Running tests/runner.rs (target/debug/deps/runner-2ec0aee362667769)
+error: test failed, to rerun pass `--test runner`
+make: *** [Makefile:41: service/test] Error 101
