@@ -3,6 +3,7 @@ pub mod acceleration;
 pub mod app;
 mod app_transport;
 pub mod catalog;
+pub mod cloud;
 mod control;
 mod filesystem;
 pub mod maintenance;

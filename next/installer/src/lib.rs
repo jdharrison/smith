@@ -10,6 +10,8 @@ pub mod launch;
 pub mod maintenance;
 pub mod manifest;
 pub mod model;
+pub mod providers;
+pub mod secret;
 pub mod setup;
 pub mod wizard;
 

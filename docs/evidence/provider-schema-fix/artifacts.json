@@ -1,0 +1,2590 @@
+{
+  "status": "rebuilt_and_explicitly_verified",
+  "claim_kind": "Local source-bound candidate only; aggregate acceptance remains FAIL and no deployment/publication is authorized.",
+  "build_command_status": "next/service/build/provider-schema-fix/package-validation/build-status.json",
+  "build_source_inventory_sha256": "2f083f0e5556c35faf7b1f0696c55e27e86073e52790f5545709c071b20f85c0",
+  "build_source_stable": true,
+  "inventory_sha256": "f5444865bc0bdd99c8b45f79e10d0336922e5443cdb1dafcb111181d0afcc1c2",
+  "package_inventory_sha256": "4530e813f628e08e57af87aa81c675b30877ee65410163b2cd091ed086e4bb3e",
+  "inventory_digest_method": "SHA-256 of compact sorted-key JSON of path-sorted file identity entries.",
+  "file_count": 189,
+  "roots": [
+    {
+      "path": "next/service/dist",
+      "exists": true,
+      "file_count": 1
+    },
+    {
+      "path": "next/client/dist",
+      "exists": true,
+      "file_count": 91
+    },
+    {
+      "path": "next/installer/dist",
+      "exists": true,
+      "file_count": 97
+    }
+  ],
+  "files": [
+    {
+      "path": "next/client/dist/data/flutter_assets/AssetManifest.bin",
+      "sha256": "ce134bb55992c19d4b23673aac67dbb1767de12000ca1d8a68a730c8f51d2d98",
+      "bytes": 1931,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/FontManifest.json",
+      "sha256": "19febf4802fb9b9b90037050e004bce4cda6eb59727b89cecec94f83553d3aff",
+      "bytes": 622,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/NOTICES.Z",
+      "sha256": "112207764f940fb52106a1f90fe509f7d5c08fc14a108ce6608ec6518051af61",
+      "bytes": 99049,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/NativeAssetsManifest.json",
+      "sha256": "9548a31e4a048135c1d94f919328bfb62ae2c7bb3cab96557c7941daa97776cb",
+      "bytes": 45,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/README.md",
+      "sha256": "ac92088158aae695a2b14bec36d6b8152dee48329f82a6586ca0975b7c9178cc",
+      "bytes": 7566,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf",
+      "sha256": "0bede3debdea8488bbb927f8f0650d915073209734a67fe8cd5a3320b572511c",
+      "bytes": 156996,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf",
+      "sha256": "fe11304a5fe956d5744e9b6a246cc83d90425245e75a62230044966ca96a7f50",
+      "bytes": 155940,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf",
+      "sha256": "c9417148ce13f8fa7d2d5c9180bbc141f72aa0d814ffeb280f6904dc2b1bbd7a",
+      "bytes": 157552,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/fonts/ibm-plex-mono/OFL.txt",
+      "sha256": "91c25c350d3cac39da2736d74f7ba37ef648f5237a4e330a240615bc8d8c4360",
+      "bytes": 4360,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf",
+      "sha256": "31c92d01a8a08528b718a43addf0ad3df0af2ca4b7b3290a452f70f358e14d3d",
+      "bytes": 273860,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf",
+      "sha256": "a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f",
+      "bytes": 273900,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf",
+      "sha256": "1b3bfa1ed5665a4ce3f9feb68d2d4e40e70bf8b4b7d9a3edd418f321b4e166a0",
+      "bytes": 277092,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/fonts/jetbrains-mono/OFL.txt",
+      "sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad",
+      "bytes": 4399,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/archive.svg",
+      "sha256": "ce0af5c71277130bdad501ed06249213e9805b0dd445e3da97af3bc6d32909ce",
+      "bytes": 264,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/check.svg",
+      "sha256": "f5914af9d3a5dc1e77ebf278af6488dc17b1935d96f50f1f8dae78e625b1c5b1",
+      "bytes": 210,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/chevron-down.svg",
+      "sha256": "640e640066191f6b26236c4c24f487ed9ba4493ba0d33b480f930825dffecfbc",
+      "bytes": 208,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/chevron-right.svg",
+      "sha256": "43b39bf125cee680dd474f2f0ba9c7bfc370df2087280cacfd5d62499a7cbb0b",
+      "bytes": 209,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/ellipsis-vertical.svg",
+      "sha256": "af99c5d1a45eef4e3f59765b1440fe51f39169bb057473fdaf925666f57e8e5a",
+      "bytes": 276,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/info.svg",
+      "sha256": "62505fa5145acd57a45fd93f49df02f1e0dc86d4c43c75a2ca69fabe8fe554b3",
+      "bytes": 244,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/menu.svg",
+      "sha256": "69a8310d92c0f2a42fd3127e50c2f7bebd87398d32c5def66db31a180e88f277",
+      "bytes": 219,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/message-square.svg",
+      "sha256": "39ef163029f320935e3becc3e478393ce5ea4e4b917d4d8f222542eb5758f741",
+      "bytes": 333,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/pencil.svg",
+      "sha256": "6de88a293c49416488fb0c5c79177d7af7c855240391b99a561062498a179ab4",
+      "bytes": 259,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/plus.svg",
+      "sha256": "6e1a6a826663c1a4fbd4fd8f8bf9d7765fa965744d4e1d6791f163ba378b2b09",
+      "bytes": 212,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/rotate-ccw.svg",
+      "sha256": "837375539874ab13b51911472d13a947582ff79cb5b926388b279d03914d64bb",
+      "bytes": 223,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/send.svg",
+      "sha256": "789dbefe721043a8fbb92c7eac0904c59cfab83b2faaa9ee924a53d9f6045933",
+      "bytes": 227,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/settings.svg",
+      "sha256": "0b22e51750886c65688e044434a578191799ffcf4afea4cbf60fdf2e9ea90327",
+      "bytes": 708,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/trash-2.svg",
+      "sha256": "958240c9bacb4dca8f2ea66e08a817eab4ace45c9e72086472095edaa7cc3a9f",
+      "bytes": 246,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/assets/icons/x.svg",
+      "sha256": "046d06a319a47b847e1053e557f1cddf3fad2f53abad2150e563cec9ad404d92",
+      "bytes": 216,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/fonts/MaterialIcons-Regular.otf",
+      "sha256": "69144da8faf2332b261e4eaeb8e62f58d46ac9891f63616d891fd3041a889419",
+      "bytes": 1760,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/pubspec.yaml",
+      "sha256": "e6747a862cba572dd1dc3888db82654fbdafd04dfbe25a5edfbdc5d1c6fe5f24",
+      "bytes": 1127,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/shaders/ink_sparkle.frag",
+      "sha256": "1fe8436a743884cb65078fe8c7b38e18f5365f2a2961270916f426fd13c604af",
+      "bytes": 21856,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/shaders/stretch_effect.frag",
+      "sha256": "bc7599dbbbaab310efe41520574138d21fb18a88c8fe4495ed79315309336f6f",
+      "bytes": 17616,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/flutter_assets/version.json",
+      "sha256": "0c6c30f9d459e2914d5f2ad5cc7f45910f638ba3a970b470c7758c0f95fca116",
+      "bytes": 94,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/data/icudtl.dat",
+      "sha256": "325a86063d26334c2eabe1743cea073b612540fbf3d8fc2ef0b5708e3763a8c7",
+      "bytes": 864880,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/lib/libapp.so",
+      "sha256": "10a0aab3df72ab45bf7b4b7636633fd9026a2deb9ffc8846fc937b3adbbf5e38",
+      "bytes": 6505352,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/lib/libflutter_linux_gtk.so",
+      "sha256": "c6992ba778360217695a8193828286ae73c971e0e1f47bdb1b98c5190497cb24",
+      "bytes": 17218152,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/share/applications/dev.smith.smith_client.desktop",
+      "sha256": "25f825eaaa693ad4cfa0480b83d2f054fc58919604150915a773b91cf6ed5621",
+      "bytes": 192,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/share/pixmaps/dev.smith.smith_client.png",
+      "sha256": "79afede7f466a59eaa01759d246fc0c9d05d63ec7d361c6c27e0a93c37d85e53",
+      "bytes": 1808730,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/LICENSE.GPL-3",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "bytes": 35149,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/LICENSE.libgomp",
+      "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79",
+      "bytes": 69004,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/LICENSE.llama.cpp",
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+      "bytes": 1078,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-base.so.0",
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6",
+      "bytes": 931232,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-alderlake.so",
+      "sha256": "d95ec54730283295bc7363ec842b5e1512dbae6523bf8106679a37f688ed367d",
+      "bytes": 1428600,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-cannonlake.so",
+      "sha256": "2bdf5f493bf9472112c4bd5e936cb0cd3f7235b1b4b3c636dea9d1a9489c1558",
+      "bytes": 1577976,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-cascadelake.so",
+      "sha256": "d8ecf1f83ed1a52f50f911853ac356047988d41cecf9121a8e0f3e94b6989c47",
+      "bytes": 1589968,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-cooperlake.so",
+      "sha256": "c43f344af8f30204e0cbecc51f4755f45eecaa56c723ee87ba35e4f887a36909",
+      "bytes": 1585944,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-haswell.so",
+      "sha256": "bd7740021e3cbce4b49270e8c12f6a3bc6eed8cec00e548276d84a298d5911fa",
+      "bytes": 1428600,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-icelake.so",
+      "sha256": "c6579106a5f0f1cfd76902218c247858ffc5098c4f2f099864df643aa1d03f62",
+      "bytes": 1589968,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-ivybridge.so",
+      "sha256": "02a7121ebdb06b07cc0b7cc449aa724b6270edf5314113a65f90bd3fb863df45",
+      "bytes": 1364216,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-piledriver.so",
+      "sha256": "8c7d57b1a5afc23f688cefd70a835ff76e9be5bdd6c73dcfc649433118ec2ec2",
+      "bytes": 1360120,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-sandybridge.so",
+      "sha256": "3e04318845d9a9d9c8133d79925331a36d185f19fc9153b672c5b35da5c2b614",
+      "bytes": 1346712,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-sapphirerapids.so",
+      "sha256": "357dea6e5099e87d547e49a1f101f3e7c2e4283e4cf9518a4c220c0dcbe07b5f",
+      "bytes": 1852272,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-skylakex.so",
+      "sha256": "e10d82e3c08f91397cc265e3a13199e92f994f1e6961cd1777a484175233ea7b",
+      "bytes": 1577976,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-sse42.so",
+      "sha256": "7012b4dcad03e5649cccda277fdeb1950872dd5bf5957680ad8d1a2d403898d0",
+      "bytes": 954352,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-x64.so",
+      "sha256": "6f92125d03aa6041931e1fb576d735fe2104120dcd80785559ff7cb7440b60ea",
+      "bytes": 942240,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-zen4.so",
+      "sha256": "16adc0bc91d85382b508430667415d4fc472221c5ac1d9ef6a88eb38db4ba50e",
+      "bytes": 1585944,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libggml.so.0",
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82",
+      "bytes": 55184,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libgomp.so.1",
+      "sha256": "135f3c8f006d2fe5e68e51281c7974cb991a03de3bfb3593d68d174dfcf854d1",
+      "bytes": 352304,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libllama-common.so.0",
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d",
+      "bytes": 6407088,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libllama-server-impl.so",
+      "sha256": "0cb1fd100e7f018ac9ac0c5a3fc12aeef4cbe7614bb7ca8c686ec7d01c30810f",
+      "bytes": 7498288,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libllama.so.0",
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba",
+      "bytes": 4788880,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/libmtmd.so.0",
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea",
+      "bytes": 1896696,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/cpu/llama-server",
+      "sha256": "5faf410bbbc00a1b94b09ee01623699f255365628dfa73b1ee552d9e52a2231d",
+      "bytes": 17864,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/LICENSE.GPL-3",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "bytes": 35149,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/LICENSE.libgomp",
+      "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79",
+      "bytes": 69004,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/LICENSE.llama.cpp",
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+      "bytes": 1078,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-base.so.0",
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6",
+      "bytes": 931232,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-alderlake.so",
+      "sha256": "d95ec54730283295bc7363ec842b5e1512dbae6523bf8106679a37f688ed367d",
+      "bytes": 1428600,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-cannonlake.so",
+      "sha256": "2bdf5f493bf9472112c4bd5e936cb0cd3f7235b1b4b3c636dea9d1a9489c1558",
+      "bytes": 1577976,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-cascadelake.so",
+      "sha256": "d8ecf1f83ed1a52f50f911853ac356047988d41cecf9121a8e0f3e94b6989c47",
+      "bytes": 1589968,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-cooperlake.so",
+      "sha256": "c43f344af8f30204e0cbecc51f4755f45eecaa56c723ee87ba35e4f887a36909",
+      "bytes": 1585944,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-haswell.so",
+      "sha256": "bd7740021e3cbce4b49270e8c12f6a3bc6eed8cec00e548276d84a298d5911fa",
+      "bytes": 1428600,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-icelake.so",
+      "sha256": "c6579106a5f0f1cfd76902218c247858ffc5098c4f2f099864df643aa1d03f62",
+      "bytes": 1589968,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-ivybridge.so",
+      "sha256": "02a7121ebdb06b07cc0b7cc449aa724b6270edf5314113a65f90bd3fb863df45",
+      "bytes": 1364216,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-piledriver.so",
+      "sha256": "8c7d57b1a5afc23f688cefd70a835ff76e9be5bdd6c73dcfc649433118ec2ec2",
+      "bytes": 1360120,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-sandybridge.so",
+      "sha256": "3e04318845d9a9d9c8133d79925331a36d185f19fc9153b672c5b35da5c2b614",
+      "bytes": 1346712,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-sapphirerapids.so",
+      "sha256": "357dea6e5099e87d547e49a1f101f3e7c2e4283e4cf9518a4c220c0dcbe07b5f",
+      "bytes": 1852272,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-skylakex.so",
+      "sha256": "e10d82e3c08f91397cc265e3a13199e92f994f1e6961cd1777a484175233ea7b",
+      "bytes": 1577976,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-sse42.so",
+      "sha256": "7012b4dcad03e5649cccda277fdeb1950872dd5bf5957680ad8d1a2d403898d0",
+      "bytes": 954352,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-x64.so",
+      "sha256": "6f92125d03aa6041931e1fb576d735fe2104120dcd80785559ff7cb7440b60ea",
+      "bytes": 942240,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-zen4.so",
+      "sha256": "16adc0bc91d85382b508430667415d4fc472221c5ac1d9ef6a88eb38db4ba50e",
+      "bytes": 1585944,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-vulkan.so",
+      "sha256": "bc151ce7639cf16e3c89006ae697ef3db77b2be5ebf398c8e7db32b4e7b0a4d0",
+      "bytes": 44315144,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libggml.so.0",
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82",
+      "bytes": 55184,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libgomp.so.1",
+      "sha256": "135f3c8f006d2fe5e68e51281c7974cb991a03de3bfb3593d68d174dfcf854d1",
+      "bytes": 352304,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libllama-common.so.0",
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d",
+      "bytes": 6407088,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libllama-server-impl.so",
+      "sha256": "0cb1fd100e7f018ac9ac0c5a3fc12aeef4cbe7614bb7ca8c686ec7d01c30810f",
+      "bytes": 7498288,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libllama.so.0",
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba",
+      "bytes": 4788880,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/libmtmd.so.0",
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea",
+      "bytes": 1896696,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/runtime/vulkan/llama-server",
+      "sha256": "5faf410bbbc00a1b94b09ee01623699f255365628dfa73b1ee552d9e52a2231d",
+      "bytes": 17864,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_backend/smith-service",
+      "sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+      "bytes": 9250656,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/client/dist/smith_client",
+      "sha256": "b12601aa3bf99ee6bbc66c857282b0d8c111d78929b69f83ea9db1b45dba551c",
+      "bytes": 1836376,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/README.txt",
+      "sha256": "13f81c502809ef599be1683583dccb7a51c0c3317985d90451ab07bb3b80202f",
+      "bytes": 11502,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/SHA256SUMS",
+      "sha256": "89f6e061c5636d80fdc168a830c56b762fe063489eff6d1c7e47f4711ee151b8",
+      "bytes": 12073,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/manifest.json",
+      "sha256": "397f3dd8eeebd4228e4cf6810d5cd1f0ac453e170de8d5bee0809d5118b38d7c",
+      "bytes": 17461,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/AssetManifest.bin",
+      "sha256": "ce134bb55992c19d4b23673aac67dbb1767de12000ca1d8a68a730c8f51d2d98",
+      "bytes": 1931,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/FontManifest.json",
+      "sha256": "19febf4802fb9b9b90037050e004bce4cda6eb59727b89cecec94f83553d3aff",
+      "bytes": 622,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/NOTICES.Z",
+      "sha256": "112207764f940fb52106a1f90fe509f7d5c08fc14a108ce6608ec6518051af61",
+      "bytes": 99049,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/NativeAssetsManifest.json",
+      "sha256": "9548a31e4a048135c1d94f919328bfb62ae2c7bb3cab96557c7941daa97776cb",
+      "bytes": 45,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/README.md",
+      "sha256": "ac92088158aae695a2b14bec36d6b8152dee48329f82a6586ca0975b7c9178cc",
+      "bytes": 7566,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf",
+      "sha256": "0bede3debdea8488bbb927f8f0650d915073209734a67fe8cd5a3320b572511c",
+      "bytes": 156996,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf",
+      "sha256": "fe11304a5fe956d5744e9b6a246cc83d90425245e75a62230044966ca96a7f50",
+      "bytes": 155940,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf",
+      "sha256": "c9417148ce13f8fa7d2d5c9180bbc141f72aa0d814ffeb280f6904dc2b1bbd7a",
+      "bytes": 157552,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/OFL.txt",
+      "sha256": "91c25c350d3cac39da2736d74f7ba37ef648f5237a4e330a240615bc8d8c4360",
+      "bytes": 4360,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf",
+      "sha256": "31c92d01a8a08528b718a43addf0ad3df0af2ca4b7b3290a452f70f358e14d3d",
+      "bytes": 273860,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf",
+      "sha256": "a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f",
+      "bytes": 273900,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf",
+      "sha256": "1b3bfa1ed5665a4ce3f9feb68d2d4e40e70bf8b4b7d9a3edd418f321b4e166a0",
+      "bytes": 277092,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/OFL.txt",
+      "sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad",
+      "bytes": 4399,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/archive.svg",
+      "sha256": "ce0af5c71277130bdad501ed06249213e9805b0dd445e3da97af3bc6d32909ce",
+      "bytes": 264,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/check.svg",
+      "sha256": "f5914af9d3a5dc1e77ebf278af6488dc17b1935d96f50f1f8dae78e625b1c5b1",
+      "bytes": 210,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/chevron-down.svg",
+      "sha256": "640e640066191f6b26236c4c24f487ed9ba4493ba0d33b480f930825dffecfbc",
+      "bytes": 208,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/chevron-right.svg",
+      "sha256": "43b39bf125cee680dd474f2f0ba9c7bfc370df2087280cacfd5d62499a7cbb0b",
+      "bytes": 209,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/ellipsis-vertical.svg",
+      "sha256": "af99c5d1a45eef4e3f59765b1440fe51f39169bb057473fdaf925666f57e8e5a",
+      "bytes": 276,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/info.svg",
+      "sha256": "62505fa5145acd57a45fd93f49df02f1e0dc86d4c43c75a2ca69fabe8fe554b3",
+      "bytes": 244,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/menu.svg",
+      "sha256": "69a8310d92c0f2a42fd3127e50c2f7bebd87398d32c5def66db31a180e88f277",
+      "bytes": 219,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/message-square.svg",
+      "sha256": "39ef163029f320935e3becc3e478393ce5ea4e4b917d4d8f222542eb5758f741",
+      "bytes": 333,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/pencil.svg",
+      "sha256": "6de88a293c49416488fb0c5c79177d7af7c855240391b99a561062498a179ab4",
+      "bytes": 259,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/plus.svg",
+      "sha256": "6e1a6a826663c1a4fbd4fd8f8bf9d7765fa965744d4e1d6791f163ba378b2b09",
+      "bytes": 212,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/rotate-ccw.svg",
+      "sha256": "837375539874ab13b51911472d13a947582ff79cb5b926388b279d03914d64bb",
+      "bytes": 223,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/send.svg",
+      "sha256": "789dbefe721043a8fbb92c7eac0904c59cfab83b2faaa9ee924a53d9f6045933",
+      "bytes": 227,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/settings.svg",
+      "sha256": "0b22e51750886c65688e044434a578191799ffcf4afea4cbf60fdf2e9ea90327",
+      "bytes": 708,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/trash-2.svg",
+      "sha256": "958240c9bacb4dca8f2ea66e08a817eab4ace45c9e72086472095edaa7cc3a9f",
+      "bytes": 246,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/x.svg",
+      "sha256": "046d06a319a47b847e1053e557f1cddf3fad2f53abad2150e563cec9ad404d92",
+      "bytes": 216,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/fonts/MaterialIcons-Regular.otf",
+      "sha256": "69144da8faf2332b261e4eaeb8e62f58d46ac9891f63616d891fd3041a889419",
+      "bytes": 1760,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/pubspec.yaml",
+      "sha256": "e6747a862cba572dd1dc3888db82654fbdafd04dfbe25a5edfbdc5d1c6fe5f24",
+      "bytes": 1127,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/shaders/ink_sparkle.frag",
+      "sha256": "1fe8436a743884cb65078fe8c7b38e18f5365f2a2961270916f426fd13c604af",
+      "bytes": 21856,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/shaders/stretch_effect.frag",
+      "sha256": "bc7599dbbbaab310efe41520574138d21fb18a88c8fe4495ed79315309336f6f",
+      "bytes": 17616,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/flutter_assets/version.json",
+      "sha256": "0c6c30f9d459e2914d5f2ad5cc7f45910f638ba3a970b470c7758c0f95fca116",
+      "bytes": 94,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/data/icudtl.dat",
+      "sha256": "325a86063d26334c2eabe1743cea073b612540fbf3d8fc2ef0b5708e3763a8c7",
+      "bytes": 864880,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/lib/libapp.so",
+      "sha256": "10a0aab3df72ab45bf7b4b7636633fd9026a2deb9ffc8846fc937b3adbbf5e38",
+      "bytes": 6505352,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/lib/libflutter_linux_gtk.so",
+      "sha256": "c6992ba778360217695a8193828286ae73c971e0e1f47bdb1b98c5190497cb24",
+      "bytes": 17218152,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/share/applications/dev.smith.smith_client.desktop",
+      "sha256": "25f825eaaa693ad4cfa0480b83d2f054fc58919604150915a773b91cf6ed5621",
+      "bytes": 192,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/share/pixmaps/dev.smith.smith_client.png",
+      "sha256": "79afede7f466a59eaa01759d246fc0c9d05d63ec7d361c6c27e0a93c37d85e53",
+      "bytes": 1808730,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/LICENSE.GPL-3",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "bytes": 35149,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/LICENSE.libgomp",
+      "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79",
+      "bytes": 69004,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/LICENSE.llama.cpp",
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+      "bytes": 1078,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-base.so.0",
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6",
+      "bytes": 931232,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-alderlake.so",
+      "sha256": "d95ec54730283295bc7363ec842b5e1512dbae6523bf8106679a37f688ed367d",
+      "bytes": 1428600,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-cannonlake.so",
+      "sha256": "2bdf5f493bf9472112c4bd5e936cb0cd3f7235b1b4b3c636dea9d1a9489c1558",
+      "bytes": 1577976,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-cascadelake.so",
+      "sha256": "d8ecf1f83ed1a52f50f911853ac356047988d41cecf9121a8e0f3e94b6989c47",
+      "bytes": 1589968,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-cooperlake.so",
+      "sha256": "c43f344af8f30204e0cbecc51f4755f45eecaa56c723ee87ba35e4f887a36909",
+      "bytes": 1585944,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-haswell.so",
+      "sha256": "bd7740021e3cbce4b49270e8c12f6a3bc6eed8cec00e548276d84a298d5911fa",
+      "bytes": 1428600,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-icelake.so",
+      "sha256": "c6579106a5f0f1cfd76902218c247858ffc5098c4f2f099864df643aa1d03f62",
+      "bytes": 1589968,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-ivybridge.so",
+      "sha256": "02a7121ebdb06b07cc0b7cc449aa724b6270edf5314113a65f90bd3fb863df45",
+      "bytes": 1364216,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-piledriver.so",
+      "sha256": "8c7d57b1a5afc23f688cefd70a835ff76e9be5bdd6c73dcfc649433118ec2ec2",
+      "bytes": 1360120,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-sandybridge.so",
+      "sha256": "3e04318845d9a9d9c8133d79925331a36d185f19fc9153b672c5b35da5c2b614",
+      "bytes": 1346712,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-sapphirerapids.so",
+      "sha256": "357dea6e5099e87d547e49a1f101f3e7c2e4283e4cf9518a4c220c0dcbe07b5f",
+      "bytes": 1852272,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-skylakex.so",
+      "sha256": "e10d82e3c08f91397cc265e3a13199e92f994f1e6961cd1777a484175233ea7b",
+      "bytes": 1577976,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-sse42.so",
+      "sha256": "7012b4dcad03e5649cccda277fdeb1950872dd5bf5957680ad8d1a2d403898d0",
+      "bytes": 954352,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-x64.so",
+      "sha256": "6f92125d03aa6041931e1fb576d735fe2104120dcd80785559ff7cb7440b60ea",
+      "bytes": 942240,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-zen4.so",
+      "sha256": "16adc0bc91d85382b508430667415d4fc472221c5ac1d9ef6a88eb38db4ba50e",
+      "bytes": 1585944,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml.so.0",
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82",
+      "bytes": 55184,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libgomp.so.1",
+      "sha256": "135f3c8f006d2fe5e68e51281c7974cb991a03de3bfb3593d68d174dfcf854d1",
+      "bytes": 352304,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libllama-common.so.0",
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d",
+      "bytes": 6407088,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libllama-server-impl.so",
+      "sha256": "0cb1fd100e7f018ac9ac0c5a3fc12aeef4cbe7614bb7ca8c686ec7d01c30810f",
+      "bytes": 7498288,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libllama.so.0",
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba",
+      "bytes": 4788880,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libmtmd.so.0",
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea",
+      "bytes": 1896696,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/llama-server",
+      "sha256": "5faf410bbbc00a1b94b09ee01623699f255365628dfa73b1ee552d9e52a2231d",
+      "bytes": 17864,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/LICENSE.GPL-3",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "bytes": 35149,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/LICENSE.libgomp",
+      "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79",
+      "bytes": 69004,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/LICENSE.llama.cpp",
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+      "bytes": 1078,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-base.so.0",
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6",
+      "bytes": 931232,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-alderlake.so",
+      "sha256": "d95ec54730283295bc7363ec842b5e1512dbae6523bf8106679a37f688ed367d",
+      "bytes": 1428600,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-cannonlake.so",
+      "sha256": "2bdf5f493bf9472112c4bd5e936cb0cd3f7235b1b4b3c636dea9d1a9489c1558",
+      "bytes": 1577976,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-cascadelake.so",
+      "sha256": "d8ecf1f83ed1a52f50f911853ac356047988d41cecf9121a8e0f3e94b6989c47",
+      "bytes": 1589968,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-cooperlake.so",
+      "sha256": "c43f344af8f30204e0cbecc51f4755f45eecaa56c723ee87ba35e4f887a36909",
+      "bytes": 1585944,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-haswell.so",
+      "sha256": "bd7740021e3cbce4b49270e8c12f6a3bc6eed8cec00e548276d84a298d5911fa",
+      "bytes": 1428600,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-icelake.so",
+      "sha256": "c6579106a5f0f1cfd76902218c247858ffc5098c4f2f099864df643aa1d03f62",
+      "bytes": 1589968,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-ivybridge.so",
+      "sha256": "02a7121ebdb06b07cc0b7cc449aa724b6270edf5314113a65f90bd3fb863df45",
+      "bytes": 1364216,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-piledriver.so",
+      "sha256": "8c7d57b1a5afc23f688cefd70a835ff76e9be5bdd6c73dcfc649433118ec2ec2",
+      "bytes": 1360120,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-sandybridge.so",
+      "sha256": "3e04318845d9a9d9c8133d79925331a36d185f19fc9153b672c5b35da5c2b614",
+      "bytes": 1346712,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-sapphirerapids.so",
+      "sha256": "357dea6e5099e87d547e49a1f101f3e7c2e4283e4cf9518a4c220c0dcbe07b5f",
+      "bytes": 1852272,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-skylakex.so",
+      "sha256": "e10d82e3c08f91397cc265e3a13199e92f994f1e6961cd1777a484175233ea7b",
+      "bytes": 1577976,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-sse42.so",
+      "sha256": "7012b4dcad03e5649cccda277fdeb1950872dd5bf5957680ad8d1a2d403898d0",
+      "bytes": 954352,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-x64.so",
+      "sha256": "6f92125d03aa6041931e1fb576d735fe2104120dcd80785559ff7cb7440b60ea",
+      "bytes": 942240,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-zen4.so",
+      "sha256": "16adc0bc91d85382b508430667415d4fc472221c5ac1d9ef6a88eb38db4ba50e",
+      "bytes": 1585944,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-vulkan.so",
+      "sha256": "bc151ce7639cf16e3c89006ae697ef3db77b2be5ebf398c8e7db32b4e7b0a4d0",
+      "bytes": 44315144,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml.so.0",
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82",
+      "bytes": 55184,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libgomp.so.1",
+      "sha256": "135f3c8f006d2fe5e68e51281c7974cb991a03de3bfb3593d68d174dfcf854d1",
+      "bytes": 352304,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libllama-common.so.0",
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d",
+      "bytes": 6407088,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libllama-server-impl.so",
+      "sha256": "0cb1fd100e7f018ac9ac0c5a3fc12aeef4cbe7614bb7ca8c686ec7d01c30810f",
+      "bytes": 7498288,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libllama.so.0",
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba",
+      "bytes": 4788880,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libmtmd.so.0",
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea",
+      "bytes": 1896696,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/llama-server",
+      "sha256": "5faf410bbbc00a1b94b09ee01623699f255365628dfa73b1ee552d9e52a2231d",
+      "bytes": 17864,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/smith-service",
+      "sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+      "bytes": 9250656,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_client",
+      "sha256": "b12601aa3bf99ee6bbc66c857282b0d8c111d78929b69f83ea9db1b45dba551c",
+      "bytes": 1836376,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/payload/service/smith-service",
+      "sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+      "bytes": 9250656,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/smith-installer",
+      "sha256": "4f8768840c36ad3ebdbd22b4e83ba4ff99872cfd1d9fe3cf2a2a3df1cf647803",
+      "bytes": 6684024,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/smith-installer-ui",
+      "sha256": "903cc706583d6db94a84619f965ad528d7d0c20cffeb73759c58357995743f15",
+      "bytes": 8176368,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/service/dist/smith-service",
+      "sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+      "bytes": 9250656,
+      "mode": "0o755",
+      "kind": "file"
+    }
+  ],
+  "artifact_snapshots": {
+    "after_build": {
+      "inventory_sha256": "f5444865bc0bdd99c8b45f79e10d0336922e5443cdb1dafcb111181d0afcc1c2",
+      "file_count": 189
+    },
+    "package-verify_before": {
+      "inventory_sha256": "f5444865bc0bdd99c8b45f79e10d0336922e5443cdb1dafcb111181d0afcc1c2",
+      "file_count": 189
+    },
+    "package-verify_after": {
+      "inventory_sha256": "f5444865bc0bdd99c8b45f79e10d0336922e5443cdb1dafcb111181d0afcc1c2",
+      "file_count": 189
+    },
+    "package-test_before": {
+      "inventory_sha256": "f5444865bc0bdd99c8b45f79e10d0336922e5443cdb1dafcb111181d0afcc1c2",
+      "file_count": 189
+    },
+    "package-test_after": {
+      "inventory_sha256": "f5444865bc0bdd99c8b45f79e10d0336922e5443cdb1dafcb111181d0afcc1c2",
+      "file_count": 189
+    },
+    "report": {
+      "inventory_sha256": "f5444865bc0bdd99c8b45f79e10d0336922e5443cdb1dafcb111181d0afcc1c2",
+      "file_count": 189
+    }
+  },
+  "artifact_identities_stable_from_build_through_verify_tests_report": true,
+  "changes_from_prebuild_exports": [
+    {
+      "path": "next/client/dist/lib/libapp.so",
+      "before": {
+        "path": "next/client/dist/lib/libapp.so",
+        "sha256": "023ba3f1be9a5a3de566b68c56ce7f3c22c027999a00fa721efda467728184f1",
+        "bytes": 6488968,
+        "mode": "0o644",
+        "kind": "file"
+      },
+      "after": {
+        "path": "next/client/dist/lib/libapp.so",
+        "sha256": "10a0aab3df72ab45bf7b4b7636633fd9026a2deb9ffc8846fc937b3adbbf5e38",
+        "bytes": 6505352,
+        "mode": "0o644",
+        "kind": "file"
+      }
+    },
+    {
+      "path": "next/client/dist/smith_backend/smith-service",
+      "before": {
+        "path": "next/client/dist/smith_backend/smith-service",
+        "sha256": "e5860b9e3751eddf1cefa5eb3b8464d31c1b3847c9d7c5c6fda6c1fc847169a1",
+        "bytes": 9249968,
+        "mode": "0o755",
+        "kind": "file"
+      },
+      "after": {
+        "path": "next/client/dist/smith_backend/smith-service",
+        "sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+        "bytes": 9250656,
+        "mode": "0o755",
+        "kind": "file"
+      }
+    },
+    {
+      "path": "next/installer/dist/SHA256SUMS",
+      "before": {
+        "path": "next/installer/dist/SHA256SUMS",
+        "sha256": "c41cc89eb76b367a94c34e13d3b105ac85d6bbe71367720ae13f7d21357b057b",
+        "bytes": 12073,
+        "mode": "0o644",
+        "kind": "file"
+      },
+      "after": {
+        "path": "next/installer/dist/SHA256SUMS",
+        "sha256": "89f6e061c5636d80fdc168a830c56b762fe063489eff6d1c7e47f4711ee151b8",
+        "bytes": 12073,
+        "mode": "0o644",
+        "kind": "file"
+      }
+    },
+    {
+      "path": "next/installer/dist/manifest.json",
+      "before": {
+        "path": "next/installer/dist/manifest.json",
+        "sha256": "305cf3e313acc37b15ab463f8423ef02d91ce792be6e141402ff53753a4b2791",
+        "bytes": 17461,
+        "mode": "0o644",
+        "kind": "file"
+      },
+      "after": {
+        "path": "next/installer/dist/manifest.json",
+        "sha256": "397f3dd8eeebd4228e4cf6810d5cd1f0ac453e170de8d5bee0809d5118b38d7c",
+        "bytes": 17461,
+        "mode": "0o644",
+        "kind": "file"
+      }
+    },
+    {
+      "path": "next/installer/dist/payload/client/lib/libapp.so",
+      "before": {
+        "path": "next/installer/dist/payload/client/lib/libapp.so",
+        "sha256": "023ba3f1be9a5a3de566b68c56ce7f3c22c027999a00fa721efda467728184f1",
+        "bytes": 6488968,
+        "mode": "0o644",
+        "kind": "file"
+      },
+      "after": {
+        "path": "next/installer/dist/payload/client/lib/libapp.so",
+        "sha256": "10a0aab3df72ab45bf7b4b7636633fd9026a2deb9ffc8846fc937b3adbbf5e38",
+        "bytes": 6505352,
+        "mode": "0o644",
+        "kind": "file"
+      }
+    },
+    {
+      "path": "next/installer/dist/payload/client/smith_backend/smith-service",
+      "before": {
+        "path": "next/installer/dist/payload/client/smith_backend/smith-service",
+        "sha256": "e5860b9e3751eddf1cefa5eb3b8464d31c1b3847c9d7c5c6fda6c1fc847169a1",
+        "bytes": 9249968,
+        "mode": "0o755",
+        "kind": "file"
+      },
+      "after": {
+        "path": "next/installer/dist/payload/client/smith_backend/smith-service",
+        "sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+        "bytes": 9250656,
+        "mode": "0o755",
+        "kind": "file"
+      }
+    },
+    {
+      "path": "next/installer/dist/payload/service/smith-service",
+      "before": {
+        "path": "next/installer/dist/payload/service/smith-service",
+        "sha256": "e5860b9e3751eddf1cefa5eb3b8464d31c1b3847c9d7c5c6fda6c1fc847169a1",
+        "bytes": 9249968,
+        "mode": "0o755",
+        "kind": "file"
+      },
+      "after": {
+        "path": "next/installer/dist/payload/service/smith-service",
+        "sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+        "bytes": 9250656,
+        "mode": "0o755",
+        "kind": "file"
+      }
+    },
+    {
+      "path": "next/installer/dist/smith-installer",
+      "before": {
+        "path": "next/installer/dist/smith-installer",
+        "sha256": "d47b4255f88c1eac6c7bacd1f14e5073584497ece33ac0e4bf0cbadd4e37c75b",
+        "bytes": 6684064,
+        "mode": "0o755",
+        "kind": "file"
+      },
+      "after": {
+        "path": "next/installer/dist/smith-installer",
+        "sha256": "4f8768840c36ad3ebdbd22b4e83ba4ff99872cfd1d9fe3cf2a2a3df1cf647803",
+        "bytes": 6684024,
+        "mode": "0o755",
+        "kind": "file"
+      }
+    },
+    {
+      "path": "next/installer/dist/smith-installer-ui",
+      "before": {
+        "path": "next/installer/dist/smith-installer-ui",
+        "sha256": "f9e99eb3aeb2b5ae1b974d740e7f71b431db739663cf01862d2dc047af9afd21",
+        "bytes": 8176304,
+        "mode": "0o755",
+        "kind": "file"
+      },
+      "after": {
+        "path": "next/installer/dist/smith-installer-ui",
+        "sha256": "903cc706583d6db94a84619f965ad528d7d0c20cffeb73759c58357995743f15",
+        "bytes": 8176368,
+        "mode": "0o755",
+        "kind": "file"
+      }
+    },
+    {
+      "path": "next/service/dist/smith-service",
+      "before": {
+        "path": "next/service/dist/smith-service",
+        "sha256": "e5860b9e3751eddf1cefa5eb3b8464d31c1b3847c9d7c5c6fda6c1fc847169a1",
+        "bytes": 9249968,
+        "mode": "0o755",
+        "kind": "file"
+      },
+      "after": {
+        "path": "next/service/dist/smith-service",
+        "sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+        "bytes": 9250656,
+        "mode": "0o755",
+        "kind": "file"
+      }
+    }
+  ],
+  "all_matching_service_copies": {
+    "copy_count": 4,
+    "identities": [
+      {
+        "path": "next/client/dist/smith_backend/smith-service",
+        "sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+        "bytes": 9250656,
+        "mode": "0o755",
+        "kind": "file"
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/smith-service",
+        "sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+        "bytes": 9250656,
+        "mode": "0o755",
+        "kind": "file"
+      },
+      {
+        "path": "next/installer/dist/payload/service/smith-service",
+        "sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+        "bytes": 9250656,
+        "mode": "0o755",
+        "kind": "file"
+      },
+      {
+        "path": "next/service/dist/smith-service",
+        "sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+        "bytes": 9250656,
+        "mode": "0o755",
+        "kind": "file"
+      }
+    ],
+    "missing_required_paths": [],
+    "all_content_equal": true,
+    "all_match_manifest_service_sha256": true
+  },
+  "paired_client_copies": {
+    "file_count": 91,
+    "exact_relative_path_sets_match": true,
+    "all_content_and_modes_equal": true,
+    "comparisons": [
+      {
+        "path": "next/client/dist/data/flutter_assets/AssetManifest.bin",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/AssetManifest.bin",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/FontManifest.json",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/FontManifest.json",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/NOTICES.Z",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/NOTICES.Z",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/NativeAssetsManifest.json",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/NativeAssetsManifest.json",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/README.md",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/README.md",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/fonts/ibm-plex-mono/OFL.txt",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/OFL.txt",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/fonts/jetbrains-mono/OFL.txt",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/OFL.txt",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/archive.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/archive.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/check.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/check.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/chevron-down.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/chevron-down.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/chevron-right.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/chevron-right.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/ellipsis-vertical.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/ellipsis-vertical.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/info.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/info.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/menu.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/menu.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/message-square.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/message-square.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/pencil.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/pencil.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/plus.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/plus.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/rotate-ccw.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/rotate-ccw.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/send.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/send.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/settings.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/settings.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/trash-2.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/trash-2.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/assets/icons/x.svg",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/x.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/fonts/MaterialIcons-Regular.otf",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/fonts/MaterialIcons-Regular.otf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/pubspec.yaml",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/pubspec.yaml",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/shaders/ink_sparkle.frag",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/shaders/ink_sparkle.frag",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/shaders/stretch_effect.frag",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/shaders/stretch_effect.frag",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/flutter_assets/version.json",
+        "packaged_path": "next/installer/dist/payload/client/data/flutter_assets/version.json",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/data/icudtl.dat",
+        "packaged_path": "next/installer/dist/payload/client/data/icudtl.dat",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/lib/libapp.so",
+        "packaged_path": "next/installer/dist/payload/client/lib/libapp.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/lib/libflutter_linux_gtk.so",
+        "packaged_path": "next/installer/dist/payload/client/lib/libflutter_linux_gtk.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/share/applications/dev.smith.smith_client.desktop",
+        "packaged_path": "next/installer/dist/payload/client/share/applications/dev.smith.smith_client.desktop",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/share/pixmaps/dev.smith.smith_client.png",
+        "packaged_path": "next/installer/dist/payload/client/share/pixmaps/dev.smith.smith_client.png",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/LICENSE.GPL-3",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/LICENSE.GPL-3",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/LICENSE.libgomp",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/LICENSE.libgomp",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/LICENSE.llama.cpp",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/LICENSE.llama.cpp",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-base.so.0",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-base.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-alderlake.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-alderlake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-cannonlake.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-cannonlake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-cascadelake.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-cascadelake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-cooperlake.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-cooperlake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-haswell.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-haswell.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-icelake.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-icelake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-ivybridge.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-ivybridge.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-piledriver.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-piledriver.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-sandybridge.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-sandybridge.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-sapphirerapids.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-sapphirerapids.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-skylakex.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-skylakex.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-sse42.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-sse42.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-x64.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-x64.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml-cpu-zen4.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-zen4.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libggml.so.0",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libgomp.so.1",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libgomp.so.1",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libllama-common.so.0",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libllama-common.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libllama-server-impl.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libllama-server-impl.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libllama.so.0",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libllama.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/libmtmd.so.0",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libmtmd.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/cpu/llama-server",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/llama-server",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/LICENSE.GPL-3",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/LICENSE.GPL-3",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/LICENSE.libgomp",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/LICENSE.libgomp",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/LICENSE.llama.cpp",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/LICENSE.llama.cpp",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-base.so.0",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-base.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-alderlake.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-alderlake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-cannonlake.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-cannonlake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-cascadelake.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-cascadelake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-cooperlake.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-cooperlake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-haswell.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-haswell.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-icelake.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-icelake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-ivybridge.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-ivybridge.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-piledriver.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-piledriver.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-sandybridge.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-sandybridge.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-sapphirerapids.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-sapphirerapids.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-skylakex.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-skylakex.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-sse42.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-sse42.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-x64.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-x64.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-cpu-zen4.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-zen4.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml-vulkan.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-vulkan.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libggml.so.0",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libgomp.so.1",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libgomp.so.1",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libllama-common.so.0",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libllama-common.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libllama-server-impl.so",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libllama-server-impl.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libllama.so.0",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libllama.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/libmtmd.so.0",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libmtmd.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/runtime/vulkan/llama-server",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/llama-server",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_backend/smith-service",
+        "packaged_path": "next/installer/dist/payload/client/smith_backend/smith-service",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/client/dist/smith_client",
+        "packaged_path": "next/installer/dist/payload/client/smith_client",
+        "content_and_mode_match": true
+      }
+    ]
+  },
+  "package_manifest": {
+    "identity": {
+      "path": "next/installer/dist/manifest.json",
+      "sha256": "397f3dd8eeebd4228e4cf6810d5cd1f0ac453e170de8d5bee0809d5118b38d7c",
+      "bytes": 17461,
+      "mode": "0o644",
+      "kind": "file"
+    },
+    "fields_excluding_file_inventory": {
+      "client_manifest_sha256": "227a780606296b53e71f9185f67c0fa5e30131c0b8ad9f34fdb1803ef53a54b4",
+      "exclusion_policy": "reviewed-text-payload-paths-v1",
+      "installer_runtime": "native",
+      "installer_ui": "gtk3",
+      "model_runner": "llama.cpp-b11429-cpu+vulkan",
+      "models_bundled": false,
+      "product": "smith-installer",
+      "schema_version": 1,
+      "service_sha256": "56e617c12fba1dba98b7d55c05b9c4efaaae0dbbda05432736cc50b51eeb9777",
+      "target": "Ubuntu 24.04 x86_64; native Rust ELF",
+      "voice_bundled": false
+    },
+    "listed_file_count": 95,
+    "actual_export_inventory_matches": true,
+    "file_identity_checks": [
+      {
+        "path": "next/installer/dist/README.txt",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/AssetManifest.bin",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/FontManifest.json",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/NOTICES.Z",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/NativeAssetsManifest.json",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/README.md",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/OFL.txt",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/OFL.txt",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/archive.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/check.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/chevron-down.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/chevron-right.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/ellipsis-vertical.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/info.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/menu.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/message-square.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/pencil.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/plus.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/rotate-ccw.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/send.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/settings.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/trash-2.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/assets/icons/x.svg",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/fonts/MaterialIcons-Regular.otf",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/pubspec.yaml",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/shaders/ink_sparkle.frag",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/shaders/stretch_effect.frag",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/flutter_assets/version.json",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/data/icudtl.dat",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/lib/libapp.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/lib/libflutter_linux_gtk.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/share/applications/dev.smith.smith_client.desktop",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/share/pixmaps/dev.smith.smith_client.png",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/LICENSE.GPL-3",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/LICENSE.libgomp",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/LICENSE.llama.cpp",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-base.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-alderlake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-cannonlake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-cascadelake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-cooperlake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-haswell.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-icelake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-ivybridge.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-piledriver.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-sandybridge.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-sapphirerapids.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-skylakex.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-sse42.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-x64.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-zen4.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libggml.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libgomp.so.1",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libllama-common.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libllama-server-impl.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libllama.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/libmtmd.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/cpu/llama-server",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/LICENSE.GPL-3",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/LICENSE.libgomp",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/LICENSE.llama.cpp",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-base.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-alderlake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-cannonlake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-cascadelake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-cooperlake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-haswell.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-icelake.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-ivybridge.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-piledriver.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-sandybridge.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-sapphirerapids.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-skylakex.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-sse42.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-x64.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-zen4.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-vulkan.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libggml.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libgomp.so.1",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libllama-common.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libllama-server-impl.so",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libllama.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/libmtmd.so.0",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/runtime/vulkan/llama-server",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_backend/smith-service",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/client/smith_client",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/payload/service/smith-service",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/smith-installer",
+        "content_and_mode_match": true
+      },
+      {
+        "path": "next/installer/dist/smith-installer-ui",
+        "content_and_mode_match": true
+      }
+    ]
+  },
+  "package_checksum_file": {
+    "path": "next/installer/dist/SHA256SUMS",
+    "sha256": "89f6e061c5636d80fdc168a830c56b762fe063489eff6d1c7e47f4711ee151b8",
+    "bytes": 12073,
+    "mode": "0o644",
+    "kind": "file"
+  },
+  "recipient_installer_elf_identities": [
+    {
+      "path": "next/installer/dist/smith-installer",
+      "sha256": "4f8768840c36ad3ebdbd22b4e83ba4ff99872cfd1d9fe3cf2a2a3df1cf647803",
+      "bytes": 6684024,
+      "mode": "0o755",
+      "kind": "file"
+    },
+    {
+      "path": "next/installer/dist/smith-installer-ui",
+      "sha256": "903cc706583d6db94a84619f965ad528d7d0c20cffeb73759c58357995743f15",
+      "bytes": 8176368,
+      "mode": "0o755",
+      "kind": "file"
+    }
+  ],
+  "optional_developer_installer_copy_comparisons": [
+    {
+      "name": "smith-installer",
+      "recipient_export": {
+        "path": "next/installer/dist/smith-installer",
+        "sha256": "4f8768840c36ad3ebdbd22b4e83ba4ff99872cfd1d9fe3cf2a2a3df1cf647803",
+        "bytes": 6684024,
+        "mode": "0o755",
+        "kind": "file"
+      },
+      "optional_developer_build_copy": {
+        "path": "next/installer/build/smith-installer",
+        "sha256": "2eb844574742d23507396f3bece003618449924d47dbe06b3cb9422bd18b995b",
+        "bytes": 1618608,
+        "mode": "0o755",
+        "kind": "file"
+      },
+      "content_equal": false,
+      "caveat": "make build rebuilds recipient installer/dist ELFs, not the separate optional installer/build development helper. Missing/stale development copies are not the recipient package pair."
+    },
+    {
+      "name": "smith-installer-ui",
+      "recipient_export": {
+        "path": "next/installer/dist/smith-installer-ui",
+        "sha256": "903cc706583d6db94a84619f965ad528d7d0c20cffeb73759c58357995743f15",
+        "bytes": 8176368,
+        "mode": "0o755",
+        "kind": "file"
+      },
+      "optional_developer_build_copy": null,
+      "content_equal": null,
+      "caveat": "make build rebuilds recipient installer/dist ELFs, not the separate optional installer/build development helper. Missing/stale development copies are not the recipient package pair."
+    }
+  ],
+  "explicit_package_verification": {
+    "status": "passed",
+    "actual_verified_file_count": 95,
+    "output": [
+      {
+        "file_count": 95,
+        "log_line": 1,
+        "text": "Native recipient package verified: 95 files; reviewed text-only payload paths"
+      }
+    ],
+    "status_path": "next/service/build/provider-schema-fix/package-validation/package-verify-status.json",
+    "log_sha256": "4f6e997052bf8ed0fe4e97c0e068bea00d34f1891dc7ee807e21581cdbb6da2e"
+  },
+  "synthetic_package_test_fixture_verifications": {
+    "reported_file_counts": {
+      "88": 14
+    },
+    "occurrences": [
+      {
+        "file_count": 88,
+        "log_line": 1743
+      },
+      {
+        "file_count": 88,
+        "log_line": 1744
+      },
+      {
+        "file_count": 88,
+        "log_line": 1745
+      },
+      {
+        "file_count": 88,
+        "log_line": 1746
+      },
+      {
+        "file_count": 88,
+        "log_line": 1747
+      },
+      {
+        "file_count": 88,
+        "log_line": 1748
+      },
+      {
+        "file_count": 88,
+        "log_line": 1749
+      },
+      {
+        "file_count": 88,
+        "log_line": 1750
+      },
+      {
+        "file_count": 88,
+        "log_line": 1751
+      },
+      {
+        "file_count": 88,
+        "log_line": 1752
+      },
+      {
+        "file_count": 88,
+        "log_line": 1753
+      },
+      {
+        "file_count": 88,
+        "log_line": 1754
+      },
+      {
+        "file_count": 88,
+        "log_line": 1755
+      },
+      {
+        "file_count": 88,
+        "log_line": 1756
+      }
+    ],
+    "caveat": "Synthetic fixture file counts are separate from the actual exported package verification count."
+  }
+}

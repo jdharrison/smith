@@ -9,6 +9,7 @@ import 'settings_view.dart';
 import 'smith_icon.dart';
 import 'smith_theme.dart';
 import 'smith_app_header.dart';
+import 'workspace_entrance.dart';
 
 export 'chat_sidebar.dart' show ChatSummary, ChatAction, RenameChatAction;
 
@@ -354,43 +355,46 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
                 padding: const EdgeInsets.all(8),
                 child: Row(
                   children: [
-                    Container(
-                      width: 56,
-                      decoration: const BoxDecoration(
-                        border: Border(
-                          right: BorderSide(color: SmithColors.strokeSubtle),
+                    WorkspaceReveal(
+                      region: WorkspaceRegion.navigation,
+                      child: Container(
+                        width: 56,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            right: BorderSide(color: SmithColors.strokeSubtle),
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        children: [
-                          _railButton(
-                            semanticLabel: 'Chat',
-                            label: _settings
-                                ? 'Return to Chat'
-                                : compact
-                                ? 'Open chat history'
-                                : 'Chat',
-                            icon: 'message-square',
-                            selected: !_settings,
-                            expanded: compact && !_settings
-                                ? _historyOpen
-                                : null,
-                            onPressed: () {
-                              if (_settings) {
-                                _setPage('chat');
-                              } else if (compact && !_historyOpen) {
-                                _history();
-                              }
-                            },
-                          ),
-                          _railButton(
-                            semanticLabel: 'Settings',
-                            label: 'Settings',
-                            icon: 'settings',
-                            selected: _settings,
-                            onPressed: () => _setPage('settings'),
-                          ),
-                        ],
+                        child: Column(
+                          children: [
+                            _railButton(
+                              semanticLabel: 'Chat',
+                              label: _settings
+                                  ? 'Return to Chat'
+                                  : compact
+                                  ? 'Open chat history'
+                                  : 'Chat',
+                              icon: 'message-square',
+                              selected: !_settings,
+                              expanded: compact && !_settings
+                                  ? _historyOpen
+                                  : null,
+                              onPressed: () {
+                                if (_settings) {
+                                  _setPage('chat');
+                                } else if (compact && !_historyOpen) {
+                                  _history();
+                                }
+                              },
+                            ),
+                            _railButton(
+                              semanticLabel: 'Settings',
+                              label: 'Settings',
+                              icon: 'settings',
+                              selected: _settings,
+                              onPressed: () => _setPage('settings'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     // Keep these slots stable through breakpoint changes; never move child.
@@ -400,112 +404,122 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
                           ? null
                           : Padding(
                               padding: const EdgeInsets.only(right: 8),
-                              child: _panel(_sidebar(widget)),
+                              child: WorkspaceReveal(
+                                region: WorkspaceRegion.sidebar,
+                                child: _panel(_sidebar(widget)),
+                              ),
                             ),
                     ),
                     Expanded(
                       child: _panel(
                         Column(
                           children: [
-                            Container(
-                              width: double.infinity,
-                              constraints: const BoxConstraints(minHeight: 48),
-                              padding: EdgeInsets.all(
-                                bounds.maxHeight < 500 ? 8 : 12,
-                              ),
-                              decoration: const BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(
-                                    color: SmithColors.strokeSubtle,
+                            WorkspaceReveal(
+                              region: WorkspaceRegion.title,
+                              child: Container(
+                                width: double.infinity,
+                                constraints: const BoxConstraints(
+                                  minHeight: 48,
+                                ),
+                                padding: EdgeInsets.all(
+                                  bounds.maxHeight < 500 ? 8 : 12,
+                                ),
+                                decoration: const BoxDecoration(
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: SmithColors.strokeSubtle,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              child: compact && !_settings
-                                  ? Row(
-                                      children: [
-                                        Expanded(
-                                          child: Builder(
-                                            builder: (anchor) => Tooltip(
-                                              message:
-                                                  'Choose chat: ${displayChatTitle(widget.title)}',
-                                              child: Semantics(
-                                                expanded: _historyOpen,
-                                                child: TextButton(
-                                                  key: const ValueKey(
-                                                    'compact-chat-title',
-                                                  ),
-                                                  onPressed: () =>
-                                                      _chooser(anchor),
-                                                  child: Row(
-                                                    children: [
-                                                      Expanded(
-                                                        child: Text(
-                                                          displayChatTitle(
-                                                            widget.title,
+                                child: compact && !_settings
+                                    ? Row(
+                                        children: [
+                                          Expanded(
+                                            child: Builder(
+                                              builder: (anchor) => Tooltip(
+                                                message:
+                                                    'Choose chat: ${displayChatTitle(widget.title)}',
+                                                child: Semantics(
+                                                  expanded: _historyOpen,
+                                                  child: TextButton(
+                                                    key: const ValueKey(
+                                                      'compact-chat-title',
+                                                    ),
+                                                    onPressed: () =>
+                                                        _chooser(anchor),
+                                                    child: Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child: Text(
+                                                            displayChatTitle(
+                                                              widget.title,
+                                                            ),
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
                                                           ),
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
                                                         ),
-                                                      ),
-                                                      const Icon(
-                                                        Icons.expand_more,
-                                                      ),
-                                                    ],
+                                                        const Icon(
+                                                          Icons.expand_more,
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                        if (widget.onNewChat != null)
-                                          IconButton(
-                                            tooltip: 'New chat',
-                                            onPressed: widget.busy
-                                                ? null
-                                                : widget.onNewChat,
-                                            icon: const SmithIcon('plus'),
-                                          ),
-                                        if (_hasArchives(widget))
-                                          IconButton(
-                                            tooltip: 'Archived chats',
-                                            onPressed: _archives,
-                                            icon: const SmithIcon('archive'),
-                                          ),
-                                      ],
-                                    )
-                                  : Tooltip(
-                                      message: _settings
-                                          ? 'Settings'
-                                          : 'Chat / ${displayChatTitle(widget.title)}',
-                                      child: Text.rich(
-                                        TextSpan(
-                                          children: _settings
-                                              ? const [
-                                                  TextSpan(text: 'Settings'),
-                                                ]
-                                              : [
-                                                  const TextSpan(
-                                                    text: 'Chat',
-                                                    style: TextStyle(
-                                                      color: SmithColors.accent,
-                                                    ),
-                                                  ),
-                                                  TextSpan(
-                                                    text:
-                                                        ' / ${displayChatTitle(widget.title)}',
-                                                  ),
-                                                ],
-                                        ),
-                                        maxLines: bounds.maxHeight < 500
-                                            ? 1
-                                            : 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        semanticsLabel: _settings
+                                          if (widget.onNewChat != null)
+                                            IconButton(
+                                              tooltip: 'New chat',
+                                              onPressed: widget.busy
+                                                  ? null
+                                                  : widget.onNewChat,
+                                              icon: const SmithIcon('plus'),
+                                            ),
+                                          if (_hasArchives(widget))
+                                            IconButton(
+                                              tooltip: 'Archived chats',
+                                              onPressed: _archives,
+                                              icon: const SmithIcon('archive'),
+                                            ),
+                                        ],
+                                      )
+                                    : Tooltip(
+                                        message: _settings
                                             ? 'Settings'
                                             : 'Chat / ${displayChatTitle(widget.title)}',
+                                        child: Text.rich(
+                                          TextSpan(
+                                            children: _settings
+                                                ? const [
+                                                    TextSpan(text: 'Settings'),
+                                                  ]
+                                                : [
+                                                    const TextSpan(
+                                                      text: 'Chat',
+                                                      style: TextStyle(
+                                                        color:
+                                                            SmithColors.accent,
+                                                      ),
+                                                    ),
+                                                    TextSpan(
+                                                      text:
+                                                          ' / ${displayChatTitle(widget.title)}',
+                                                    ),
+                                                  ],
+                                          ),
+                                          maxLines: bounds.maxHeight < 500
+                                              ? 1
+                                              : 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          semanticsLabel: _settings
+                                              ? 'Settings'
+                                              : 'Chat / ${displayChatTitle(widget.title)}',
+                                        ),
                                       ),
-                                    ),
+                              ),
                             ),
                             if (widget.error != null ||
                                 widget.recoveryGuidance != null)
@@ -560,10 +574,14 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
                                     ),
                                   ),
                                   if (_settings)
-                                    SettingsView(
-                                      connectionStatus: widget.connectionStatus,
-                                      modelStatus: widget.modelStatus,
-                                      version: widget.version,
+                                    WorkspaceReveal(
+                                      region: WorkspaceRegion.settings,
+                                      child: SettingsView(
+                                        connectionStatus:
+                                            widget.connectionStatus,
+                                        modelStatus: widget.modelStatus,
+                                        version: widget.version,
+                                      ),
                                     ),
                                 ],
                               ),

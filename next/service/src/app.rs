@@ -12,6 +12,10 @@ use std::time::{Duration, Instant};
 #[path = "app_v2.rs"]
 mod v2;
 use v2::{Durable, Job};
+#[path = "app_timestamps.rs"]
+mod timestamps;
+#[path = "app_v3.rs"]
+mod v3;
 
 pub const FRAME_LIMIT: usize = 4 * 1024 * 1024;
 pub const MAX_JOBS: usize = 32;
@@ -75,7 +79,7 @@ pub fn new_id() -> Result<String> {
     Ok(bytes.iter().map(|b| format!("{b:02x}")).collect())
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AppRequest {
     pub schema_version: u32,
@@ -85,9 +89,18 @@ pub struct AppRequest {
     pub op: String,
     pub args: Value,
 }
+impl std::fmt::Debug for AppRequest {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AppRequest")
+            .field("schema_version", &self.schema_version)
+            .field("op", &self.op)
+            .field("args", &"[REDACTED]")
+            .finish()
+    }
+}
 impl AppRequest {
     pub fn validate(&self) -> AppResult<()> {
-        if ![1, 2].contains(&self.schema_version)
+        if ![1, 2, 3].contains(&self.schema_version)
             || self.service != "smith-next"
             || self.protocol != "app"
             || !valid_id(&self.call_id)
@@ -410,9 +423,11 @@ struct Inner {
     fault: bool,
     owned: bool,
     inventory_observed: bool,
+    cloud: v3::Volatile,
 }
 struct WorkerOwner {
     provider: Arc<dyn Provider>,
+    cloud: Arc<crate::cloud::Dependencies>,
     inner: Arc<Mutex<Inner>>,
     sender: Option<mpsc::SyncSender<()>>,
     thread: Option<JoinHandle<()>>,
@@ -424,6 +439,7 @@ impl Drop for WorkerOwner {
         if let Ok(mut inner) = self.inner.lock() {
             inner.owned = false;
         }
+        self.cloud.cancel();
         let join_cleanup = self.provider.cancel_owned();
         self.sender.take();
         if let Some(thread) = self.thread.take() {
@@ -450,6 +466,7 @@ pub struct Application {
     owner: Option<Arc<WorkerOwner>>,
     path: PathBuf,
     pub instance_id: String,
+    cloud: Arc<crate::cloud::Dependencies>,
 }
 struct Work {
     id: String,
@@ -466,6 +483,8 @@ enum Task {
     Submit { text: String },
     Verify(ModelArgs),
     Remove(ModelArgs),
+    Routed(v3::RoutedTask),
+    Provider(v3::ProviderTask),
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -527,6 +546,15 @@ fn text(value: &str, limit: usize) -> AppResult<()> {
 
 impl Application {
     pub fn open(roots: &Roots, provider: Arc<dyn Provider>) -> Result<Self> {
+        Self::open_with_cloud(roots, provider, crate::cloud::Dependencies::disabled())
+    }
+    /// Isolated injection; production is the only constructor that enables real keyring/HTTP.
+    pub fn open_with_cloud(
+        roots: &Roots,
+        provider: Arc<dyn Provider>,
+        cloud: crate::cloud::Dependencies,
+    ) -> Result<Self> {
+        let cloud = Arc::new(cloud);
         let path = roots.data.join("smith-next/app-state.json");
         filesystem::check_directory(&roots.data.join("smith-next"), true)?;
         let (mut durable, migrated) = match filesystem::read_file(&path, 0o600, STATE_LIMIT)? {
@@ -540,10 +568,8 @@ impl Application {
                 j.operation.status = "interrupted".into();
                 j.operation.phase = "complete".into();
                 j.operation.result = None;
-                j.operation.error = Some(AppError::new(
-                    "INTERRUPTED",
-                    "Service restarted; operation was not replayed",
-                ));
+                j.operation.error = Some(v3::restart_error(j));
+                v3::reconcile_validation(&mut durable.cloud, j, cloud.clock.wall_ms());
                 changed = true;
             }
         }
@@ -561,6 +587,7 @@ impl Application {
             fault: false,
             owned: true,
             inventory_observed: false,
+            cloud: v3::Volatile::default(),
         }));
         let instance_id = new_id()?;
         let worker = Self {
@@ -568,6 +595,7 @@ impl Application {
             owner: None,
             path: path.clone(),
             instance_id: instance_id.clone(),
+            cloud: cloud.clone(),
         };
         let owner_provider = provider.clone();
         let thread = std::thread::Builder::new()
@@ -608,6 +636,7 @@ impl Application {
         Ok(Self {
             owner: Some(Arc::new(WorkerOwner {
                 provider: owner_provider,
+                cloud: cloud.clone(),
                 inner: inner.clone(),
                 sender: Some(sender),
                 thread: Some(thread),
@@ -615,16 +644,27 @@ impl Application {
             inner,
             path,
             instance_id,
+            cloud,
         })
     }
     pub fn production(roots: &Roots) -> Result<Self> {
-        Self::open(roots, Arc::new(Providers::new(roots)?))
+        Self::open_with_cloud(
+            roots,
+            Arc::new(Providers::new(roots)?),
+            crate::cloud::Dependencies::production(),
+        )
     }
     pub fn call(&self, req: AppRequest) -> AppResult<Value> {
         req.validate()?;
-        if serde_json::to_vec(&req).map_err(|_| invalid())?.len() > FRAME_LIMIT {
+        let encoded = zeroize::Zeroizing::new(serde_json::to_vec(&req).map_err(|_| invalid())?);
+        if encoded.len() > FRAME_LIMIT {
             return Err(invalid());
         }
+        drop(encoded);
+        if req.schema_version == 3 {
+            return self.call_v3(req);
+        }
+        self.legacy_guard(&req)?;
         if req.schema_version == 2 {
             return self.call_v2(req);
         }
@@ -882,6 +922,7 @@ impl Application {
                 Task::Submit { .. } => "generation",
                 Task::Verify(_) => "verification",
                 Task::Remove(_) => "removal",
+                Task::Routed(_) | Task::Provider(_) => return Err(invalid()),
             }
             .into(),
             config_revision: inner.durable.config.revision,
@@ -916,6 +957,10 @@ impl Application {
         Ok(admission(&operation))
     }
     fn run(&self, work: Work, provider: &dyn Provider) {
+        if matches!(work.task, Task::Routed(_) | Task::Provider(_)) {
+            self.run_v3(work, provider);
+            return;
+        }
         let mut turn = None;
         let mut inventory = None;
         let result = (|| -> AppResult<Value> {
@@ -970,6 +1015,7 @@ impl Application {
                     turn = Some((text.clone(), assistant.clone()));
                     Ok(json!({"assistant_text":assistant,"audio":null,"speech_error":null}))
                 }
+                Task::Routed(_) | Task::Provider(_) => Err(invalid()),
             }
         })()
         .map_err(bounded_error);
@@ -993,6 +1039,10 @@ impl Application {
             }
             let mut next = inner.durable.clone();
             if let Some((user, assistant)) = turn {
+                let Some(job) = next.jobs.iter().find(|j| j.operation.request_id == work.id) else {
+                    return;
+                };
+                let accepted_ms = job.accepted_ms;
                 let Some(conversation) = next.conversations.iter_mut().find(|c| {
                     Some(&c.conversation_id) == work.conversation_id.as_ref()
                         && Some(c.history_revision) == work.history_revision
@@ -1001,6 +1051,7 @@ impl Application {
                 };
                 conversation.history_revision += 1;
                 let history = &mut conversation.history;
+                let previous_pairs = history.len() / 2;
                 history.push(Message {
                     role: "user".into(),
                     content: user,
@@ -1009,11 +1060,31 @@ impl Application {
                     role: "assistant".into(),
                     content: assistant,
                 });
+                v3::append_provenance(
+                    &mut next.cloud,
+                    &conversation.conversation_id,
+                    history.len() / 2 - 1,
+                    None,
+                    None,
+                );
                 while history.len() > 32
                     || history.iter().map(|m| m.content.len()).sum::<usize>() > MAX_CONTEXT
                 {
                     history.drain(..2);
                 }
+                v3::trim_provenance(
+                    &mut next.cloud,
+                    &conversation.conversation_id,
+                    history.len() / 2,
+                );
+                timestamps::append(
+                    &mut next.timestamps,
+                    &conversation.conversation_id,
+                    previous_pairs,
+                    history.len() / 2,
+                    accepted_ms,
+                    self.cloud.clock.wall_ms(),
+                );
             }
             if let Some(job) = next
                 .jobs

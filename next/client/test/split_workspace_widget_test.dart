@@ -323,7 +323,7 @@ void main() {
   );
 
   testWidgets(
-    'duplicate saved views share drafts but not reading positions or send scrolling',
+    'duplicate saved views share drafts but preserve independent anchors on send',
     (tester) async {
       final api = FakeAppApi()..holdChats = true;
       for (var i = 0; i < 32; i++) {
@@ -354,13 +354,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(api.calls.where((op) => op == 'submit'), hasLength(1));
       expect(a.offset, 100);
-      expect(b.offset, b.position.maxScrollExtent);
+      expect(b.offset, 200);
       w.newChatFor(w.panes[1]);
       await tester.pumpAndSettle();
       await w.selectFor(w.panes[1], testConversation);
       await tester.pumpAndSettle();
       expect(a.offset, 100);
-      expect(b.offset, b.position.maxScrollExtent);
+      expect(b.offset, 200);
       await tester.pumpWidget(const SizedBox());
     },
   );

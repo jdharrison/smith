@@ -219,6 +219,7 @@ impl Fixture {
         let executable = package.join("smith-installer");
         fs::copy(env!("CARGO_BIN_EXE_smith-installer"), &executable).unwrap();
         fs::set_permissions(&executable, fs::Permissions::from_mode(0o755)).unwrap();
+
         // Real native bytes for both helper copies; never executed as a service.
         let native = fs::read(&executable).unwrap();
         file(
@@ -382,7 +383,11 @@ fn wait(mut child: std::process::Child) -> Output {
         if Instant::now() >= deadline {
             child.kill().unwrap();
             child.wait().unwrap();
-            panic!("CLI fixture exceeded its finite budget");
+            panic!(
+                "CLI fixture exceeded its finite budget; stdout: {}; stderr: {}",
+                String::from_utf8_lossy(&out),
+                String::from_utf8_lossy(&err)
+            );
         }
         std::thread::sleep(Duration::from_millis(5));
     }
@@ -465,7 +470,8 @@ fn known_child_exit_captures_status_and_available_output_without_waiting_for_oth
     assert_eq!(output.status.code(), Some(2));
     assert!(output.stdout.is_empty());
     let error = String::from_utf8_lossy(&output.stderr);
-    assert!(error.contains("Unknown argument: --unknown-capture-regression"));
+    assert!(error.contains("Unknown argument; API keys are accepted only by hidden terminal input"));
+    assert!(!error.contains("--unknown-capture-regression"));
     assert!(error.contains("Use --help for usage"));
     assert!(started.elapsed() < Duration::from_secs(2));
     // SAFETY: retained descriptors remain open through the completed capture.

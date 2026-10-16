@@ -10,6 +10,29 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 libc = "0.2"
 sha2 = "0.10"
+hyper = { version = "1.12", default-features = false, features = ["client", "http1"] }
+hyper-util = { version = "0.1", default-features = false, features = ["tokio"] }
+http-body-util = "0.1"
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+webpki-roots = "1"
+tokio = { version = "1", features = ["rt", "time", "net", "macros", "io-util"] }
+zbus = { version = "4.4", default-features = false, features = ["tokio"] }
+zeroize = "1"
+aes = "0.8"
+cbc = { version = "0.1", features = ["alloc", "block-padding"] }
+hkdf = "0.12"
+num-bigint = "0.4"
+rand = "0.8"
+
+[dev-dependencies]
+rcgen = "0.13"
+
+zbus = { version = "4.4", default-features = false, features = ["tokio", "bus-impl"] }
+
+# Integration fixtures repeatedly copy/hash the actual helper under Core's unchanged
+# 60-second approval window. Dependency debug symbols are not executable evidence.
+[profile.test]
+debug = 0
 
 [workspace]
 resolver = "2"

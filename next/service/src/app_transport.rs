@@ -55,7 +55,8 @@ fn read_frame_correlated(
     }
 }
 fn send<T: serde::Serialize>(stream: &mut UnixStream, value: &T) -> Result<()> {
-    let mut bytes = serde_json::to_vec(value).map_err(|_| "Cannot encode app frame")?;
+    let mut bytes =
+        zeroize::Zeroizing::new(serde_json::to_vec(value).map_err(|_| "Cannot encode app frame")?);
     if bytes.len() > FRAME_LIMIT {
         return Err("App reply exceeds limit".into());
     }
@@ -164,7 +165,7 @@ impl Listener {
                     Ok((mut stream,_))=> {
                         if !peer(&stream).is_ok_and(|c|c.uid==filesystem::uid()) { continue; }
                         let mut version=1; let mut call=String::new();
-                                                let req=read_frame_correlated(&mut stream, &mut version, &mut call).and_then(|b| { serde_json::from_slice::<AppRequest>(&b).map_err(|_|"Invalid app request".into()) });
+                                                let req=read_frame_correlated(&mut stream, &mut version, &mut call).and_then(|b| { let b = zeroize::Zeroizing::new(b); decode_request(&b) });
                         let (version,call,result)=match req {
                             Ok(req)=> { let version=req.schema_version; let call=req.call_id.clone(); let result=match &app { Ok(app)=>app.call(req),Err(_)=>Err(AppError::new("STATE_UNAVAILABLE","Application state is corrupt, unsupported or unsafe; preserved without reset")) }; (version,call,result) },
                             Err(_)=>(version,call,Err(AppError::new("INVALID_REQUEST","Invalid, oversized or incomplete app frame"))),
@@ -191,13 +192,18 @@ impl Drop for Listener {
         }
     }
 }
+fn decode_request(bytes: &[u8]) -> Result<AppRequest> {
+    let value = crate::cloud::unique_json(bytes).map_err(|_| "Invalid app request")?;
+    serde_json::from_value(value).map_err(|_| "Invalid app request".into())
+}
+
 /// Read one stdin JSON line with a finite deadline and a 4 MiB payload bound.
 pub fn stdin_request() -> Result<AppRequest> {
     stdin_request_correlated(&mut 1, &mut String::new())
 }
 fn correlate(bytes: &[u8], version: &mut u32, call: &mut String) {
     if let Ok(v) = serde_json::from_slice::<serde_json::Value>(bytes) {
-        if let (Some(schema @ (1 | 2)), Some(id)) = (
+        if let (Some(schema @ 1..=3), Some(id)) = (
             v.get("schema_version").and_then(serde_json::Value::as_u64),
             v.get("call_id").and_then(serde_json::Value::as_str),
         ) {
@@ -251,7 +257,8 @@ pub fn stdin_request_correlated(version: &mut u32, call: &mut String) -> Result<
             if end + 1 != n {
                 return Err("Multiple app stdin frames rejected".into());
             }
-            return serde_json::from_slice(&bytes).map_err(|_| "Invalid app stdin JSON".into());
+            let bytes = zeroize::Zeroizing::new(bytes);
+            return decode_request(&bytes);
         }
         if bytes.len() + n > FRAME_LIMIT {
             return Err("App stdin exceeds limit".into());
@@ -358,20 +365,27 @@ mod tests {
     }
     #[test]
     fn complete_first_envelope_correlates_rejected_trailing_frames() {
-        for suffix in ["\n", "{}\n"] {
-            let (mut writer, mut reader) = UnixStream::pair().unwrap();
-            let id = "1".repeat(32);
-            let bytes = format!(
-                "{}\n{suffix}",
-                serde_json::json!({"schema_version":2,"service":"smith-next","protocol":"app","call_id":id,"op":"submit_new","args":{}})
-            );
-            writer.write_all(bytes.as_bytes()).unwrap();
-            let mut version = 1;
-            let mut call = String::new();
-            assert!(read_frame_correlated(&mut reader, &mut version, &mut call).is_err());
-            assert_eq!(version, 2);
-            assert_eq!(call, id);
+        for schema in [2, 3] {
+            for suffix in ["\n", "{}\n"] {
+                let (mut writer, mut reader) = UnixStream::pair().unwrap();
+                let id = "1".repeat(32);
+                let bytes = format!(
+                    "{}\n{suffix}",
+                    serde_json::json!({"schema_version":schema,"service":"smith-next","protocol":"app","call_id":id,"op":"submit_new","args":{}})
+                );
+                writer.write_all(bytes.as_bytes()).unwrap();
+                let mut version = 1;
+                let mut call = String::new();
+                assert!(read_frame_correlated(&mut reader, &mut version, &mut call).is_err());
+                assert_eq!(version, schema);
+                assert_eq!(call, id);
+            }
         }
+    }
+    #[test]
+    fn duplicate_security_fields_are_rejected_before_application_dispatch() {
+        let bytes = br#"{"schema_version":3,"service":"smith-next","protocol":"app","call_id":"11111111111111111111111111111111","op":"provider_apply","args":{"api_key":"synthetic-one","api_key":"synthetic-two"}}"#;
+        assert!(decode_request(bytes).is_err());
     }
     #[test]
     fn truncated_app_frame_is_not_a_request() {

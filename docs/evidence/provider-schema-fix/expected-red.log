@@ -1,0 +1,19 @@
+   Compiling smith-service v0.1.0 (<repository>/next/service)
+    Finished `test` profile [unoptimized] target(s) in 3.42s
+     Running unittests src/lib.rs (service/target/debug/deps/smith_service-7c11b7ac37ef8548)
+
+running 1 test
+
+thread 'cloud::keyring::tests::gnome_schema_metadata_round_trip' (578276) panicked at src/cloud_keyring_tests.rs:495:13:
+encrypted plain-text round trip failed: KEYRING_CONFLICT; provider=openai; schema=true; creates=1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test cloud::keyring::tests::gnome_schema_metadata_round_trip ... FAILED
+
+failures:
+
+failures:
+    cloud::keyring::tests::gnome_schema_metadata_round_trip
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 107 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `--lib`

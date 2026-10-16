@@ -1,5 +1,6 @@
 //! Independent LOCAL-SMITH-NEXT-MULTI-CHAT REQ-004 regression.
-//! Real application/storage and unchanged installer; no transport, manager or model weights.
+//! Real disk3 application/storage and frozen installer v1 seam; no transport,
+//! manager, keyring, cloud calls or model weights.
 use serde_json::{json, Value};
 use smith_installer::{
     setup::{Backend, Native},
@@ -317,7 +318,7 @@ fn native_v1_management_is_exclusive_with_durable_v2_chat_and_reopens() {
     let queued = submit_new(&app, &queued_id);
     assert_eq!(queued["status"], "queued");
     let before = fixture.disk();
-    assert_eq!(before["schema_version"], 2);
+    assert_eq!(before["schema_version"], 4);
     for (id, status) in [(&running_id, "running"), (&queued_id, "queued")] {
         let job = before["jobs"]
             .as_array()
@@ -427,7 +428,7 @@ fn deleting_migrated_legacy_chat_never_remaps_installer_v1_history() {
     initialize(&mut installer);
     let original = installer.app("state", json!({})).unwrap()["history"].clone();
     assert_eq!(original[0]["content"], "Legacy question");
-    assert_eq!(fixture.disk()["schema_version"], 2);
+    assert_eq!(fixture.disk()["schema_version"], 4);
     let legacy = call(&app, 2, "state", json!({}))["conversations"][0].clone();
     let other_id = "c".repeat(32);
     let other = submit_new(&app, &other_id);

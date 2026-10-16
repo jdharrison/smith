@@ -4,8 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'text_chat.dart';
+import 'workspace_controller.dart';
+import 'ui/cloud_selector.dart';
+import 'ui/message_header.dart';
+import 'ui/message_queue_panel.dart';
 import 'ui/smith_icon.dart';
 import 'ui/smith_theme.dart';
+import 'ui/workspace_entrance.dart';
 
 class ChatPanel extends StatefulWidget {
   const ChatPanel({
@@ -32,13 +37,11 @@ class ChatPanel extends StatefulWidget {
 class _ChatPanelState extends State<ChatPanel> {
   late final TextEditingController draft;
   late final ScrollController transcript;
-  bool initialScrollScheduled = false;
-  bool initialScrollComplete = false;
-  Set<String> observedLocalSends = {};
+
   final editorFocus = FocusNode(debugLabel: 'Chat composer');
   final positions = Expando<double>();
   final editingValues = Expando<TextEditingValue>();
-  bool sendingHere = false;
+
   ScrollMetrics? readingMetrics;
   bool restoringPosition = false;
   bool navigationPending = false;
@@ -50,10 +53,7 @@ class _ChatPanelState extends State<ChatPanel> {
       a.maxScrollExtent == b.maxScrollExtent;
 
   void readingPositionChanged() {
-    if (!widget.independentView ||
-        restoringPosition ||
-        navigationPending ||
-        !transcript.hasClients) {
+    if (restoringPosition || navigationPending || !transcript.hasClients) {
       return;
     }
     final current = transcript.position;
@@ -62,14 +62,16 @@ class _ChatPanelState extends State<ChatPanel> {
     if (readingMetrics == null || !sameGeometry(readingMetrics!, current)) {
       return;
     }
-    positions[widget.controller] = current.pixels;
-    initialScrollComplete = true;
+    rememberPosition(
+      widget.controller,
+      current.maxScrollExtent - current.pixels <= 1
+          ? double.infinity
+          : current.pixels,
+    );
   }
 
   void jumpToReadingPosition(double desired, {bool remember = true}) {
-    if (widget.independentView && remember) {
-      positions[widget.controller] = desired;
-    }
+    if (remember) rememberPosition(widget.controller, desired);
     final target = desired.clamp(
       transcript.position.minScrollExtent,
       transcript.position.maxScrollExtent,
@@ -84,9 +86,7 @@ class _ChatPanelState extends State<ChatPanel> {
   }
 
   bool readingMetricsChanged(ScrollMetricsNotification notification) {
-    if (!widget.independentView ||
-        notification.depth != 0 ||
-        metricsRestoreScheduled) {
+    if (notification.depth != 0 || metricsRestoreScheduled) {
       return false;
     }
     metricsRestoreScheduled = true;
@@ -100,10 +100,7 @@ class _ChatPanelState extends State<ChatPanel> {
         return;
       }
       readingMetrics = transcript.position.copyWith();
-      final desired = positions[controller];
-      if (desired != null) {
-        jumpToReadingPosition(desired, remember: false);
-      }
+      jumpToReadingPosition(position(controller) ?? double.infinity);
     });
     WidgetsBinding.instance.ensureVisualUpdate();
     return false;
@@ -112,15 +109,19 @@ class _ChatPanelState extends State<ChatPanel> {
   double? position(ChatController controller) =>
       widget.independentView ? positions[controller] : controller.scrollOffset;
 
+  void rememberPosition(ChatController controller, double desired) {
+    // Infinity is a desired bottom anchor, never an applied scroll offset.
+    if (widget.independentView) {
+      positions[controller] = desired;
+    } else {
+      controller.scrollOffset = desired;
+    }
+  }
+
   void savePosition(ChatController controller) {
     if (!transcript.hasClients) return;
-    if (widget.independentView) {
-      // The current pixels may be a temporary geometry clamp, not the reader's
-      // chosen offset. Preserve the desired position across navigation too.
-      positions[controller] ??= transcript.offset;
-    } else {
-      controller.scrollOffset = transcript.offset;
-    }
+    // Current pixels may be a temporary geometry clamp, not reader intent.
+    rememberPosition(controller, position(controller) ?? double.infinity);
   }
 
   void editorFocusChanged() {
@@ -128,12 +129,19 @@ class _ChatPanelState extends State<ChatPanel> {
   }
 
   void send() {
-    if (!widget.active || !widget.controller.canSend) return;
-    sendingHere = true;
-    try {
-      widget.controller.send();
-    } finally {
-      sendingHere = false;
+    if (!widget.active) return;
+    final controller = widget.controller;
+    final queue = controller.messageQueue;
+    if (queue != null && queue.usesQueue) {
+      if (queue.canEnqueue) queue.enqueue();
+      return;
+    }
+    if (!controller.canSend) return;
+    if (controller is ConversationController &&
+        controller.owner.routingEnabled) {
+      controller.sendWithConsent((p) => confirmCloudTransfer(context, p));
+    } else {
+      controller.send();
     }
   }
 
@@ -142,14 +150,12 @@ class _ChatPanelState extends State<ChatPanel> {
     super.initState();
     draft = TextEditingController(text: widget.controller.draft);
     editorFocus.addListener(editorFocusChanged);
+    final saved = position(widget.controller);
     transcript = ScrollController(
-      initialScrollOffset: position(widget.controller) ?? 0,
+      initialScrollOffset: saved != null && saved.isFinite ? saved : 0,
     );
     transcript.addListener(readingPositionChanged);
-    initialScrollComplete = position(widget.controller) != null;
     widget.controller.addListener(sync);
-    observedLocalSends = widget.controller.localSends.keys.toSet();
-    scheduleInitialScroll();
   }
 
   @override
@@ -162,8 +168,7 @@ class _ChatPanelState extends State<ChatPanel> {
       editingValues[oldWidget.controller] = draft.value;
       oldWidget.controller.removeListener(sync);
       widget.controller.addListener(sync);
-      observedLocalSends = widget.controller.localSends.keys.toSet();
-      initialScrollComplete = position(widget.controller) != null;
+
       final controller = widget.controller;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted ||
@@ -173,9 +178,7 @@ class _ChatPanelState extends State<ChatPanel> {
         }
         navigationPending = false;
         readingMetrics = transcript.position.copyWith();
-        jumpToReadingPosition(
-          position(controller) ?? transcript.position.maxScrollExtent,
-        );
+        jumpToReadingPosition(position(controller) ?? double.infinity);
       });
       sync();
       final saved = editingValues[widget.controller];
@@ -185,47 +188,7 @@ class _ChatPanelState extends State<ChatPanel> {
     }
   }
 
-  void scheduleInitialScroll() {
-    if (initialScrollComplete ||
-        initialScrollScheduled ||
-        (widget.controller.history.isEmpty &&
-            widget.controller.provisionalAnswers.isEmpty &&
-            widget.controller.localSends.isEmpty)) {
-      return;
-    }
-    initialScrollScheduled = true;
-    final controller = widget.controller;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      initialScrollScheduled = false;
-      if (!mounted ||
-          controller != widget.controller ||
-          initialScrollComplete ||
-          !transcript.hasClients) {
-        return;
-      }
-      jumpToReadingPosition(transcript.position.maxScrollExtent);
-      initialScrollComplete = true;
-    });
-  }
-
   void sync() {
-    final currentSends = widget.controller.localSends.keys.toSet();
-    final hasNewSend = currentSends.difference(observedLocalSends).isNotEmpty;
-    observedLocalSends = currentSends;
-    if (hasNewSend && (!widget.independentView || sendingHere)) {
-      final controller = widget.controller;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted &&
-            controller == widget.controller &&
-            transcript.hasClients) {
-          jumpToReadingPosition(transcript.position.maxScrollExtent);
-          initialScrollComplete = true;
-        }
-      });
-    } else if (hasNewSend && widget.independentView) {
-      // Another view sent this message: do not treat it as initial history.
-      initialScrollComplete = true;
-    }
     if (draft.text != widget.controller.draft) {
       draft.value = TextEditingValue(
         text: widget.controller.draft,
@@ -234,7 +197,6 @@ class _ChatPanelState extends State<ChatPanel> {
         ),
       );
     }
-    scheduleInitialScroll();
     setState(() {});
   }
 
@@ -261,7 +223,7 @@ class _ChatPanelState extends State<ChatPanel> {
       }
       return KeyEventResult.handled;
     }
-    if (event is KeyDownEvent && widget.controller.canSend) {
+    if (event is KeyDownEvent) {
       send();
     }
     // Consume repeat/up too: a held Enter must not send again or add newlines.
@@ -370,6 +332,7 @@ class _ChatPanelState extends State<ChatPanel> {
   Widget bubble(
     String content, {
     bool user = false,
+    int? timestampMs,
     String? note,
     Key? key,
     bool progress = false,
@@ -392,28 +355,7 @@ class _ChatPanelState extends State<ChatPanel> {
                 : CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: user ? SmithColors.userMarker : SmithColors.accent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    user ? 'YOU' : 'SMITH',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: user
-                          ? SmithColors.textPrimary
-                          : SmithColors.accent,
-                    ),
-                  ),
-                ],
-              ),
+              MessageHeader(user: user, timestampMs: timestampMs),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -454,6 +396,12 @@ class _ChatPanelState extends State<ChatPanel> {
   @override
   Widget build(BuildContext context) {
     final c = widget.controller;
+    final routed = c is ConversationController && c.owner.routingEnabled;
+    final queue = c.messageQueue;
+    final queueMode = queue != null && queue.usesQueue;
+    final showQueue =
+        queue != null &&
+        (queue.entries.isNotEmpty || (queue.paused && queue.usesQueue));
     return LayoutBuilder(
       builder: (context, constraints) {
         final gutter = constraints.maxWidth < 600 ? 8.0 : 24.0;
@@ -473,9 +421,17 @@ class _ChatPanelState extends State<ChatPanel> {
             )
             .toDouble();
         final composerGutter = short ? 0.0 : 8.0;
+        final queueHeight = showQueue
+            ? math.min(120.0, constraints.maxHeight * .25)
+            : 0.0;
         final recoveryAvailable = math.max(
           0.0,
-          constraints.maxHeight - composerHeight - composerGutter * 2 - 1,
+          constraints.maxHeight -
+              composerHeight -
+              composerGutter * 2 -
+              1 -
+              queueHeight -
+              (routed ? 48 : 0),
         );
         Widget bounded(Widget child, {double? horizontal}) => Center(
           child: ConstrainedBox(
@@ -493,100 +449,137 @@ class _ChatPanelState extends State<ChatPanel> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: NotificationListener<ScrollMetricsNotification>(
-                  onNotification: readingMetricsChanged,
-                  child: ScrollbarTheme(
-                    data: ScrollbarTheme.of(context).copyWith(
-                      crossAxisMargin: 0,
-                      thickness: const WidgetStatePropertyAll(8),
-                    ),
-                    child: Scrollbar(
-                      controller: transcript,
-                      scrollbarOrientation: ScrollbarOrientation.right,
-                      child: ScrollConfiguration(
-                        behavior: ScrollConfiguration.of(context)
-                            .copyWith(scrollbars: false),
-                        child: SingleChildScrollView(
-                          key: const ValueKey('conversation-history'),
-                          controller: transcript,
-                          child: bounded(
-                            // Reserve the 8px thumb plus clearance even on narrow
-                            // panes; symmetric gutters keep messages centered.
-                            horizontal: math.max(gutter, 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (c.stale)
-                                  const Text(
-                                    'Saved conversation · stale / unavailable',
-                                  ),
-                                if (c.history.isEmpty &&
-                                    c.provisionalAnswers.isEmpty &&
-                                    c.localSends.isEmpty)
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 32),
-                                    child: Text(
-                                      'What would you like to work on?',
+                child: WorkspaceReveal(
+                  region: WorkspaceRegion.transcript,
+                  child: NotificationListener<ScrollMetricsNotification>(
+                    onNotification: readingMetricsChanged,
+                    child: ScrollbarTheme(
+                      data: ScrollbarTheme.of(context).copyWith(
+                        crossAxisMargin: 0,
+                        thickness: const WidgetStatePropertyAll(8),
+                      ),
+                      child: Scrollbar(
+                        controller: transcript,
+                        scrollbarOrientation: ScrollbarOrientation.right,
+                        child: ScrollConfiguration(
+                          behavior: ScrollConfiguration.of(context)
+                              .copyWith(scrollbars: false),
+                          child: SingleChildScrollView(
+                            key: const ValueKey('conversation-history'),
+                            controller: transcript,
+                            child: bounded(
+                              // Reserve the 8px thumb plus clearance even on narrow
+                              // panes; symmetric gutters keep messages centered.
+                              horizontal: math.max(gutter, 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (c.stale)
+                                    const Text(
+                                      'Saved conversation · stale / unavailable',
                                     ),
-                                  ),
-                                for (final turn in c.history)
-                                  bubble(
-                                    turn['content'] as String,
-                                    user: turn['role'] == 'user',
-                                  ),
-                                for (final send in c.localSends.entries) ...[
-                                  bubble(
-                                    send.value.text,
-                                    user: true,
-                                    key: ValueKey('local-user-${send.key}'),
-                                  ),
-                                  if (!c.provisionalAnswers.containsKey(
-                                    send.key,
-                                  ))
-                                    Semantics(
-                                      liveRegion: true,
-                                      child: bubble(
-                                        send.value.status,
-                                        progress: send.value.active,
-                                        key: ValueKey(
-                                          'local-status-${send.key}',
-                                        ),
-                                        note: send.value.active
-                                            ? 'Request in progress'
-                                            : 'Request status',
+                                  if (c.history.isEmpty &&
+                                      c.provisionalAnswers.isEmpty &&
+                                      c.localSends.isEmpty)
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 32,
+                                      ),
+                                      child: Text(
+                                        'What would you like to work on?',
                                       ),
                                     ),
-                                  if (c.provisionalAnswers.containsKey(
-                                    send.key,
-                                  ))
+                                  for (
+                                    var i = 0;
+                                    i < c.history.length;
+                                    i++
+                                  ) ...[
                                     bubble(
-                                      c.provisionalAnswers[send.key]!,
+                                      c.history[i]['content'] as String,
+                                      user: c.history[i]['role'] == 'user',
+                                      timestampMs: c.messageTimestampAt(i),
+                                    ),
+                                    if (routed && i.isOdd)
+                                      Text(
+                                        c.routing != null &&
+                                                i ~/ 2 < c.routing!.turns.length
+                                            ? c.routing!.turns[i ~/ 2]?.label ??
+                                                  'Legacy route unknown'
+                                            : 'Route not yet observed',
+                                      ),
+                                  ],
+                                  if (routed)
+                                    for (final route in c.requestRoutes.values)
+                                      if (c.localSends.containsKey(
+                                            route.request,
+                                          ) ||
+                                          c.pendingId == route.request ||
+                                          c.terminalErrorRequestId ==
+                                              route.request)
+                                        Text(route.label),
+                                  for (final send in c.localSends.entries) ...[
+                                    if (routed &&
+                                        !c.requestRoutes.containsKey(
+                                          send.key,
+                                        ) &&
+                                        c.submittedRoutes.containsKey(send.key))
+                                      Text(
+                                        '${c.submittedRoutes[send.key]!.label} · requested route; admission/delivery not yet observed',
+                                      ),
+                                    bubble(
+                                      send.value.text,
+                                      user: true,
+                                      key: ValueKey('local-user-${send.key}'),
+                                    ),
+                                    if (!c.provisionalAnswers.containsKey(
+                                      send.key,
+                                    ))
+                                      Semantics(
+                                        liveRegion: true,
+                                        child: bubble(
+                                          send.value.status,
+                                          progress: send.value.active,
+                                          key: ValueKey(
+                                            'local-status-${send.key}',
+                                          ),
+                                          note: send.value.active
+                                              ? 'Request in progress'
+                                              : 'Request status',
+                                        ),
+                                      ),
+                                    if (c.provisionalAnswers.containsKey(
+                                      send.key,
+                                    ))
+                                      bubble(
+                                        c.provisionalAnswers[send.key]!,
+                                        key: ValueKey(
+                                          'terminal-answer-${send.key}',
+                                        ),
+                                        note: 'Verified answer · awaiting history sync',
+                                      ),
+                                  ],
+                                  for (final answer
+                                      in c.provisionalAnswers.entries.where(
+                                        (entry) => !c.localSends.containsKey(
+                                          entry.key,
+                                        ),
+                                      ))
+                                    bubble(
+                                      // Text equality avoids duplicate display, not identity claims.
+                                      c.history.any(
+                                            (turn) =>
+                                                turn['role'] == 'assistant' &&
+                                                turn['content'] == answer.value,
+                                          )
+                                          ? 'Answer text is already visible in saved history.'
+                                          : answer.value,
                                       key: ValueKey(
-                                        'terminal-answer-${send.key}',
+                                        'terminal-answer-${answer.key}',
                                       ),
                                       note: 'Verified answer · awaiting history sync',
                                     ),
                                 ],
-                                for (final answer
-                                    in c.provisionalAnswers.entries.where(
-                                      (entry) =>
-                                          !c.localSends.containsKey(entry.key),
-                                    ))
-                                  bubble(
-                                    // Text equality avoids duplicate display, not identity claims.
-                                    c.history.any(
-                                          (turn) =>
-                                              turn['role'] == 'assistant' &&
-                                              turn['content'] == answer.value,
-                                        )
-                                        ? 'Answer text is already visible in saved history.'
-                                        : answer.value,
-                                    key: ValueKey(
-                                      'terminal-answer-${answer.key}',
-                                    ),
-                                    note: 'Verified answer · awaiting history sync',
-                                  ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
@@ -596,187 +589,223 @@ class _ChatPanelState extends State<ChatPanel> {
                 ),
               ),
               bounded(
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (c.error != null || c.stale || c.pendingId != null)
-                      if (compactRecovery)
-                        SizedBox(
-                          height: math.min(48, recoveryAvailable),
-                          child: Tooltip(
-                            message: 'View recovery details',
-                            child: TextButton(
-                              onPressed: showRecoveryDetails,
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                              ),
-                              child: Text(
-                                c.error != null ||
-                                        c.stale ||
-                                        c.canAbandonExpiredRequest
-                                    ? 'Needs attention'
-                                    : 'Request pending',
-                              ),
-                            ),
-                          ),
-                        )
-                      else
-                        ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxHeight: math.min(
-                              recoveryAvailable,
-                              math.max(48.0, recoveryAvailable * .5),
-                            ),
-                          ),
-                          child: SingleChildScrollView(
-                            key: const ValueKey('conversation-recovery'),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (c.error != null)
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: short ? 0 : 8,
-                                    ),
-                                    child: SelectableText(
-                                      c.error!,
-                                      key: const ValueKey('conversation-error'),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(color: SmithColors.danger),
-                                    ),
-                                  ),
-                                if (c.pendingId != null)
-                                  Text(
-                                    'Pending ${c.pendingKind} · ${c.phase}. Retry queries only; it never resends.',
-                                  ),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Wrap(
-                                    children: [
-                                      TextButton(
-                                        onPressed: c.busy
-                                            ? null
-                                            : widget.onRetry ?? c.synchronize,
-                                        child: const Text('Retry'),
-                                      ),
-                                      if (c.canAbandonExpiredRequest)
-                                        TextButton(
-                                          onPressed: c.busy ? null : forget,
-                                          child: const Text(
-                                            'Resolve expired request',
-                                          ),
-                                        ),
-                                    ],
-                                  ),
+                WorkspaceReveal(
+                  region: WorkspaceRegion.composer,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (c.error != null ||
+                          c.stale ||
+                          c.pendingId != null ||
+                          (routed && !c.routeReady))
+                        if (compactRecovery)
+                          SizedBox(
+                            height: math.min(48, recoveryAvailable),
+                            child: Tooltip(
+                              message: 'View recovery details',
+                              child: TextButton(
+                                onPressed: showRecoveryDetails,
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
                                 ),
-                              ],
+                                child: Text(
+                                  c.error != null ||
+                                          c.stale ||
+                                          c.canAbandonExpiredRequest
+                                      ? 'Needs attention'
+                                      : 'Request pending',
+                                ),
+                              ),
                             ),
+                          )
+                        else
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight: math.min(
+                                recoveryAvailable,
+                                math.max(48.0, recoveryAvailable * .5),
+                              ),
+                            ),
+                            child: SingleChildScrollView(
+                              key: const ValueKey('conversation-recovery'),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (c.error != null)
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: short ? 0 : 8,
+                                      ),
+                                      child: SelectableText(
+                                        c.error!,
+                                        key: const ValueKey(
+                                          'conversation-error',
+                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: SmithColors.danger,
+                                            ),
+                                      ),
+                                    ),
+                                  if (c.pendingId != null)
+                                    Text(
+                                      'Pending ${c.pendingKind} · ${c.phase}. Retry queries only; it never resends.',
+                                    ),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Wrap(
+                                      children: [
+                                        TextButton(
+                                          onPressed: c.busy
+                                              ? null
+                                              : widget.onRetry ?? c.synchronize,
+                                          child: const Text('Retry'),
+                                        ),
+                                        if (c.canAbandonExpiredRequest)
+                                          TextButton(
+                                            onPressed: c.busy ? null : forget,
+                                            child: const Text(
+                                              'Resolve expired request',
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      if (routed)
+                        CloudSelector(controller: c, active: widget.active),
+                      if (showQueue)
+                        SizedBox(
+                          height: queueHeight,
+                          child: MessageQueuePanel(
+                            key: ObjectKey(c),
+                            controller: c,
+                            active: widget.active,
                           ),
                         ),
-                    const Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: SmithColors.strokeSubtle,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: composerGutter),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxHeight: composerHeight),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              child: Focus(
-                                onKeyEvent: handleKey,
-                                child: TextField(
-                                  key: const ValueKey('chat-composer'),
-                                  controller: draft,
-                                  focusNode: editorFocus,
-                                  readOnly: !widget.active,
-                                  onTap: widget.onActivate,
-                                  onChanged: (value) {
-                                    if (widget.active) c.edit(value);
-                                  },
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                  cursorHeight: MediaQuery.textScalerOf(context)
-                                      .scale(bodyStyle.fontSize ?? 14),
-                                  keyboardType: TextInputType.multiline,
-                                  minLines: 1,
-                                  maxLines: null,
-                                  decoration: InputDecoration(
-                                    hintText: 'Message Smith…',
-                                    prefixIcon: const ExcludeSemantics(
-                                      child: Center(
-                                        widthFactor: 1,
-                                        heightFactor: 1,
-                                        child: SmithIcon(
-                                          'chevron-right',
-                                          size: 20,
+                      const Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: SmithColors.strokeSubtle,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: composerGutter),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: composerHeight,
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: Focus(
+                                  onKeyEvent: handleKey,
+                                  child: TextField(
+                                    key: const ValueKey('chat-composer'),
+                                    controller: draft,
+                                    focusNode: editorFocus,
+                                    readOnly: !widget.active,
+                                    onTap: widget.onActivate,
+                                    onChanged: (value) {
+                                      if (widget.active) c.edit(value);
+                                    },
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium,
+                                    cursorHeight: MediaQuery.textScalerOf(
+                                      context,
+                                    ).scale(bodyStyle.fontSize ?? 14),
+                                    keyboardType: TextInputType.multiline,
+                                    minLines: 1,
+                                    maxLines: null,
+                                    decoration: InputDecoration(
+                                      hintText: 'Message Smith…',
+                                      prefixIcon: const ExcludeSemantics(
+                                        child: Center(
+                                          widthFactor: 1,
+                                          heightFactor: 1,
+                                          child: SmithIcon(
+                                            'chevron-right',
+                                            size: 20,
+                                            color: SmithColors.accent,
+                                          ),
+                                        ),
+                                      ),
+                                      prefixIconConstraints:
+                                          const BoxConstraints(minWidth: 28),
+                                      filled: true,
+                                      fillColor: SmithColors.surface,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: composerHeight < 90 ? 6 : 16,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                        borderSide: const BorderSide(
+                                          color: SmithColors.stroke,
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                        borderSide: const BorderSide(
                                           color: SmithColors.accent,
                                         ),
                                       ),
                                     ),
-                                    prefixIconConstraints: const BoxConstraints(
-                                      minWidth: 28,
-                                    ),
-                                    filled: true,
-                                    fillColor: SmithColors.surface,
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: composerHeight < 90 ? 6 : 16,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                      borderSide: const BorderSide(
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              if (queueMode)
+                                Tooltip(
+                                  message: 'Queue next turn, not steering the current reply',
+                                  child: OutlinedButton(
+                                    onPressed: widget.active && queue.canEnqueue
+                                        ? send
+                                        : null,
+                                    child: const Text('Queue'),
+                                  ),
+                                )
+                              else
+                                SizedBox(
+                                  width: 48,
+                                  height: 48,
+                                  child: IconButton.outlined(
+                                    tooltip: 'Send',
+                                    onPressed: widget.active && c.canSend
+                                        ? send
+                                        : null,
+                                    style: IconButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      side: const BorderSide(
                                         color: SmithColors.stroke,
                                       ),
                                     ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                      borderSide: const BorderSide(
-                                        color: SmithColors.accent,
-                                      ),
+                                    icon: SmithIcon(
+                                      'send',
+                                      color: widget.active && c.canSend
+                                          ? SmithColors.accent
+                                          : SmithColors.textMuted,
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            SizedBox(
-                              width: 48,
-                              height: 48,
-                              child: IconButton.outlined(
-                                tooltip: 'Send',
-                                onPressed: widget.active && c.canSend
-                                    ? send
-                                    : null,
-                                style: IconButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  side: const BorderSide(
-                                    color: SmithColors.stroke,
-                                  ),
-                                ),
-                                icon: SmithIcon(
-                                  'send',
-                                  color: widget.active && c.canSend
-                                      ? SmithColors.accent
-                                      : SmithColors.textMuted,
-                                ),
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],

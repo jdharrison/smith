@@ -1,0 +1,476 @@
+{
+  "counting_method": "ANSI stripped; count primary task-tagged summaries only, not repeated undecorated stdout. Reused package tests are separate from fresh component counts.",
+  "line_numbering": "One-based Python read_text().splitlines(); normalized logs preserve positions.",
+  "service": {
+    "status": "passed",
+    "totals": {
+      "passed": 258,
+      "failed": 0,
+      "ignored": 3,
+      "filtered_out": 0
+    },
+    "suites": [
+      {
+        "task": 23,
+        "name": "unittests src/lib.rs",
+        "start_line": 428,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 540,
+        "passed": 106,
+        "failed": 0,
+        "ignored": 2,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "4.68s"
+      },
+      {
+        "task": 23,
+        "name": "unittests src/main.rs",
+        "start_line": 542,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 547,
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.00s"
+      },
+      {
+        "task": 23,
+        "name": "tests/application.rs",
+        "start_line": 549,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 588,
+        "passed": 35,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.64s"
+      },
+      {
+        "task": 23,
+        "name": "tests/cloud.rs",
+        "start_line": 590,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 624,
+        "passed": 30,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.20s"
+      },
+      {
+        "task": 23,
+        "name": "tests/cloud_protocol.rs",
+        "start_line": 626,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 642,
+        "passed": 12,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.04s"
+      },
+      {
+        "task": 23,
+        "name": "tests/debug_service.rs",
+        "start_line": 644,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 671,
+        "passed": 22,
+        "failed": 0,
+        "ignored": 1,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "19.21s"
+      },
+      {
+        "task": 23,
+        "name": "tests/maintenance.rs",
+        "start_line": 673,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 688,
+        "passed": 11,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.06s"
+      },
+      {
+        "task": 23,
+        "name": "tests/runner.rs",
+        "start_line": 690,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 739,
+        "passed": 41,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "22.72s"
+      }
+    ],
+    "log": {
+      "path": "next/service/build/cloud-catalog-expansion/component-package-validation/service-test.log",
+      "sha256": "616bc11f82f632bc5ffdb7ab28fee1a40a940f9160e7f974e2eb871f2d444861",
+      "normalized": {
+        "path": "next/service/build/cloud-catalog-expansion/component-package-validation/service-test-normalized.log",
+        "sha256": "5d63efdebf45b1df410d8a0a912c7d55e7885d145b0c12416d626fb6c7883139",
+        "bytes": 71984
+      }
+    }
+  },
+  "installer_native": {
+    "status": "passed",
+    "totals": {
+      "passed": 279,
+      "failed": 0,
+      "ignored": 2,
+      "filtered_out": 0
+    },
+    "suites": [
+      {
+        "task": 39,
+        "name": "unittests src/lib.rs",
+        "start_line": 3074,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 3840,
+        "passed": 105,
+        "failed": 0,
+        "ignored": 2,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "4.59s"
+      },
+      {
+        "task": 39,
+        "name": "unittests src/main.rs",
+        "start_line": 3842,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 3846,
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.00s"
+      },
+      {
+        "task": 39,
+        "name": "tests/artifact.rs",
+        "start_line": 3848,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 5087,
+        "passed": 36,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "1.14s"
+      },
+      {
+        "task": 39,
+        "name": "tests/catalog.rs",
+        "start_line": 5089,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 5101,
+        "passed": 8,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.13s"
+      },
+      {
+        "task": 39,
+        "name": "tests/cli.rs",
+        "start_line": 5103,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 5185,
+        "passed": 15,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "8.08s"
+      },
+      {
+        "task": 39,
+        "name": "tests/maintenance.rs",
+        "start_line": 5187,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 7102,
+        "passed": 20,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.91s"
+      },
+      {
+        "task": 39,
+        "name": "tests/model.rs",
+        "start_line": 7104,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 7112,
+        "passed": 4,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.00s"
+      },
+      {
+        "task": 39,
+        "name": "tests/model_wizard.rs",
+        "start_line": 7114,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 7129,
+        "passed": 11,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.03s"
+      },
+      {
+        "task": 39,
+        "name": "tests/multi_chat_compatibility.rs",
+        "start_line": 7131,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 7137,
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.52s"
+      },
+      {
+        "task": 39,
+        "name": "tests/providers.rs",
+        "start_line": 7139,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 7161,
+        "passed": 18,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.72s"
+      },
+      {
+        "task": 39,
+        "name": "tests/setup.rs",
+        "start_line": 7163,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 7202,
+        "passed": 35,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "1.51s"
+      },
+      {
+        "task": 39,
+        "name": "tests/wizard.rs",
+        "start_line": 7204,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 7233,
+        "passed": 25,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "0.15s"
+      }
+    ]
+  },
+  "installer_gtk": {
+    "status": "passed",
+    "totals": {
+      "passed": 9,
+      "failed": 0,
+      "ignored": 0,
+      "filtered_out": 0
+    },
+    "suites": [
+      {
+        "task": 48,
+        "name": "unittests src/ui.rs",
+        "start_line": 7438,
+        "completed": true,
+        "result": "ok",
+        "summary_line": 7451,
+        "passed": 9,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filtered_out": 0,
+        "elapsed": "19.57s"
+      }
+    ]
+  },
+  "installer_native_runtime": {
+    "status": "passed",
+    "scope": "Configured Ubuntu no-Python release-ELF help/version/artifact-only dry-run gate; no unit-test count invented.",
+    "observations": [
+      {
+        "line": 2108,
+        "task": 71,
+        "text": "71  : ┆ [24.4s] | smith-installer 0.1.0",
+        "content": "smith-installer 0.1.0"
+      },
+      {
+        "line": 2117,
+        "task": 72,
+        "text": "72  : ┆ [24.5s] | Dry run: no mutation.",
+        "content": "Dry run: no mutation."
+      },
+      {
+        "line": 4991,
+        "task": 39,
+        "text": "39  : ┆ [38.6s] | Dry run: no mutation.",
+        "content": "Dry run: no mutation."
+      }
+    ]
+  },
+  "client": {
+    "status": "passed",
+    "passed": 538,
+    "failed": 0,
+    "skipped": 0,
+    "summary": {
+      "line": 1218,
+      "task": 49,
+      "text": "49  : ┆ [1m2s] | 00:20 +538: All tests passed!",
+      "content": "00:20 +538: All tests passed!"
+    },
+    "format_and_analyzer": [
+      {
+        "line": 671,
+        "task": 49,
+        "text": "49  : ┆ [29.4s] | Formatted 79 files (0 changed) in 0.35 seconds.",
+        "content": "Formatted 79 files (0 changed) in 0.35 seconds."
+      },
+      {
+        "line": 673,
+        "task": 49,
+        "text": "49  : ┆ [35.2s] | No issues found! (ran in 5.5s)",
+        "content": "No issues found! (ran in 5.5s)"
+      }
+    ],
+    "compiled_fixture_gate": {
+      "configured_service": "/opt/smith-service",
+      "configured_cloud_fixture": "/opt/smith-cloud-fixture",
+      "whole_suite_completed": true,
+      "runtime_skips": 0,
+      "visible_progress": {
+        "rust_cloud_integration_test.dart": [],
+        "rust_socket_integration_test.dart": [],
+        "message_timestamps_integration_test.dart": []
+      },
+      "note": "Both compiled fixtures are supplied by the configured test-client recipe. Compact concurrent output need not display every scenario name; no separately visible per-scenario result is invented."
+    }
+  },
+  "controlled_fixture_ignores": [
+    {
+      "command": "service-test",
+      "task": 23,
+      "line": 474,
+      "text": "test cloud::http::tests::proxy_environment_child ... ignored, isolated proxy-environment subprocess fixture"
+    },
+    {
+      "command": "service-test",
+      "task": 23,
+      "line": 494,
+      "text": "test manager::tests::captured_helper_fixture ... ignored, fixture invoked only by captured-helper subprocess tests"
+    },
+    {
+      "command": "service-test",
+      "task": 23,
+      "line": 647,
+      "text": "test dart_cloud::dart_cloud_fixture ... ignored, launched explicitly by the Dart schema3 fixture gate"
+    },
+    {
+      "command": "installer-test",
+      "task": 39,
+      "line": 3098,
+      "text": "test launch::tests::launch_parent_fixture ... ignored, finite subprocess fixture, invoked only with private test roots"
+    },
+    {
+      "command": "installer-test",
+      "task": 39,
+      "line": 3130,
+      "text": "test model::tests::progress_output_probe_child ... ignored, controlled signal-probe child only"
+    }
+  ],
+  "controlled_fixture_ignore_count": 5,
+  "ignore_note": "Three service and two installer subprocess fixture definitions are intentionally ignored in their parent suite. This is not five missing product scenarios; unseen child invocations are not independently counted.",
+  "package_tests": {
+    "status": "PASS — reused same-source actual-ELF package subtask",
+    "reused": true,
+    "new_package_test_runs": 0,
+    "passed": 41,
+    "failed": 0,
+    "skipped": 0,
+    "summary_line": 9849,
+    "task": 128,
+    "log": {
+      "path": "next/service/build/cloud-catalog-expansion/final-validation/combined.log",
+      "sha256": "8757064f1e53f0bcbf99d8b3b72fbbe12228fadeef974688eacf2781eda791ec"
+    },
+    "counts": {
+      "path": "next/service/build/cloud-catalog-expansion/final-validation/suite-counts.json",
+      "sha256": "5ca2edb6d73e000152d41b5e687cbca4ada2e4ed4ef8a96aba80a1261ac81bcb"
+    },
+    "source_inventory_sha256": "205bfa82434e1a4ecbd23f2f9c5455c7d61274c1b96c888b9e3a948453724b03",
+    "matches_all_current_component_build_verify_inputs": true,
+    "synthetic_fixture_verification_file_count_histogram": {
+      "88": 14
+    },
+    "native_elf_binding": {
+      "recipe": "next/dagger/src/smith_next/main.py::test_package uses build_installer_binary/build_installer_ui, the same producers used by build_installer.",
+      "scope": "Same full source and native-builder recipe. Fixture tests consumed actual native ELFs. The fixture log does not separately emit those ELF SHA256s; no independent byte-for-byte reconstruction or clean/hermetic build claim is made.",
+      "exported_elf_identities_recorded_separately": true
+    },
+    "aggregate_verdict_unchanged": "FAIL"
+  },
+  "fresh_component_totals": {
+    "passed": 1084,
+    "failed": 0,
+    "controlled_ignores": 5,
+    "client_skips": 0
+  },
+  "reused_package_totals": {
+    "passed": 41,
+    "failed": 0,
+    "skipped": 0
+  }
+}

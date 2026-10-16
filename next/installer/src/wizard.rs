@@ -51,6 +51,11 @@ pub enum Command {
     },
     RefreshReview,
     ManageModels,
+    ManageProviders,
+    ProviderAction {
+        request_id: u64,
+        action: crate::providers::Action,
+    },
     Upgrade,
     Uninstall,
     ModelAction {
@@ -84,6 +89,17 @@ pub enum Event {
         title: String,
         effects: Vec<String>,
     },
+    Providers {
+        request_id: u64,
+        catalog: crate::providers::Catalog,
+        message: String,
+        pending_request: Option<String>,
+    },
+    ProviderConfirmation {
+        request_id: u64,
+        title: String,
+        effects: Vec<String>,
+    },
     Finished {
         report: Report,
     },
@@ -96,6 +112,8 @@ pub struct Report {
     pub message: String,
     pub steps: Vec<StepResult>,
     pub details: Vec<String>,
+    /// Optional provider outcomes never erase verified local installation facts.
+    pub providers: Option<crate::providers::Outcome>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Scope {
@@ -104,6 +122,7 @@ pub enum Scope {
     Uninstall,
     ModelCheck,
     ModelRemoval,
+    Providers,
 }
 impl Scope {
     pub fn completion_heading(self) -> &'static str {
@@ -113,6 +132,7 @@ impl Scope {
             Self::Uninstall => "Uninstall complete",
             Self::ModelCheck => "Model check complete",
             Self::ModelRemoval => "Model removal complete",
+            Self::Providers => "Provider management complete",
         }
     }
 }
@@ -224,6 +244,7 @@ enum Kind {
     Review,
     Core,
     Model,
+    Providers,
 }
 #[derive(Clone, Copy)]
 struct Pending {
@@ -358,7 +379,7 @@ impl Session {
         // The native entrypoint installs this BEFORE GTK. Idempotence also makes
         // this guard safe when the shell has already installed the same handlers.
         consent::install_cancellation()?;
-        Self::spawn_extended_with(
+        Self::spawn_provider_aware_with(
             bundle,
             |client, service| artifact::Installer::new(Some(client), Some(service)),
             |source| {
@@ -377,6 +398,7 @@ impl Session {
             Some(Box::new(|bundle| {
                 Ok(Box::new(maintenance::Native::new(bundle)?) as Box<dyn maintenance::Runner>)
             })),
+            true,
         )
     }
     /// Factories cross the thread boundary; publisher/Native/Roots/reviews do not.
@@ -450,6 +472,37 @@ impl Session {
         BF: FnMut(PathBuf) -> Result<Box<dyn Backend>> + Send + 'static,
         HF: FnMut() -> Result<()> + Send + 'static,
     {
+        Self::spawn_provider_aware_with(
+            bundle,
+            publisher,
+            backend,
+            preflight,
+            cancellation,
+            limits,
+            provider,
+            maintenance,
+            false,
+        )
+    }
+    /// Schema 3 plus the optional Providers step, without changing v1 library fixtures.
+    #[allow(clippy::too_many_arguments)]
+    pub fn spawn_provider_aware_with<P, PF, BF, HF>(
+        bundle: PathBuf,
+        publisher: PF,
+        backend: BF,
+        preflight: HF,
+        cancellation: Cancellation,
+        limits: Limits,
+        provider: Option<ProviderFactory>,
+        maintenance: Option<MaintenanceFactory>,
+        provider_aware: bool,
+    ) -> Result<Self>
+    where
+        P: Publisher + 'static,
+        PF: FnMut(PathBuf, PathBuf) -> Result<P> + Send + 'static,
+        BF: FnMut(PathBuf) -> Result<Box<dyn Backend>> + Send + 'static,
+        HF: FnMut() -> Result<()> + Send + 'static,
+    {
         let limits = limits.validate()?;
         if !bundle.is_absolute() || bundle.as_os_str().len() > TEXT_LIMIT {
             return Err("Wizard requires an explicit bounded absolute package root".into());
@@ -468,7 +521,7 @@ impl Session {
             let mut report = initial_report();
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let mut engine = Engine { bundle, publisher_factory: publisher, backend_factory: backend,
-                    preflight, commands, events: events.clone(), shared: owner.clone(), limits, provider, maintenance };
+                    preflight, commands, events: events.clone(), shared: owner.clone(), limits, provider, maintenance, provider_aware };
                 engine.run(&mut report)
             }));
             match result {
@@ -552,7 +605,10 @@ impl Session {
                 Command::Decline { request_id } => {
                     gate.pending.is_some_and(|p| p.id == *request_id)
                 }
-                Command::ManageModels | Command::Upgrade | Command::Uninstall => {
+                Command::ManageModels
+                | Command::ManageProviders
+                | Command::Upgrade
+                | Command::Uninstall => {
                     !gate.installing && gate.pending.is_none_or(|p| p.kind == Kind::Review)
                 }
                 Command::ModelAction {
@@ -562,6 +618,9 @@ impl Session {
                         .is_some_and(|p| p.kind == Kind::Model && p.id == *request_id)
                         && crate::catalog::entry(model).is_ok()
                 }
+                Command::ProviderAction { request_id, .. } => gate
+                    .pending
+                    .is_some_and(|p| p.kind == Kind::Providers && p.id == *request_id),
                 Command::RefreshReview => !gate.installing,
                 Command::Cancel => unreachable!(),
             };
@@ -573,7 +632,11 @@ impl Session {
         gate.queued = true;
         if matches!(
             command,
-            Command::Install { .. } | Command::ManageModels | Command::Upgrade | Command::Uninstall
+            Command::Install { .. }
+                | Command::ManageModels
+                | Command::ManageProviders
+                | Command::Upgrade
+                | Command::Uninstall
         ) {
             gate.installing = true;
         }
@@ -686,6 +749,7 @@ where
     limits: Limits,
     provider: Option<ProviderFactory>,
     maintenance: Option<MaintenanceFactory>,
+    provider_aware: bool,
 }
 impl<P, PF, BF, HF> Engine<P, PF, BF, HF>
 where
@@ -791,6 +855,11 @@ where
                 Some(Command::Uninstall) => {
                     return self.maintain(maintenance::Operation::Uninstall, report)
                 }
+                Some(Command::ManageProviders) if self.provider_aware => {
+                    report.scope = Scope::Providers;
+                    self.shared.pending(None);
+                    return self.providers(source, report);
+                }
                 Some(Command::ManageModels) if self.provider.is_some() => {
                     report.scope = Scope::ModelCheck;
                     self.shared.pending(None);
@@ -862,7 +931,11 @@ where
                             && report.steps[0..4].iter().all(|step| {
                                 matches!(step.state, StepState::Completed | StepState::Skipped)
                             });
-                        return self.models(source, report, lifecycle_complete);
+                        self.models(source.clone(), report, lifecycle_complete)?;
+                        if self.provider_aware && report.complete {
+                            self.providers(source, report)?;
+                        }
+                        return Ok(());
                     }
                     if report.steps[0..4]
                         .iter()
@@ -891,6 +964,11 @@ where
                         }
                         Some(Command::RefreshReview) => {
                             publisher = None;
+                        }
+                        Some(Command::ManageProviders) if self.provider_aware => {
+                            report.scope = Scope::Providers;
+                            self.shared.pending(None);
+                            return self.providers(source, report);
                         }
                         Some(Command::ManageModels) if self.provider.is_some() => {
                             report.scope = Scope::ModelCheck;
@@ -1113,6 +1191,133 @@ where
         }
         Ok(())
     }
+    fn providers(&mut self, source: PathBuf, report: &mut Report) -> Result<()> {
+        let result = self.providers_inner(source, report);
+        if let Err(error) = result {
+            self.shared.check()?;
+            report.providers = Some(crate::providers::Outcome { success: false, message: format!("Optional Providers unavailable: {}. Local installation/model effects remain; rerun Manage providers separately.", bounded(&error)) });
+            if report.scope == Scope::Providers {
+                report.complete = false;
+                report.message =
+                    "Provider setup incomplete; no artifact or lifecycle work performed".into();
+            }
+        }
+        Ok(())
+    }
+    fn providers_inner(&mut self, source: PathBuf, report: &mut Report) -> Result<()> {
+        use crate::providers::{Action, Manager, Outcome};
+        self.emit(Event::Stage {
+            message:
+                "Providers — observing cached service configuration only; no keyring or API request"
+                    .into(),
+        })?;
+        let mut manager = Manager::open(Native::new_v3((self.backend_factory)(source)?))?;
+        let mut message = "Optional Providers. Configure either or both independently, or Skip. Saving is not validation. API billing is separate from consumer subscriptions.".to_owned();
+        let mut failed = false;
+        loop {
+            self.shared.check()?;
+            let id = next_id()?;
+            self.shared.pending(Some(Pending {
+                id,
+                kind: Kind::Providers,
+            }));
+            self.emit(Event::Providers {
+                request_id: id,
+                catalog: manager.catalog.clone(),
+                message: message.clone(),
+                pending_request: manager.pending_request().map(str::to_owned),
+            })?;
+            let action = match self.receive(None)? {
+                Some(Command::ProviderAction { request_id, action }) if request_id == id => action,
+                _ => return Err("Provider selection stopped; earlier effects remain".into()),
+            };
+            self.shared.pending(None);
+            if action == Action::Done {
+                let success = !failed && manager.pending_request().is_none();
+                let pending = manager.pending_request().map(|id| format!("\nUncertain request {id}; accepted work may continue. Never repeat its apply.")).unwrap_or_default();
+                report.providers = Some(Outcome {
+                    success,
+                    message: format!(
+                        "{}\n{}\n{}{pending}",
+                        if success {
+                            "Optional Providers finished; skipped actions are not validation."
+                        } else {
+                            "Optional Providers had failed/unknown outcomes. Local setup and saved keys remain."
+                        },
+                        manager.catalog.summary(),
+                        message
+                    ),
+                });
+                if report.scope == Scope::Providers {
+                    report.complete = success;
+                    report.message = if success {
+                        "Provider management complete; no artifacts or lifecycle actions performed"
+                    } else {
+                        "Provider management incomplete; prior effects remain"
+                    }
+                    .into();
+                    report.steps.push(StepResult { label: "Provider management".into(), state: if success { StepState::Completed } else { StepState::Failed }, detail: "Cached state observed; only individually confirmed actions performed. Skipping is not API validation.".into() });
+                }
+                return Ok(());
+            }
+            self.emit(Event::Stage {
+                message: "Managing providers — no effect until its own explicit action/approval"
+                    .into(),
+            })?;
+            let result = manager.perform(
+                action,
+                &mut |prepared| {
+                    let id = next_id()?;
+                    self.shared.pending(Some(Pending {
+                        id,
+                        kind: Kind::Core,
+                    }));
+                    self.emit(Event::ProviderConfirmation {
+                        request_id: id,
+                        title: prepared.title(),
+                        effects: prepared.effects(),
+                    })?;
+                    let deadline = prepared
+                        .deadline
+                        .min(Instant::now() + self.limits.pending_timeout);
+                    let approved = match self.receive(Some(deadline))? {
+                        Some(Command::Approve { request_id }) if request_id == id => true,
+                        Some(Command::Decline { request_id }) if request_id == id => false,
+                        _ => return Err("Provider approval expired; no reprepare or apply".into()),
+                    };
+                    self.shared.pending(None);
+                    self.shared.check()?;
+                    Ok(approved)
+                },
+                &|| self.shared.check().is_err(),
+            );
+            self.shared.pending(None);
+            match result {
+                Ok(outcome) => {
+                    failed |= !outcome.success;
+                    message = outcome.message;
+                }
+                Err(error) => {
+                    failed = true;
+                    message = bounded(&error);
+                }
+            }
+            if let Some(request) = manager.pending_request() {
+                message = format!("{message}\nOriginal uncertain request: {request}. Accepted work may continue; observe this identity, never repeat its apply.");
+            }
+            report.providers = Some(Outcome {
+                success: !failed && manager.pending_request().is_none(),
+                message: message.clone(),
+            });
+            self.shared.check()?;
+            // Refresh only cached facts after a deliberate action; never probe
+            // the keyring, reprepare, or repeat a secret-bearing apply here.
+            if let Err(error) = manager.refresh() {
+                failed = true;
+                message = format!("{message}\nStatus refresh unavailable: {}. Displayed provider facts may be stale.", bounded(&error));
+            }
+        }
+    }
     fn model_consent(&self, title: &str, effects: Vec<String>) -> Result<()> {
         self.shared.check()?;
         let id = next_id()?;
@@ -1153,7 +1358,12 @@ where
             message: "Model choice — observing the managed service".into(),
         })?;
         self.shared.check()?;
-        let mut native = Native::new((self.backend_factory)(source)?);
+        let backend = (self.backend_factory)(source)?;
+        let mut native = if self.provider_aware {
+            Native::new_v3(backend)
+        } else {
+            Native::new(backend)
+        };
         let facts = native.inspect()?;
         setup::usable(&facts)?;
         if facts.enablement_state != "enabled"
@@ -1286,7 +1496,7 @@ where
             Scope::Installation if lifecycle_complete => "Installation complete: exact artifacts are installed and the service is enabled, running and bridge-ready; service-backed model check verified; app not launched",
             Scope::Installation => "Setup incomplete: model check passed, but exact installed, enabled, running and bridge-ready lifecycle completion was not verified; prior effects remain",
             Scope::ModelRemoval => unreachable!("Removal completed separately"),
-            Scope::Upgrade | Scope::Uninstall => unreachable!("Maintenance never runs model setup"),
+            Scope::Upgrade | Scope::Uninstall | Scope::Providers => unreachable!("Maintenance never runs model setup"),
         }.into();
         Ok(())
     }
@@ -1451,7 +1661,10 @@ fn receipt_expired(
         && !(artifact_review
             && matches!(
                 command,
-                Command::ManageModels | Command::Upgrade | Command::Uninstall
+                Command::ManageModels
+                    | Command::ManageProviders
+                    | Command::Upgrade
+                    | Command::Uninstall
             ))
 }
 
@@ -1531,6 +1744,7 @@ fn initial_report() -> Report {
         cancelled: false,
         message: "No installation effects verified".into(),
         details: Vec::new(),
+        providers: None,
         steps: [
             "Artifacts",
             "Service registration",

@@ -77,8 +77,16 @@ class SmithNext:
     @function
     async def test_client(self, source: dagger.Directory, service: dagger.Directory) -> str:
         """Check and test an explicit client source directory."""
+        cloud_fixture = (
+            self._service(service)
+            .with_exec(["cargo", "test", "--locked", "--test", "debug_service", "--no-run"])
+            .with_exec(["sh", "-c", "find target/debug/deps -maxdepth 1 -type f -name 'debug_service-*' -executable -exec cp '{}' /tmp/smith-cloud-fixture ';'"])
+            .file("/tmp/smith-cloud-fixture")
+        )
         return await (
             self._client(source, service)
+            .with_file("/opt/smith-cloud-fixture", cloud_fixture, permissions=0o755)
+            .with_env_variable("SMITH_TEST_CLOUD_SERVICE", "/opt/smith-cloud-fixture")
             .with_exec(["sh", "scripts/test.sh"])
             .stdout()
         )

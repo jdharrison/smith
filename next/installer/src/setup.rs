@@ -115,7 +115,7 @@ pub fn run(
     };
     let mut provider =
         || crate::catalog::Native::new().map(|p| Box::new(p) as Box<dyn model::Provider>);
-    run_with(
+    run_with_schema(
         options,
         &mut Factories {
             preflight: &mut preflight,
@@ -125,6 +125,7 @@ pub fn run(
         },
         confirm,
         output,
+        true,
     )
 }
 
@@ -134,9 +135,26 @@ pub fn run_with(
     confirm: &mut dyn FnMut(&str) -> Result<String>,
     output: &mut dyn model::ProgressOutput,
 ) -> Result<artifact::Outcome> {
+    run_with_schema(options, factories, confirm, output, false)
+}
+
+fn run_with_schema(
+    options: &Options,
+    factories: &mut Factories<'_>,
+    confirm: &mut dyn FnMut(&str) -> Result<String>,
+    output: &mut dyn model::ProgressOutput,
+    provider_aware: bool,
+) -> Result<artifact::Outcome> {
     let mut effects = Vec::new();
     let mut console = consent::Console::new(output);
-    let result = run_inner(options, factories, confirm, &mut console, &mut effects);
+    let result = run_inner(
+        options,
+        factories,
+        confirm,
+        &mut console,
+        &mut effects,
+        provider_aware,
+    );
     if consent::cancelled() {
         // A signal cannot require another write to the same backpressured pipe.
         // Accepted effects remain; incomplete reporting never implies rollback.
@@ -180,6 +198,7 @@ fn run_inner(
     confirm: &mut dyn FnMut(&str) -> Result<String>,
     output: &mut consent::Console<'_>,
     effects: &mut Vec<String>,
+    provider_aware: bool,
 ) -> Result<artifact::Outcome> {
     consent::check()?;
     options.validate()?;
@@ -214,7 +233,12 @@ fn run_inner(
     }
     effects.push("Artifact publication completed; artifacts remain installed".into());
     consent::check()?;
-    let mut native = Native::new((factories.backend)(source)?);
+    let backend = (factories.backend)(source)?;
+    let mut native = if provider_aware {
+        Native::new_v3(backend)
+    } else {
+        Native::new(backend)
+    };
     let mut facts = native.inspect()?;
     usable(&facts)?;
     if facts.unit_state == "missing" || facts.message == RELOAD_MESSAGE {
@@ -266,6 +290,7 @@ fn run_inner(
             names.iter().cloned().collect::<Vec<_>>().join(", ")
         ),
     )?;
+    say(output, "Optional cloud Providers are separate from the local Model step. After local setup, run smith-installer --providers with this package to save/replace and explicitly validate OpenAI and/or Anthropic. Skipping keeps local-only use; no cloud request is made here.")?;
     let Some(selected) = options.model.as_deref() else {
         say(output, "No model selected. Rerun with --model EXACT or explicitly Save an observed model in Smith. No default was invented; model/inference setup is not complete.")?;
         return Ok(artifact::Outcome::Installed);
@@ -454,6 +479,7 @@ pub struct Native {
     backend: Box<dyn Backend>,
     instance: Option<String>,
     pid: Option<u32>,
+    schema: u32,
 }
 impl Native {
     pub fn new(backend: Box<dyn Backend>) -> Self {
@@ -461,7 +487,20 @@ impl Native {
             backend,
             instance: None,
             pid: None,
+            schema: 1,
         }
+    }
+    /// Explicit production/provider-aware adapter; never a version fallback.
+    pub fn new_v3(backend: Box<dyn Backend>) -> Self {
+        Self {
+            schema: 3,
+            ..Self::new(backend)
+        }
+    }
+    pub(crate) fn instance(&self) -> Result<&str> {
+        self.instance
+            .as_deref()
+            .ok_or_else(|| "Service identity has not been observed".into())
     }
     pub fn inspect(&mut self) -> Result<Observation> {
         consent::check()?;
@@ -483,20 +522,49 @@ impl Native {
         }
         checked_core(self.backend.apply(action, approval)?)
     }
-    pub fn app(&mut self, op: &str, args: Value) -> Result<Value> {
+    pub fn app(&mut self, op: &str, mut args: Value) -> Result<Value> {
         consent::check()?;
         validate_args(op, &args)?;
+        if self.schema == 3 {
+            if let Some(revision) = args.get_mut("expected_revision") {
+                if let Some(number) = revision.as_u64() {
+                    *revision = crate::providers::wire_revision(number);
+                }
+            }
+        }
+        self.exchange(self.schema, op, args)
+            .map_err(|e| e.to_string())
+    }
+    pub(crate) fn app_v3(
+        &mut self,
+        op: &str,
+        args: Value,
+    ) -> std::result::Result<Value, crate::providers::Failure> {
+        self.exchange(3, op, args)
+    }
+    fn exchange(
+        &mut self,
+        schema: u32,
+        op: &str,
+        args: Value,
+    ) -> std::result::Result<Value, crate::providers::Failure> {
+        use crate::providers::Failure;
+        consent::check()
+            .map_err(|_| Failure::unknown("Installer interrupted; no automatic resend"))?;
         let request = AppRequest {
-            schema_version: 1,
+            schema_version: schema,
             service: "smith-next".into(),
             protocol: "app".into(),
-            call_id: app::new_id()?,
+            call_id: app::new_id()
+                .map_err(|_| Failure::unknown("Cannot allocate app call identity"))?,
             op: op.into(),
             args,
         };
         let call = request.call_id.clone();
-        let reply = self.backend.app(request)?;
-        if reply.schema_version != 1
+        let reply = self.backend.app(request).map_err(|_| {
+            Failure::unknown("App transport unavailable; outcome unknown; no automatic resend")
+        })?;
+        if reply.schema_version != schema
             || reply.service != "smith-next"
             || reply.protocol != "app"
             || reply.call_id != call
@@ -505,7 +573,9 @@ impl Native {
             || reply.ok != reply.error.is_none()
             || reply.ok != reply.result.is_some()
         {
-            return Err("App envelope identity/schema mismatch; no automatic resend".into());
+            return Err(Failure::unknown(
+                "App envelope identity/schema mismatch; no automatic resend",
+            ));
         }
         if self
             .instance
@@ -513,23 +583,24 @@ impl Native {
             .is_some_and(|i| i != &reply.instance_id)
             || self.pid.is_some_and(|pid| pid != reply.pid)
         {
-            return Err("Service instance changed; synchronize without resending".into());
+            return Err(Failure::unknown(
+                "Service instance changed; synchronize without resending",
+            ));
         }
         self.instance = Some(reply.instance_id);
         self.pid = Some(reply.pid);
         if let Some(error) = reply.error {
             if !valid_error(&error) {
-                return Err("Invalid bounded app error".into());
+                return Err(Failure::unknown("Invalid bounded app error"));
             }
-            return Err(format!(
-                "App operation failed: {}; no automatic resend",
-                consent::display(&error.code)
-            ));
+            return Err(Failure::Service(error.code));
         }
-        let value = reply.result.ok_or("Missing app result")?;
-        bounded_value(&value)?;
+        let value = reply
+            .result
+            .ok_or_else(|| Failure::unknown("Missing app result"))?;
+        bounded_value(&value).map_err(|_| Failure::unknown("Invalid bounded app JSON"))?;
         if !value.is_object() {
-            return Err("Invalid app result shape".into());
+            return Err(Failure::unknown("Invalid app result shape"));
         }
         Ok(value)
     }
@@ -548,7 +619,8 @@ impl Native {
             return Err("Inventory polling cannot exceed its observation budget".into());
         }
         let id = app::new_id()?;
-        let admission: Admission = decode(self.app("models", json!({"request_id":id}))?)?;
+        let value = self.app("models", json!({"request_id":id}))?;
+        let admission = self.admission(value, "models")?;
         if admission.request_id != id
             || !["running", "succeeded"].contains(&admission.status.as_str())
             || (admission.status == "running" && admission.phase != "inventory")
@@ -565,8 +637,8 @@ impl Native {
                     "Inventory observation timed out; operation may continue; no resend".into(),
                 );
             }
-            let operation: Operation =
-                decode(self.app("poll", json!({"request_id":id,"instance_id":instance}))?)?;
+            let value = self.app("poll", json!({"request_id":id,"instance_id":instance}))?;
+            let operation = self.local_operation(value)?;
             consent::check()?;
             if Instant::now() >= deadline {
                 return Err(
@@ -608,10 +680,24 @@ impl Native {
         let value = self.app("state", json!({}))?;
         fields(
             &value,
-            &["config", "history", "active", "providers", "retention"],
+            if self.schema == 3 {
+                &[
+                    "config",
+                    "inventory_observed",
+                    "inventory",
+                    "conversations",
+                    "operations",
+                    "retention",
+                    "revision",
+                ]
+            } else {
+                &["config", "history", "active", "providers", "retention"]
+            },
         )?;
-        fields(&value["config"], &["model", "voice", "revision"])?;
-        let config: Config = decode(value["config"].clone())?;
+        let config = self.local_config(value["config"].clone())?;
+        if self.schema == 3 {
+            checked_state_v3(&value, config.revision)?;
+        }
         if config
             .model
             .as_deref()
@@ -626,8 +712,7 @@ impl Native {
             "configure_checked",
             json!({"model":selected,"voice":null,"expected_revision":revision}),
         )?;
-        fields(&value, &["model", "voice", "revision"])?;
-        let config: Config = decode(value)?;
+        let config = self.local_config(value)?;
         if config.model.as_deref() != Some(selected)
             || config.voice.is_some()
             || config.revision != revision.checked_add(1).ok_or("Revision exhausted")?
@@ -678,7 +763,8 @@ impl Native {
         if stopped() {
             return Err("Observation stopped before admission".into());
         }
-        let admission: Admission = decode(self.app(op, json!({"request_id":id,"model":selected,"sha256":entry.sha256,"expected_revision":revision}))?)?;
+        let value = self.app(op, json!({"request_id":id,"model":selected,"sha256":entry.sha256,"expected_revision":revision}))?;
+        let admission = self.admission(value, op)?;
         if admission.request_id != id
             || admission.config_revision != revision
             || !["running", "succeeded"].contains(&admission.status.as_str())
@@ -699,8 +785,8 @@ impl Native {
                     "Model observation stopped; accepted work may continue; no resend".into(),
                 );
             }
-            let operation: Operation =
-                decode(self.app("poll", json!({"request_id":id,"instance_id":instance}))?)?;
+            let value = self.app("poll", json!({"request_id":id,"instance_id":instance}))?;
+            let operation = self.local_operation(value)?;
             if stopped() || Instant::now() >= deadline {
                 return Err(
                     "Model observation stopped; accepted work may continue; no resend".into(),
@@ -760,10 +846,47 @@ impl Native {
         }
         Err("Model poll limit exceeded; accepted work may continue; no resend".into())
     }
+    fn local_config(&self, mut value: Value) -> Result<Config> {
+        fields(&value, &["model", "voice", "revision"])?;
+        if self.schema == 3 {
+            value["revision"] = json!(crate::providers::config_revision(&value["revision"])?);
+        }
+        decode(value)
+    }
+    fn admission(&self, mut value: Value, kind: &str) -> Result<Admission> {
+        if self.schema == 3 {
+            crate::providers::check_operation(&value, false)?;
+            if value["kind"] != kind || !value["conversation_id"].is_null() {
+                return Err("Local operation admission mismatch".into());
+            }
+            let map = value.as_object_mut().ok_or("Invalid admission")?;
+            map.remove("kind");
+            map.remove("conversation_id");
+            value["config_revision"] = json!(crate::providers::config_revision(
+                &value["config_revision"]
+            )?);
+        }
+        decode(value)
+    }
+    fn local_operation(&self, mut value: Value) -> Result<Operation> {
+        if self.schema == 3 {
+            crate::providers::check_operation(&value, true)?;
+            if !value["conversation_id"].is_null() {
+                return Err("Unexpected conversation in local installer work".into());
+            }
+            value
+                .as_object_mut()
+                .ok_or("Invalid operation")?
+                .remove("conversation_id");
+            value["config_revision"] = json!(crate::providers::config_revision(
+                &value["config_revision"]
+            )?);
+        }
+        decode(value)
+    }
     pub fn configure(&mut self, selected: &str) -> Result<()> {
         let value = self.app("configure", json!({"model":selected,"voice":null}))?;
-        fields(&value, &["model", "voice", "revision"])?;
-        let config: Config = decode(value)?;
+        let config = self.local_config(value)?;
         if config.model.as_deref() != Some(selected) || config.voice.is_some() {
             return Err("Saved preference response mismatch; synchronize before retry".into());
         }
@@ -922,6 +1045,16 @@ pub fn validate_args(op: &str, args: &Value) -> Result<()> {
 
 pub fn checked_inventory(value: Value) -> Result<BTreeSet<String>> {
     let inventory: Inventory = decode(value)?;
+    let names = inventory_names(&inventory)?;
+    if !inventory.providers.llm.ready {
+        return Err("Native runtime unavailable; install the complete paired Smith package".into());
+    }
+    Ok(names)
+}
+
+// Cached state may legitimately have no observed/available local runtime. Share
+// strict shape/identity validation without turning that fact into a setup error.
+fn inventory_names(inventory: &Inventory) -> Result<BTreeSet<String>> {
     if !inventory.voices.is_empty() || inventory.models.len() > 256 {
         return Err("Unexpected active voice or oversized model inventory".into());
     }
@@ -950,18 +1083,139 @@ pub fn checked_inventory(value: Value) -> Result<BTreeSet<String>> {
     {
         return Err("Unexpected active speech provider/model".into());
     }
-    if !observations.llm.ready {
-        return Err("Native runtime unavailable; install the complete paired Smith package".into());
+    if !observations.llm.ready && !inventory.models.is_empty() {
+        return Err("Unavailable local provider has model inventory".into());
     }
     let mut names = BTreeSet::new();
-    for entry in inventory.models {
+    for entry in &inventory.models {
         if !model::valid_model(&entry.name)
             || entry.digest.len() != 64
             || !entry.digest.bytes().all(|b| b.is_ascii_hexdigit())
-            || !names.insert(entry.name)
+            || !names.insert(entry.name.clone())
         {
             return Err("Invalid/ambiguous eligible model inventory".into());
         }
     }
     Ok(names)
+}
+
+fn checked_state_v3(value: &Value, revision: u64) -> Result<()> {
+    use crate::providers::{check_operation, config_revision, id, safe};
+    let observed = value["inventory_observed"]
+        .as_bool()
+        .ok_or("Invalid local inventory observation flag")?;
+    let inventory: Inventory = decode(value["inventory"].clone())?;
+    inventory_names(&inventory)?;
+    if !observed
+        && (inventory.providers.llm.ready
+            || inventory
+                .providers
+                .llm
+                .error
+                .as_ref()
+                .map(|e| e.code.as_str())
+                != Some("NOT_OBSERVED"))
+    {
+        return Err("Unobserved local inventory has observed facts".into());
+    }
+    if !safe(&value["revision"]) {
+        return Err("Invalid state revision".into());
+    }
+    let expected_retention = json!({
+        "max_conversations":32,"max_turn_pairs":16,"max_context_bytes":65536,
+        "max_terminal_jobs":32,"max_expired_ids":1024,"max_pending_jobs":4,
+        "queue_timeout_ms":600000,"capacity_policy":"reject_when_expiry_metadata_full",
+        "missing_request_code":"REQUEST_EXPIRED"
+    });
+    if value["retention"] != expected_retention {
+        return Err("Unexpected state retention contract".into());
+    }
+    let conversations = value["conversations"]
+        .as_array()
+        .filter(|items| items.len() <= 32)
+        .ok_or("Invalid bounded conversation summaries")?;
+    let mut conversations_seen = BTreeSet::new();
+    let mut origins_seen = BTreeSet::new();
+    let mut previous_sequence = None;
+    for conversation in conversations {
+        fields(
+            conversation,
+            &[
+                "conversation_id",
+                "title",
+                "archived",
+                "metadata_revision",
+                "history_revision",
+                "sequence",
+                "origin_request_id",
+            ],
+        )?;
+        // Historical titles keep the wire's 256-byte limit, not the newer
+        // 40-scalar limit on writes. Reading must not trap existing chats.
+        let title_valid = conversation["title"].as_str().is_some_and(|title| {
+            !title.is_empty() && title.trim() == title && title.len() <= 256
+                && !title.chars().any(|c| c.is_control()
+                    || matches!(c, '\u{061c}' | '\u{200e}' | '\u{200f}' | '\u{2028}'..='\u{202e}' | '\u{2066}'..='\u{2069}'))
+        });
+        if !id(&conversation["conversation_id"])
+            || !conversations_seen.insert(conversation["conversation_id"].as_str().unwrap_or(""))
+            || !title_valid
+            || !conversation["archived"].is_boolean()
+            || !safe(&conversation["metadata_revision"])
+            || !safe(&conversation["history_revision"])
+            || !safe(&conversation["sequence"])
+            || (!conversation["origin_request_id"].is_null()
+                && (!id(&conversation["origin_request_id"])
+                    || !origins_seen
+                        .insert(conversation["origin_request_id"].as_str().unwrap_or(""))))
+        {
+            return Err("Invalid conversation summary".into());
+        }
+        let sequence = conversation["sequence"]
+            .as_u64()
+            .ok_or("Invalid sequence")?;
+        if previous_sequence.is_some_and(|previous| sequence >= previous) {
+            return Err("Invalid conversation ordering/sequence".into());
+        }
+        previous_sequence = Some(sequence);
+    }
+    let operations = value["operations"]
+        .as_array()
+        .filter(|items| items.len() <= 32)
+        .ok_or("Invalid bounded operation summaries")?;
+    let mut requests = BTreeSet::new();
+    let mut pending_conversations = BTreeSet::new();
+    let mut pending = 0;
+    let mut running = 0;
+    let mut global_pending = 0;
+    for operation in operations {
+        check_operation(operation, false)?;
+        if !requests.insert(operation["request_id"].as_str().ok_or("Invalid request")?)
+            || config_revision(&operation["config_revision"])? > revision
+        {
+            return Err("Invalid operation identity/configuration revision".into());
+        }
+        if let Some(conversation) = operation["conversation_id"].as_str() {
+            if conversations_seen.contains(conversation)
+                == (operation["kind"] == "conversation_delete")
+            {
+                return Err("Invalid operation conversation reference".into());
+            }
+        }
+        if matches!(operation["status"].as_str(), Some("queued" | "running")) {
+            pending += 1;
+            running += usize::from(operation["status"] == "running");
+            if let Some(conversation) = operation["conversation_id"].as_str() {
+                if !pending_conversations.insert(conversation) {
+                    return Err("Multiple pending operations in one conversation".into());
+                }
+            } else {
+                global_pending += 1;
+            }
+        }
+    }
+    if pending > 4 || running > 1 || (global_pending != 0 && pending != 1) {
+        return Err("Invalid pending operation bounds".into());
+    }
+    Ok(())
 }

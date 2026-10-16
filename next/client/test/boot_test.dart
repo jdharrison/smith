@@ -3,11 +3,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smith_client/app_api.dart';
 import 'package:smith_client/boot.dart';
 import 'package:smith_client/control_api.dart';
 import 'package:smith_client/main.dart';
 import 'package:smith_client/text_chat.dart';
 import 'package:smith_client/ui/smith_workspace.dart';
+import 'package:smith_client/ui/smith_theme.dart';
 
 import 'app_fakes.dart';
 import 'widget_test.dart' show FakeControlApi, profile;
@@ -76,7 +78,278 @@ Future<void> flushWidget(WidgetTester tester) async {
   }
 }
 
+class HeldConversationApi extends FakeAppApi {
+  final synchronization = Completer<void>();
+
+  @override
+  Future<AppReply> call(String op, Map<String, dynamic> args) async {
+    if (op == 'conversation_get') await synchronization.future;
+    return super.call(op, args);
+  }
+}
+
+class PresentationCoordinator extends BootCoordinator {
+  PresentationCoordinator()
+    : super(
+        control: BootControl(profile()),
+        chat: ChatController(LegacyFakeAppApi()),
+      );
+
+  void show(BootPhase phase) {
+    state = BootState(
+      phase: phase,
+      status: phase == BootPhase.ready ? 'Connected to Smith' : 'Check Smith',
+    );
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    chat.dispose();
+    control.dispose();
+  }
+}
+
+Widget presentationHarness(
+  PresentationCoordinator coordinator, {
+  bool reducedMotion = false,
+}) => MaterialApp(
+  theme: SmithTheme.dark(),
+  home: MediaQuery(
+    data: MediaQueryData(disableAnimations: reducedMotion),
+    child: BootPresentation(
+      coordinator: coordinator,
+      readyBuilder: (context) => const Text('Workspace mounted'),
+    ),
+  ),
+);
+
+double bootOpacity(WidgetTester tester) => tester
+    .widget<Opacity>(find.byKey(const ValueKey('boot-transition')))
+    .opacity;
+
+Future<void> advancePresentation(WidgetTester tester, int milliseconds) async {
+  await tester.pump();
+  if (milliseconds < 500) {
+    await tester.pump(Duration(milliseconds: milliseconds));
+    return;
+  }
+  await tester.pump(bootIntroDuration);
+  if (milliseconds < 1500) {
+    await tester.pump(Duration(milliseconds: milliseconds - 500));
+    return;
+  }
+  await tester.pump(bootMinimumHoldDuration);
+  await tester.pump(Duration(milliseconds: milliseconds - 1500));
+}
+
 void main() {
+  testWidgets('a delayed intro frame cannot consume the fully visible hold', (
+    tester,
+  ) async {
+    final coordinator = PresentationCoordinator()..show(BootPhase.ready);
+    await tester.pumpWidget(presentationHarness(coordinator));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(bootOpacity(tester), lessThan(1));
+    await tester.pump(const Duration(milliseconds: 1251));
+    expect(bootOpacity(tester), 1);
+    await tester.pump(const Duration(milliseconds: 999));
+    expect(bootOpacity(tester), 1);
+    expect(find.text('Workspace mounted'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(bootOpacity(tester), 1);
+    await tester.pump(const Duration(milliseconds: 499));
+    expect(find.text('Workspace mounted'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(find.text('Workspace mounted'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    coordinator.dispose();
+  });
+
+  testWidgets('fast launch uses 500ms intro, 1s hold and 500ms outro', (
+    tester,
+  ) async {
+    final control = FakeControlApi(profile());
+    final app = FakeAppApi();
+    await tester.pumpWidget(SmithApp(controlApi: control, appApi: app));
+    await flushWidget(tester);
+
+    expect(control.calls, ['inspect']);
+    expect(app.calls, ['state', 'conversation_get', 'models', 'poll']);
+    expect(find.text('Connected to Smith'), findsOneWidget);
+    expect(bootOpacity(tester), 0);
+    expect(find.byType(ConversationScreen), findsNothing);
+
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(bootOpacity(tester), allOf(greaterThan(0), lessThan(1)));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(bootOpacity(tester), 1);
+    await tester.pump(const Duration(milliseconds: 999));
+    expect(bootOpacity(tester), 1);
+    expect(find.byType(ConversationScreen), findsNothing);
+
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(bootOpacity(tester), 1);
+
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(
+      bootOpacity(tester),
+      closeTo(1 - Curves.easeInOutCubic.transform(0.5), 0.001),
+    );
+    expect(find.byType(TextField), findsNothing);
+    await tester.pump(const Duration(milliseconds: 249));
+    expect(find.byType(ConversationScreen), findsNothing);
+    await tester.pump(const Duration(milliseconds: 1, microseconds: 1));
+    expect(find.byType(ConversationScreen), findsOneWidget);
+    await flushWidget(tester);
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.byKey(const ValueKey('boot-surface')), findsNothing);
+    expect(control.calls, ['inspect']);
+    expect(app.calls, ['state', 'conversation_get', 'models', 'poll']);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  for (final holdSynchronization in [false, true]) {
+    testWidgets(
+      'slow ${holdSynchronization ? 'synchronization' : 'Core readiness'} extends hold, then exits without another minimum',
+      (tester) async {
+        final control = FakeControlApi(profile());
+        final app = HeldConversationApi();
+        if (!holdSynchronization) {
+          control.pendingInspect = Completer<ControlReply>();
+          app.synchronization.complete();
+        }
+        await tester.pumpWidget(SmithApp(controlApi: control, appApi: app));
+        await flushWidget(tester);
+        await tester.pump(const Duration(milliseconds: 1500));
+        await tester.pump(const Duration(milliseconds: 2500));
+        expect(bootOpacity(tester), 1);
+        expect(find.byType(ConversationScreen), findsNothing);
+        expect(
+          find.text(
+            holdSynchronization ? 'Syncing conversation' : 'Starting Smith',
+          ),
+          findsOneWidget,
+        );
+        if (holdSynchronization) {
+          app.synchronization.complete();
+        } else {
+          control.pendingInspect!.complete(bootReply(profile()));
+        }
+        await flushWidget(tester);
+        await tester.pump(const Duration(milliseconds: 499));
+        expect(find.byType(ConversationScreen), findsNothing);
+        await tester.pump(const Duration(milliseconds: 1, microseconds: 1));
+        expect(find.byType(ConversationScreen), findsOneWidget);
+        expect(control.calls, ['inspect']);
+        expect(app.calls, ['state', 'conversation_get', 'models', 'poll']);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+  }
+
+  testWidgets('reduced motion keeps a static opaque two-second sequence', (
+    tester,
+  ) async {
+    final coordinator = PresentationCoordinator()..show(BootPhase.ready);
+    await tester.pumpWidget(
+      presentationHarness(coordinator, reducedMotion: true),
+    );
+    await tester.pump();
+    for (final milliseconds in [250, 250, 1000, 250, 249]) {
+      await tester.pump(Duration(milliseconds: milliseconds));
+      if (milliseconds == 1000) {
+        await tester.pump(const Duration(microseconds: 1));
+      }
+      expect(bootOpacity(tester), 1);
+      final painter =
+          tester
+                  .widget<CustomPaint>(find.byKey(const ValueKey('boot-mark')))
+                  .painter!
+              as BootMarkPainter;
+      expect(painter.progress, 0.12);
+      expect(find.text('Workspace mounted'), findsNothing);
+    }
+    await tester.pump(const Duration(milliseconds: 1, microseconds: 1));
+    expect(find.text('Workspace mounted'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    coordinator.dispose();
+  });
+
+  testWidgets('motion changes and rebuilds never restart presentation', (
+    tester,
+  ) async {
+    final coordinator = PresentationCoordinator()..show(BootPhase.ready);
+    await tester.pumpWidget(presentationHarness(coordinator));
+    await advancePresentation(tester, 250);
+    expect(bootOpacity(tester), allOf(greaterThan(0), lessThan(1)));
+    await tester.pumpWidget(
+      presentationHarness(coordinator, reducedMotion: true),
+    );
+    expect(bootOpacity(tester), 1);
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.pump(const Duration(milliseconds: 1000));
+    await tester.pump(const Duration(microseconds: 1));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Workspace mounted'), findsNothing);
+    await tester.pumpWidget(presentationHarness(coordinator));
+    expect(
+      bootOpacity(tester),
+      closeTo(1 - Curves.easeInOutCubic.transform(0.5), 0.001),
+    );
+    coordinator.show(BootPhase.ready);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250, microseconds: 1));
+    expect(find.text('Workspace mounted'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    coordinator.dispose();
+  });
+
+  for (final milliseconds in [250, 750, 1750]) {
+    testWidgets(
+      'repair at ${milliseconds}ms cancels decoration and stale exit',
+      (tester) async {
+        final coordinator = PresentationCoordinator()..show(BootPhase.ready);
+        await tester.pumpWidget(presentationHarness(coordinator));
+        await advancePresentation(tester, milliseconds);
+        coordinator.show(BootPhase.blocked);
+        await tester.pump();
+        expect(bootOpacity(tester), 1);
+        expect(find.text('Observe again').hitTestable(), findsOneWidget);
+        await tester.pump(const Duration(seconds: 5));
+        expect(find.text('Workspace mounted'), findsNothing);
+        expect(bootOpacity(tester), 1);
+        coordinator.show(BootPhase.ready);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 499));
+        expect(find.text('Workspace mounted'), findsNothing);
+        await tester.pump(const Duration(milliseconds: 1, microseconds: 1));
+        expect(find.text('Workspace mounted'), findsOneWidget);
+        expect((coordinator.control as BootControl).calls, isEmpty);
+        await tester.pumpWidget(const SizedBox());
+        coordinator.dispose();
+      },
+    );
+  }
+
+  for (final milliseconds in [0, 250, 1000, 1750]) {
+    testWidgets('unmount at ${milliseconds}ms safely disposes transition', (
+      tester,
+    ) async {
+      final coordinator = PresentationCoordinator()..show(BootPhase.ready);
+      await tester.pumpWidget(presentationHarness(coordinator));
+      await advancePresentation(tester, milliseconds);
+      await tester.pumpWidget(const SizedBox());
+      coordinator.show(BootPhase.blocked);
+      coordinator.dispose();
+      await tester.pump(const Duration(seconds: 5));
+      expect(tester.takeException(), isNull);
+      expect(tester.binding.transientCallbackCount, 0);
+    });
+  }
+
   testWidgets(
     'launch shows only Boot, then mounts chat after ready synchronization',
     (tester) async {

@@ -3,12 +3,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import 'app_api.dart';
+import 'message_queue.dart';
 
 /// A process-local presentation receipt, never authoritative service history.
 class LocalTextSend {
-  LocalTextSend(this.text, {this.historyRevision = 0});
+  LocalTextSend(this.text, {this.historyRevision = 0, this.fromQueue = false});
   final String text;
   final int historyRevision;
+  final bool fromQueue;
   String status = 'Sending…';
   bool active = true;
 }
@@ -22,6 +24,7 @@ class ChatController extends ChangeNotifier {
   });
   final AppApi api;
   final bool ownsApi;
+  MessageQueue? get messageQueue => null;
   double? scrollOffset;
   final Duration pollInterval;
   final Duration operationBudget;
@@ -62,6 +65,13 @@ class ChatController extends ChangeNotifier {
   Map<String, dynamic> config = {};
   Map<String, dynamic> providers = {};
   List<Map<String, dynamic>> history = [];
+  List<int?> historyTimestamps = [];
+  int? messageTimestampAt(int index) =>
+      historyTimestamps.length == history.length &&
+          index >= 0 &&
+          index < history.length
+      ? historyTimestamps[index]
+      : null;
   // Verified terminal answers are not service history and may lack user text.
   // Retain them by request identity until a later state read succeeds.
   final Map<String, String> provisionalAnswers = {};
@@ -131,6 +141,7 @@ class ChatController extends ChangeNotifier {
     final savedProviders = Map<String, dynamic>.from(state['providers'] as Map);
     config = savedConfig;
     history = savedHistory;
+    historyTimestamps = [];
     providers = savedProviders;
     provisionalAnswers.clear();
   }

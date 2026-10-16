@@ -5,6 +5,8 @@ pub mod appearance;
 use gtk::glib::{self, ControlFlow, Propagation};
 use gtk::prelude::*;
 use smith_installer::launch::{DesktopLauncher, LaunchResult, NativeLauncher};
+use smith_installer::providers::{Action as ProviderAction, Catalog as ProviderCatalog, Provider};
+use smith_installer::secret::Secret;
 use smith_installer::wizard::{Choices, Command, Event, Report, Scope, Session, StepState};
 use smith_installer::{consent, Result};
 use std::cell::RefCell;
@@ -33,10 +35,11 @@ Includes the Smith app, menu/icon, user command and standalone service binary.\n
 Install approves only the exact displayed artifact review. Register Smith service\n\
 and Start now are requested by default, with separate inline confirmations.\n\
 Model choice/download and a separately confirmed service-backed check follow.\n\
-Manage models bypasses artifact publication; exact-model removal is service-mediated.\n\
+Then optional Providers configures OpenAI/Anthropic independently; Save is not Validate.\n\
+Manage models/providers bypasses artifact publication; exact-model removal is service-mediated.\n\
 CPU/Vulkan model runtimes and CPU fallback are bundled; no Ollama dependency. No OS/GPU provisioning, implicit upgrades or lingering changes.\n\
 No automatic app launch or rollback; stopping preserves accepted/uncertain effects.\n\
-The headless smith-installer CLI is separate and unchanged.\n";
+The headless smith-installer CLI remains separate; --providers manages optional API keys.\n";
 const CSS: &str = "
 window.smith-installer, window.smith-stop-dialog {
     background-color: #031514;
@@ -229,6 +232,7 @@ enum Phase {
     Inspecting,
     Review,
     Model,
+    Providers,
     Working,
     Confirmation,
     Stopping,
@@ -277,6 +281,16 @@ struct Widgets {
     model: gtk::ComboBoxText,
     remove: gtk::CheckButton,
     model_facts: gtk::Label,
+    provider_choice: gtk::ComboBoxText,
+    provider_action: gtk::ComboBoxText,
+    provider_model: gtk::ComboBoxText,
+    provider_model_label: gtk::Label,
+    provider_key: gtk::Entry,
+    provider_key_label: gtk::Label,
+    provider_reveal: gtk::CheckButton,
+    provider_status: gtk::Label,
+    manage_providers: gtk::Button,
+    result_providers: gtk::Button,
 }
 
 fn label(value: &str) -> gtk::Label {
@@ -363,6 +377,10 @@ impl Widgets {
         let recipe = label("");
         let review = label("Reading the package and preparing a read-only review…");
         choices.pack_start(&review, false, false, 0);
+        let manage_providers = gtk::Button::with_label("Manage providers");
+        manage_providers.set_no_show_all(true);
+        manage_providers.set_halign(gtk::Align::Start);
+        choices.pack_start(&manage_providers, false, false, 0);
         stack.add_named(&choices, "review");
         let model_page = gtk::Box::new(gtk::Orientation::Vertical, 12);
         model_page.style_context().add_class("panel");
@@ -396,6 +414,61 @@ impl Widgets {
         model_page.pack_start(&remove, false, false, 0);
         model_page.pack_start(&label("Download, selection changes, testing and removal each need separate approval. CPU performance is unmeasured."), false, false, 0);
         stack.add_named(&model_page, "model");
+
+        let providers_page = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        providers_page.style_context().add_class("panel");
+        let provider_choice = gtk::ComboBoxText::new();
+        for provider in Provider::ALL {
+            provider_choice.append(Some(provider.id()), provider.label());
+        }
+        provider_choice.set_active(Some(0));
+        let provider_action = gtk::ComboBoxText::new();
+        for (id, title) in [
+            ("save", "Save / replace API key"),
+            ("validate", "Validate model (API request)"),
+            ("probe", "Observe local keyring (no API)"),
+            ("refresh", "Refresh cached status (no keyring/API)"),
+            ("observe", "Observe original request (no resend)"),
+        ] {
+            provider_action.append(Some(id), title);
+        }
+        provider_action.set_active(Some(0));
+        let provider_model = gtk::ComboBoxText::new();
+        let provider_key = gtk::Entry::new();
+        provider_key.set_visibility(false);
+        provider_key.set_input_purpose(gtk::InputPurpose::Password);
+        // Keep one overflow sentinel: GTK must not truncate an oversized paste
+        // into an apparently valid 4096-byte credential.
+        provider_key.set_max_length(4097);
+        provider_key
+            .set_placeholder_text(Some("New API key — never loaded from saved credentials"));
+        let provider_key_label = gtk::Label::with_mnemonic("API _key");
+        provider_key_label.set_xalign(0.0);
+        provider_key_label.set_mnemonic_widget(Some(&provider_key));
+        let provider_reveal = gtk::CheckButton::with_label("Show newly entered key");
+        let provider_status = label("");
+        providers_page.pack_start(&section("Optional cloud providers"), false, false, 0);
+        providers_page.pack_start(&provider_status, false, false, 0);
+        providers_page.pack_start(&label("API credentials/billing are separate from consumer subscriptions. Keys remain in the existing keyring after replacement and uninstall; no automatic unlock or removal."), false, false, 0);
+        let provider_label = gtk::Label::with_mnemonic("_Provider");
+        provider_label.set_xalign(0.0);
+        provider_label.set_mnemonic_widget(Some(&provider_choice));
+        let action_label = gtk::Label::with_mnemonic("Ac_tion");
+        action_label.set_xalign(0.0);
+        action_label.set_mnemonic_widget(Some(&provider_action));
+        let provider_model_label = gtk::Label::with_mnemonic("_Validation model");
+        provider_model_label.set_xalign(0.0);
+        provider_model_label.set_mnemonic_widget(Some(&provider_model));
+        providers_page.pack_start(&provider_label, false, false, 0);
+        providers_page.pack_start(&provider_choice, false, false, 0);
+        providers_page.pack_start(&action_label, false, false, 0);
+        providers_page.pack_start(&provider_action, false, false, 0);
+        providers_page.pack_start(&provider_model_label, false, false, 0);
+        providers_page.pack_start(&provider_model, false, false, 0);
+        providers_page.pack_start(&provider_key_label, false, false, 0);
+        providers_page.pack_start(&provider_key, false, false, 0);
+        providers_page.pack_start(&provider_reveal, false, false, 0);
+        stack.add_named(&providers_page, "providers");
 
         let working = gtk::Box::new(gtk::Orientation::Vertical, 12);
         let stage = label("Preparing installation…");
@@ -432,6 +505,10 @@ impl Widgets {
         manage.set_no_show_all(true);
         manage.set_halign(gtk::Align::Start);
         terminal.pack_start(&manage, false, false, 0);
+        let result_providers = gtk::Button::with_label("Manage providers");
+        result_providers.set_no_show_all(true);
+        result_providers.set_halign(gtk::Align::Start);
+        terminal.pack_start(&result_providers, false, false, 0);
         stack.add_named(&terminal, "terminal");
         body.pack_start(&stack, false, false, 0);
 
@@ -540,6 +617,16 @@ impl Widgets {
             model,
             remove,
             model_facts,
+            provider_choice,
+            provider_action,
+            provider_model,
+            provider_model_label,
+            provider_key,
+            provider_key_label,
+            provider_reveal,
+            provider_status,
+            manage_providers,
+            result_providers,
         }
     }
 
@@ -595,6 +682,10 @@ struct Controller {
     action_after_review: Option<AfterReview>,
     active_scope: Scope,
     model_request: Option<u64>,
+    provider_request: Option<u64>,
+    provider_catalog: Option<ProviderCatalog>,
+    provider_pending: bool,
+    provider_confirmation: bool,
     cancellation: Box<dyn Fn() -> bool>,
     restart_blocked: bool,
     launcher: Box<dyn DesktopLauncher>,
@@ -634,6 +725,10 @@ impl Controller {
             action_after_review: None,
             active_scope: Scope::Installation,
             model_request: None,
+            provider_request: None,
+            provider_catalog: None,
+            provider_pending: false,
+            provider_confirmation: false,
             cancellation: Box::new(consent::cancelled),
             restart_blocked: false,
             launcher,
@@ -775,6 +870,7 @@ impl Controller {
                     self.active_scope = match &command {
                         Command::Upgrade => Scope::Upgrade,
                         Command::Uninstall => Scope::Uninstall,
+                        Command::ManageProviders => Scope::Providers,
                         _ => Scope::ModelCheck,
                     };
                     self.phase = Phase::Inspecting;
@@ -791,6 +887,7 @@ impl Controller {
             self.active_scope = match command {
                 Command::Upgrade => Scope::Upgrade,
                 Command::Uninstall => Scope::Uninstall,
+                Command::ManageProviders => Scope::Providers,
                 _ => Scope::ModelCheck,
             };
             self.choices = Some(Choices::default());
@@ -825,6 +922,117 @@ impl Controller {
             model: model.to_string(),
             remove,
         }) {
+            self.fail(&error);
+        }
+    }
+    fn selected_provider(&self) -> Provider {
+        if self.ui.provider_choice.active_id().as_deref() == Some("anthropic") {
+            Provider::Anthropic
+        } else {
+            Provider::Openai
+        }
+    }
+    fn provider_selected(&self) {
+        self.ui.provider_key.set_text("");
+        self.ui.provider_reveal.set_active(false);
+        self.ui.provider_model.remove_all();
+        if let Some(catalog) = &self.provider_catalog {
+            for choice in catalog.choices(self.selected_provider()) {
+                self.ui.provider_model.append(
+                    Some(&choice.route.model),
+                    &format!("{} ({})", choice.label, choice.route.model),
+                );
+            }
+            self.ui.provider_model.set_active(Some(0));
+        }
+        self.provider_controls();
+    }
+    fn provider_controls(&self) {
+        if self.phase != Phase::Providers {
+            return;
+        }
+        let action = self.ui.provider_action.active_id();
+        let save = action.as_deref() == Some("save");
+        let validate = action.as_deref() == Some("validate");
+        self.ui.primary_label(match action.as_deref() {
+            Some("save") => "Review Save / Replace",
+            Some("validate") => "Review validation",
+            Some("probe") => "Observe local keyring",
+            Some("refresh") => "Refresh cached status",
+            Some("observe") => "Observe original request",
+            _ => "Review provider action",
+        });
+        self.ui.provider_key.set_visible(save);
+        self.ui.provider_key_label.set_visible(save);
+        self.ui.provider_reveal.set_visible(save);
+        self.ui.provider_model.set_visible(validate);
+        self.ui.provider_model_label.set_visible(validate);
+        let eligible = match action.as_deref() {
+            Some("save") => !self.provider_pending && !self.ui.provider_key.text().is_empty(),
+            Some("validate") => {
+                !self.provider_pending
+                    && self.ui.provider_model.active_id().is_some()
+                    && self.provider_catalog.as_ref().is_some_and(|c| {
+                        c.provider(self.selected_provider())
+                            .credential_generation
+                            .is_some()
+                    })
+            }
+            Some("probe") => !self.provider_pending,
+            Some("refresh") => true,
+            Some("observe") => self.provider_pending,
+            _ => false,
+        };
+        self.ui
+            .primary
+            .set_sensitive(self.provider_request.is_some() && eligible);
+    }
+    fn provider_action(&mut self, done: bool) {
+        if self.phase != Phase::Providers {
+            return;
+        }
+        let Some(request_id) = self.provider_request else {
+            return;
+        };
+        let provider = self.selected_provider();
+        let action = if done {
+            ProviderAction::Done
+        } else {
+            match self.ui.provider_action.active_id().as_deref() {
+                Some("save") => {
+                    let secret = Secret::new(self.ui.provider_key.text().to_string());
+                    self.ui.provider_key.set_text("");
+                    self.ui.provider_reveal.set_active(false);
+                    match secret {
+                        Ok(secret) => ProviderAction::Save { provider, secret },
+                        Err(error) => {
+                            self.ui.provider_status.set_text(&error);
+                            self.provider_controls();
+                            return;
+                        }
+                    }
+                }
+                Some("validate") => {
+                    let Some(model) = self.ui.provider_model.active_id() else {
+                        return;
+                    };
+                    ProviderAction::Validate {
+                        provider,
+                        model: model.to_string(),
+                    }
+                }
+                Some("probe") => ProviderAction::Probe { provider },
+                Some("refresh") => ProviderAction::Refresh,
+                Some("observe") => ProviderAction::Observe,
+                _ => return,
+            }
+        };
+        self.ui.provider_key.set_text("");
+        self.ui.provider_reveal.set_active(false);
+        self.provider_request = None;
+        self.phase = Phase::Working;
+        self.render();
+        if let Err(error) = self.send(Command::ProviderAction { request_id, action }) {
             self.fail(&error);
         }
     }
@@ -869,8 +1077,13 @@ impl Controller {
         let Some(pending) = self.pending.take() else {
             return;
         };
-        self.stopped_by_user = true;
-        self.phase = Phase::Stopping;
+        if self.provider_confirmation {
+            self.provider_confirmation = false;
+            self.phase = Phase::Working;
+        } else {
+            self.stopped_by_user = true;
+            self.phase = Phase::Stopping;
+        }
         self.render();
         if let Err(error) = self.send(Command::Decline {
             request_id: pending.request_id,
@@ -889,6 +1102,8 @@ impl Controller {
     }
 
     fn stop(&mut self, close_after_join: bool) {
+        self.ui.provider_key.set_text("");
+        self.ui.provider_reveal.set_active(false);
         self.dismiss_stop_dialog();
         self.close_after_join |= close_after_join;
         self.stopped_by_user = true;
@@ -915,6 +1130,8 @@ impl Controller {
     }
 
     fn fail(&mut self, error: &str) {
+        self.ui.provider_key.set_text("");
+        self.ui.provider_reveal.set_active(false);
         self.dismiss_stop_dialog();
         if self.fault.is_none() {
             self.fault = Some(text(error, TEXT_LIMIT));
@@ -935,6 +1152,49 @@ impl Controller {
 
     fn event(&mut self, event: Event) {
         match event {
+            Event::Providers {
+                request_id,
+                catalog,
+                message,
+                pending_request,
+            } => {
+                self.fence_progress();
+                if self.phase == Phase::Stopping {
+                    return;
+                }
+                if self.phase != Phase::Working {
+                    self.fail("Providers arrived outside active setup");
+                    return;
+                }
+                self.provider_catalog = Some(catalog);
+                self.provider_request = Some(request_id);
+                self.provider_pending = pending_request.is_some();
+                self.provider_confirmation = false;
+                let pending = pending_request.map(|id| format!("\nOriginal uncertain request: {id}. Observe only; never repeat its apply.")).unwrap_or_default();
+                self.ui.provider_status.set_text(&format!(
+                    "{message}\n\n{}{pending}",
+                    self.provider_catalog.as_ref().expect("catalog").summary()
+                ));
+                self.phase = Phase::Providers;
+                if self.provider_pending {
+                    self.ui.provider_action.set_active_id(Some("observe"));
+                }
+                self.provider_selected();
+                self.render();
+            }
+            Event::ProviderConfirmation {
+                request_id,
+                title,
+                effects,
+            } => {
+                self.event(Event::Confirmation {
+                    request_id,
+                    title,
+                    effects,
+                });
+                self.provider_confirmation = self.phase == Phase::Confirmation;
+                self.render();
+            }
             Event::Review {
                 request_id,
                 description,
@@ -1065,6 +1325,7 @@ impl Controller {
                 title,
                 effects,
             } => {
+                self.provider_confirmation = false;
                 self.fence_progress();
                 if self.phase == Phase::Stopping {
                     return;
@@ -1182,6 +1443,8 @@ impl Controller {
     }
 
     fn finish(&mut self) {
+        self.ui.provider_key.set_text("");
+        self.ui.provider_reveal.set_active(false);
         // Terminal/Close is reachable only after the owned worker has been joined.
         debug_assert!(self.session.is_none());
         self.phase = Phase::Terminal;
@@ -1204,6 +1467,7 @@ impl Controller {
                 Scope::Upgrade => "Upgrade cancelled",
                 Scope::Uninstall => "Uninstall cancelled",
                 Scope::ModelCheck | Scope::ModelRemoval => "Model operation cancelled",
+                Scope::Providers => "Provider operation cancelled",
                 Scope::Installation => "Installation cancelled",
             }
         } else {
@@ -1220,6 +1484,22 @@ impl Controller {
             .unwrap_or("The installer did not produce a verified result.");
         self.ui.introduction.set_text(&text(message, TEXT_LIMIT));
         if let Some(report) = &self.report {
+            if let Some(providers) = &report.providers {
+                self.ui.results.pack_start(
+                    &label(&format!(
+                        "Optional Providers: {}\n{}",
+                        if providers.success {
+                            "Finished (see individual validation status)"
+                        } else {
+                            "Failed or uncertain; local setup preserved"
+                        },
+                        text(&providers.message, 12 * 1024)
+                    )),
+                    false,
+                    false,
+                    0,
+                );
+            }
             for step in report
                 .steps
                 .iter()
@@ -1281,7 +1561,7 @@ impl Controller {
             );
         }
         self.ui.outcome.set_text(if complete && self.active_scope == Scope::Uninstall {
-            "ALL app/Core state, preferences, history, models, releases and backups are kept. Disk usage is not purged."
+            "ALL app/Core state, preferences, history, models, releases and backups are kept. Saved API keys remain in the keyring and are not revoked. Disk usage is not purged."
         } else if complete && self.active_scope == Scope::Upgrade {
             "Models were not downloaded or tested. Keep the package for maintenance."
         } else if complete {
@@ -1434,6 +1714,20 @@ impl Controller {
             .set_sensitive(landing && !self.management_blocked());
         self.ui.manage.set_visible(false);
         self.ui.manage.set_sensitive(false);
+        let management = !self.management_blocked() && self.launch_pending.is_none() && !self.quit;
+        self.ui.manage_providers.set_visible(review);
+        self.ui
+            .manage_providers
+            .set_sensitive(review && self.review_refreshable && management);
+        self.ui.result_providers.set_visible(
+            terminal
+                && self.bundle.is_some()
+                && self.session.is_none()
+                && !self.management_blocked(),
+        );
+        self.ui
+            .result_providers
+            .set_sensitive(management && self.session.is_none());
         self.ui
             .launch_status
             .set_visible(terminal && !self.ui.launch_status.text().is_empty());
@@ -1442,7 +1736,7 @@ impl Controller {
         self.ui.secondary.set_visible(!landing);
         self.ui.secondary.set_sensitive(matches!(
             self.phase,
-            Phase::Review | Phase::Model | Phase::Working | Phase::Confirmation
+            Phase::Review | Phase::Model | Phase::Providers | Phase::Working | Phase::Confirmation
         ));
         self.ui
             .confirmation
@@ -1456,6 +1750,8 @@ impl Controller {
             "landing"
         } else if self.phase == Phase::Model {
             "model"
+        } else if self.phase == Phase::Providers {
+            "providers"
         } else if review {
             "review"
         } else if terminal {
@@ -1515,12 +1811,21 @@ impl Controller {
                 );
                 self.ui.secondary.set_label("Cancel model operation…");
             }
+            Phase::Providers => {
+                self.ui.heading.set_text("Providers");
+                self.ui.introduction.set_text("Optional additions after local Model setup. Configure OpenAI and Anthropic independently. Nothing is sent by selecting or typing.");
+                self.ui.primary.set_visible(true);
+                self.ui.primary_label("Review provider action");
+                self.ui.secondary.set_label("Done / Skip Providers");
+                self.provider_controls();
+            }
             Phase::Working => {
                 self.ui.primary.set_visible(false);
                 self.ui.heading.set_text(match self.active_scope {
                     Scope::Upgrade => "Upgrading Smith",
                     Scope::Uninstall => "Uninstalling Smith",
                     Scope::ModelCheck | Scope::ModelRemoval => "Managing models",
+                    Scope::Providers => "Managing providers",
                     Scope::Installation => "Installing Smith",
                 });
                 self.ui
@@ -1539,7 +1844,11 @@ impl Controller {
                     self.ui.primary_label(&pending.title);
                 }
                 self.ui.primary.set_sensitive(self.pending.is_some());
-                self.ui.secondary.set_label("Stop here");
+                self.ui.secondary.set_label(if self.provider_confirmation {
+                    "Not now"
+                } else {
+                    "Stop here"
+                });
             }
             Phase::Stopping | Phase::Finishing => {
                 self.ui.primary.set_visible(false);
@@ -1632,7 +1941,9 @@ fn close_request(controller: &Rc<RefCell<Controller>>) {
         Phase::Terminal => controller.borrow_mut().close_terminal(),
         Phase::Landing | Phase::Inspecting | Phase::Review => controller.borrow_mut().stop(true),
         Phase::Stopping | Phase::Finishing => controller.borrow_mut().close_after_join = true,
-        Phase::Model | Phase::Working | Phase::Confirmation => ask_stop(controller, true),
+        Phase::Model | Phase::Providers | Phase::Working | Phase::Confirmation => {
+            ask_stop(controller, true)
+        }
     }
 }
 
@@ -1686,6 +1997,7 @@ fn connect(controller: &Rc<RefCell<Controller>>) {
             match state.phase {
                 Phase::Review => state.install(),
                 Phase::Model => state.model_action(),
+                Phase::Providers => state.provider_action(false),
                 Phase::Confirmation => state.approve(),
                 Phase::Terminal => state.close_terminal(),
                 _ => {}
@@ -1698,6 +2010,7 @@ fn connect(controller: &Rc<RefCell<Controller>>) {
             let phase = controller.borrow().phase;
             match phase {
                 Phase::Confirmation => controller.borrow_mut().decline(),
+                Phase::Providers => controller.borrow_mut().provider_action(true),
                 Phase::Terminal if controller.borrow().launch_eligible() => {
                     controller.borrow_mut().launch()
                 }
@@ -1719,6 +2032,46 @@ fn connect(controller: &Rc<RefCell<Controller>>) {
         if let Some(controller) = weak.upgrade() {
             controller.borrow_mut().manage();
         }
+    });
+    for button in [&state.ui.manage_providers, &state.ui.result_providers] {
+        let weak = Rc::downgrade(controller);
+        button.connect_clicked(move |_| {
+            if let Some(controller) = weak.upgrade() {
+                controller
+                    .borrow_mut()
+                    .independent_action(Command::ManageProviders);
+            }
+        });
+    }
+    let weak = Rc::downgrade(controller);
+    state.ui.provider_choice.connect_changed(move |_| {
+        if let Some(controller) = weak.upgrade() {
+            if let Ok(state) = controller.try_borrow() {
+                state.provider_selected();
+            }
+        }
+    });
+    let weak = Rc::downgrade(controller);
+    state.ui.provider_action.connect_changed(move |_| {
+        if let Some(controller) = weak.upgrade() {
+            if let Ok(state) = controller.try_borrow() {
+                state.ui.provider_key.set_text("");
+                state.ui.provider_reveal.set_active(false);
+                state.provider_controls();
+            }
+        }
+    });
+    let weak = Rc::downgrade(controller);
+    state.ui.provider_key.connect_changed(move |_| {
+        if let Some(controller) = weak.upgrade() {
+            if let Ok(state) = controller.try_borrow() {
+                state.provider_controls();
+            }
+        }
+    });
+    let key = state.ui.provider_key.clone();
+    state.ui.provider_reveal.connect_toggled(move |show| {
+        key.set_visibility(show.is_active());
     });
     let weak = Rc::downgrade(controller);
     state.ui.upgrade.connect_clicked(move |_| {
@@ -1967,6 +2320,7 @@ mod tests {
     fn report(complete: bool, cancelled: bool, state: StepState) -> Report {
         Report {
             scope: smith_installer::wizard::Scope::Installation,
+            providers: None,
             complete,
             cancelled,
             message: "Selected effects reported by the worker.".into(),
@@ -2902,6 +3256,218 @@ mod tests {
             assert_eq!(controller.borrow().exit_code(), 0);
             destroy(controller);
         }
+    }
+
+    fn provider_catalog() -> ProviderCatalog {
+        use serde_json::json;
+        let providers: Vec<_> = Provider::ALL
+            .iter()
+            .map(|p| {
+                json!({"provider":p.id(),"revision":0,"credential_generation":null,
+            "credential_state":"not_configured","credential_error":null,"validation":null})
+            })
+            .collect();
+        let models: Vec<_> = smith_service::cloud::MODELS.iter().map(|model| json!({"group":"cloud","label":model.label,
+            "route":{"provider":model.vendor.name(),"model":model.id,"credential_generation":null},"available":false,
+            "unavailable_reason":{"code":"PROVIDER_NOT_CONFIGURED","message":"Synthetic missing credential"},"validated_model":false})).collect();
+        ProviderCatalog::parse(json!({"config_revision":0,"inventory_observed":false,"providers":providers,"models":models})).unwrap()
+    }
+    fn providers_event(request_id: u64) -> Event {
+        Event::Providers {
+            request_id,
+            catalog: provider_catalog(),
+            message: "Optional Providers; local setup is unchanged.".into(),
+            pending_request: None,
+        }
+    }
+    fn provider_cases() {
+        let (controller, data) = fixture();
+        assert!(!controller.borrow().ui.manage_providers.is_visible());
+        assert!(!controller.borrow().ui.result_providers.is_visible());
+        data.borrow_mut().events.push_back(review_event(600));
+        controller.borrow_mut().tick(false);
+        controller.borrow_mut().choose_install_or_upgrade();
+        let manage = controller.borrow().ui.manage_providers.clone();
+        assert!(manage.is_visible() && manage.is_sensitive());
+        manage.emit_clicked();
+        assert_eq!(data.borrow().commands, [Command::ManageProviders]);
+        data.borrow_mut().events.push_back(providers_event(601));
+        controller.borrow_mut().tick(false);
+        assert_eq!(controller.borrow().phase, Phase::Providers);
+        let action = controller.borrow().ui.provider_action.clone();
+        let key = controller.borrow().ui.provider_key.clone();
+        let reveal = controller.borrow().ui.provider_reveal.clone();
+        let provider = controller.borrow().ui.provider_choice.clone();
+        action.set_active_id(Some("validate"));
+        assert!(!controller.borrow().ui.primary.is_sensitive());
+        assert!(controller.borrow().ui.provider_model.is_visible());
+        action.set_active_id(Some("save"));
+        key.set_text("synthetic-gtk-key-NOT-A-CREDENTIAL");
+        assert!(!EntryExt::is_visible(&key));
+        reveal.set_active(true);
+        assert!(EntryExt::is_visible(&key));
+        assert!(controller.borrow().ui.primary.is_sensitive());
+        assert_eq!(
+            data.borrow().commands.len(),
+            1,
+            "Selection/typing must have no worker effect"
+        );
+        controller.borrow_mut().provider_action(false);
+        assert!(key.text().is_empty() && !EntryExt::is_visible(&key) && !reveal.is_active());
+        assert!(!format!("{:?}", data.borrow().commands).contains("synthetic-gtk-key"));
+        assert!(matches!(
+            &data.borrow().commands[1],
+            Command::ProviderAction {
+                request_id: 601,
+                action: ProviderAction::Save {
+                    provider: Provider::Openai,
+                    ..
+                }
+            }
+        ));
+        data.borrow_mut()
+            .events
+            .push_back(Event::ProviderConfirmation {
+                request_id: 602,
+                title: "Save OpenAI API key".into(),
+                effects: vec![
+                    "Save only to keyring; no API validation. Previous items retained.".into(),
+                ],
+            });
+        controller.borrow_mut().tick(false);
+        assert_eq!(
+            controller.borrow().ui.secondary.label().as_deref(),
+            Some("Not now")
+        );
+        assert!(controller
+            .borrow()
+            .ui
+            .effects
+            .text()
+            .contains("no API validation"));
+        controller.borrow_mut().decline();
+        assert!(!controller.borrow().stopped_by_user);
+        data.borrow_mut().events.push_back(providers_event(603));
+        controller.borrow_mut().tick(false);
+        key.set_text("unsubmitted-fixture-key");
+        provider.set_active_id(Some("anthropic"));
+        assert!(key.text().is_empty());
+        assert_eq!(data.borrow().commands.len(), 3);
+        key.set_text("invalid whitespace");
+        controller.borrow_mut().provider_action(false);
+        assert!(key.text().is_empty());
+        assert_eq!(data.borrow().commands.len(), 3);
+        assert!(controller
+            .borrow()
+            .ui
+            .provider_status
+            .text()
+            .contains("without whitespace"));
+        key.set_text(&"x".repeat(5000));
+        assert_eq!(key.text().len(), 4097);
+        controller.borrow_mut().provider_action(false);
+        assert!(key.text().is_empty());
+        assert_eq!(
+            data.borrow().commands.len(),
+            3,
+            "Oversized input must not be saved after truncation"
+        );
+        controller.borrow_mut().provider_action(true);
+        assert!(matches!(
+            &data.borrow().commands[3],
+            Command::ProviderAction {
+                request_id: 603,
+                action: ProviderAction::Done
+            }
+        ));
+        let mut done = report(true, false, StepState::Completed);
+        done.scope = Scope::Providers;
+        done.providers = Some(smith_installer::providers::Outcome {
+            success: true,
+            message: "Not configured; skipping is not validation.".into(),
+        });
+        data.borrow_mut()
+            .events
+            .push_back(Event::Finished { report: done });
+        data.borrow_mut().finished = true;
+        controller.borrow_mut().tick(false);
+        assert_eq!(controller.borrow().phase, Phase::Terminal);
+        assert!(!controller.borrow().launch_eligible());
+        destroy(controller);
+
+        // Unknown work offers only observation as an effect; Close clears any
+        // abandoned input and waits for the existing joined worker.
+        let (controller, data) = fixture();
+        data.borrow_mut().events.push_back(review_event(610));
+        controller.borrow_mut().tick(false);
+        controller
+            .borrow_mut()
+            .independent_action(Command::ManageProviders);
+        let mut event = providers_event(611);
+        if let Event::Providers {
+            pending_request, ..
+        } = &mut event
+        {
+            *pending_request = Some("a".repeat(32));
+        }
+        data.borrow_mut().events.push_back(event);
+        controller.borrow_mut().tick(false);
+        assert_eq!(
+            controller
+                .borrow()
+                .ui
+                .provider_action
+                .active_id()
+                .as_deref(),
+            Some("observe")
+        );
+        assert!(controller
+            .borrow()
+            .ui
+            .provider_status
+            .text()
+            .contains("Original uncertain request"));
+        let key = controller.borrow().ui.provider_key.clone();
+        key.set_text("abandoned-fixture-key");
+        controller.borrow_mut().stop(true);
+        assert!(key.text().is_empty());
+        assert!(!controller.borrow().quit);
+        data.borrow_mut().events.push_back(Event::Finished {
+            report: report(false, true, StepState::Skipped),
+        });
+        data.borrow_mut().finished = true;
+        controller.borrow_mut().tick(false);
+        destroy(controller);
+
+        // Optional provider failure must not erase verified local install/Launch.
+        let (controller, data) = fixture();
+        controller.borrow_mut().bundle = Some(PathBuf::from("/fixture/package"));
+        data.borrow_mut().events.push_back(review_event(620));
+        controller.borrow_mut().tick(false);
+        controller.borrow_mut().choose_install_or_upgrade();
+        controller.borrow_mut().install();
+        data.borrow_mut().events.push_back(providers_event(621));
+        controller.borrow_mut().tick(false);
+        controller.borrow_mut().provider_action(true);
+        let mut done = report(true, false, StepState::Completed);
+        done.providers = Some(smith_installer::providers::Outcome {
+            success: false,
+            message: "Optional provider validation failed; saved key and local setup remain."
+                .into(),
+        });
+        data.borrow_mut()
+            .events
+            .push_back(Event::Finished { report: done });
+        data.borrow_mut().finished = true;
+        controller.borrow_mut().tick(false);
+        assert!(controller.borrow().launch_eligible());
+        assert!(controller.borrow().ui.result_providers.is_visible());
+        assert!(controller.borrow().ui.results.children().iter().any(|w| w
+            .clone()
+            .downcast::<gtk::Label>()
+            .is_ok_and(|l| l.text().contains("Optional provider validation failed"))));
+        assert_eq!(controller.borrow().exit_code(), 0);
+        destroy(controller);
     }
 
     // Keep all GTK scenarios in one test: GTK must stay on the initialization
@@ -3846,6 +4412,7 @@ mod tests {
         controller.borrow_mut().tick(false);
         destroy(controller);
 
+        provider_cases();
         launch_cases();
         visual_matrix();
     }

@@ -9,12 +9,14 @@ pub const HELP: &str = "Smith native installer — Ubuntu 24.04 LTS x86_64, unpr
 Usage: smith-installer [--bundle ROOT] [--dry-run] [--model EXACT]\n\
                        [--download-model] [--verify-inference]\n\
        smith-installer --artifacts-only [--client BUNDLE] [--service BINARY]\n\
-                       [--dry-run] [--yes]\n\n\
+                       [--dry-run] [--yes]\n\
+       smith-installer --providers [--bundle ROOT]\n\n\
   --bundle ROOT       Recipient package root (default: actual executable directory)\n\
   --dry-run           Read-only artifact plan; no locks/writes, manager or provider\n\
   --model EXACT       Exact eligible local name:tag; no default model\n\
   --download-model    Offer separate curated GGUF download consent only if missing\n\
   --models            List the pinned local model catalog (no discovery/download)\n\
+  --providers         Optional interactive OpenAI/Anthropic management; no install\n\
   --pull-model        Compatibility alias for --download-model\n\
   --verify-inference  Offer separate fixed minimal inference, not a saved chat turn\n\
   --artifacts-only    Developer artifact publication only; never register/start\n\
@@ -32,6 +34,9 @@ Later decline/failure preserves prior effects; no automatic retry or rollback.\n
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Mode {
+    Providers {
+        bundle: Option<PathBuf>,
+    },
     Recipient {
         bundle: Option<PathBuf>,
         model: Option<String>,
@@ -66,6 +71,7 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Command> {
     let (mut dry_run, mut artifact_mode, mut assume_yes, mut pull_model, mut verify_inference) =
         (false, false, false, false, false);
     let (mut help, mut version, mut list_models) = (false, false, false);
+    let mut providers = false;
     while let Some(argument) = args.next() {
         let text = argument.to_str().ok_or("Option names must be UTF-8")?;
         let (name, inline) = match text.split_once('=') {
@@ -78,6 +84,25 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Command> {
             "-V" => "--version",
             other => other,
         };
+        if ![
+            "--help",
+            "--version",
+            "--models",
+            "--providers",
+            "--dry-run",
+            "--artifacts-only",
+            "--yes",
+            "--pull-model",
+            "--verify-inference",
+            "--bundle",
+            "--client",
+            "--service",
+            "--model",
+        ]
+        .contains(&name)
+        {
+            return Err("Unknown argument; API keys are accepted only by hidden terminal input in --providers".into());
+        }
         if !seen.insert(name.to_owned()) {
             return Err(format!("Repeated option: {name}"));
         }
@@ -100,6 +125,7 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Command> {
             "--help" => help = true,
             "--version" => version = true,
             "--models" => list_models = true,
+            "--providers" => providers = true,
             "--dry-run" => dry_run = true,
             "--artifacts-only" => artifact_mode = true,
             "--yes" => assume_yes = true,
@@ -116,7 +142,8 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Command> {
                         .map_err(|_| "Model must be UTF-8")?,
                 )
             }
-            _ => return Err(format!("Unknown argument: {name}")),
+            // Unknown positional text could be an accidentally pasted secret.
+            _ => return Err("Unknown argument; API keys are accepted only by hidden terminal input in --providers".into()),
         }
     }
     if help {
@@ -131,7 +158,23 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Command> {
         }
         return Ok(Command::Models);
     }
-    let mode = if artifact_mode {
+    let mode = if providers {
+        if artifact_mode
+            || assume_yes
+            || client.is_some()
+            || service.is_some()
+            || model.is_some()
+            || pull_model
+            || verify_inference
+            || dry_run
+        {
+            return Err(
+                "--providers accepts only --bundle; no artifact/model/dry-run/yes combinations"
+                    .into(),
+            );
+        }
+        Mode::Providers { bundle }
+    } else if artifact_mode {
         if bundle.is_some() || model.is_some() || pull_model || verify_inference {
             return Err("--artifacts-only rejects recipient --bundle/--model/--pull-model/--verify-inference".into());
         }
@@ -182,6 +225,14 @@ pub fn execute(
     output: &mut dyn ProgressOutput,
 ) -> Result<artifact::Outcome> {
     match options.mode {
+        Mode::Providers { bundle } => {
+            let bundle = match bundle {
+                Some(root) => absolute(root)?,
+                None => default_bundle()?,
+            };
+            crate::providers::run_cli(bundle, confirm, output)?;
+            Ok(artifact::Outcome::Installed)
+        }
         Mode::Recipient {
             bundle,
             model,

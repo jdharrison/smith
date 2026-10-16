@@ -2,7 +2,7 @@
 
 .PHONY: help test build run install client/install service/install installer/test installer/build installer/binary package/test \
 	client/test client/build client/run \
-	service/test service/build installer/ui installer/ui-test \
+	service/test service/build installer/ui installer/ui-test installer/run \
 	test-service test-client build-service build-client run-client
 
 help:
@@ -26,6 +26,7 @@ help:
 	  '' \
 	  'Recipient package:' \
 		  '  make installer/build Export visual + CLI installers and paired payload' \
+		  '  make installer/run   Build/verify the full package, then launch installer GUI' \
 		  '  make installer/binary Build native tool for component artifact installs' \
 		  '  make installer/ui    Export native GTK installer tool' \
 		  '  make installer/ui-test Isolated GTK quality and widget smoke' \
@@ -58,6 +59,9 @@ installer/binary:
 installer/build:
 	dagger call -o installer/dist build-installer --installer installer --client client --service service --tooling dagger
 	python3 dagger/package.py --root installer/dist --verify
+
+installer/run: installer/build
+	./installer/dist/smith-installer-ui
 
 install: service/build client/build installer/binary
 	./installer/build/smith-installer --artifacts-only --client client/dist --service service/dist/smith-service

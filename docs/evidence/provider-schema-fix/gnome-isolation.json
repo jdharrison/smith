@@ -1,0 +1,15 @@
+{
+  "network_mode": "none",
+  "mounts": [],
+  "user": "1000:1000",
+  "privileged": false,
+  "cap_drop": [
+    "ALL"
+  ],
+  "security_opt": [
+    "no-new-privileges"
+  ],
+  "image_id": "sha256:72b3645759a9b96359333521be200c1ba2cb6281e8486154e4ff9a6f1a8debc9",
+  "pids_limit": 64,
+  "memory_bytes": 536870912
+}

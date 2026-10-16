@@ -99,7 +99,7 @@ void main() {
     chat.edit('Successful B');
     await chat.send();
     await tester.pumpAndSettle();
-    expect(scroll.offset, scroll.position.maxScrollExtent);
+    expect(scroll.offset, 0);
     final successfulRequest = chat.pendingId!;
     expect(chat.localSends.keys, [failedRequest, successfulRequest]);
     scroll.jumpTo(0);
@@ -157,46 +157,44 @@ void main() {
     },
   );
 
-  testWidgets(
-    'latest send scrolls once without pulling a reader down on updates',
-    (tester) async {
-      final api = DelayedAdmissionApi()..holdChats = true;
-      for (var i = 0; i < 12; i++) {
-        api.history.addAll([
-          {'role': 'user', 'content': 'Earlier question $i'},
-          {'role': 'assistant', 'content': 'Earlier answer $i'},
-        ]);
-      }
-      final workspace = await ready(api);
-      final chat = workspace.selected;
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: ChatPanel(controller: chat)),
-        ),
-      );
-      await tester.pumpAndSettle();
-      final scroll = tester
-          .widget<SingleChildScrollView>(
-            find.byKey(const ValueKey('conversation-history')),
-          )
-          .controller!;
-      scroll.jumpTo(0);
-      chat.edit('Latest message');
-      final sending = chat.send();
-      await tester.pumpAndSettle();
-      expect(scroll.offset, scroll.position.maxScrollExtent);
-      scroll.jumpTo(0);
-      api.admission.complete();
-      await sending;
-      await tester.pumpAndSettle();
-      expect(scroll.offset, 0);
-      chat.edit('Another draft');
-      await tester.pumpAndSettle();
-      expect(scroll.offset, 0);
-      await tester.pumpWidget(const SizedBox.shrink());
-      workspace.dispose();
-    },
-  );
+  testWidgets('send and admission updates preserve a locked reading position', (
+    tester,
+  ) async {
+    final api = DelayedAdmissionApi()..holdChats = true;
+    for (var i = 0; i < 12; i++) {
+      api.history.addAll([
+        {'role': 'user', 'content': 'Earlier question $i'},
+        {'role': 'assistant', 'content': 'Earlier answer $i'},
+      ]);
+    }
+    final workspace = await ready(api);
+    final chat = workspace.selected;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: ChatPanel(controller: chat)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final scroll = tester
+        .widget<SingleChildScrollView>(
+          find.byKey(const ValueKey('conversation-history')),
+        )
+        .controller!;
+    scroll.jumpTo(0);
+    chat.edit('Latest message');
+    final sending = chat.send();
+    await tester.pumpAndSettle();
+    expect(scroll.offset, 0);
+    api.admission.complete();
+    await sending;
+    await tester.pumpAndSettle();
+    expect(scroll.offset, 0);
+    chat.edit('Another draft');
+    await tester.pumpAndSettle();
+    expect(scroll.offset, 0);
+    await tester.pumpWidget(const SizedBox.shrink());
+    workspace.dispose();
+  });
   testWidgets(
     'Send clears immediately; queued/thinking becomes authoritative answer',
     (tester) async {

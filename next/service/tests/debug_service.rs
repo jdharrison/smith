@@ -287,32 +287,72 @@ fn app_cli_stdin_envelope_is_separate_and_never_uses_endpoint_argv() {
     assert!(!reply.ok);
 }
 #[test]
-fn app_v2_helper_correlates_preflight_and_strict_decode_failures() {
-    for (malformed, suffix) in [(false, ""), (true, ""), (false, "\n"), (false, "{}\n")] {
-        let mut request = serde_json::to_value(app_state_request()).unwrap();
-        request["schema_version"] = serde_json::json!(2);
-        if malformed {
-            request["unknown"] = serde_json::json!(true);
+fn app_v2_v3_helper_correlates_preflight_and_strict_decode_failures() {
+    for version in [2, 3] {
+        for (malformed, suffix) in [(false, ""), (true, ""), (false, "\n"), (false, "{}\n")] {
+            let mut request = serde_json::to_value(app_state_request()).unwrap();
+            request["schema_version"] = serde_json::json!(version);
+            if malformed {
+                request["unknown"] = serde_json::json!(true);
+            }
+            let mut child = spawn_fixture(
+                Command::new(env!("CARGO_BIN_EXE_smith-service"))
+                    .arg("app")
+                    .env_clear()
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::piped()),
+            )
+            .unwrap();
+            let mut bytes = serde_json::to_vec(&request).unwrap();
+            bytes.push(b'\n');
+            bytes.extend_from_slice(suffix.as_bytes());
+            child.stdin.take().unwrap().write_all(&bytes).unwrap();
+            let output = child.wait_with_output().unwrap();
+            assert!(!output.status.success());
+            let reply: smith_service::app::AppReply =
+                serde_json::from_slice(&output.stdout).unwrap();
+            assert_eq!(reply.schema_version, version);
+            assert_eq!(reply.call_id, app_state_request().call_id);
+            assert!(!reply.ok);
         }
-        let mut child = spawn_fixture(
-            Command::new(env!("CARGO_BIN_EXE_smith-service"))
-                .arg("app")
-                .env_clear()
-                .stdin(Stdio::piped())
-                .stdout(Stdio::piped()),
-        )
-        .unwrap();
-        let mut bytes = serde_json::to_vec(&request).unwrap();
-        bytes.push(b'\n');
-        bytes.extend_from_slice(suffix.as_bytes());
-        child.stdin.take().unwrap().write_all(&bytes).unwrap();
-        let output = child.wait_with_output().unwrap();
-        assert!(!output.status.success());
-        let reply: smith_service::app::AppReply = serde_json::from_slice(&output.stdout).unwrap();
-        assert_eq!(reply.schema_version, 2);
-        assert_eq!(reply.call_id, app_state_request().call_id);
-        assert!(!reply.ok);
     }
+}
+#[test]
+fn app_v3_cached_catalog_and_preparation_use_the_actual_socket_without_cloud_effects() {
+    let fixture = Fixture::new();
+    let c = fixture.controller();
+    apply(&c, Action::InstallBinary);
+    apply(&c, Action::InstallUnit);
+    apply(&c, Action::Enable);
+    apply(&c, Action::Start);
+    let mut request = app_state_request();
+    request.schema_version = 3;
+    request.op = "route_catalog".into();
+    let reply = c.app(request.clone()).unwrap();
+    assert!(reply.ok);
+    assert_eq!(reply.schema_version, 3);
+    let instance = reply.instance_id;
+    let catalog = reply.result.unwrap();
+    assert_eq!(catalog["providers"].as_array().unwrap().len(), 2);
+    let models = catalog["models"].as_array().unwrap();
+    assert_eq!(models.len(), smith_service::cloud::MODELS.len());
+    for (choice, model) in models.iter().zip(smith_service::cloud::MODELS) {
+        assert_eq!(choice["route"]["provider"], model.vendor.name());
+        assert_eq!(choice["route"]["model"], model.id);
+        assert_eq!(choice["label"], model.label);
+        assert_eq!(choice["available"], false);
+        assert_eq!(choice["validated_model"], false);
+    }
+    request.op = "provider_prepare".into();
+    request.args = serde_json::json!({"request_id":"11111111111111111111111111111111","instance_id":instance,"provider":"openai","action":"save","model":null,"expected_provider_revision":0});
+    let reply = c.app(request).unwrap();
+    assert!(reply.ok);
+    assert!(reply.result.unwrap()["endpoint"].is_null());
+    assert!(!fixture
+        .roots
+        .data
+        .join("smith-next/app-state.json")
+        .exists());
 }
 #[test]
 fn v2_trailing_frames_execute_neither_request_and_keep_correlation() {
@@ -1001,4 +1041,401 @@ fn compiled_identity_is_finite_and_ambient_manager_override_is_not_a_control_opt
     assert!(!output.status.success());
     let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(json["ok"], false);
+}
+
+// Test-only executable seam consumed by Flutter's mandatory Dagger gate. None
+// of these controls are linked into smith-service or consult the host keyring.
+mod dart_cloud {
+    use super::*;
+    use serde_json::{json, Value};
+    use smith_service::app::{AppReply, AppRequest, AppResult, Application, Message};
+    use smith_service::cloud::{
+        Clock, CredentialRef, CredentialStore, Dependencies, HttpFailure, HttpResponse,
+        HttpTransport, Secret, Vendor,
+    };
+    use smith_service::providers::{
+        Inventory, Model, Observation as ProviderObservation, Observations, Provider,
+    };
+    use std::collections::HashMap;
+    use std::io::{BufRead, BufReader};
+    use std::os::unix::net::UnixListener;
+    use std::sync::atomic::AtomicBool;
+    use std::sync::Arc;
+
+    #[derive(Default)]
+    struct Controls {
+        hold: AtomicBool,
+        fail_http: AtomicBool,
+        offset: AtomicU64,
+        local_calls: AtomicU64,
+        http_calls: AtomicU64,
+        key_reads: AtomicU64,
+        messages: Mutex<Vec<Value>>,
+    }
+    impl Controls {
+        fn wait(&self) {
+            let deadline = Instant::now() + Duration::from_secs(10);
+            while self.hold.load(Ordering::SeqCst) {
+                assert!(
+                    Instant::now() < deadline,
+                    "fixture hold exceeded 10 seconds"
+                );
+                std::thread::sleep(Duration::from_millis(5));
+            }
+        }
+    }
+    impl Clock for Controls {
+        fn now(&self) -> Instant {
+            Instant::now() + Duration::from_millis(self.offset.load(Ordering::SeqCst))
+        }
+        fn wall_ms(&self) -> u64 {
+            smith_service::cloud::SystemClock.wall_ms() + self.offset.load(Ordering::SeqCst)
+        }
+    }
+    struct Keys {
+        controls: Arc<Controls>,
+        items: Mutex<HashMap<String, Vec<u8>>>,
+    }
+    impl CredentialStore for Keys {
+        fn read(&self, identity: &CredentialRef, _: Instant, _: &AtomicBool) -> AppResult<Secret> {
+            self.controls.key_reads.fetch_add(1, Ordering::SeqCst);
+            let items = self.items.lock().unwrap();
+            Secret::new(
+                items
+                    .get(&identity.generation)
+                    .expect("only saved fake generations")
+                    .clone(),
+            )
+        }
+        fn save(
+            &self,
+            identity: &CredentialRef,
+            secret: &Secret,
+            _: Instant,
+            _: &AtomicBool,
+        ) -> AppResult<()> {
+            self.items
+                .lock()
+                .unwrap()
+                .insert(identity.generation.clone(), secret.expose().to_vec());
+            Ok(())
+        }
+    }
+    struct Local(Arc<Controls>);
+    impl Provider for Local {
+        fn inventory(&self) -> AppResult<Inventory> {
+            Ok(Inventory {
+                models: vec![Model {
+                    name: smith_service::catalog::CATALOG[0].name.into(),
+                    digest: smith_service::catalog::CATALOG[0].sha256.into(),
+                }],
+                voices: vec![],
+                providers: Observations {
+                    llm: ProviderObservation {
+                        ready: true,
+                        error: None,
+                    },
+                    ..Observations::default()
+                },
+            })
+        }
+        fn chat(&self, _: &str, messages: &[Message]) -> AppResult<String> {
+            self.0.local_calls.fetch_add(1, Ordering::SeqCst);
+            self.0
+                .messages
+                .lock()
+                .unwrap()
+                .push(serde_json::to_value(messages).unwrap());
+            self.0.wait();
+            Ok("Synthetic local answer".into())
+        }
+    }
+    struct Http(Arc<Controls>);
+    impl HttpTransport for Http {
+        fn post(
+            &self,
+            vendor: Vendor,
+            body: Vec<u8>,
+            _: &Secret,
+            _: Instant,
+            _: Instant,
+            _: &AtomicBool,
+        ) -> std::result::Result<HttpResponse, HttpFailure> {
+            self.0.http_calls.fetch_add(1, Ordering::SeqCst);
+            self.0.wait();
+            let input: Value = serde_json::from_slice(&body).unwrap();
+            self.0.messages.lock().unwrap().push(input.clone());
+            if self.0.fail_http.swap(false, Ordering::SeqCst) {
+                return Ok(HttpResponse {
+                    status: 503,
+                    header_bytes: 0,
+                    body: b"{}".to_vec(),
+                });
+            }
+            let result = match vendor {
+                Vendor::Openai => {
+                    json!({"object":"response","model":input["model"],"status":"completed","error":null,"incomplete_details":null,"output":[{"type":"message","role":"assistant","status":"completed","content":[{"type":"output_text","text":"Synthetic cloud answer","annotations":[]}]}]})
+                }
+                Vendor::Anthropic => {
+                    json!({"type":"message","role":"assistant","model":input["model"],"content":[{"type":"text","text":"Synthetic cloud answer"}],"stop_reason":"end_turn","stop_sequence":null})
+                }
+            };
+            Ok(HttpResponse {
+                status: 200,
+                header_bytes: 0,
+                body: serde_json::to_vec(&result).unwrap(),
+            })
+        }
+    }
+    fn call(app: &Application, op: &str, args: Value) -> Value {
+        app.call(AppRequest {
+            schema_version: 3,
+            service: "smith-next".into(),
+            protocol: "app".into(),
+            call_id: smith_service::app::new_id().unwrap(),
+            op: op.into(),
+            args,
+        })
+        .unwrap()
+    }
+    fn wait(app: &Application, request: &str) {
+        let deadline = Instant::now() + Duration::from_secs(5);
+        loop {
+            let v = call(
+                app,
+                "poll",
+                json!({"request_id":request,"instance_id":app.instance_id}),
+            );
+            if v["status"] != "running" && v["status"] != "queued" {
+                assert_eq!(v["status"], "succeeded", "{v}");
+                return;
+            }
+            assert!(Instant::now() < deadline);
+            std::thread::sleep(Duration::from_millis(5));
+        }
+    }
+    fn open(roots: &Roots, keys: &Arc<Keys>, controls: &Arc<Controls>) -> Application {
+        Application::open_with_cloud(
+            roots,
+            Arc::new(Local(controls.clone())),
+            Dependencies::new(keys.clone(), Arc::new(Http(controls.clone())))
+                .with_clock(controls.clone()),
+        )
+        .unwrap()
+    }
+    fn bootstrap(app: &Application, saved_only: bool) {
+        let request = smith_service::app::new_id().unwrap();
+        call(app, "models", json!({"request_id":request}));
+        wait(app, &request);
+        call(
+            app,
+            "configure",
+            json!({"model":smith_service::catalog::CATALOG[0].name,"voice":null}),
+        );
+        for vendor in Vendor::ALL {
+            for (action, revision) in [("save", 0), ("validate", 1)] {
+                if saved_only && action == "validate" {
+                    continue;
+                }
+                let request = smith_service::app::new_id().unwrap();
+                let model = if action == "save" {
+                    Value::Null
+                } else {
+                    json!(if vendor == Vendor::Openai {
+                        "gpt-6-astra"
+                    } else {
+                        "claude-sonnet-5-5"
+                    })
+                };
+                let prepared = call(
+                    app,
+                    "provider_prepare",
+                    json!({"request_id":request,"instance_id":app.instance_id,"provider":vendor.name(),"action":action,"model":model,"expected_provider_revision":revision}),
+                );
+                call(
+                    app,
+                    "provider_apply",
+                    json!({"request_id":request,"instance_id":app.instance_id,"approval_token":prepared["approval_token"],"api_key":if action == "save" { json!("synthetic-fixture-only") } else { Value::Null }}),
+                );
+                wait(app, &request);
+            }
+        }
+    }
+    #[test]
+    fn bootstrap_modes_keep_fake_keys_and_restart_resets_only_volatile_facts() {
+        for saved_only in [false, true] {
+            let fixture = Fixture::new();
+            directory(&fixture.roots.data.join("smith-next"));
+            let controls = Arc::new(Controls::default());
+            let keys = Arc::new(Keys {
+                controls: controls.clone(),
+                items: Mutex::new(HashMap::new()),
+            });
+            let app = open(&fixture.roots, &keys, &controls);
+            bootstrap(&app, saved_only);
+            let before = call(&app, "route_catalog", json!({}));
+            let instance = app.instance_id.clone();
+            let reads = controls.key_reads.load(Ordering::SeqCst);
+            let posts = controls.http_calls.load(Ordering::SeqCst);
+            assert_eq!(posts, if saved_only { 0 } else { 2 });
+            assert_eq!(reads, posts);
+            assert_eq!(keys.items.lock().unwrap().len(), 2);
+            drop(app);
+            let app = open(&fixture.roots, &keys, &controls);
+            assert_ne!(app.instance_id, instance);
+            let after = call(&app, "route_catalog", json!({}));
+            for vendor in Vendor::ALL {
+                let p = &after["providers"][vendor.index()];
+                assert_eq!(
+                    p["credential_generation"],
+                    before["providers"][vendor.index()]["credential_generation"]
+                );
+                assert_eq!(p["credential_state"], "not_observed");
+                assert_eq!(p["credential_error"]["code"], "NOT_OBSERVED");
+                assert_eq!(
+                    p["validation"],
+                    before["providers"][vendor.index()]["validation"]
+                );
+                assert_eq!(p["validation"].is_null(), saved_only);
+            }
+            for choice in after["models"].as_array().unwrap() {
+                assert_eq!(choice["available"], true);
+                assert!(choice["unavailable_reason"].is_null());
+                if saved_only {
+                    assert_eq!(choice["validated_model"], false);
+                }
+            }
+            assert_eq!(controls.key_reads.load(Ordering::SeqCst), reads);
+            assert_eq!(controls.http_calls.load(Ordering::SeqCst), posts);
+        }
+    }
+    #[test]
+    #[ignore = "launched explicitly by the Dart schema3 fixture gate"]
+    fn dart_cloud_fixture() {
+        let base = PathBuf::from(
+            std::env::var_os("SMITH_DART_CLOUD_ROOT").expect("explicit private fixture root"),
+        );
+        assert!(base.is_absolute());
+        let roots = Roots {
+            data: base.join("data"),
+            config: base.join("config"),
+            runtime: base.join("runtime"),
+        };
+        for path in [&roots.data, &roots.config, &roots.runtime] {
+            directory(path);
+        }
+        directory(&roots.data.join("smith-next"));
+        let controls = Arc::new(Controls::default());
+        let keys = Arc::new(Keys {
+            controls: controls.clone(),
+            items: Mutex::new(HashMap::new()),
+        });
+        let mut app = open(&roots, &keys, &controls);
+        let saved_only = std::env::var("SMITH_DART_CLOUD_SAVED_ONLY").is_ok_and(|v| v == "1");
+        bootstrap(&app, saved_only);
+        controls.local_calls.store(0, Ordering::SeqCst);
+        controls.http_calls.store(0, Ordering::SeqCst);
+        controls.key_reads.store(0, Ordering::SeqCst);
+        controls.messages.lock().unwrap().clear();
+        let listener = UnixListener::bind(base.join("app.sock")).unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let deadline = Instant::now() + Duration::from_secs(90);
+        let mut exchanges = 0;
+        let mut catalog_exchanges = 0;
+        loop {
+            assert!(
+                Instant::now() < deadline,
+                "Dart fixture exceeded 90 seconds"
+            );
+            let (mut stream, _) = match listener.accept() {
+                Ok(v) => v,
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                    std::thread::sleep(Duration::from_millis(5));
+                    continue;
+                }
+                Err(e) => panic!("fixture socket: {e}"),
+            };
+            exchanges += 1;
+            assert!(exchanges <= 1024);
+            stream
+                .set_read_timeout(Some(Duration::from_secs(2)))
+                .unwrap();
+            stream
+                .set_write_timeout(Some(Duration::from_secs(2)))
+                .unwrap();
+            let mut frame = String::new();
+            BufReader::new((&stream).take(4 * 1024 * 1024 + 1))
+                .read_line(&mut frame)
+                .unwrap();
+            assert!(frame.len() <= 4 * 1024 * 1024 && frame.ends_with('\n'));
+            let value: Value = serde_json::from_str(&frame).unwrap();
+            let mut stop = false;
+            let response = if let Some(control) = value["fixture"].as_str() {
+                match control {
+                    "hold" => controls
+                        .hold
+                        .store(value["value"].as_bool().unwrap(), Ordering::SeqCst),
+                    "fail_http" => controls.fail_http.store(true, Ordering::SeqCst),
+                    "advance" => {
+                        controls
+                            .offset
+                            .fetch_add(value["milliseconds"].as_u64().unwrap(), Ordering::SeqCst);
+                    }
+                    "stats" => {}
+                    "restart" => {
+                        drop(app);
+                        app = open(&roots, &keys, &controls);
+                    }
+                    "shutdown" => {
+                        controls.hold.store(false, Ordering::SeqCst);
+                        stop = true;
+                    }
+                    _ => panic!("unknown test control"),
+                }
+                json!({"local_calls":controls.local_calls.load(Ordering::SeqCst),"http_calls":controls.http_calls.load(Ordering::SeqCst),"key_reads":controls.key_reads.load(Ordering::SeqCst),"messages":*controls.messages.lock().unwrap()})
+            } else {
+                let req: AppRequest = serde_json::from_value(value).unwrap();
+                assert_eq!(
+                    req.schema_version, 3,
+                    "production Dart adapter must use schema3"
+                );
+                let call_id = req.call_id.clone();
+                let is_catalog = req.op == "route_catalog";
+                let result = app.call(req);
+                if is_catalog {
+                    let catalog = result.as_ref().expect("actual service catalog");
+                    let cloud: Vec<_> = catalog["models"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .filter(|choice| choice["route"]["provider"] != "local")
+                        .collect();
+                    assert_eq!(cloud.len(), smith_service::cloud::MODELS.len());
+                    for (choice, model) in cloud.iter().zip(smith_service::cloud::MODELS) {
+                        assert_eq!(choice["route"]["provider"], model.vendor.name());
+                        assert_eq!(choice["route"]["model"], model.id);
+                        assert_eq!(choice["label"], model.label);
+                    }
+                    catalog_exchanges += 1;
+                }
+                serde_json::to_value(AppReply::from_versioned_result(
+                    3,
+                    &app.instance_id,
+                    &call_id,
+                    result,
+                ))
+                .unwrap()
+            };
+            serde_json::to_writer(&mut stream, &response).unwrap();
+            stream.write_all(b"\n").unwrap();
+            if stop {
+                break;
+            }
+        }
+        assert!(
+            catalog_exchanges > 0,
+            "Dart must request the actual full Rust catalog"
+        );
+        drop(app);
+    }
 }

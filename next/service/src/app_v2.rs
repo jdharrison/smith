@@ -3,12 +3,12 @@
 #[path = "app_v2_tests.rs"]
 mod tests;
 use super::*;
-const MAX_CONVERSATIONS: usize = 32;
-const MAX_PENDING: usize = 4;
+pub(super) const MAX_CONVERSATIONS: usize = 32;
+pub(super) const MAX_PENDING: usize = 4;
 const QUEUE_MS: u64 = 600_000;
 pub(super) const MAX_REVISION: u64 = 9_007_199_254_740_991;
 
-fn wire_config_revision(revision: u64) -> Value {
+pub(super) fn wire_config_revision(revision: u64) -> Value {
     if revision <= MAX_REVISION {
         json!(revision)
     } else {
@@ -29,7 +29,9 @@ fn parse_config_revision(value: Value) -> AppResult<u64> {
         _ => Err(invalid()),
     }
 }
-fn config_revision<'de, D: serde::Deserializer<'de>>(d: D) -> std::result::Result<u64, D::Error> {
+pub(super) fn config_revision<'de, D: serde::Deserializer<'de>>(
+    d: D,
+) -> std::result::Result<u64, D::Error> {
     parse_config_revision(Value::deserialize(d)?)
         .map_err(|_| serde::de::Error::custom("Noncanonical configuration revision"))
 }
@@ -49,19 +51,19 @@ pub(super) fn pending(o: &Operation) -> bool {
 pub(super) fn capacity() -> AppError {
     AppError::new("CAPACITY", "Durable capacity exhausted; no change was made")
 }
-fn stale() -> AppError {
+pub(super) fn stale() -> AppError {
     AppError::new(
         "STALE_REVISION",
         "State changed; observe again without retry",
     )
 }
-fn missing() -> AppError {
+pub(super) fn missing() -> AppError {
     AppError::new(
         "CONVERSATION_NOT_FOUND",
         "Conversation is absent; no replacement was created",
     )
 }
-fn blocked() -> AppError {
+pub(super) fn blocked() -> AppError {
     AppError::new("BUSY", "Target or global worker is occupied")
 }
 const MAX_NEW_TITLE_SCALARS: usize = 40;
@@ -80,7 +82,7 @@ fn valid_new_title(s: &str) -> bool {
     valid_title(s) && s.chars().count() <= MAX_NEW_TITLE_SCALARS
 }
 
-fn initial_title(input: &str) -> String {
+pub(super) fn initial_title(input: &str) -> String {
     let sanitized: String = input
         .chars()
         // Dart trims FEFF but Rust does not; remove it before truncation can expose it.
@@ -135,11 +137,11 @@ pub(super) struct Job {
     pub accepted_ms: u64,
 }
 impl Job {
-    fn summary(&self) -> Value {
+    pub(super) fn summary(&self) -> Value {
         let o = &self.operation;
         json!({"request_id":o.request_id,"conversation_id":self.conversation_id,"kind":o.kind,"status":o.status,"phase":o.phase,"config_revision":wire_config_revision(o.config_revision)})
     }
-    fn poll(&self) -> Value {
+    pub(super) fn poll(&self) -> Value {
         let mut v = self.summary();
         v["result"] = json!(self.operation.result);
         v["error"] = json!(self.operation.error);
@@ -157,19 +159,23 @@ impl Job {
 #[serde(deny_unknown_fields)]
 pub(super) struct Durable {
     schema_version: u32,
+    pub cloud: v3::CloudDurable,
+    pub timestamps: timestamps::Timestamps,
     pub config: Config,
     pub conversations: Vec<Conversation>,
     pub jobs: Vec<Job>,
     pub expired_ids: Vec<String>,
     #[serde(deserialize_with = "required_nullable")]
-    legacy_conversation_id: Option<String>,
+    pub(super) legacy_conversation_id: Option<String>,
     pub revision: u64,
     next_sequence: u64,
 }
 impl Default for Durable {
     fn default() -> Self {
         Self {
-            schema_version: 2,
+            schema_version: 4,
+            cloud: v3::CloudDurable::default(),
+            timestamps: timestamps::Timestamps::default(),
             config: Config::default(),
             conversations: vec![],
             jobs: vec![],
@@ -182,7 +188,7 @@ impl Default for Durable {
 }
 impl Durable {
     pub fn load(bytes: &[u8]) -> Result<(Self, bool)> {
-        let v: Value = serde_json::from_slice(bytes).map_err(|_| "Corrupt state; preserved")?;
+        let v = crate::cloud::unique_json(bytes).map_err(|_| "Corrupt state; preserved")?;
         match v.get("schema_version").and_then(Value::as_u64) {
             Some(1) => {
                 let old: LegacyDurable =
@@ -225,9 +231,82 @@ impl Durable {
                     .collect();
                 Ok((next, true))
             }
-            Some(2) => serde_json::from_slice(bytes)
+            Some(2) => {
+                #[derive(Deserialize)]
+                #[serde(deny_unknown_fields)]
+                struct FrozenV2 {
+                    schema_version: u32,
+                    config: Config,
+                    conversations: Vec<Conversation>,
+                    jobs: Vec<Job>,
+                    expired_ids: Vec<String>,
+                    #[serde(deserialize_with = "required_nullable")]
+                    legacy_conversation_id: Option<String>,
+                    revision: u64,
+                    next_sequence: u64,
+                }
+                let old: FrozenV2 =
+                    serde_json::from_slice(bytes).map_err(|_| "Corrupt v2 state; preserved")?;
+                if old.schema_version != 2
+                    || old.jobs.iter().any(|j| {
+                        j.version > 2 || matches!(j.task, Some(Task::Routed(_) | Task::Provider(_)))
+                    })
+                {
+                    return Err("Corrupt v2 state; preserved".into());
+                }
+                let next = Self {
+                    schema_version: 4,
+                    cloud: v3::CloudDurable::default(),
+                    timestamps: timestamps::Timestamps::default(),
+                    config: old.config,
+                    conversations: old.conversations,
+                    jobs: old.jobs,
+                    expired_ids: old.expired_ids,
+                    legacy_conversation_id: old.legacy_conversation_id,
+                    revision: old.revision,
+                    next_sequence: old.next_sequence,
+                };
+                next.validate()?;
+                Ok((next, true))
+            }
+            Some(3) => {
+                #[derive(Deserialize)]
+                #[serde(deny_unknown_fields)]
+                struct FrozenV3 {
+                    schema_version: u32,
+                    cloud: v3::CloudDurable,
+                    config: Config,
+                    conversations: Vec<Conversation>,
+                    jobs: Vec<Job>,
+                    expired_ids: Vec<String>,
+                    #[serde(deserialize_with = "required_nullable")]
+                    legacy_conversation_id: Option<String>,
+                    revision: u64,
+                    next_sequence: u64,
+                }
+                let old: FrozenV3 =
+                    serde_json::from_slice(bytes).map_err(|_| "Corrupt v3 state; preserved")?;
+                if old.schema_version != 3 {
+                    return Err("Corrupt v3 state; preserved".into());
+                }
+                let next = Self {
+                    schema_version: 4,
+                    cloud: old.cloud,
+                    timestamps: timestamps::Timestamps::default(),
+                    config: old.config,
+                    conversations: old.conversations,
+                    jobs: old.jobs,
+                    expired_ids: old.expired_ids,
+                    legacy_conversation_id: old.legacy_conversation_id,
+                    revision: old.revision,
+                    next_sequence: old.next_sequence,
+                };
+                next.validate()?;
+                Ok((next, true))
+            }
+            Some(4) => serde_json::from_slice(bytes)
                 .map(|d| (d, false))
-                .map_err(|_| "Corrupt v2 state; preserved".into()),
+                .map_err(|_| "Corrupt v4 state; preserved".into()),
             _ => Err("Unsupported state; preserved".into()),
         }
     }
@@ -278,7 +357,7 @@ impl Durable {
         self.legacy_conversation_id = Some(id.clone());
         Ok(id)
     }
-    fn allocate(&mut self, origin: Option<String>, title: String) -> AppResult<String> {
+    pub(super) fn allocate(&mut self, origin: Option<String>, title: String) -> AppResult<String> {
         if self.conversations.len() >= MAX_CONVERSATIONS || self.next_sequence >= MAX_REVISION {
             return Err(capacity());
         }
@@ -319,13 +398,14 @@ impl Durable {
             .push(self.jobs.remove(index).operation.request_id);
         Ok(())
     }
-    fn reserved_bytes(&self) -> AppResult<usize> {
+    pub(super) fn reserved_bytes(&self) -> AppResult<usize> {
         // Normalize growing envelopes to their maximum reachable encoding. As a
         // phase advances, its actual growth consumes this headroom, not new space.
         let mut maximal = self.clone();
         maximal.revision = MAX_REVISION;
         for job in &mut maximal.jobs {
             if pending(&job.operation) {
+                v3::reserve_delivery(job);
                 job.operation.status = "interrupted".into();
                 job.operation.phase = "generation".into();
                 if let Some(c) = maximal
@@ -334,6 +414,11 @@ impl Durable {
                     .find(|c| Some(&c.conversation_id) == job.conversation_id.as_ref())
                 {
                     c.history_revision = MAX_REVISION;
+                    timestamps::reserve(
+                        &mut maximal.timestamps,
+                        &c.conversation_id,
+                        c.history.len() / 2,
+                    );
                 }
             }
         }
@@ -348,22 +433,14 @@ impl Durable {
                 if j.operation.kind == "models" {
                     FRAME_LIMIT + 8192
                 } else {
-                    2 * 6 * MAX_CONTEXT + 8192
+                    2 * 6 * MAX_CONTEXT + if j.version == 3 { 32768 } else { 8192 }
                 }
             })
             .sum::<usize>();
         Ok(bytes.saturating_add(reserve))
     }
     pub fn preflight(&self) -> AppResult<()> {
-        let transitions: u64 = self
-            .jobs
-            .iter()
-            .map(|j| match j.operation.status.as_str() {
-                "queued" => 2,
-                "running" => 1,
-                _ => 0,
-            })
-            .sum();
+        let transitions: u64 = self.jobs.iter().map(v3::transitions).sum();
         if self.reserved_bytes()? > STATE_LIMIT as usize
             || self.revision > MAX_REVISION.saturating_sub(transitions)
         {
@@ -373,7 +450,7 @@ impl Durable {
     }
     pub fn validate(&self) -> Result<()> {
         let fail = || "Invalid v2 application state; preserved".to_owned();
-        if self.schema_version != 2
+        if self.schema_version != 4
             || self.conversations.len() > MAX_CONVERSATIONS
             || self.jobs.len() > MAX_JOBS
             || self.expired_ids.len() > MAX_EXPIRED_IDS
@@ -414,9 +491,10 @@ impl Durable {
                 .as_ref()
                 .and_then(|origin| self.jobs.iter().find(|j| &j.operation.request_id == origin))
             {
-                if job.version != 2
-                    || job.operation.kind != "submit_new"
-                    || job.conversation_id.as_ref() != Some(&c.conversation_id)
+                if !matches!(
+                    (job.version, job.operation.kind.as_str()),
+                    (2, "submit_new") | (3, "submit_new_routed")
+                ) || job.conversation_id.as_ref() != Some(&c.conversation_id)
                 {
                     return Err(fail());
                 }
@@ -451,6 +529,11 @@ impl Durable {
                 "conversation_archive",
                 "conversation_restore",
                 "conversation_delete",
+                "provider_probe",
+                "provider_save",
+                "provider_validate",
+                "submit_routed",
+                "submit_new_routed",
             ]
             .contains(&o.kind.as_str())
                 || ![
@@ -461,6 +544,7 @@ impl Durable {
                     "verification",
                     "removal",
                     "transcription",
+                    "credential",
                     "complete",
                 ]
                 .contains(&o.phase.as_str())
@@ -471,7 +555,7 @@ impl Durable {
             }
             if !valid_id(&o.request_id)
                 || !ids.insert(o.request_id.clone())
-                || ![1, 2].contains(&j.version)
+                || ![1, 2, 3].contains(&j.version)
                 || j.fingerprint.len() != 64
                 || !j
                     .fingerprint
@@ -498,7 +582,7 @@ impl Durable {
             } else if j.history_revision.is_some() {
                 return Err(fail());
             }
-            if o.kind == "submit_new"
+            if matches!(o.kind.as_str(), "submit_new" | "submit_new_routed")
                 && !self.conversations.iter().any(|c| {
                     Some(&c.conversation_id) == j.conversation_id.as_ref()
                         && c.origin_request_id.as_ref() == Some(&o.request_id)
@@ -534,6 +618,10 @@ impl Durable {
                 if j.version != 2 || !valid_lifecycle(j) {
                     return Err(fail());
                 }
+            } else if j.version == 3 {
+                if !v3::valid_job(j) {
+                    return Err(fail());
+                }
             } else {
                 let mut normalized = o.clone();
                 if normalized.kind == "submit_new" {
@@ -552,7 +640,12 @@ impl Durable {
             }
             let chat_kind = matches!(
                 o.kind.as_str(),
-                "submit" | "submit_new" | "speak" | "transcribe"
+                "submit"
+                    | "submit_new"
+                    | "speak"
+                    | "transcribe"
+                    | "submit_routed"
+                    | "submit_new_routed"
             );
             if (chat_kind && j.conversation_id.is_none())
                 || (!chat_kind
@@ -561,7 +654,7 @@ impl Durable {
                 || (j.version == 2
                     && matches!(o.kind.as_str(), "submit" | "submit_new")
                     && j.task.is_none())
-                || (pending(o) && o.config_revision != self.config.revision)
+                || (pending(o) && j.version != 3 && o.config_revision != self.config.revision)
             {
                 return Err(fail());
             }
@@ -573,6 +666,7 @@ impl Durable {
                             && j.conversation_id.is_some()
                     }
                     Task::Models => o.kind == "models" && j.conversation_id.is_none(),
+                    Task::Routed(_) | Task::Provider(_) => j.version == 3 && v3::valid_job(j),
                     Task::Verify(a) | Task::Remove(a) => {
                         model_identity(&a.model, &a.sha256)
                             && a.request_id == o.request_id
@@ -597,6 +691,8 @@ impl Durable {
         {
             return Err(fail());
         }
+        self.cloud.validate(self)?;
+        timestamps::validate(&self.timestamps, &self.conversations)?;
         self.preflight().map_err(|e| e.message)?;
         Ok(())
     }
@@ -995,6 +1091,8 @@ impl Application {
                 }
             });
             next.conversations.remove(index);
+            next.cloud.conversations.remove(&target);
+            next.timestamps.remove(&target);
             json!({"request_id":id,"conversation_id":target,"deleted":true})
         } else {
             let c = &mut next.conversations[index];
@@ -1069,7 +1167,9 @@ impl Application {
                     "QUEUE_EXPIRED",
                     "Queue wait exceeded ten minutes; not dispatched",
                 ));
+                let id = job.operation.request_id.clone();
                 self.commit_worker(&mut inner, next)?;
+                inner.cloud.complete(&id);
                 continue;
             }
             let Some(task) = job.task.clone() else {
@@ -1078,7 +1178,7 @@ impl Application {
             };
             let transition = job.operation.status == "queued";
             job.operation.status = "running".into();
-            if matches!(task, Task::Submit { .. }) {
+            if matches!(task, Task::Submit { .. } | Task::Routed(_)) {
                 job.operation.phase = "generation".into();
             }
             let work = Work {

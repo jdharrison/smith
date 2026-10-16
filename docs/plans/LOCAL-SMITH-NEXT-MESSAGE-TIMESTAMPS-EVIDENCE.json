@@ -1,0 +1,75 @@
+{
+  "work_record": "LOCAL-SMITH-NEXT-MESSAGE-TIMESTAMPS",
+  "observed_at_utc": "2026-10-15T22:05:04Z",
+  "scope": "Local source and private synthetic fixtures only; no installation, migration of installed state, real provider/keyring/model access, commit or deployment.",
+  "base_revision": "7f6a483ae82c4bcf647268f035f1e7cc80409d4b",
+  "branch": "feature/autonomy",
+  "source_kind": "Dirty shared worktree including preserved concurrent cloud/queue work; not a release candidate",
+  "snapshot_algorithm": "For each component, enumerate regular files under the listed roots, excluding path components ephemeral and failures; sort paths; SHA256 of concatenated component-relative UTF-8 path + NUL + raw SHA256(file bytes). Generated build/target output is outside these roots.",
+  "final_sources_before_and_after_gates": {
+    "unchanged": true,
+    "next/client": {
+      "roots": ["lib", "test", "linux", "assets", "scripts", "pubspec.yaml", "pubspec.lock", "analysis_options.yaml"],
+      "files": 130,
+      "sha256": "662aff88f089ef8a021e3c2498f4dd22e7089e90c110e3700c3a059797591125"
+    },
+    "next/service": {
+      "roots": ["src", "tests", "scripts", "Cargo.toml", "Cargo.lock"],
+      "files": 37,
+      "sha256": "957e806c1b129392da9679416c0b16616adbbe9a61161ed6e39768388a907e7f"
+    },
+    "next/installer": {
+      "roots": ["src", "tests", "scripts", "Cargo.toml", "Cargo.lock"],
+      "files": 984,
+      "sha256": "70d4b889162101998f368d6eaa8685792ce18f0a87e41eb3cd0e102000031abe"
+    }
+  },
+  "fixture_environment": {
+    "note": "Both environment variables were absolute resolved paths at execution; only project-relative equivalents are retained here.",
+    "SMITH_TEST_SERVICE": "next/service/target/release/smith-service",
+    "SMITH_TEST_CLOUD_SERVICE": "next/service/target/debug/deps/debug_service-0a4be2ddda80d80f"
+  },
+  "checks": [
+    {"cwd": "next/client", "command": "flutter pub get --offline", "exit": 0, "result": "Resolved existing dependencies without lockfile changes; three newer incompatible versions were informational only."},
+    {"cwd": "next/client", "command": "dart format --output=none --set-exit-if-changed lib test", "exit": 0, "result": "71 files, zero formatting changes"},
+    {"cwd": "next/client", "command": "flutter analyze --no-pub", "exit": 0, "result": "No issues"},
+    {"cwd": "next/client", "command": "flutter test --no-pub --reporter expanded test/message_timestamps_test.dart test/message_timestamp_widget_test.dart test/optimistic_send_test.dart test/message_queue_controller_test.dart", "exit": 0, "result": "69 passed"},
+    {"cwd": "next/client", "command": "flutter test --no-pub --reporter expanded test/message_timestamps_integration_test.dart test/rust_cloud_integration_test.dart test/rust_socket_integration_test.dart", "environment": "fixture_environment", "exit": 0, "result": "6 passed, no skips"},
+    {"cwd": "next/client", "command": "flutter test --no-pub --reporter expanded", "environment": "fixture_environment", "exit": 0, "passed": 456, "failed": 0, "skipped": 0, "log": "next/client/build/message-timestamps-final-tests.log"},
+    {"cwd": "next/client", "command": "flutter build linux --debug --no-pub", "exit": 0, "result": "Built debug desktop bundle; not a paired recipient package"},
+    {"cwd": "next/service", "command": "cargo test --locked --offline --lib timestamps::tests -- --test-threads=1", "exit": 0, "result": "10 passed"},
+    {"cwd": "next/service", "command": "cargo test --locked --offline --test cloud timestamps_ -- --test-threads=1", "exit": 0, "result": "3 passed"},
+    {"cwd": "next/service", "command": "cargo fmt --all --check", "exit": 0},
+    {"cwd": "next/service", "command": "cargo clippy --all-targets --locked --offline -- -D warnings", "exit": 0},
+    {"cwd": "next/service", "command": "cargo test --all-targets --locked --offline", "exit": 0, "result": "All targets passed; three controlled fixture entry points ignored in ordinary Rust harness. Cloud fixture separately executed through Dart."},
+    {"cwd": "next/service", "command": "cargo build --release --locked --offline", "exit": 0},
+    {"cwd": "next/installer", "command": "cargo fmt --all --check", "exit": 0},
+    {"cwd": "next/installer", "command": "cargo test --offline --locked --test multi_chat_compatibility -- --test-threads=1", "exit": 0, "result": "2 passed, zero skipped"},
+    {"cwd": ".", "command": "git --no-pager diff --check", "exit": 0, "result": "Tracked diff whitespace clean; new Dart/Rust files additionally covered by formatter checks"}
+  ],
+  "artifacts": [
+    {"path": "next/service/target/release/smith-service", "sha256": "49391519be588ee5884e104c334f909cd1d83787dd56ed472452a768d99802d2"},
+    {"path": "next/service/target/debug/deps/debug_service-0a4be2ddda80d80f", "sha256": "0fe4a2d3085ae8f32a1351982b63bd94c7717e8e8180df6e59590e3dab968fb1"},
+    {"path": "next/client/build/linux/x64/debug/bundle/smith_client", "sha256": "2d1ee7e2efe8880bf363fd43f5137517ae7495d634c117f34ff59cff362e2cdc"},
+    {"path": "next/client/build/message-timestamps-final-tests.log", "sha256": "6b209330df53a1e928abaf4984b09f797fd68468d3b6650705bad4f08febe024"},
+    {"path": "next/client/build/message-timestamp-previews/desktop-1440x900.png", "sha256": "08c2d80dd4668029b0f94066f694681c99b97995677d4b2bea2f9d942bbf2377"},
+    {"path": "next/client/build/message-timestamp-previews/narrow-400x400-text2.png", "sha256": "1a15ad08449ed37657e948a182c359375bccde6b858c90bf9a67c2f69f16a138"}
+  ],
+  "review": {
+    "session": "93873c5f-ff3a-4864-9632-724bf307adce",
+    "initial": "No runtime/security defect identified; blocked on two obsolete installer schema assertions and missing canonical documentation/evidence.",
+    "remediation": "Both installer assertions updated from disk3 to disk4 and full compatibility tests rerun; canonical docs and validation record completed.",
+    "final": "PASS for timestamp source-scope closure only. Both findings closed; no remaining scoped blocker. Reviewer independently reran installer format/2 compatibility tests, 10 service timestamp units, 3 routed timestamp tests, and the compiled Rust-Dart timestamp test without skips; verified all three source inventories, all six artifact hashes and the 456-pass client log. Full installer/GTK/Dagger/package/live/deployment acceptance excluded."
+  },
+  "historical_failures": [
+    "Initial widget test SemanticsHandle teardown occurred too late; immediate try/finally disposal fixed it.",
+    "Initial installer compatibility tests expected disk3 rather than disk4; both version expectations corrected without weakening behavioral assertions.",
+    "Initial four legacy Rust socket fixtures rejected a relative SMITH_TEST_SERVICE path; corrected to an absolute compiled-binary path.",
+    "Initial full client run had 455 passes and one timestamp-integration failure, whose detailed error was not retained in the truncated response. Focused and unchanged-source full reruns passed. Test synchronization was subsequently tightened to wait for timing metadata as well as completed history without relaxing the deadline or assertions; the final full run passed. No proven root-cause claim for the initial failure."
+  ],
+  "unrun_or_excluded": [
+    "Full installer/GTK suite and complete Dagger/recipient packaging for this timestamp slice",
+    "Installed native graphical behavior, migration/restore, lifecycle and real provider/keyring/model actions",
+    "Release, publication and deployment approval"
+  ]
+}

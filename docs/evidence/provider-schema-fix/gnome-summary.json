@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "scenario": "final",
+  "elapsed_seconds": 4.31,
+  "repository_before_after_equal": true,
+  "changed_repository_paths": [],
+  "service_before_after_equal": true,
+  "compiled_service_matches_after": true,
+  "old_evidence_before_after_equal": true,
+  "container_removed": true,
+  "host_packages_installed": false,
+  "host_keyring_accessed": false,
+  "artifact_sha256": {
+    "final/libsmith_service.rlib": "d3638e8c260fca41fdb4b388c4214e1f0c7d88dee83465200b9be10eb2279c01",
+    "final/probe": "3df6c5d8af2898c751f57e4c174f19f8ebbe660f180550ab539f5d3c08e52bcf",
+    "probe.rs": "44cade7671bc7fdc7ad25053e527dbf6359568e15c8c00d8dd23369ec7c7be27",
+    "harness.py": "14afcf852d72b6c37ae7bb6ec44de9b15058878135ff5aaefd1d98f487df174d",
+    "Dockerfile": "7cff45893dc5b9f337ec78cb12d743ef29c6befa179de3e0e0004ff68a0d6419",
+    "run.py": "cf4a9079d6bdf845bed8914aa6ff88d347971bbc24e209c686408a63a3bead2b"
+  }
+}

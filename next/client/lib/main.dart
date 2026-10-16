@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 
 import 'workspace_preferences.dart';
 import 'workspace_preferences_io.dart';
+import 'window_launcher.dart';
 
 import 'app_api.dart';
 import 'boot.dart';
 import 'chat_panel.dart';
 import 'control_api.dart';
 import 'native_control.dart';
+import 'queue_exit_guard.dart';
 import 'text_chat.dart';
 import 'workspace_controller.dart';
 import 'ui/build_info.dart';
@@ -18,6 +20,7 @@ import 'ui/smith_theme.dart';
 import 'ui/smith_app_header.dart';
 import 'ui/smith_workspace.dart';
 import 'ui/split_workspace.dart';
+import 'ui/workspace_entrance.dart';
 
 /// One owner for presentation hydration, latest-only writes and store lifetime.
 class WorkspacePresentation extends ChangeNotifier {
@@ -162,8 +165,19 @@ class WorkspacePresentation extends ChangeNotifier {
   }
 }
 
-void main() => runApp(
-  SmithApp(preferencesStore: LinuxWorkspacePreferencesStore.fromEnvironment()),
+WorkspacePreferencesStore? workspacePreferencesForStartup(
+  List<String> arguments,
+  WorkspacePreferencesStore Function() createStore,
+) => arguments.contains(sessionOnlyWindowArgument) ? null : createStore();
+
+void main(List<String> arguments) => runApp(
+  SmithApp(
+    preferencesStore: workspacePreferencesForStartup(
+      arguments,
+      LinuxWorkspacePreferencesStore.fromEnvironment,
+    ),
+    openWindow: launchSessionOnlyWindow,
+  ),
 );
 
 class SmithApp extends StatelessWidget {
@@ -172,6 +186,7 @@ class SmithApp extends StatelessWidget {
     this.controlApi,
     this.appApi,
     this.preferencesStore,
+    this.openWindow,
     this.bootClock,
     this.bootObservationBudget = defaultBootObservationBudget,
     this.bootPollInterval = defaultBootPollInterval,
@@ -182,6 +197,7 @@ class SmithApp extends StatelessWidget {
   });
 
   final WorkspacePreferencesStore? preferencesStore;
+  final Future<void> Function()? openWindow;
   final String fontFamily;
 
   final ControlApi? controlApi;
@@ -199,6 +215,7 @@ class SmithApp extends StatelessWidget {
       controlApi: controlApi,
       appApi: appApi,
       preferencesStore: preferencesStore,
+      openWindow: openWindow,
       bootClock: bootClock,
       bootObservationBudget: bootObservationBudget,
       bootPollInterval: bootPollInterval,
@@ -212,12 +229,14 @@ class SmithShell extends StatefulWidget {
     this.controlApi,
     this.appApi,
     this.preferencesStore,
+    this.openWindow,
     this.bootClock,
     this.bootObservationBudget = defaultBootObservationBudget,
     this.bootPollInterval = defaultBootPollInterval,
   });
 
   final WorkspacePreferencesStore? preferencesStore;
+  final Future<void> Function()? openWindow;
   final ControlApi? controlApi;
   final AppApi? appApi;
   final BootClock? bootClock;
@@ -233,6 +252,7 @@ class _SmithShellState extends State<SmithShell> {
   late final ChatController chat;
   late final BootCoordinator boot;
   late final WorkspacePresentation presentation;
+  late final QueueExitGuard exitGuard;
 
   @override
   void initState() {
@@ -243,6 +263,13 @@ class _SmithShellState extends State<SmithShell> {
     presentation = WorkspacePresentation(
       chat as WorkspaceController,
       widget.preferencesStore,
+    );
+    final workspace = chat as WorkspaceController;
+    exitGuard = QueueExitGuard(
+      acquireHold: workspace.acquireQueueExitHold,
+      releaseHold: workspace.releaseQueueExitHold,
+      confirm: (hold) =>
+          mounted ? showQueueExitDialog(context, hold) : Future.value(false),
     );
     boot = BootCoordinator(
       control: control,
@@ -256,6 +283,7 @@ class _SmithShellState extends State<SmithShell> {
 
   @override
   void dispose() {
+    exitGuard.dispose();
     boot.dispose();
     presentation.dispose();
     chat.dispose();
@@ -264,15 +292,14 @@ class _SmithShellState extends State<SmithShell> {
   }
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: boot,
-    builder: (context, _) => boot.state.phase == BootPhase.ready
-        ? ConversationScreen(
-            control: control,
-            chat: chat,
-            presentation: presentation,
-          )
-        : BootSurface(coordinator: boot),
+  Widget build(BuildContext context) => BootPresentation(
+    coordinator: boot,
+    readyBuilder: (context) => ConversationScreen(
+      control: control,
+      chat: chat,
+      presentation: presentation,
+      openWindow: widget.openWindow,
+    ),
   );
 }
 
@@ -282,8 +309,10 @@ class ConversationScreen extends StatefulWidget {
     required this.control,
     required this.chat,
     this.presentation,
+    this.openWindow,
   });
 
+  final Future<void> Function()? openWindow;
   final WorkspacePresentation? presentation;
   final ControlApi control;
   final ChatController chat;
@@ -295,6 +324,7 @@ class ConversationScreen extends StatefulWidget {
 class _ConversationScreenState extends State<ConversationScreen> {
   bool inspecting = false;
   bool closed = false;
+  bool openingWindow = false;
   String status = 'Connected to Smith';
 
   ChatController get chat => widget.chat;
@@ -314,6 +344,25 @@ class _ConversationScreenState extends State<ConversationScreen> {
     if (mounted) setState(() {});
   }
 
+  Future<void> openWindow() async {
+    final launch = widget.openWindow;
+    if (launch == null || openingWindow || closed) return;
+    setState(() => openingWindow = true);
+    try {
+      await launch();
+    } on Object {
+      if (mounted && !closed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Couldn’t launch a new window. You can try again.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted && !closed) setState(() => openingWindow = false);
+    }
+  }
+
   Future<void> retry() async {
     if (inspecting || chat.busy || closed) return;
     setState(() => inspecting = true);
@@ -324,6 +373,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
         await chat.synchronize();
         if (closed) return;
         if (!chat.stale) await chat.refreshModels();
+        if (closed) return;
+        await (chat as WorkspaceController).retryCloudProviders();
         if (closed) return;
         status = 'Connected to Smith';
         return;
@@ -368,6 +419,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
     if (chat.stale) return 'Smith application unavailable. Retry queries only.';
     if (chat is WorkspaceController && chat.error != null) {
       return 'Observation unavailable: ${chat.error}';
+    }
+    if (chat is WorkspaceController &&
+        (chat as WorkspaceController).routingEnabled) {
+      return 'Connected to Smith';
     }
     if (!chat.inventoryObserved) {
       return 'Installed-model inventory unavailable.';
@@ -511,12 +566,18 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                 )
                               : null,
                           onRefreshArchives: chat is WorkspaceController
-                              ? retry
+                              ? (chat as WorkspaceController).routingEnabled
+                                    ? chat.synchronize
+                                    : retry
                               : null,
                           version: buildInfo.buildVersion,
                           connectionStatus: status,
                           connectionOnline: online,
-                          modelStatus: chat.inventoryObserved && !chat.stale
+                          modelStatus:
+                              selected is ConversationController &&
+                                  selected.owner.routingEnabled
+                              ? '${selected.selectedRoute?.label ?? 'No route selected'} · ${selected.routeReady ? 'Available for future sends; availability is advisory.' : 'Unavailable. Choose a replacement or Retry. Keys and validation are installer-only.'}'
+                              : chat.inventoryObserved && !chat.stale
                               ? connectionStatus == 'Connected to Smith'
                                     ? 'Selected model: ${chat.config['model']}. Runtime available; inference not verified by this observation.'
                                     : connectionStatus
@@ -534,23 +595,60 @@ class _ConversationScreenState extends State<ConversationScreen> {
                         );
                       }
 
-                      if (chat is! WorkspaceController) {
-                        return shell(null, true, null);
-                      }
-                      return SplitWorkspace(
-                        headerBuilder: (context, menu) => SmithAppHeader(
-                          connectionStatus: status,
-                          connectionOnline: online,
-                          trailing: menu,
-                        ),
-                        controller: chat as WorkspaceController,
-                        initialLayout:
-                            widget.presentation?.layout ??
-                            WorkspaceLayout.single,
-                        initialActive: widget.presentation?.active ?? 0,
-                        onPresentationChanged: widget.presentation?.setLayout,
-                        builder: (context, pane, active, activate) =>
-                            shell(pane, active, activate),
+                      final workspace = chat is! WorkspaceController
+                          ? shell(null, true, null)
+                          : SplitWorkspace(
+                              headerBuilder: (context, menu) => SmithAppHeader(
+                                connectionStatus: status,
+                                connectionOnline: online,
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    menu,
+                                    if (widget.openWindow != null) ...[
+                                      const SizedBox(width: 8),
+                                      IconButton(
+                                        key: const ValueKey('new-window'),
+                                        tooltip: 'Open a new window — layout isn’t saved.',
+                                        onPressed: openingWindow
+                                            ? null
+                                            : openWindow,
+                                        icon: const Icon(Icons.open_in_new),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              controller: chat as WorkspaceController,
+                              initialLayout:
+                                  widget.presentation?.layout ??
+                                  WorkspaceLayout.single,
+                              initialActive: widget.presentation?.active ?? 0,
+                              onPresentationChanged:
+                                  widget.presentation?.setLayout,
+                              builder: (context, pane, active, activate) =>
+                                  shell(pane, active, activate),
+                            );
+                      final needsAttention =
+                          !online ||
+                          guidance != null ||
+                          chat.error != null ||
+                          widget.presentation?.warning != null ||
+                          (chat is WorkspaceController &&
+                              (chat as WorkspaceController).panes
+                                  .take(widget.presentation?.layout.count ?? 1)
+                                  .any((pane) {
+                                    final selected = pane.selected;
+                                    return selected.error != null ||
+                                        selected.stale ||
+                                        selected.uncertain ||
+                                        selected.canAbandonExpiredRequest ||
+                                        (selected.owner.routingEnabled &&
+                                            !selected.routeReady);
+                                  }));
+                      return WorkspaceEntrance(
+                        skipMotion: needsAttention,
+                        child: workspace,
                       );
                     },
                   ),

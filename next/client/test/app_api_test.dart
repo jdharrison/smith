@@ -50,7 +50,8 @@ class ReplyExecutor implements AppExecutor {
     args = Map<String, dynamic>.from(req['args']);
     expect(req['call_id'], matches(RegExp(r'^[0-9a-f]{32}$')));
     expect(req['protocol'], 'app');
-    return jsonEncode(envelope(req['call_id']));
+    expect(req['schema_version'], 3);
+    return jsonEncode(envelope(req['call_id'])..['schema_version'] = 3);
   }
 
   @override
@@ -243,7 +244,7 @@ void main() {
       expect(argv, ['app']);
       expect(frame.endsWith('\n'), true);
       expect(request['args']['request_id'], testInstance);
-      final reply = envelope(request['call_id']);
+      final reply = envelope(request['call_id'])..['schema_version'] = 3;
       reply['result'] = {
         'request_id': testInstance,
         'conversation_id': testConversation,

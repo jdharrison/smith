@@ -10,9 +10,45 @@
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  FlMethodChannel* exit_channel;
+  GtkWindow* window;  // Weak pointer, cleared on window destruction.
+  gboolean close_pending;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
+
+// Unlike the embedding's platform exit exchange, errors here fail closed.
+static void close_decision_cb(GObject* object, GAsyncResult* result,
+                              gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  g_autoptr(GError) error = nullptr;
+  g_autoptr(FlMethodResponse) response = fl_method_channel_invoke_method_finish(
+      FL_METHOD_CHANNEL(object), result, &error);
+  FlValue* value = response == nullptr
+                       ? nullptr
+                       : fl_method_response_get_result(response, &error);
+  self->close_pending = FALSE;
+  if (value != nullptr && fl_value_get_type(value) == FL_VALUE_TYPE_BOOL &&
+      fl_value_get_bool(value) && self->window != nullptr) {
+    gtk_widget_destroy(GTK_WIDGET(self->window));
+  }
+  g_object_unref(self);
+}
+
+static gboolean request_close_cb(GtkWidget*, GdkEvent*, MyApplication* self) {
+  if (!self->close_pending && self->exit_channel != nullptr) {
+    self->close_pending = TRUE;
+    fl_method_channel_invoke_method(self->exit_channel, "requestClose", nullptr,
+                                   nullptr, close_decision_cb,
+                                   g_object_ref(self));
+  }
+  return TRUE;
+}
+
+static void quit_action_cb(GSimpleAction*, GVariant*, gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  if (self->window != nullptr) gtk_window_close(self->window);
+}
 
 // Called when first Flutter frame received.
 static void first_frame_cb(MyApplication* self, FlView* view) {
@@ -24,6 +60,13 @@ static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
+
+  self->window = window;
+  g_object_add_weak_pointer(G_OBJECT(window),
+                           reinterpret_cast<gpointer*>(&self->window));
+  // Connect before FlView realization so its fail-open handler never receives
+  // normal window-manager/header-bar close requests.
+  g_signal_connect(window, "delete-event", G_CALLBACK(request_close_cb), self);
 
   // Use a header bar when running in GNOME as this is the common style used
   // by applications and is the setup most users will be using (e.g. Ubuntu
@@ -67,6 +110,10 @@ static void my_application_activate(GApplication* application) {
       project, self->dart_entrypoint_arguments);
 
   FlView* view = fl_view_new(project);
+  g_autoptr(FlStandardMethodCodec) exit_codec = fl_standard_method_codec_new();
+  self->exit_channel = fl_method_channel_new(
+      fl_engine_get_binary_messenger(fl_view_get_engine(view)),
+      "dev.smith/queue_exit", FL_METHOD_CODEC(exit_codec));
   GdkRGBA background_color;
   // Background defaults to black, override it here if necessary, e.g. #00000000
   // for transparent.
@@ -114,6 +161,12 @@ static void my_application_startup(GApplication* application) {
   // Perform any actions required at application startup.
 
   G_APPLICATION_CLASS(my_application_parent_class)->startup(application);
+  g_autoptr(GSimpleAction) quit = g_simple_action_new("quit", nullptr);
+  g_signal_connect(quit, "activate", G_CALLBACK(quit_action_cb), application);
+  g_action_map_add_action(G_ACTION_MAP(application), G_ACTION(quit));
+  const gchar* accelerators[] = {"<Primary>q", nullptr};
+  gtk_application_set_accels_for_action(GTK_APPLICATION(application),
+                                       "app.quit", accelerators);
 }
 
 // Implements GApplication::shutdown.
@@ -128,6 +181,13 @@ static void my_application_shutdown(GApplication* application) {
 // Implements GObject::dispose.
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
+  if (self->window != nullptr) {
+    g_signal_handlers_disconnect_by_data(self->window, self);
+    g_object_remove_weak_pointer(G_OBJECT(self->window),
+                                reinterpret_cast<gpointer*>(&self->window));
+    self->window = nullptr;
+  }
+  g_clear_object(&self->exit_channel);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }

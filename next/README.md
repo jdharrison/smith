@@ -47,6 +47,7 @@ make package/test     # Builder metadata tests with the compiled native installe
 make service/build
 make client/build
 make installer/build
+make installer/run    # Build/verify the full package, then launch the installer GUI
 make installer/binary # Export the unchanged CLI without building the desktop package
 make installer/ui     # Export installer/build/smith-installer-ui (binary only)
 ```
@@ -75,7 +76,7 @@ Keep both installer ELFs, complete payload and metadata together. The target is 
 ./installer/dist/smith-installer-ui
 ```
 
-If needed, run `make installer/build` first, then the same command. `make installer/ui` exports only a binary, not its paired package. These are manual operator actions, not tests or agent host approval.
+To build, verify and launch in one step, use `make installer/run` (or `make -C next installer/run` from the repository root). The GUI launches only after the full package build and verification succeed, with all installer confirmations unchanged. `make installer/ui` exports only a binary, not its paired package. These are manual operator actions, not tests or agent host approval.
 
 The minimal entry screen offers only **INSTALL / UPGRADE** and **UNINSTALL**. Model management appears later from setup/results rather than the landing page. Under the [maintenance plan](../docs/plans/LOCAL-SMITH-NEXT-INSTALLER-MAINTENANCE.md), an older differing managed installation must use **Upgrade**, not Install/Refresh. Upgrade independently verifies old ownership, preserves backups, separately confirms Stop and applicable lifecycle effects, publishes/verifies the new paired artifacts and offers Start. It does not download models; continue with Manage models afterward. Declined Start leaves upgraded artifacts with service stopped. Foreign/modified/unknown installations still refuse.
 

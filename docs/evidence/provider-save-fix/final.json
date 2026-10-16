@@ -1,0 +1,232 @@
+{
+  "verdict": "pass for isolated source/build/package gates only",
+  "commands": [
+    {
+      "command": [
+        "env",
+        "DAGGER_NO_NAG=1",
+        "DAGGER_CLOUD_TOKEN=",
+        "DAGGER_PROGRESS=plain",
+        "make",
+        "test",
+        "build"
+      ],
+      "cwd": "next",
+      "started_utc": "2026-10-15T23:22:09.548134+00:00",
+      "timeout_seconds": 1740,
+      "status": "passed",
+      "before_inventory_sha256": "ad0cdd12d92cdf163b02fce7ab5d70e4ba8fa5160584fa5fe5df5bb6368e235c",
+      "exit_code": 0,
+      "killed": false,
+      "ended_utc": "2026-10-15T23:31:36.148548+00:00",
+      "elapsed_seconds": 566.6,
+      "after_inventory_sha256": "ad0cdd12d92cdf163b02fce7ab5d70e4ba8fa5160584fa5fe5df5bb6368e235c",
+      "source_stable": true,
+      "changed_paths": [],
+      "file_count_before": 1267,
+      "file_count_after": 1267,
+      "log": "next/service/build/provider-save-fix/final-validation/combined.log",
+      "log_sha256": "d5a776368304570ef357c395a26f8e684223f120e75b9eda49f034ec474f1c50"
+    },
+    {
+      "command": [
+        "python3",
+        "dagger/package.py",
+        "--root",
+        "installer/dist",
+        "--verify"
+      ],
+      "cwd": "next",
+      "started_utc": "2026-10-15T23:31:42.515843+00:00",
+      "timeout_seconds": 1740,
+      "status": "passed",
+      "before_inventory_sha256": "ad0cdd12d92cdf163b02fce7ab5d70e4ba8fa5160584fa5fe5df5bb6368e235c",
+      "exit_code": 0,
+      "killed": false,
+      "ended_utc": "2026-10-15T23:31:42.924424+00:00",
+      "elapsed_seconds": 0.409,
+      "after_inventory_sha256": "ad0cdd12d92cdf163b02fce7ab5d70e4ba8fa5160584fa5fe5df5bb6368e235c",
+      "source_stable": true,
+      "changed_paths": [],
+      "file_count_before": 1267,
+      "file_count_after": 1267,
+      "log": "next/service/build/provider-save-fix/final-validation/package-verify.log",
+      "log_sha256": "4f6e997052bf8ed0fe4e97c0e068bea00d34f1891dc7ee807e21581cdbb6da2e"
+    }
+  ],
+  "counts": {
+    "service_passed": 250,
+    "service_helper_ignores": 3,
+    "installer_passed": 279,
+    "installer_helper_ignores": 2,
+    "gtk_passed": 9,
+    "client_passed": 456,
+    "client_skips_reported": 0,
+    "package_tests_passed": 41,
+    "failed": 0
+  },
+  "test_summary_lines": [
+    "25  : \u2506 [57.5s] | test cloud::http::tests::proxy_environment_child ... ignored, isolated proxy-environment subprocess fixture",
+    "25  : \u2506 [57.5s] | test manager::tests::captured_helper_fixture ... ignored, fixture invoked only by captured-helper subprocess tests",
+    "76  : \u2506 [1m2s] | test launch::tests::launch_parent_fixture ... ignored, finite subprocess fixture, invoked only with private test roots",
+    "76  : \u2506 [1m3s] | test model::tests::progress_output_probe_child ... ignored, controlled signal-probe child only",
+    "25  : \u2506 [1m4s] | test result: ok. 103 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 6.91s",
+    "25  : \u2506 [1m4s] | test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "25  : \u2506 [1m5s] | test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.07s",
+    "25  : \u2506 [1m6s] | test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s",
+    "25  : \u2506 [1m6s] | test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
+    "25  : \u2506 [1m6s] | test dart_cloud::dart_cloud_fixture ... ignored, launched explicitly by the Dart schema3 fixture gate",
+    "76  : \u2506 [1m8s] | test result: ok. 105 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 6.11s",
+    "76  : \u2506 [1m8s] | test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "76  : \u2506 [1m12s] | test result: ok. 36 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.23s",
+    "76  : \u2506 [1m12s] | test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
+    "76  : \u2506 [1m22s] | test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.29s",
+    "76  : \u2506 [1m23s] | test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s",
+    "76  : \u2506 [1m23s] | test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "76  : \u2506 [1m23s] | test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+    "76  : \u2506 [1m24s] | test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s",
+    "76  : \u2506 [1m26s] | test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.66s",
+    "76  : \u2506 [1m27s] | test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.55s",
+    "76  : \u2506 [1m28s] | test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.87s",
+    "25  : \u2506 [1m31s] | test result: ok. 22 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 25.47s",
+    "25  : \u2506 [1m31s] | test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s",
+    "98  : \u2506 [1m31s] | No issues found! (ran in 7.8s)",
+    "128 : \u2506 [1m26s] | Ran 41 tests in 4.005s",
+    "25  : \u2506 [1m56s] | test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.15s",
+    "98  : \u2506 [2m8s] | 00:27 +456: All tests passed!",
+    "54  : \u2506 [2m28s] | test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.80s"
+  ],
+  "suite_groups_by_dagger_vertex": {
+    "25": [
+      {
+        "passed": 103,
+        "failed": 0,
+        "ignored": 2
+      },
+      {
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 35,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 27,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 10,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 22,
+        "failed": 0,
+        "ignored": 1
+      },
+      {
+        "passed": 11,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 41,
+        "failed": 0,
+        "ignored": 0
+      }
+    ],
+    "76": [
+      {
+        "passed": 105,
+        "failed": 0,
+        "ignored": 2
+      },
+      {
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 36,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 8,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 15,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 20,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 4,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 11,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 18,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 35,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "passed": 25,
+        "failed": 0,
+        "ignored": 0
+      }
+    ],
+    "54": [
+      {
+        "passed": 9,
+        "failed": 0,
+        "ignored": 0
+      }
+    ]
+  },
+  "differences_from_prior_cloud_final_snapshot": [
+    "next/service/src/cloud_keyring.rs",
+    "next/service/src/cloud_keyring_tests.rs"
+  ],
+  "binary_sha256": {
+    "next/service/dist/smith-service": "e5860b9e3751eddf1cefa5eb3b8464d31c1b3847c9d7c5c6fda6c1fc847169a1",
+    "next/client/dist/smith_client": "b12601aa3bf99ee6bbc66c857282b0d8c111d78929b69f83ea9db1b45dba551c",
+    "next/client/dist/smith_backend/smith-service": "e5860b9e3751eddf1cefa5eb3b8464d31c1b3847c9d7c5c6fda6c1fc847169a1",
+    "next/installer/dist/smith-installer": "d47b4255f88c1eac6c7bacd1f14e5073584497ece33ac0e4bf0cbadd4e37c75b",
+    "next/installer/dist/smith-installer-ui": "f9e99eb3aeb2b5ae1b974d740e7f71b431db739663cf01862d2dc047af9afd21",
+    "next/installer/dist/payload/service/smith-service": "e5860b9e3751eddf1cefa5eb3b8464d31c1b3847c9d7c5c6fda6c1fc847169a1"
+  },
+  "package_inventory_sha256": "3794c8684a179e6292b2cf7db37abce9b8886e19e138554d8316235fdcd3b3cb",
+  "package_verification_output": "Native recipient package verified: 95 files; reviewed text-only payload paths",
+  "preserved_expected_red_log_sha256": "2a17b93e52e3bdd3c657ea9fc08f2fbea3f3f836b3a9f77b24763350aad63e04",
+  "limitations": [
+    "Before/after identity equality, not continuous monitoring.",
+    "Dagger cache may be reused; not clean-clone/hermetic, installed-host, real credential/provider or normal-keyring evidence.",
+    "No source/lock/docs changes, live operations, installation, deployment, commits, or gratuitous reruns. Prior evidence preserved."
+  ]
+}

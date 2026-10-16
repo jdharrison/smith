@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'control_api.dart';
 import 'app_v2.dart';
+import 'cloud_routing.dart';
 import 'native_control.dart';
 
 const appFrameLimit = 4 * 1024 * 1024;
@@ -25,7 +26,7 @@ class AppReply {
   AppReply(this.instanceId, this.result);
   final String instanceId;
   final Map<String, dynamic> result;
-  static AppReply parse(String text, String callId) {
+  static AppReply parse(String text, String callId, {int schemaVersion = 2}) {
     if (utf8.encode(text).length > appFrameLimit + 1 ||
         !_idPattern.hasMatch(callId)) {
       throw const AppFailure(
@@ -51,7 +52,7 @@ class AppReply {
       'error',
     ]);
     if (v is! Map<String, dynamic> ||
-        v['schema_version'] != 2 ||
+        v['schema_version'] != schemaVersion ||
         v['service'] != 'smith-next' ||
         v['protocol'] != 'app' ||
         v['call_id'] != callId ||
@@ -224,6 +225,13 @@ class NativeAppApi implements AppApi {
 
   Future<AppReply> _exchange(String op, Map<String, dynamic> args) async {
     if (![
+      'route_catalog',
+      'conversation_routing',
+      'conversation_timestamps',
+      'request_routing',
+      'route_prepare',
+      'submit_routed',
+      'provider_probe',
       'state',
       'models',
       'configure',
@@ -245,11 +253,11 @@ class NativeAppApi implements AppApi {
         'Only text chat and voice:null configuration are supported.',
       );
     }
-    validateV2Arguments(op, args);
+    validateV3Arguments(op, args);
     final id = appId();
     final payload = utf8.encode(
       jsonEncode({
-        'schema_version': 2,
+        'schema_version': 3,
         'service': 'smith-next',
         'protocol': 'app',
         'call_id': id,
@@ -264,8 +272,9 @@ class NativeAppApi implements AppApi {
       final reply = AppReply.parse(
         await _executor.exchange([...payload, 10]),
         id,
+        schemaVersion: 3,
       );
-      validateV2(op, reply.result);
+      validateV3(op, reply.result);
       return reply;
     } on ControlFailure catch (e) {
       throw AppFailure('TRANSPORT', e.message, unknown: e.outcomeUnknown);

@@ -12,6 +12,9 @@ import 'ui/smith_theme.dart';
 const defaultBootObservationBudget = Duration(seconds: 15);
 const defaultBootPollInterval = Duration(milliseconds: 500);
 const bootAnimationDuration = Duration(milliseconds: 2400);
+const bootIntroDuration = Duration(milliseconds: 500);
+const bootMinimumHoldDuration = Duration(seconds: 1);
+const bootOutroDuration = Duration(milliseconds: 500);
 
 enum BootPhase {
   observing,
@@ -385,6 +388,144 @@ class BootCoordinator extends ChangeNotifier {
   }
 }
 
+/// Keeps cosmetic timing separate from readiness and mounts chat only afterward.
+class BootPresentation extends StatefulWidget {
+  const BootPresentation({
+    super.key,
+    required this.coordinator,
+    required this.readyBuilder,
+  });
+
+  final BootCoordinator coordinator;
+  final WidgetBuilder readyBuilder;
+
+  @override
+  State<BootPresentation> createState() => _BootPresentationState();
+}
+
+enum _BootPresentationPhase { intro, hold, waiting, outro, complete }
+
+class _BootPresentationState extends State<BootPresentation>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController transition = AnimationController(
+    vsync: this,
+    duration: bootIntroDuration,
+    // Accessibility removes visible motion, not the minimum presentation time.
+    animationBehavior: AnimationBehavior.preserve,
+  )..addListener(_transitionChanged);
+  _BootPresentationPhase phase = _BootPresentationPhase.intro;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.coordinator.addListener(_changed);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _changed();
+      if (phase == _BootPresentationPhase.intro) transition.forward();
+    });
+  }
+
+  @override
+  void didUpdateWidget(BootPresentation oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.coordinator != widget.coordinator) {
+      oldWidget.coordinator.removeListener(_changed);
+      widget.coordinator.addListener(_changed);
+      _changed();
+    }
+  }
+
+  void _changed() {
+    if (!mounted || phase == _BootPresentationPhase.complete) return;
+    final state = widget.coordinator.state;
+    if (state.phase != BootPhase.ready &&
+        (phase == _BootPresentationPhase.outro || !state.isWaiting)) {
+      // Repair and confirmation must never wait behind decorative animation.
+      phase = _BootPresentationPhase.waiting;
+      transition.stop();
+    } else if (state.phase == BootPhase.ready &&
+        phase == _BootPresentationPhase.waiting) {
+      _animate(_BootPresentationPhase.outro, bootOutroDuration);
+    }
+    setState(() {});
+  }
+
+  void _animate(_BootPresentationPhase next, Duration duration) {
+    phase = next;
+    transition.duration = duration;
+    transition.forward(from: 0);
+  }
+
+  void _transitionChanged() {
+    if (!mounted || transition.value < 1) return;
+    switch (phase) {
+      case _BootPresentationPhase.intro:
+        // Start the hold on the first opaque frame, not the nominal intro
+        // deadline: a delayed frame must not consume the fully visible hold.
+        _animate(_BootPresentationPhase.hold, bootMinimumHoldDuration);
+      case _BootPresentationPhase.hold:
+        phase = _BootPresentationPhase.waiting;
+        transition.stop();
+        if (widget.coordinator.state.phase == BootPhase.ready) {
+          _animate(_BootPresentationPhase.outro, bootOutroDuration);
+        }
+      case _BootPresentationPhase.outro:
+        transition.stop();
+        phase = widget.coordinator.state.phase == BootPhase.ready
+            ? _BootPresentationPhase.complete
+            : _BootPresentationPhase.waiting;
+      case _BootPresentationPhase.waiting:
+      case _BootPresentationPhase.complete:
+        return;
+    }
+    setState(() {});
+  }
+
+  double _opacity(BuildContext context) {
+    final state = widget.coordinator.state;
+    if (MediaQuery.disableAnimationsOf(context) ||
+        (!state.isWaiting && state.phase != BootPhase.ready)) {
+      return 1;
+    }
+    return switch (phase) {
+      _BootPresentationPhase.intro => Curves.easeOutCubic.transform(
+        transition.value,
+      ),
+      _BootPresentationPhase.outro =>
+        1 - Curves.easeInOutCubic.transform(transition.value),
+      _ => 1,
+    };
+  }
+
+  @override
+  void dispose() {
+    widget.coordinator.removeListener(_changed);
+    transition.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (phase == _BootPresentationPhase.complete) {
+      return widget.readyBuilder(context);
+    }
+    return ColoredBox(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: AnimatedBuilder(
+        animation: transition,
+        child: BootSurface(coordinator: widget.coordinator),
+        builder: (context, child) => Opacity(
+          key: const ValueKey('boot-transition'),
+          opacity: _opacity(context),
+          alwaysIncludeSemantics: true,
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
 class BootSurface extends StatefulWidget {
   const BootSurface({super.key, required this.coordinator});
 
@@ -503,7 +644,7 @@ class _BootSurfaceState extends State<BootSurface>
                       painter: BootMarkPainter(animation.value),
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
                   Semantics(
                     key: const ValueKey('boot-status-semantics'),
                     container: true,
@@ -587,7 +728,7 @@ class BootMarkPainter extends CustomPainter {
     final base = Paint()
       ..color = SmithColors.stroke
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 5
+      ..strokeWidth = 3
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     canvas.drawPath(path, base);
@@ -598,7 +739,7 @@ class BootMarkPainter extends CustomPainter {
     final highlight = Paint()
       ..color = SmithColors.accent
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 5
+      ..strokeWidth = 3
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     final end = start + segment;

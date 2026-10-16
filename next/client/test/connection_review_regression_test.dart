@@ -99,6 +99,7 @@ void main() {
         final control = FakeControlApi(profile());
         await tester.pumpWidget(SmithApp(controlApi: control, appApi: api));
         await flush(tester);
+        await tester.pumpAndSettle();
         final coreCalls = List<String>.of(control.calls);
         final bootStates = api.states;
         final retry = tester

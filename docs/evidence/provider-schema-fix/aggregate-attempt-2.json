@@ -1,0 +1,832 @@
+{
+  "work_record": "LOCAL-SMITH-NEXT-PROVIDER-SCHEMA-FIX",
+  "claim_kind": "Observed validation continuation only, not authorship, independent review, installed-host acceptance or deployment approval.",
+  "timestamp_utc": "2026-10-16T03:13:21.762353+00:00",
+  "repository": "smith",
+  "branch": "feature/autonomy",
+  "head": "7f6a483ae82c4bcf647268f035f1e7cc80409d4b",
+  "verdict": "FAIL",
+  "commands": {
+    "isolated-runner": {
+      "command": [
+        "cargo",
+        "--locked",
+        "--offline",
+        "test",
+        "--manifest-path",
+        "service/Cargo.toml",
+        "--test",
+        "runner",
+        "application_teardown_cancels_active_native_inference_and_joins_cleanup",
+        "--",
+        "--exact",
+        "--nocapture"
+      ],
+      "cwd": "next",
+      "started_utc": "2026-10-16T03:07:31.850976+00:00",
+      "timeout_seconds": 1740,
+      "status": "passed",
+      "before_inventory_sha256": "7c718307e6a6f825b238ef539c00b9d0415b4e8338cd38506c38d287e2011bfc",
+      "exit_code": 0,
+      "killed": false,
+      "ended_utc": "2026-10-16T03:07:35.417128+00:00",
+      "elapsed_seconds": 3.566,
+      "after_inventory_sha256": "7c718307e6a6f825b238ef539c00b9d0415b4e8338cd38506c38d287e2011bfc",
+      "source_stable": true,
+      "changed_paths": [],
+      "file_count_before": 1272,
+      "file_count_after": 1272,
+      "log": "next/service/build/provider-schema-fix/continuation-run/isolated-runner.log",
+      "log_sha256": "3653becf65fbfa33cf247150fc226af383b42bc7dd1f58a42ffba7333763d9fb",
+      "log_hash_verified": true,
+      "terminal_timeout_ms": 1800000,
+      "test_summaries": [
+        {
+          "result": "ok",
+          "passed": 1,
+          "failed": 0,
+          "ignored": 0,
+          "measured": 0,
+          "filtered_out": 40,
+          "duration": "1.97s"
+        }
+      ]
+    },
+    "runner-suite": {
+      "command": [
+        "cargo",
+        "--locked",
+        "--offline",
+        "test",
+        "--manifest-path",
+        "service/Cargo.toml",
+        "--test",
+        "runner",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "next",
+      "started_utc": "2026-10-16T03:07:52.826977+00:00",
+      "timeout_seconds": 1740,
+      "status": "passed",
+      "before_inventory_sha256": "7c718307e6a6f825b238ef539c00b9d0415b4e8338cd38506c38d287e2011bfc",
+      "exit_code": 0,
+      "killed": false,
+      "ended_utc": "2026-10-16T03:08:15.570245+00:00",
+      "elapsed_seconds": 22.743,
+      "after_inventory_sha256": "7c718307e6a6f825b238ef539c00b9d0415b4e8338cd38506c38d287e2011bfc",
+      "source_stable": true,
+      "changed_paths": [],
+      "file_count_before": 1272,
+      "file_count_after": 1272,
+      "log": "next/service/build/provider-schema-fix/continuation-run/runner-suite.log",
+      "log_sha256": "b0f4df7b9672c68fa3e609994f5e8d17e1f1449aedf66dd3e5a8fd6bea792d2f",
+      "log_hash_verified": true,
+      "terminal_timeout_ms": 1800000,
+      "test_summaries": [
+        {
+          "result": "ok",
+          "passed": 41,
+          "failed": 0,
+          "ignored": 0,
+          "measured": 0,
+          "filtered_out": 0,
+          "duration": "22.57s"
+        }
+      ]
+    },
+    "combined": {
+      "command": [
+        "env",
+        "DAGGER_NO_NAG=1",
+        "DAGGER_CLOUD_TOKEN=",
+        "DAGGER_PROGRESS=plain",
+        "make",
+        "test",
+        "build"
+      ],
+      "cwd": "next",
+      "started_utc": "2026-10-16T03:08:27.511555+00:00",
+      "timeout_seconds": 1740,
+      "status": "failed",
+      "before_inventory_sha256": "7c718307e6a6f825b238ef539c00b9d0415b4e8338cd38506c38d287e2011bfc",
+      "exit_code": 2,
+      "killed": false,
+      "ended_utc": "2026-10-16T03:10:31.085267+00:00",
+      "elapsed_seconds": 123.574,
+      "after_inventory_sha256": "7c718307e6a6f825b238ef539c00b9d0415b4e8338cd38506c38d287e2011bfc",
+      "source_stable": true,
+      "changed_paths": [],
+      "file_count_before": 1272,
+      "file_count_after": 1272,
+      "log": "next/service/build/provider-schema-fix/continuation-run/combined.log",
+      "log_sha256": "46f2fd928ac4ec2ca7dd0026bc0643e37cf5950c45c6e4100edcffca1b5a1631",
+      "log_hash_verified": true,
+      "terminal_timeout_ms": 1800000
+    }
+  },
+  "build": {
+    "status": "not_reached",
+    "reason": "make test failed before make build"
+  },
+  "package_verify": {
+    "status": "not_run",
+    "command": [
+      "python3",
+      "dagger/package.py",
+      "--root",
+      "installer/dist",
+      "--verify"
+    ],
+    "completed_runs": 0,
+    "actual_verified_export_file_count": null,
+    "reason": "The single aggregate attempt failed. No further rerun, build or verification was attempted.",
+    "synthetic_package_test_fixture_verifications": {
+      "reported_file_counts": {
+        "88": 14
+      },
+      "occurrences": [
+        {
+          "file_count": 88,
+          "log_line": 9939
+        },
+        {
+          "file_count": 88,
+          "log_line": 9940
+        },
+        {
+          "file_count": 88,
+          "log_line": 9941
+        },
+        {
+          "file_count": 88,
+          "log_line": 9942
+        },
+        {
+          "file_count": 88,
+          "log_line": 9943
+        },
+        {
+          "file_count": 88,
+          "log_line": 9944
+        },
+        {
+          "file_count": 88,
+          "log_line": 9945
+        },
+        {
+          "file_count": 88,
+          "log_line": 9946
+        },
+        {
+          "file_count": 88,
+          "log_line": 9947
+        },
+        {
+          "file_count": 88,
+          "log_line": 9948
+        },
+        {
+          "file_count": 88,
+          "log_line": 9949
+        },
+        {
+          "file_count": 88,
+          "log_line": 9950
+        },
+        {
+          "file_count": 88,
+          "log_line": 9951
+        },
+        {
+          "file_count": 88,
+          "log_line": 9952
+        }
+      ],
+      "caveat": "These synthetic fixture checks do not verify installer/dist."
+    }
+  },
+  "aggregate_counts": {
+    "service": {
+      "passed": 252,
+      "failed": 1,
+      "controlled_ignores": 3,
+      "completed_suite_summaries": 8
+    },
+    "installer": {
+      "passed": 279,
+      "failed": 0,
+      "controlled_ignores": 2,
+      "completed_suite_summaries": 12
+    },
+    "flutter": [
+      {
+        "passed": 470,
+        "skipped": 0,
+        "failed": 0,
+        "log_line": 10745,
+        "status": "passed"
+      }
+    ],
+    "package_tests": [
+      {
+        "test_count": 41,
+        "duration": "3.498s",
+        "log_line": 9936,
+        "status": "passed",
+        "ok_log_line": 9938
+      }
+    ],
+    "keyring_included_in_service": {
+      "passed": 18
+    },
+    "gtk": {
+      "status": "canceled",
+      "completed_test_count": null,
+      "log_lines": [
+        10760
+      ]
+    },
+    "aggregate_observed_totals": {
+      "passed": 1042,
+      "failed": 1,
+      "controlled_ignores": 5,
+      "scope": "Aggregate only; excludes the earlier isolated/full-runner executions and canceled GTK."
+    }
+  },
+  "rust_suite_summaries": [
+    {
+      "component": "service",
+      "suite": "unittests src/lib.rs",
+      "log_line": 4698,
+      "result": "ok",
+      "passed": 106,
+      "failed": 0,
+      "ignored": 2,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "6.35s"
+    },
+    {
+      "component": "service",
+      "suite": "unittests src/main.rs",
+      "log_line": 4705,
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.00s"
+    },
+    {
+      "component": "service",
+      "suite": "tests/application.rs",
+      "log_line": 4833,
+      "result": "ok",
+      "passed": 35,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.72s"
+    },
+    {
+      "component": "service",
+      "suite": "tests/cloud.rs",
+      "log_line": 4866,
+      "result": "ok",
+      "passed": 27,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.06s"
+    },
+    {
+      "component": "service",
+      "suite": "tests/cloud_protocol.rs",
+      "log_line": 4882,
+      "result": "ok",
+      "passed": 10,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.01s"
+    },
+    {
+      "component": "installer",
+      "suite": "unittests src/lib.rs",
+      "log_line": 5554,
+      "result": "ok",
+      "passed": 105,
+      "failed": 0,
+      "ignored": 2,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "4.68s"
+    },
+    {
+      "component": "installer",
+      "suite": "unittests src/main.rs",
+      "log_line": 5560,
+      "result": "ok",
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.00s"
+    },
+    {
+      "component": "installer",
+      "suite": "tests/artifact.rs",
+      "log_line": 6893,
+      "result": "ok",
+      "passed": 36,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.71s"
+    },
+    {
+      "component": "installer",
+      "suite": "tests/catalog.rs",
+      "log_line": 6907,
+      "result": "ok",
+      "passed": 8,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.08s"
+    },
+    {
+      "component": "installer",
+      "suite": "tests/cli.rs",
+      "log_line": 7665,
+      "result": "ok",
+      "passed": 15,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "10.48s"
+    },
+    {
+      "component": "installer",
+      "suite": "tests/maintenance.rs",
+      "log_line": 9637,
+      "result": "ok",
+      "passed": 20,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "1.37s"
+    },
+    {
+      "component": "installer",
+      "suite": "tests/model.rs",
+      "log_line": 9647,
+      "result": "ok",
+      "passed": 4,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.00s"
+    },
+    {
+      "component": "installer",
+      "suite": "tests/model_wizard.rs",
+      "log_line": 9664,
+      "result": "ok",
+      "passed": 11,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.03s"
+    },
+    {
+      "component": "installer",
+      "suite": "tests/multi_chat_compatibility.rs",
+      "log_line": 9690,
+      "result": "ok",
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.52s"
+    },
+    {
+      "component": "installer",
+      "suite": "tests/providers.rs",
+      "log_line": 9739,
+      "result": "ok",
+      "passed": 18,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.72s"
+    },
+    {
+      "component": "installer",
+      "suite": "tests/setup.rs",
+      "log_line": 9838,
+      "result": "ok",
+      "passed": 35,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "1.58s"
+    },
+    {
+      "component": "installer",
+      "suite": "tests/wizard.rs",
+      "log_line": 9878,
+      "result": "ok",
+      "passed": 25,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.15s"
+    },
+    {
+      "component": "service",
+      "suite": "tests/debug_service.rs",
+      "log_line": 10034,
+      "result": "ok",
+      "passed": 22,
+      "failed": 0,
+      "ignored": 1,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "23.75s"
+    },
+    {
+      "component": "service",
+      "suite": "tests/maintenance.rs",
+      "log_line": 10057,
+      "result": "ok",
+      "passed": 11,
+      "failed": 0,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "0.59s"
+    },
+    {
+      "component": "service",
+      "suite": "tests/runner.rs",
+      "log_line": 10779,
+      "result": "FAILED",
+      "passed": 40,
+      "failed": 1,
+      "ignored": 0,
+      "measured": 0,
+      "filtered_out": 0,
+      "duration": "23.12s"
+    }
+  ],
+  "controlled_ignores": [
+    {
+      "component": "service",
+      "name": "cloud::http::tests::proxy_environment_child",
+      "reason": "isolated proxy-environment subprocess fixture",
+      "log_line": 4128
+    },
+    {
+      "component": "service",
+      "name": "manager::tests::captured_helper_fixture",
+      "reason": "fixture invoked only by captured-helper subprocess tests",
+      "log_line": 4145
+    },
+    {
+      "component": "installer",
+      "name": "launch::tests::launch_parent_fixture",
+      "reason": "finite subprocess fixture, invoked only with private test roots",
+      "log_line": 4460
+    },
+    {
+      "component": "installer",
+      "name": "model::tests::progress_output_probe_child",
+      "reason": "controlled signal-probe child only",
+      "log_line": 4489
+    },
+    {
+      "component": "service",
+      "name": "dart_cloud::dart_cloud_fixture",
+      "reason": "launched explicitly by the Dart schema3 fixture gate",
+      "log_line": 4887
+    }
+  ],
+  "counting_method": "Count task-tagged primary Dagger test summaries only, not the repeated undecorated failed stdout. Isolated and full-runner results are separate from aggregate totals. Canceled GTK is not a pass.",
+  "controlled_ignore_note": "The five ignored test definitions are private subprocess fixtures. Definitions and aggregate wrapper results do not imply individually visible execution of every child in the compact Flutter log.",
+  "failure": {
+    "test": "vulkan_startup_observes_full_window_and_accepts_only_complete_fragmented_evidence",
+    "source_location": "next/service/tests/runner.rs:636:13",
+    "exact_log_lines": [
+      {
+        "line": 11087,
+        "text": "test vulkan_startup_observes_full_window_and_accepts_only_complete_fragmented_evidence ... FAILED"
+      },
+      {
+        "line": 11105,
+        "text": "thread 'vulkan_startup_observes_full_window_and_accepts_only_complete_fragmented_evidence' (5643) panicked at tests/runner.rs:636:13:"
+      },
+      {
+        "line": 11106,
+        "text": "gpu-window-full: a candidate must remain provisional for the full post-health window"
+      },
+      {
+        "line": 11113,
+        "text": "test result: FAILED. 40 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.12s"
+      },
+      {
+        "line": 11486,
+        "text": "error: test failed, to rerun pass `--test runner`"
+      },
+      {
+        "line": 11487,
+        "text": "make: *** [Makefile:36: test] Error 101"
+      }
+    ],
+    "excerpt": "next/service/build/provider-schema-fix/continuation-run/failure-lines.log",
+    "diagnosis": "Observed assertion only; no root-cause or flakiness claim, no fix, no further rerun."
+  },
+  "earlier_failure": {
+    "path": "next/service/build/provider-schema-fix/combined-status.json",
+    "status_file_sha256": "eb65e8ea4d1ac5f284d6b5c96835c6d6f31880af6c943d006654ea0efa457bdc",
+    "log_sha256": "bf979ae6070728afb0a21b7c7ae262062564fae4d101e9eb5fcfb2f8a8a72996",
+    "test": "application_teardown_cancels_active_native_inference_and_joins_cleanup",
+    "root_cause": "historical and unresolved; the isolated/full-suite passes do not establish a fix"
+  },
+  "source": {
+    "file_count": 1272,
+    "inventory_sha256": "8f5cc5e4f6bbb01872054b7e0c6e31e3860a839a1733d1a055ab5b7c1b7c94c3",
+    "combined_inventory_sha256": "7c718307e6a6f825b238ef539c00b9d0415b4e8338cd38506c38d287e2011bfc",
+    "all_commands_source_stable": true,
+    "same_snapshot_for_all_commands": true,
+    "report_snapshot_matches_combined": false,
+    "manifest": "next/service/build/provider-schema-fix/continuation-run/source-manifest.json",
+    "manifest_sha256": "39c9c5bc13402be8a69be14c74b61282149934386e06b28b7581531c4ac2fa67",
+    "baseline_manifest": "docs/evidence/provider-save-fix/source-manifest.json",
+    "baseline_manifest_sha256": "728abc4551e485fd592a6c30bec5f684b3ee8c4765c22ac95e5731ae470f75d2",
+    "baseline_inventory_sha256": "ad0cdd12d92cdf163b02fce7ab5d70e4ba8fa5160584fa5fe5df5bb6368e235c",
+    "expected_keyring_two_and_boot_three": [
+      {
+        "path": "next/client/lib/boot.dart",
+        "before": {
+          "path": "next/client/lib/boot.dart",
+          "sha256": "839b8ddcd95cca990966b006c56244ac743d6b6ec995c1099c12838e1757c1df",
+          "bytes": 18520,
+          "kind": "file",
+          "mode": "0o664"
+        },
+        "after": {
+          "path": "next/client/lib/boot.dart",
+          "sha256": "17562b7e6f11a4964e116fbd26d60ddc3ec695cf4a4393896219d60783da97e0",
+          "bytes": 23121,
+          "kind": "file",
+          "mode": "0o664"
+        }
+      },
+      {
+        "path": "next/client/lib/main.dart",
+        "before": {
+          "path": "next/client/lib/main.dart",
+          "sha256": "307997ebe03a75caa16ddf204390ae6f723f7c331a32c8ab6aa6a7039219251b",
+          "bytes": 20235,
+          "kind": "file",
+          "mode": "0o664"
+        },
+        "after": {
+          "path": "next/client/lib/main.dart",
+          "sha256": "396717fce16304b0a489724a86e75f53a7ef0f1fad0950742cef22a993e48271",
+          "bytes": 20126,
+          "kind": "file",
+          "mode": "0o664"
+        }
+      },
+      {
+        "path": "next/client/test/boot_test.dart",
+        "before": {
+          "path": "next/client/test/boot_test.dart",
+          "sha256": "6498a9261656ce1d06d05c94ad0280bab3209b49af3de3059641853e935b0500",
+          "bytes": 10029,
+          "kind": "file",
+          "mode": "0o664"
+        },
+        "after": {
+          "path": "next/client/test/boot_test.dart",
+          "sha256": "4b9cda071681dc457f05d394e564e2ebe2a8d46c928e9a6cfeead1f09b4171a8",
+          "bytes": 20465,
+          "kind": "file",
+          "mode": "0o664"
+        }
+      },
+      {
+        "path": "next/service/src/cloud_keyring.rs",
+        "before": {
+          "path": "next/service/src/cloud_keyring.rs",
+          "sha256": "93b2be987cdd6883d8d500269c7ec8be5c5576d3a85375b9e184d938ffdd3279",
+          "bytes": 14374,
+          "kind": "file",
+          "mode": "0o664"
+        },
+        "after": {
+          "path": "next/service/src/cloud_keyring.rs",
+          "sha256": "f6ac5c6ea536992ad7bf252d92ef06b4ab8085b6393dc2e1592c53f5628c20aa",
+          "bytes": 14673,
+          "kind": "file",
+          "mode": "0o664"
+        }
+      },
+      {
+        "path": "next/service/src/cloud_keyring_tests.rs",
+        "before": {
+          "path": "next/service/src/cloud_keyring_tests.rs",
+          "sha256": "e35cd783bbe4bae05f95b18dbb13572f89aae2be0fb5bada1dbc20fce5f036dd",
+          "bytes": 29331,
+          "kind": "file",
+          "mode": "0o664"
+        },
+        "after": {
+          "path": "next/service/src/cloud_keyring_tests.rs",
+          "sha256": "b3c5816aa52f4b73e1ce2c55bd50bd8c7196f6ed9a136a6a96708f3c7981ec83",
+          "bytes": 36477,
+          "kind": "file",
+          "mode": "0o664"
+        }
+      }
+    ],
+    "additional_actual_input_changes": [
+      {
+        "path": "next/client/test/boot_visual_test.dart",
+        "before": null,
+        "after": {
+          "path": "next/client/test/boot_visual_test.dart",
+          "sha256": "fc61ef001834fd1a3e9deb1c48e6ce2e12a9de03489c51279b40960c45cc3f30",
+          "bytes": 3705,
+          "kind": "file",
+          "mode": "0o664"
+        }
+      },
+      {
+        "path": "next/client/test/connection_polling_test.dart",
+        "before": {
+          "path": "next/client/test/connection_polling_test.dart",
+          "sha256": "60ecb24ce6219fc5e9fb2834c98f2e9c6eb89456389d03aa7ea1123fce331a85",
+          "bytes": 11929,
+          "kind": "file",
+          "mode": "0o664"
+        },
+        "after": {
+          "path": "next/client/test/connection_polling_test.dart",
+          "sha256": "250a9959a58425667f7ff0ef082779a8c21ad514ab69f399274a0c6f9338974b",
+          "bytes": 11965,
+          "kind": "file",
+          "mode": "0o664"
+        }
+      },
+      {
+        "path": "next/client/test/connection_review_regression_test.dart",
+        "before": {
+          "path": "next/client/test/connection_review_regression_test.dart",
+          "sha256": "198d3344a54146668c29fa835f4078ec5beb866e036bd1d35631f5cc53f15213",
+          "bytes": 7434,
+          "kind": "file",
+          "mode": "0o664"
+        },
+        "after": {
+          "path": "next/client/test/connection_review_regression_test.dart",
+          "sha256": "516dbafeabd08817bbcf54e2814c7e6935330cc007545056bd8b2ea47efd19bd",
+          "bytes": 7472,
+          "kind": "file",
+          "mode": "0o664"
+        }
+      },
+      {
+        "path": "next/client/test/goldens/boot/hold.png",
+        "before": null,
+        "after": {
+          "path": "next/client/test/goldens/boot/hold.png",
+          "sha256": "a2708555fd59ae23c372f1a692fd2b4989674bf475452603abcc86471633e678",
+          "bytes": 10554,
+          "kind": "file",
+          "mode": "0o664"
+        }
+      },
+      {
+        "path": "next/client/test/goldens/boot/intro.png",
+        "before": null,
+        "after": {
+          "path": "next/client/test/goldens/boot/intro.png",
+          "sha256": "043f14aeec5f144fd4e66ac1f7bf1b4b883692056c84d240b6316f3745dcd443",
+          "bytes": 10611,
+          "kind": "file",
+          "mode": "0o664"
+        }
+      },
+      {
+        "path": "next/client/test/goldens/boot/outro.png",
+        "before": null,
+        "after": {
+          "path": "next/client/test/goldens/boot/outro.png",
+          "sha256": "91b75becfa5e20a2e7c0d76cef9f1a97b17de4aac49e87603ecee5fbe5300224",
+          "bytes": 10642,
+          "kind": "file",
+          "mode": "0o664"
+        }
+      },
+      {
+        "path": "next/client/test/goldens/boot/repair-400x400-text2.png",
+        "before": null,
+        "after": {
+          "path": "next/client/test/goldens/boot/repair-400x400-text2.png",
+          "sha256": "38ef0836bb567d0beae298c8127278046298425f5b659c829a5306a24c46c421",
+          "bytes": 31376,
+          "kind": "file",
+          "mode": "0o664"
+        }
+      }
+    ],
+    "documentation_only_drift": [],
+    "runner_unchanged_from_mime": true,
+    "comparison_policy": "Actual current snapshot; expected five paths are not an authorized-source allowlist. Concurrent client/Boot changes were preserved, not authored or independently reviewed by this validation task.",
+    "scope": "All actual component and Dagger files except generated/cache exclusions; includes untracked inputs and conservative extra documentation/log inputs.",
+    "excluded_directory_names": [
+      ".cache",
+      ".dart_tool",
+      ".git",
+      ".idea",
+      ".pub",
+      ".pub-cache",
+      ".pytest_cache",
+      "__pycache__",
+      "build",
+      "cache",
+      "dist",
+      "ephemeral",
+      "target"
+    ],
+    "excluded_files": [
+      ".flutter-plugins-dependencies"
+    ],
+    "docs_outside_component_roots": "Parent-owned docs/plans, canonical docs and next/VALIDATION.md are outside this input inventory; no authorship or stability claim is made for those documents."
+  },
+  "protected_prior_evidence": {
+    "manifest": "next/service/build/provider-schema-fix/continuation-run/protected-prior-evidence.json",
+    "file_count": 163,
+    "all_preserved": true,
+    "changed_paths": []
+  },
+  "artifacts": {
+    "path": "next/service/build/provider-schema-fix/continuation-run/artifacts.json",
+    "file_sha256": "bc37e7e87c6f59f178e6a582386bb0f9296a5ea113effe8c23a76e0f086a7562",
+    "inventory_sha256": "6f4bc30c3bf102069dc77260f8640cfd745623b71ea391bd65cf15327fc554e0",
+    "package_inventory_sha256": "5509f5c29b4d6cbc36ea031f6ae2af2d1be1d2ac0ccfbf5d52aefbcae13b3672",
+    "status": "not_rebuilt"
+  },
+  "quality_gate": {
+    "service": "Formatting and warning-denied all-target Clippy completed before tests under set -eu; one runner test failed.",
+    "installer_rust": "Formatting, warning-denied all-target Clippy and Rust tests passed.",
+    "flutter": [
+      {
+        "line": 5464,
+        "task": 98,
+        "text": "Formatted 72 files (0 changed) in 0.44 seconds."
+      },
+      {
+        "line": 7368,
+        "task": 98,
+        "text": "No issues found! (ran in 8.3s)"
+      }
+    ],
+    "gtk": "Canceled before a completed quality/test gate; not a pass.",
+    "aggregate": "FAIL; new artifact build and exported-package verification were not reached."
+  },
+  "boundaries": {
+    "source_lock_documentation_edits_by_validation_task": false,
+    "source_reverts": false,
+    "commits_or_publication": false,
+    "installed_deployment": false,
+    "live_host_bus_keyring_manager_service_model_or_provider_validation": "not performed or claimed; configured source tests use private synthetic fixtures",
+    "generated_outputs": "next/service/build/provider-schema-fix/continuation-run/ only"
+  },
+  "caveats": [
+    "Aggregate acceptance failed despite isolated and full runner-suite passes.",
+    "The historical RUNNER_BUSY failure remains unresolved, not fixed.",
+    "GTK was canceled; no rebuild/export or package-verify acceptance occurred.",
+    "Concurrent Boot/client input changes were preserved and inventoried, not authored or independently reviewed here.",
+    "Raw ignored logs may contain builder-local paths and require parent sanitization before durable documentation copies."
+  ]
+}

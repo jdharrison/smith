@@ -431,7 +431,7 @@ class _SerialExecutor implements AppExecutor {
     active++;
     if (active > maxActive) maxActive = active;
     final req = jsonDecode(utf8.decode(frame));
-    expect(req['schema_version'], 2);
+    expect(req['schema_version'], 3);
     final gate = Completer<void>();
     gates.add(gate);
     try {
@@ -440,7 +440,7 @@ class _SerialExecutor implements AppExecutor {
       active--;
     }
     return jsonEncode({
-      'schema_version': 2,
+      'schema_version': 3,
       'service': 'smith-next',
       'protocol': 'app',
       'pid': 123,

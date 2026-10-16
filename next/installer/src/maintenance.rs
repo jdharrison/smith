@@ -445,7 +445,7 @@ impl<M: Manager> Native<M> {
         } else {
             None
         };
-        let mut review = vec![format!("{op:?} exact manifest-owned installation; old helper SHA256 {}", old.sha), "Keep ALL Core/app state, history, preferences, models, releases, backups, stages, lockfiles and unrelated files. Retained data continues to use disk space. No purge, automatic retry/rollback, model download or old-helper execution.".into()];
+        let mut review = vec![format!("{op:?} exact manifest-owned installation; old helper SHA256 {}", old.sha), "Keep ALL Core/app state, history, preferences, models, releases, backups, stages, lockfiles and unrelated files. Saved API keys remain in the keyring and are NOT revoked or removed by uninstall. Manage/revoke credentials externally; this version has no key removal action. Retained data continues to use disk space. No purge, automatic retry/rollback, model download or old-helper execution.".into()];
         review.extend(
             old.objects
                 .iter()
@@ -717,7 +717,7 @@ impl<M: Manager> Native<M> {
             "Start accepted but fresh Core readiness unconfirmed; artifacts retained",
         )?;
         let reply = controller.app(smith_service::app::AppRequest {
-            schema_version: 1,
+            schema_version: 3,
             service: "smith-next".into(),
             protocol: "app".into(),
             call_id: smith_service::app::new_id()?,

@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "source_before_after_equal": false,
+  "elapsed_seconds": 119.15,
+  "host_packages_installed": false,
+  "host_keyring_accessed": false,
+  "container_removed": true,
+  "changed_repository_paths": [
+    "docs/plans/LOCAL-SMITH-NEXT-PROVIDER-SAVE-FIX-REVIEW.md"
+  ],
+  "service_source_manifest_lock_unchanged": true,
+  "artifact_sha256": {
+    "libsmith_service.rlib": "83697b911bdc1c3481876d534587be88df3c8fe0b065ff68826d8236f5323c23",
+    "probe": "73b169f6e924a08ddfbca3d3affee6c8666496cd06fc448020af21da1979b58e",
+    "probe.rs": "5ef1e2438504681661d3a795923572841d8fa182343ed4bb1bf312cd18444a50",
+    "harness.py": "f0e1bc5550f3111d80f98cbf6b83982e7db2acf126537df74758dba69baea24c",
+    "Dockerfile": "571aec06ae7f3ff23926083590122b55820481cc68fe1fb314108eba1c1f12de",
+    "run.py": "6bac4f7d916646d1d52cf621ae04d9947b35d168118adb84115a0e5ff690666d"
+  }
+}

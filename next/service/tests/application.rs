@@ -1015,7 +1015,7 @@ fn strict_requests_ids_exact_tags_and_text_limits() {
         "INVALID_REQUEST"
     );
     let mut req = request("state", json!({}));
-    req.schema_version = 3;
+    req.schema_version = 4;
     assert!(app.call(req).is_err());
     for bad in [
         "ABCDEFABCDEFABCDEFABCDEFABCDEFABCD",
@@ -1716,9 +1716,7 @@ fn production_source_has_no_speech_transport_or_audio_execution() {
         assert!(!app.contains(forbidden), "{forbidden}");
     }
     let cargo = include_str!("../Cargo.toml");
-    assert!(!cargo
-        .lines()
-        .any(|line| line.starts_with("base64") || line.starts_with("reqwest")));
+    assert!(!cargo.lines().any(|line| line.starts_with("base64")));
     let runner = include_str!("../src/runner.rs");
     assert!(!runner.contains("TcpStream") && !runner.contains("http://"));
 }

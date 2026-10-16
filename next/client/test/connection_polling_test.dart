@@ -325,6 +325,7 @@ void main() {
       final control = FakeControlApi(profile());
       await tester.pumpWidget(SmithApp(controlApi: control, appApi: api));
       await flush(tester);
+      await tester.pumpAndSettle();
       expect(find.text('SYSTEM ONLINE'), findsOneWidget);
       final states = api.states;
       await tester.enterText(find.byType(TextField).first, 'retain me');

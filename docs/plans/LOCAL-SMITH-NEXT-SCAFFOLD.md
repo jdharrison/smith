@@ -30,3 +30,7 @@ Plan → local development → self-check → fresh-context assurance. Record ac
 Defer API/listeners, setup/chat, providers, credentials, persistence, backend ownership, Rust UI/FFI, CLI, packaging, release preparation/publication, and old-source cutover/removal. Model services, systemd/autostart, external providers and existing data remain untouched.
 
 Rollback is limited to reverting this scaffold's sources/ignore changes while preserving user changes and generated caches; never remove legacy implementation or user data. No automatic destructive cleanup.
+
+## Approved follow-up: installer/run
+
+The user's “lets do a `installer/run`” authorizes a routine local Make convenience target on `feature/autonomy`, base `7f6a483ae82c4bcf647268f035f1e7cc80409d4b`, preserving concurrent work. Scope: add a phony `installer/run` depending on the existing full-package `installer/build`, then launch `./installer/dist/smith-installer-ui` in the foreground with no bypass flags. Update Make help, developer documentation and the canonical pipeline description. Build/package verification must succeed before launch; installer confirmations remain unchanged. No agent-run GUI, Dagger build, host installation, service action, commit or remote effect is authorized by this source-only follow-up. Self-check PASS: `make -C next help`, `make -C next -n installer/run`, an exact three-command dry-run assertion (Dagger package build → Python verification → GUI launch), and scoped `git diff --check`. Actual build/GUI execution remains unverified and was not performed.

@@ -601,7 +601,11 @@ void main() {
         );
         for (final control in [
           find.byType(TextField),
-          find.byTooltip('Send'),
+          expired
+              ? find.byTooltip(
+                  'Queue next turn, not steering the current reply',
+                )
+              : find.byTooltip('Send'),
         ]) {
           final rect = tester.getRect(control);
           expect(rect.top, greaterThanOrEqualTo(0));

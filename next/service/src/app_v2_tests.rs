@@ -17,10 +17,12 @@ impl Fixture {
                 inventory_observed: false,
                 fault: false,
                 owned: true,
+                cloud: v3::Volatile::default(),
             })),
             owner: None,
             path: dir.join("state.json"),
             instance_id: new_id().unwrap(),
+            cloud: Arc::new(crate::cloud::Dependencies::disabled()),
         };
         Self { app, dir }
     }
