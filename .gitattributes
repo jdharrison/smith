@@ -1,13 +1,11 @@
 * text=auto eol=lf
 *.rs text eol=lf
 
-# Historical reference archives are byte-preserved, including legacy whitespace.
-reference/** -whitespace
 
 # Preserve provenance and recorded output bytes; source whitespace stays checked.
 docs/evidence/clean-checkpoint/** -whitespace
 docs/plans/LOCAL-SMITH-NEXT-GPU-STARTUP-FIX-*.log -whitespace
-next/client/assets/fonts/**/OFL.txt -whitespace
-next/installer/assets/fonts/**/OFL.txt -whitespace
-next/installer/tests/fixtures/ui-redesign/**/test-output.txt -whitespace
+client/assets/fonts/**/OFL.txt -whitespace
+installer/assets/fonts/**/OFL.txt -whitespace
+installer/tests/fixtures/ui-redesign/**/test-output.txt -whitespace
 

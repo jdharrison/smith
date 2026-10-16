@@ -1,13 +1,13 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.13)
-project(runner LANGUAGES CXX)
+project(runner LANGUAGES C CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "smith_halo")
+set(BINARY_NAME "smith_client")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "dev.smith.Halo")
+set(APPLICATION_ID "dev.smith.smith_client")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
@@ -79,10 +79,7 @@ include(flutter/generated_plugins.cmake)
 # By default, "installing" just makes a relocatable bundle in the build
 # directory.
 set(BUILD_BUNDLE_DIR "${PROJECT_BINARY_DIR}/bundle")
-# Flutter's Linux toolchain currently passes /usr/local explicitly even for a
-# normal bundle build, so CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT is false.
-# Keep explicit non-default prefixes available for intentional CMake installs.
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT OR CMAKE_INSTALL_PREFIX STREQUAL "/usr/local")
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "${BUILD_BUNDLE_DIR}" CACHE PATH "..." FORCE)
 endif()
 
@@ -97,9 +94,13 @@ set(INSTALL_BUNDLE_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
 install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"
   COMPONENT Runtime)
 
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/dev.smith.Halo.desktop"
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications"
-  COMPONENT Runtime)
+# Bundle desktop integration inputs without registering anything on the host.
+configure_file("smith.desktop.in" "${APPLICATION_ID}.desktop" @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${APPLICATION_ID}.desktop"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications" COMPONENT Runtime)
+install(FILES "runner/resources/smith.png"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pixmaps"
+  RENAME "${APPLICATION_ID}.png" COMPONENT Runtime)
 
 install(FILES "${FLUTTER_ICU_DATA_FILE}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   COMPONENT Runtime)

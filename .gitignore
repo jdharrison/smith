@@ -1,33 +1,25 @@
-/target
+/target/
 
-# Flutter client
-client/.dart_tool/
-client/.flutter-plugins-dependencies
-client/.pub-cache/
-client/.pub/
-client/build/
-client/**/doc/api/
+# Flutter generated state and outputs
+/client/.dart_tool/
+/client/.flutter-plugins-dependencies
+/client/.pub-cache/
+/client/.pub/
+/client/build/
+/client/dist/
+/client/**/doc/api/
+/client/test/failures/
 
-# Generated diagnostics and Python bytecode (preserve locally, do not commit)
+# Rust component outputs and exported recipient package
+/service/build/
+/service/dist/
+/service/target/
+/installer/build/
+/installer/dist/
+/installer/target/
+
+# Developer-only generated SDK/environment and Python caches
+/dagger/sdk/
+/dagger/.venv/
 __pycache__/
 *.py[cod]
-/next/client/test/failures/
-
-# Next-layout generated component outputs
-/next/__pycache__/
-/next/client/build/
-/next/client/dist/
-/next/client/.dart_tool/
-/next/client/.flutter-plugins-dependencies
-/next/client/.pub-cache/
-/next/client/.pub/
-/next/service/build/
-/next/service/dist/
-/next/service/target/
-/next/installer/dist/
-/next/installer/build/
-/next/installer/target/
-/next/dagger/sdk/
-/next/dagger/.venv/
-/next/dagger/**/__pycache__/
-/next/dagger/**/*.pyc

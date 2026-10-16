@@ -2,41 +2,112 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
+  workflow_call:
+    inputs:
+      release-candidate:
+        description: Validate an annotated release tag and retain its installer candidate
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+env:
+  CARGO_TERM_COLOR: always
+  PYTHONDONTWRITEBYTECODE: '1'
 
 jobs:
   test:
-    name: Test on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      # Windows excluded: dagger-sdk 0.19 uses Unix-only APIs (e.g. PermissionsExt, set_mode)
-      matrix:
-        os: [ubuntu-latest, macos-latest]
+    name: Pipeline source and archive checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    outputs:
+      stem: ${{ steps.identity.outputs.stem }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          components: rustfmt, clippy
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-      - name: Build
-        run: cargo build --locked --verbose
-      - name: Test
-        run: cargo test --locked --verbose
-      - name: Check formatting
-        run: cargo fmt --check
-      - name: Clippy
-        run: cargo clippy --all-targets -- -D warnings
+          ref: ${{ inputs.release-candidate && github.ref || '' }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate release identity before building
+        if: inputs.release-candidate
+        id: identity
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          SOURCE_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_EVENT_NAME" = push
+          test "$GITHUB_REF_TYPE" = tag
+          stem="$(python3 scripts/prepare-installer-release.py --tag "$RELEASE_TAG" --commit "$SOURCE_SHA" --check-only)"
+          printf 'stem=%s\n' "$stem" >> "$GITHUB_OUTPUT"
+      - name: Test pipeline source and archive checks
+        run: python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
 
+
+  installer:
+    name: Native Ubuntu installer checks and package
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      DAGGER_NO_NAG: '1'
+      DAGGER_CLOUD_TOKEN: ''
+      DAGGER_PROGRESS: plain
+      DO_NOT_TRACK: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.release-candidate && github.ref || '' }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install checksum-pinned Dagger CLI
+        run: sh scripts/install-dagger-ci.sh
+      - name: Test and build the complete paired installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p target
+          dagger version
+          make test installer/build 2>&1 | tee target/installer-validation.log
+      - name: Verify exported recipient package
+        run: python3 dagger/package.py --root installer/dist --verify
+      - name: Archive and reverify the tagged candidate
+        if: inputs.release-candidate
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/prepare-installer-release.py \
+            --tag "$RELEASE_TAG" --commit "$SOURCE_SHA" \
+            --package installer/dist --output target/installer-release \
+            --run-url "$RUN_URL"
+          cp target/installer-validation.log target/installer-release/validation.log
+          dagger version > target/installer-release/dagger-version.txt
+          {
+            printf '## Installer candidate built (not a published release)\n\n'
+            printf 'Target: Ubuntu 24.04 LTS x86_64. Source: %s.\n\n' "$SOURCE_SHA"
+            printf 'Download the workflow artifact, verify its archive digest, extract the complete package, then read README.txt.\n\n'
+            cat target/installer-release/*.sha256
+            printf '\nRetention: 14 days. Publication and installation require separate approval.\n'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain verified installer candidate and evidence
+        if: inputs.release-candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ needs.test.outputs.stem }}
+          path: target/installer-release/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14

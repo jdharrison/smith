@@ -1,5 +1,5 @@
-# Proposed ownership boundaries for review routing. GitHub branch protection must
-# separately require CODEOWNER review for this file to be enforced.
+# Review routing only. GitHub branch protection must separately require
+# CODEOWNER review; this file does not enforce approvals by itself.
 
 /AGENTS.md @jdharrison
 /.smith/ @jdharrison
@@ -8,11 +8,20 @@
 /docs/PROCESS.md @jdharrison
 /docs/DESIGN.md @jdharrison
 /docs/HOST_PROFILE.md @jdharrison
+/docs/HISTORY.md @jdharrison
 /roles/ @jdharrison
 /.github/ @jdharrison
-/src/brain/ @jdharrison
-/src/docker/ @jdharrison
-/src/github.rs @jdharrison
-/src/commands/pipeline/ @jdharrison
-/src/commands/serve.rs @jdharrison
-/src/service/ @jdharrison
+
+# Promoted product, builder inputs and candidate pipeline.
+/client/ @jdharrison
+/service/ @jdharrison
+/installer/ @jdharrison
+/dagger/ @jdharrison
+/scripts/ @jdharrison
+/Makefile @jdharrison
+/dagger.toml @jdharrison
+/dagger.lock @jdharrison
+/rust-toolchain.toml @jdharrison
+/VALIDATION.md @jdharrison
+/README.md @jdharrison
+/SECURITY.md @jdharrison

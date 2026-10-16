@@ -1,19 +1,18 @@
+# Portable self-project metadata, not an implemented policy/command runner.
+# Keep version-1 field shapes; no consumer enforcement is claimed.
 version: 1
 
 project:
   id: smith
   name: SMITH
-  workspace_root: /home/jdharrison/develop/personal/projects/smith
+  # Repository-relative locator; no workstation-specific absolute binding.
+  workspace_root: .
   platform_target: ubuntu_linux_workstation
 
 aliases:
   "gh:smith":
     provider: github
     repository: jdharrison/smith
-  "jira:smith":
-    provider: jira
-    site: jdharrison.atlassian.net
-    project_key: SMITH
 
 repositories:
   - id: smith
@@ -22,34 +21,28 @@ repositories:
     role: core
     default_branch: main
     integration_branch: main
+    # Run from the promoted repository root. Lists are descriptive, not a
+    # dependency scheduler. Aggregate test includes formatting/lint and compiled
+    # integration, isolated GTK and no-Python native CLI/package checks.
     validation:
-      format:
-        - cargo fmt --check
-      lint:
-        - cargo clippy --all-targets -- -D warnings
+      format: []
+      lint: []
       build:
-        - cargo build --locked --verbose
+        - make build
       unit:
-        - cargo test --locked --verbose
-      integration: []
+        - make test
+      integration:
+        - python3 -B -m unittest discover -s scripts/tests -p 'test_*.py' -v
+        # Requires the complete package produced by make build/installer/build.
+        - python3 -B dagger/package.py --root installer/dist --verify
       e2e: []
       security: []
 
-project_management:
-  - id: smith
-    source: "jira:smith"
-    role: optional
-    board_id: 3
-    # Status mapping is intentionally unresolved until verified from Jira.
-    workflow_mapping:
-      backlog: []
-      ready: []
-      in_progress: []
-      review: []
-      done: []
+# Optional Jira is unbound in portable metadata. Configure privately if enabled;
+# no private site, project or board identifiers are distributed here.
+project_management: []
 
 workflow:
-  # Work tracking is optional. When enabled, use the ticket-key conventions below.
   ticket_required: false
   bootstrap_exceptions:
     - branch: feature/autonomy
@@ -57,12 +50,12 @@ workflow:
   base_branch_precedence:
     - repository_default
   branch_patterns:
-    feature: "feature/{ticket}-{slug}"
-    fix: "fix/{ticket}-{slug}"
-    feature_without_ticket: "feature/{slug}"
-    fix_without_ticket: "fix/{slug}"
-    hotfix: "hotfix/{ticket}-{slug}"
-    release: "release/v{version}"
+    feature: feature/{ticket}-{slug}
+    fix: fix/{ticket}-{slug}
+    feature_without_ticket: feature/{slug}
+    fix_without_ticket: fix/{slug}
+    hotfix: hotfix/{ticket}-{slug}
+    release: release/v{version}
   pull_requests:
     start_as_draft: true
     ticket_key_required: false
@@ -70,7 +63,7 @@ workflow:
     human_merge_approval_required: true
   releases:
     branch_only_when_requested: true
-    tag_pattern: "release/v{version}"
+    tag_pattern: release/v{version}
     annotated_tag_for_new_releases: true
     human_release_approval_required: true
   deployments:

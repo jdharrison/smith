@@ -1,0 +1,193 @@
+{
+  "aggregate_tests_passed": 1262,
+  "attempt": 2,
+  "build": "PASS; service/client/full paired installer",
+  "components": {
+    "client": {
+      "analyzer": "PASS; No issues found",
+      "compiled_fixture_inputs": [
+        "SMITH_TEST_SERVICE",
+        "SMITH_TEST_CLOUD_SERVICE"
+      ],
+      "format": "81 files, 0 changed",
+      "passed": 668,
+      "skipped": 0,
+      "status": "PASS"
+    },
+    "installer": {
+      "clippy": "PASS; --all-targets --locked -- -D warnings",
+      "failed": 0,
+      "format": "PASS",
+      "ignored": 2,
+      "passed": 281,
+      "status": "PASS",
+      "summaries": [
+        {
+          "failed": 0,
+          "ignored": 2,
+          "passed": 105
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 0
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 36
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 8
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 15
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 20
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 4
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 11
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 2
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 20
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 35
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 25
+        }
+      ]
+    },
+    "installer_gui": {
+      "clippy": "PASS; gui feature; warnings denied",
+      "failed": 0,
+      "format": "PASS",
+      "ignored": 0,
+      "passed": 9,
+      "status": "PASS",
+      "summaries": [
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 9
+        }
+      ]
+    },
+    "service": {
+      "clippy": "PASS; --all-targets --locked -- -D warnings",
+      "failed": 0,
+      "format": "PASS",
+      "ignored": 3,
+      "passed": 263,
+      "status": "PASS",
+      "summaries": [
+        {
+          "failed": 0,
+          "ignored": 2,
+          "passed": 106
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 1
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 35
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 34
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 12
+        },
+        {
+          "failed": 0,
+          "ignored": 1,
+          "passed": 23
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 11
+        },
+        {
+          "failed": 0,
+          "ignored": 0,
+          "passed": 41
+        }
+      ]
+    }
+  },
+  "controlled_rust_fixture_ignores": [
+    "test cloud::http::tests::proxy_environment_child ... ignored, isolated proxy-environment subprocess fixture",
+    "test manager::tests::captured_helper_fixture ... ignored, fixture invoked only by captured-helper subprocess tests",
+    "test launch::tests::launch_parent_fixture ... ignored, finite subprocess fixture, invoked only with private test roots",
+    "test model::tests::progress_output_probe_child ... ignored, controlled signal-probe child only",
+    "test dart_cloud::dart_cloud_fixture ... ignored, launched explicitly by the Dart schema3 fixture gate"
+  ],
+  "dagger_cache_note": "Existing named engine and dependency/build cache reused; not a clean-cache/hermetic build.",
+  "helpers_actual_package": {
+    "actual_package_roundtrip": true,
+    "passed": 34,
+    "provenance_limit": "helper uses synthetic source identity; not clean-source release provenance",
+    "roundtrip_archive_sha256": "6dc1d066e17e5ede16c84496bd8ddcbcd398d6c44ce97dd09dc4662ef5627daf",
+    "skipped": 0,
+    "status": "PASS"
+  },
+  "helpers_before": {
+    "passed": 33,
+    "reason": "actual package unavailable before build",
+    "skipped": 1
+  },
+  "isolated_gtk": "PASS; Xvfb only",
+  "native_no_python_runtime": "PASS; Ubuntu non-root release CLI help/version/artifacts-only dry-run, absent Python, unavailable PATH",
+  "native_package_suite": {
+    "fixture": "compiled CLI/UI ELFs supplied by SMITH_TEST_INSTALLER and SMITH_TEST_INSTALLER_UI",
+    "passed": 41,
+    "skipped": 0,
+    "status": "PASS"
+  },
+  "schema": 2,
+  "status": "PASS",
+  "test_summary_evidence": {
+    "log": "target/root-promotion/validation-v2/validation-aggregate.log",
+    "rust_output_trace_nodes": {
+      "gui": "73",
+      "installer": "62",
+      "service": "22"
+    },
+    "sha256": "1ef5542cf6732e8c608603618d506f48cb1a755e723660d4bbc88a19a15240d1"
+  }
+}

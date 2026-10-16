@@ -1,7 +1,0 @@
-*
-!Dockerfile
-!requirements.txt
-!api.py
-!engines.py
-!serve.py
-!healthcheck.py

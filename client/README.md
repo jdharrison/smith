@@ -1,166 +1,113 @@
-# Halo text-chat client
+# Smith text client
 
-Halo is Smith’s separate Flutter desktop application for Ubuntu 24.04 LTS
-x86_64. **Implemented in source, not an approved release:** Flutter is Smith's
-primary desktop interface, opening **Boot / Setup** before **Home / Chat**, with
-ordinary secondary read-only **Settings**, using `127.0.0.1:4783`. CLI is secondary
-query/status/configuration with existing commands retained. Future headless
-operation is a separate deferred deployment/lifecycle capability, not CLI.
-The Halo candidate bundles the backend alongside the complete Flutter payload.
-The client can explicitly start/stop only its captured chat backend child and run
-separate read-only setup inspection or an explicitly approved model pull. It does
-not install/start Ollama, use sudo/legacy install helpers or integrate services.
+## Current bundled native runner
 
-## Required backend contract
+**Implemented source:** [native-runner plan](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-NATIVE-RUNNER.md) supersedes external Ollama setup/provider descriptions from earlier stages below for the promoted product. Smith bundles separate CPU and Vulkan llama.cpp runtimes in the paired client release; no external Ollama is required. Weights remain separate. List choices with `smith-installer --models`; use `--model EXACT --download-model` (`--pull-model` alias) with separate exact-name download, preference and optional inference consent. The focused visual installer supplies model provisioning/service-backed checks/removal; Qwen3-14B is fresh-only preselection, preserving existing saved selection. Neither installer is persistently installed: retain the full package.
 
-After separately approved installation/runtime effects, launch the installed
-Halo executable. The guided wizard follows **Detect backend → Local runtime →
-Select/install model → Review & Start**. It automatically validates only
-`smith_backend/smith` under the **actual Halo executable directory** (installed
-`ROOT/halo/smith_backend/smith`), not cwd, PATH or a recursive scan. Invalid discovery
-never silently chooses another executable. **Advanced · explicit backend path**
-allows a reviewed normalized absolute native Linux x86_64 executable. Ownership,
-mode/type/ELF and schema checks are safety/behavioral checks, not artifact authentication.
+Runtime/model verification, private Unix IPC, one runner lease, bounded context and service-owned cancellation/cleanup are described in canonical Architecture. Production loads the held verified model FD; app-owner teardown cancels/joins native inference, while desktop close only detaches. No implicit upgrades, retries, cloud fallback, tools, bundled weights or real-inference/real-GPU/clean-host/release guarantee. The service currently attempts fixed full offload on `Vulkan0`; classified startup failure may fall back once to independent CPU after confirmed cleanup. No driver discovery/provisioning or acceleration claim. Unused installer Ollama code remains legacy library/test coverage, not a production fallback. See [validation history](../VALIDATION.md) for observed checks.
 
-Opening can run `smith setup inspect`, a read-only schema-v1 JSON inventory of
-eligible exact local tags from Ollama at `127.0.0.1:11434`. Inventory `ready` is not
-verified inference. Select an observed installed `name:tag`, review, then explicitly
-**Start packaged backend** when absence is confirmed. Missing Ollama gets guided
-instructions to provision/run it separately and **Retry inspection**: empty-host
-setup is partial, not turnkey host installation/start.
+**Implemented source — T1:** [LOCAL-SMITH-NEXT-TEXT-RESET](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-TEXT-RESET.md) replaces the active wizard/voice interface with one conversation-first dark desktop screen. [LOCAL-SMITH-NEXT-LOGIN-BOOT](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-LOGIN-BOOT.md) now gates that existing screen behind a minimal observation-only Boot surface while the login-started service becomes ready and authoritative conversation state synchronizes. There are no Core Home, setup stages, install/register/finish, microphone, playback or voice controls. The retired voice source is available through [Git-backed history](../docs/HISTORY.md), not an active source tree or runtime dependency. Commit-pinned plan citations below describe historical implementation stages; current policy lives in `../docs/`.
 
-**Review model download** runs separate `smith setup pull --model <exact-name:tag>`.
-The confirmation names the exact tag and fixed endpoint; stdin approval must match
-that tag and operation within 60 seconds. NDJSON reports sanitized stages and known
-per-layer byte counts. Pull observation has a 15-minute overall and 30-second idle
-deadline; no automatic retries. Success requires provider success plus fresh exact
-tag verification. Ollama may use internet and external persistent disk; transfer
-and storage sizes are unknown until reported. Cancel stops local request/observation
-and cleans its captured setup child, not necessarily daemon work or partial cache.
-There is no cache deletion/rollback or cloud fallback.
+## Connection and model readiness
 
-Editing/selection is disabled during setup work, active chat, backend readiness or
-owned-child lifecycle. Download additionally requires observed backend absence and
-rechecks permission before writing approval; backend-state/active-chat conflicts
-cancel the local pull. Start requires an observed installed selection and backend
-Start eligibility. Read-only detection/inspection may still run with an active
-backend; this is not a global provider lock. Cleanup unknown blocks another setup
-child. See [setup boundary](../docs/ARCHITECTURE.md#desktop-setup-command-boundary).
-A fully validated sequence-zero terminal `error` is accepted as a preflight failure
-without consent/approval; terminal success/cancelled first remain rejected. The UI
-preserves validated failure code/message with control/bidi stripping and slash-prefixed
-path-like redaction, plus no-auto-retry/unknown-cache guidance. Automatic detection
-and advanced-path resolution use the inspection timeout (10 seconds by default).
-Real version compatibility remains pending.
+Launch performs finite serialized read-only Core observations for up to 15 monotonic seconds. Chat attachment requires `ok=true`, installed binary/unit, running service and verified ready bridge; conversation synchronization completes before the chat widgets mount. Strict control schema 2 also requires independent `enablement_state` (`missing`, `disabled`, `enabled`, `conflict`, or `unknown`). The `setup_complete` field remains strictly decoded for compatibility but **neither grants nor denies chat readiness**. Conflict, malformed, failed or unavailable identity facts block app attachment. Native managed executable/unit/MainPID/peer/inode verification remains in the helper.
 
-Alternatively, a separately managed `smith serve --chat-only --model
-<exact-installed-tag>` can be attached to when strictly ready. The observed exact
-model is displayed; an explicitly configured model is never substituted. Attachment
-does not send/reset a conversation, take ownership, or stop the external backend.
+A verified connection reads authoritative app state/history and queries any outstanding request before new inventory work. One bounded asynchronous installed-model inventory observation runs per attachment or explicit Retry; no inference probe or automatic retry occurs. Inventory is not inference verification. Sending requires a selected model present in that observation and a ready bundled-runtime observation. If unselected or missing, Send stays disabled with concise guidance to configure a model through the separate installer, then Retry. The app never selects a default or saves model configuration. No default/invented model, download, provider install/start or model provisioning is available in the app.
 
-The client requires `/v1/health` to identify `smith-bridge`, report
-`profile: "chat-only"`, and not report echo mode. Missing/legacy profiles and
-unrelated listeners cannot receive messages from this client. Readiness also requires provider `ollama`, a nonempty exact model and affirmative
-`provider_available` and `model_available`; unknown/mismatch blocks Send.
-A connected bridge is not proof that inference works.
+Boot is a full-screen rounded vector loop with one traveling segment and one short live status; reduced motion shows a static mark. Missing, disabled, conflict and unknown lifecycle facts get concise external repair guidance. Only an exact installed, registered, enabled, safely stopped service with an unavailable bridge can expose **Start Smith** after bounded observation. That button uses one `prepare('start')` token, an exact visible confirmation and one `apply('start', token)`, followed by fresh observation. The client recognizes `enable` as a schema action but never invokes it. No lifecycle action is automatic.
 
-Navigation, Check readiness and four-second readiness pulses perform health reads
-only. Opening additionally discovers/validates the paired executable and runs
-read-only setup inventory; none starts a chat backend or downloads. Only explicit Send (or Ctrl+Enter) posts
-to `/v1/chat-only`; there is no legacy endpoint fallback. Lifecycle configuration
-is limited to Boot/Setup; ordinary Settings remains observational. No task/service/
-speech reads, sidecar startup or file-opening capability is added to chat. Model
-pull is isolated in the separate setup subprocess; the chat bridge has no
-provisioning tools/routes.
+After Boot reaches ready, the workspace starts one idempotent read-only connection timer. It observes app `state` 30 seconds later and rearms 30 seconds after each completed observation, including in Settings and through outages. Necessary `conversation_get`/existing-request `poll` calls reconcile validated snapshots; automatic checks never create inventory/model work, reset finite request budgets, invoke Core lifecycle/configuration or resend. Full reconciliations serialize with manual and operation observations. A changed service instance invalidates prior model facts; manual Retry remains necessary if current-instance inventory is unavailable. Closing disposes the timer and existing API-owned helper cleanup, not the service.
 
-Explicit Start launches without a shell using `serve --chat-only --port 4783
---model <exact-installed-tag> --desktop-session <32-lowercase-hex-id>`, with a
-15-second startup budget. Desktop mode refuses occupied-port adoption. Owned
-readiness requires matching health `desktop_session` and captured-child liveness,
-not a healthy port alone; this is correlation, not same-UID authentication.
-Stop/normal close closes stdin and sends TERM, waits up to five seconds, then
-KILL and up to two seconds for confirmed exit. Unknown cleanup blocks another
-start and cancels normal exit. Parent-pipe EOF initiates backend shutdown as a
-backup, not crash-proof instantaneous termination or provider-work cancellation.
-No HTTP shutdown or port/PID-based killing is used; external backends are untouched.
-Readiness loss/recovery preserves the mounted Home, draft and transcript, with
-no automatic resend or hidden conversation reset.
-The chat-only backend is the capability boundary; hiding controls in the client
-alone does not restrict legacy Smith orchestration.
+After chat mounts, repair stays compact: factual status text and observation-only **Retry**. Workspace Retry uses the same serialized app-state synchronization as the heartbeat, followed by explicitly permitted manual inventory observation; it does not repeat Core inspection or mark a healthy connection unavailable while checking. Post-Boot status means last verified app service transport/state, not an ongoing guarantee of enabled-at-login configuration. Core observation and lifecycle confirmation remain Boot/pre-ready responsibilities; legacy controller paths are unchanged. Retry never submits/resends drafts or service work. Saved history and draft remain visible during outage, explicitly labeled stale/unavailable. Typing remains possible while disconnected; Send is disabled until readiness is observed.
 
-## Conversation behavior
+## Sequential follow-ups
 
-- Home has an expanded text composer; sending opens Chat immediately.
-- Home/Chat share the unsent draft and active conversation across navigation.
-- Enter inserts a newline; Ctrl+Enter or Send submits a nonempty message.
-- Disconnection/model unavailability leaves editing available but disables Send.
-- Waiting means a single request is pending, not token streaming or tool work.
-  Responses appear as received text, without a simulated typewriter effect.
-- Failures are distinct from assistant replies. The attempted text remains in
-  the transcript and can be copied into the composer with **Edit failed message**.
-  Replacing a different unsent draft requires confirmation. Nothing is retried
-  automatically. A timed-out request may have been processed by the backend;
-  deliberately resending may duplicate a turn.
-- **New chat** confirms before clearing the visible transcript. It preserves
-  the draft and sends no reset request immediately. The next explicit send
-  requests a reset of the shared default backend conversation. A failed reset
-  request stays pending until a successful explicit send; retry may reset again.
-- The client stores drafts/transcripts in memory only. Closing/reopening loses
-  them; there is no saved history, session list, or restore operation. The first
-  explicit send from a newly opened client requests a fresh backend conversation.
-- The backend has one shared default conversation with bounded in-memory context.
-  Another client can affect that context, and backend restart clears it.
-  Reconnection does not restore history or prove context survived. The visible
-  transcript is not a guarantee that every earlier turn remains in model context.
+The client now keeps a bounded, session-only **Up next** queue per conversation, shared across panes. While busy, **Queue** adds a later turn without steering the current response. Success plus synchronized history releases the next message; a failed head blocks until explicit safe Retry or Skip. Unknown/running requests remain observation-only. Waiting locally does not consume an execution timeout. Normal Close/Quit warns before discarding unsent messages/drafts, without stopping accepted service work. See the canonical [operator contract](../docs/DESIGN.md#client-side-queued-follow-ups), [architecture](../docs/ARCHITECTURE.md#client-side-sequential-message-queue) and [implementation/evidence plan](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-MESSAGE-QUEUE.md). The cloud-routing hooks below bind queued routes and gate first transfers; local queue tests alone do not establish cloud safety or readiness.
 
-Settings shows connection/profile/provider/model observations and these memory
-limitations. It contains no service controls. Status is expressed in text, not
-color alone; controls are keyboard operable and the Halo respects reduced motion.
+## Per-chat local/cloud routing
 
-## Deferred capabilities
+**Implemented client source, not live-provider validation:** production `NativeAppApi` uses strict app schema 3 without version fallback. Unchanged local DTOs delegate to the preserved v2 validators. `cloud_routing.dart` owns reviewed route/catalog/preparation/provenance DTOs; `workspace_cloud.dart` adds serialized cached reads, explicit local provider probes and frozen Send preparation; `ui/cloud_selector.dart` presents the composer selector and transfer confirmation. See the [frozen protocol](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-CLOUD-PROVIDERS.md) and [verified catalog contract](../docs/plans/LOCAL-SMITH-NEXT-CLOUD-API-CONTRACT.md).
 
-Work, pipelines, agents, integrations, voice, automatic speech, uploads,
-attachments, durable history, and streaming are not part of this slice.
-Existing Work/voice widgets and bridge methods remain dormant for later scoped
-integration; the release entry point does not construct their controllers or
-mount their surfaces. The app uses Flutter’s local default font, not runtime
-Google Fonts fetching. Existing dependency declarations are retained unchanged.
+Each chat has a process-local LOCAL/CLOUD selection. New chats start at the installer's saved local default; reattached chats use their last accepted route as a hint. An unavailable previous model/generation remains selected and history remains readable until an operator chooses a replacement. Selection changes do not configure the service or change accepted requests. Historical provenance and request delivery uncertainty are read separately. Provider keys and paid validation remain installer-only; the client has no credential input or vendor HTTP implementation.
 
-This is source-inspected local candidate work, not a verified offline release.
-Actual provider pull/cancel integration, version compatibility, real local model
-inference without external networking, clean-host installation, final source-bound
-checks/review and publication/license/SBOM gates remain pending. See the
-[approved wizard plan](../docs/plans/LOCAL-SMITH-DESKTOP-WIZARD-P0.md),
-[boot plan](../docs/plans/LOCAL-SMITH-FLUTTER-BOOT-P0.md),
-[offline-chat plan](../docs/plans/LOCAL-SMITH-OFFLINE-CHAT-SLICE-P0.md) and
-[canonical design](../docs/DESIGN.md).
+Every cloud send prepares its exact request/text/route/configuration/history/instance binding. First transfer to a provider/credential generation requires the displayed context/processing/retention/billing confirmation; decline preserves draft/history. Same approved destination model changes do not add a dialog, but still prepare afresh. Editing text or route during confirmation invalidates the pending send. Recovery queries original identities, never substitutes a token or resends unknown work. Explicit Retry can probe configured local keyring items; Boot and automatic reads never probe keyring or call vendor APIs.
 
-**Agent-reported evidence, not rerun here:** 127 Rust tests and the full 136 Flutter
-tests passed; the client also reported analyzer/Linux build PASS. Fresh static
-assurance was reported source-limited PASS with no blockers; the low-severity client
-fixes above still need focused review. These reports are not final integrated checks
-or release approval.
+Queue entries capture their route at enqueue. A dropdown change pauses queued work; explicit Resume rebinds unsent entries to the visibly selected route. Automatic dispatch cannot approve a new cloud destination: it pauses for **Review queued cloud send**, with the same frozen confirmation. No queue, close hold, per-chat admission or unknown-outcome barrier is removed. Fake regression coverage is in `test/cloud_routing_test.dart`, `cloud_protocol_test.dart`, `cloud_retry_test.dart` and `cloud_selector_widget_test.dart`; combined service/installer fixtures and independent review remain coordinator-owned integration gates.
 
-## Offline developer validation
+**Review remediation implemented (2026-10-15):** a provider probe releases its local global-operation reservation only for allowlisted proven pre-admission rejection (including BUSY and STALE_REVISION). Storage/transport/identity uncertainty and any failure after admission retain the exact original ID for polling; no automatic probe replay. Regression tests cover rejected probe → local send → successful explicit probe, ambiguous STATE_UNAVAILABLE/transport, and lost acknowledgement recovery. Queue tests additionally cover explicit Resume rebinding an undispatched local intent to an already-approved cloud destination while preserving the accepted request and newer composer text.
 
-With Flutter/Linux toolchain and dependencies already cached, run from `client/`:
+**Compiled schema-3 evidence:** `test/rust_cloud_integration_test.dart` sends actual production `NativeAppApi` frames to the Rust `Application` through a private Unix socket. The test-only harness in `../service/tests/debug_service.rs` injects fake local inference, credential storage, HTTP and clock dependencies; it is not a production flag or service lifecycle adapter. It exercises routed local admission, first-cloud consent, mixed-route history in one chat, stale/expired rejection, pending reattach/poll/provenance, explicit queued rebind, failed queued cloud Retry with a fresh identity, retained newer draft, and lost-acknowledgement observation without replay. `test-client` supplies the compiled harness via `SMITH_TEST_CLOUD_SERVICE`; when the existing `SMITH_TEST_SERVICE` integration gate is enabled, a missing cloud fixture is a failure, not a skip.
 
-```sh
-flutter pub get --offline --enforce-lockfile
-flutter analyze --no-pub
-flutter test --no-pub
-flutter build linux --release --no-pub
+**Observed current self-check:** bounded `make client/test` passed **423 tests with no skips**, including the original four Rust fixtures and the new schema-3 fixture, formatting and analyzer gates. Full captured output is at ignored `build/cloud-review-client-test.log`. `cargo clippy --locked --test debug_service -- -D warnings` passed; `cargo test --locked --test debug_service` passed 22 ordinary tests with the one Dart-launched harness intentionally ignored by that standalone command (it ran successfully in `client/test`). Scoped formatting/whitespace checks passed. Earlier attempts were blocked first by incomplete service source and later a concurrent manifest/lock mismatch; the final locked Dagger gate supersedes those failed snapshots. No installed service, real keyring, credentials or vendor calls were exercised. Final combined validation and independent re-review remain coordinator-owned.
+
+## Terminal-inspired UI
+
+**Implemented presentation:** the native Flutter shell uses flat dark teal/cyan styling, thin bordered panels, a Chat/Settings rail, selectable left-SMITH/right-YOU bubbles and an anchored multiline composer. Wide windows retain a bounded reading lane; narrow windows expose history through the Chat rail drawer. Settings is read-only Connection & About and preserves the mounted conversation/draft. Header connectivity means **last observed**, not continuous monitoring or verified model inference. Version comes from Flutter build metadata, falling back to the bundled `pubspec.yaml` declaration (currently `v0.1.0+1`). Keep that declaration as an unquoted numeric semantic version with optional prerelease/build number. Generated metadata takes precedence, including build overrides; if neither source is valid, the UI says `Version unavailable`.
+
+JetBrains Mono is bundled by default; `SmithApp(fontFamily: SmithTheme.alternativeFontFamily)` or `--dart-define=SMITH_FONT_FAMILY="IBM Plex Mono"` selects the bundled alternative without persisted preferences or runtime downloads. Font notices and pinned provenance are in [assets/README.md](assets/README.md). Supplied-icon redistribution rights still require resolution before publication.
+
+**Implemented client source under [multi-chat](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-MULTI-CHAT.md):** the existing workspace now consumes authoritative v2 conversations. New reuses one unsaved process-local view; only accepted `submit_new` creates a service conversation. Rename/Archive/Delete and archived Reactivate/Rename/Delete use captured IDs/revisions. Delete is logical current-store deletion, not secure erasure. Target outstanding/uncertain work blocks archive/delete, not unrelated chats or rename with fresh metadata. Selected archive/delete returns to the preserved unsaved view; restore does not switch selection. Drafts and per-chat reading positions are process-local, never written to disk. Enter sends, Shift+Enter inserts a newline; key repeat and IME composition are guarded. Short layouts keep recovery reachable through scrollable details, and long drafts scroll within the composer.
+
+See the [labelled screenshot matrix](test/goldens/ui-redesign/README.md), [redesign plan](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-UI-REDESIGN.md), and [validation history](../VALIDATION.md). Historical screenshots remain visual references, not current backend evidence. The original single-conversation shell capture is retained unchanged through an explicitly historical presentation fixture; production v2 capability/interaction coverage is in `multi_chat_widget_test.dart`. Installed desktop QA remains separate.
+
+## Minimal chat and external setup
+
+**Implemented source:** [minimal-chat plan](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-MINIMAL-CHAT.md) removes the installer instructions dialog/button and model chooser. After Boot, the redesigned chat retains independently scrollable, selectable history and an anchored multiline composer. No setup, install, voice, speech, model-save or terminal-launch action is exposed. Use the separate native installer package for provisioning and model preferences; return to chat and Retry to synchronize external changes. Connection verification and send gates remain mandatory. Exceptional expired-request confirmation remains a local recovery action, not provisioning.
+
+## Source layout
+
+```text
+lib/main.dart           Boot-gated shell and existing conversation screen
+lib/boot.dart           Typed Boot coordinator, bounded observation and vector surface
+lib/text_chat.dart      Legacy controller/presentation test seam; not production transport
+lib/workspace_controller.dart Global observation owner and isolated conversation controllers
+lib/app_v2.dart         Strict v2 result/argument validators
+lib/chat_panel.dart     Fixed editable composer and scrollable selectable history
+lib/ui/                Theme, local icons, build metadata and capability-gated presentation
+assets/                Bundled fonts, SVGs, font notices and provenance
+lib/control_api.dart    Strict schema-2 Core contract and known lifecycle actions
+lib/native_control.dart Canonical helper discovery and dedicated bounded inspect cleanup
+lib/app_api.dart        Schema-3 production app API, bounded FIFO arbiter and 4 MiB stdin executor
+linux/                  Flutter Linux runner and embedded icon
+scripts/                Native tests and paired client build
+test/                   Fake API/process, protocol, text, layout and Rust fixture tests
 ```
 
-Do not bypass missing tools/cache with downloads under the local validation
-scope. These checks do not launch the app, models, or services. Desktop keyboard,
-accessibility, actual contextual inference, and recipient installation checks
-remain separate manual gates.
+The Core prepare/apply management API is retained as a native contract. The application invokes only explicit `start`, and only through the bounded Boot eligibility and confirmation flow; install, register, enable and setup completion remain external. Active audio source/tests remain excluded after extraction of generic text safety tests.
 
-The Linux bundle is emitted under `build/linux/x64/release/bundle/` with the
-`smith_halo` executable and `dev.smith.Halo.desktop` metadata. It includes the
-client and Flutter/plugin runtime. `scripts/package-chat.sh` adds the release
-backend at `smith_backend/smith` beside full `lib/` and `data/`; install the whole
-paired Halo candidate. The standalone backend candidate remains secondary. The supplied icon's original asset is not
-available in the workspace; integration is pending and metadata does not claim one. The client is independently packaged, not part of
-the supervisor installer or systemd user-unit lifecycle.
+## Text and durability boundary
+
+`NativeAppApi` admits `state`, `models`, `configure`, `submit`, `submit_new`, `poll`, `conversation_get`, `conversation_rename`, `conversation_archive`, `conversation_restore`, and `conversation_delete`. Installer-only model mutation operations remain excluded. Configure rejects non-null voice; submit requires `output:"chat"`. Production app requests use strictly correlated schema-3 envelopes, delegating unchanged local DTO validation to v2, with no version fallback and 32-lowercase-hex correlation IDs over stdin with helper argv exactly `['app']`; prompts never enter argv. Payloads are bounded to 4 MiB excluding newline. Core frames/caps remain unchanged.
+
+Configuration revisions alone preserve the full migrated unsigned-64-bit range: v2 uses a JSON integer through `9007199254740991`, then a canonical unsigned decimal string through `18446744073709551615`. The client validates strings with `BigInt` and preserves/echoes the original value without floating-point conversion or clamping. Metadata/history/global-state revisions and sequences remain safe integers. V1 installer replies remain numeric; this is not desktop v1 fallback.
+
+Retained legacy submit results may include a bounded `speech_error`; succeeded legacy `speak` records may carry only `AUDIO_EXPIRED`. These are inert readable results, never voice execution or playable audio. Histories must be complete alternating user/assistant pairs within per-message and total byte limits; valid legacy empty messages remain readable. Current-instance inventory requires coherent ready/error observations and cannot advertise readiness before observation.
+
+One workspace owns/disposes the shared API. Its bounded FIFO arbiter serializes individual short helper exchanges, not whole generation lifetimes or poll sleeps. Central coalesced polling observes up to four chat jobs, with a ten-minute queue allowance plus 210-second execution observation budget; expiry is query-only uncertainty, not cancellation. Request IDs survive unknown/malformed acknowledgements and are queried without replay. Boot waits for index, selected detail and known-operation observations, not generation completion. Current-instance inventory can be adopted while another chat runs; missing inventory is refreshed by Boot or explicit Retry only when idle, without inference; the post-Boot heartbeat never initiates inventory work. Instance changes synchronize and query retained work against the new instance; they do not erase pending identity or authorize resend. Reopening reads the index, selected detail and accepted operations, without invoking retired operations or recreating audio. An explicit Send synchronously reserves one queued send per conversation and captures immutable text, draft revision, service/conversation identity, and config/history revisions. Dispatch revalidates current authority against that capture; it never rebinds to newer revisions or text. Changed authority leaves a local Not sent receipt rather than submitting. Edits made during submission are preserved by draft revision tracking. History is replaced only by authoritative `conversation_get` reads; polling never appends synthetic turns. Verified terminal answers are retained separately by request ID until a later state read succeeds, even when reattached work has no locally captured user text. If the follow-up state read fails, the answer remains selectable as **Verified answer · awaiting history sync**, without inventing a missing user message. When the same answer text is already visible in saved history, the provisional status references that text rather than rendering it twice; text equality does not establish request identity. Successful synchronization clears the provisional view and shows only the authoritative bounded history.
+
+Once admission has been acknowledged, a failed first or later poll—including `STATE_UNAVAILABLE`—cannot discard its pending identity or permit resubmission. Reattachment observes the latest relevant retained failure/interruption for each conversation even when detail reads succeed; older outcomes do not replace newer work. This relies on the service's retained operation list remaining in admission order, not timestamps or request-ID ordering. Lifecycle receipts resolve the original request, but cannot roll back greater metadata/history revisions or recreate a target absent from a newer index.
+
+`REQUEST_EXPIRED` retains pending identity until a confirmed **Forget request** action explains unknown outcome and duplicate risk. Forgetting changes only local metadata, preserves draft/history and neither resends nor cancels service work. Other unknown requests cannot be forgotten through this control. Service storage remains bounded to 16 turn pairs/64 KiB context with bounded jobs/tombstones; it is not unlimited archival history. Closing the UI disposes short-lived helpers and polling, not the independently managed service or already-authorized work.
+
+## Native helper safety
+
+The helper is `<actual desktop executable directory>/smith_backend/smith-service`, or an explicit absolute compile-time `SMITH_SERVICE_EXECUTABLE` developer override. Relative overrides fail closed; no PATH/cwd search or shell fallback exists. Before execution, the adapter rejects non-Linux, noncanonical/symlink/nonregular paths, group/world-writable executable paths or ancestors, nonexecutable files and non-x86_64 ELF headers. These are local safety checks, not hostile-same-UID authentication.
+
+Mutation helpers retain the 45-second budget, combined Core stdout/stderr cap of 16 KiB and separate app output cap. Boot inspection uses a dedicated two-second helper path with one-second TERM grace and one-second KILL confirmation; the coordinator reserves that cleanup bound inside its 15-second monotonic total. Every observation remains serialized and awaits captured cleanup before another begins. Unconfirmed cleanup retains ownership and blocks reuse. Late launch results are cleaned. No daemon is adopted or stopped by desktop disposal. Existing canonical-path, malformed-contract, operation-bound and native cleanup regression tests are retained.
+
+## Validation and builds
+
+From `client/`:
+
+```sh
+flutter pub get --enforce-lockfile
+# Explicit already-compiled candidate; tests use only private temporary fixtures.
+SMITH_TEST_SERVICE=/absolute/path/to/smith-service sh scripts/test.sh
+sh scripts/build.sh ../service/target/release/smith-service /absolute/path/to/verified/runtime
+```
+
+`test.sh` checks format, analyzes and runs tests. The Rust socket fixture skips explicitly only if `SMITH_TEST_SERVICE` is absent; a supplied invalid path fails. It copies the candidate into a private owner-controlled fixture, verifies 0755/one-link metadata, and starts captured foreground `serve` children with explicit private data/config/runtime roots. It uses bounded direct Unix-socket reads, checks initial flag=false chat eligibility and existing explicit flag-completion/detach/restart compatibility, and confirms child exit before deleting temporary roots. It also seeds private valid v1 stores to verify inert speech results, restart interruption, empty legacy messages, exact numeric v1 revisions and canonical v2 high/u64-max revisions. Revision-echo requests use a null model and must return `MODEL_UNAVAILABLE` before admission or inference. It does not call a real manager or provider.
+
+`make client/build` from the repository root is parent-owned paired Dagger build wiring. `scripts/build.sh` builds the Linux release and safely copies the regular compatible helper into `smith_backend/`. Outputs are under `build/` and explicit exports under `dist/`. The GTK icon is embedded from `linux/runner/resources/smith.png`; builder tooling includes `glib-compile-resources`, not a recipient dependency. Bundle desktop/icon assets are not registered merely by building.
+
+All unit/widget tests use fake app/Core APIs and fake helper processes. No live GUI, manager, provider inventory, inference, audio, model download or installed-service mutation is part of client validation. Parent canonical policy/build documentation and fresh independent assurance remain separate work. Live install/chat/close/reopen and candidate deployment require separate approval; passing source tests/builds does not establish clean-host or real-inference readiness.

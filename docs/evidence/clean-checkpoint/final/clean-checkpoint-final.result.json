@@ -1,8 +1,0 @@
-{
-  "command": "DAGGER_NO_NAG=1 DAGGER_CLOUD_TOKEN= DAGGER_PROGRESS=plain make client/test client/build",
-  "utc_start": "2026-10-15T18:52:23.187852+00:00",
-  "timeout_seconds": 600,
-  "exit_code": 0,
-  "elapsed_seconds": 98.256,
-  "utc_end": "2026-10-15T18:54:01.443650+00:00"
-}

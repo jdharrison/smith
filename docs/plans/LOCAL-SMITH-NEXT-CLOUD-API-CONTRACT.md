@@ -1,12 +1,14 @@
 # LOCAL-SMITH-NEXT-CLOUD-API-CONTRACT
 
-- Freeze the optional OpenAI/Anthropic text adapter subset for [TASK-001](LOCAL-SMITH-NEXT-CLOUD-PROVIDERS.md#external-api-contract-freeze-and-network-policy); do not implement another provider framework.
+- Freeze the optional OpenAI/Anthropic text adapter subset for [TASK-001](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-CLOUD-PROVIDERS.md#external-api-contract-freeze-and-network-policy); do not implement another provider framework.
 - Preserve explicit destination consent, service-owned final-text history, immutable accepted routes, one worker and no replay/fallback.
 - This document alone is owned by this bounded task. No source, other documentation, credentials, keyring, installed state or live inference is changed or accessed.
 
 ## Status and evidence
 
-**Target contract, originally frozen 2026-10-15 and expanded by the approved [static-catalog follow-up](LOCAL-SMITH-NEXT-CLOUD-CATALOG-EXPANSION.md); not an account-availability guarantee.** The parent work record binds local-source approval and records prior architecture reconciliation. This document supplies its API prerequisite, not independent assurance or authorization for external effects. Canonical policy and parent integration updates remain main-agent owned. Follow [AGENTS](../../AGENTS.md) and [Process](../PROCESS.md#approval-boundaries).
+**Target contract, originally frozen 2026-10-15 and expanded by the approved [static-catalog follow-up](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-CLOUD-CATALOG-EXPANSION.md); not an account-availability guarantee.** The parent work record binds local-source approval and records prior architecture reconciliation. This document supplies its API prerequisite, not independent assurance or authorization for external effects. Canonical policy and parent integration updates remain main-agent owned. Follow [AGENTS](../../AGENTS.md) and [Process](../PROCESS.md#approval-boundaries).
+
+Root-promotion navigation update: parent/follow-up records are historical and linked to their immutable checkpoint; request/catalog semantics and dated research below are unchanged. The current operational boundary is in canonical Scope/Architecture.
 
 Public documentation research only. No authenticated request, account availability check, paid request or live API validation occurred. Published model support is not evidence that this operator's account can use it, that billing is configured, or that a request will finish within Smith's deadline.
 
@@ -28,7 +30,7 @@ The original ledger observations below are dated **2026-10-15**. Additional mode
 
 ## Detected Stack
 
-Parent plan's base-source assessment identifies Rust 2021 service (`serde`/`serde_json`, declared Rust 1.83 minimum), Flutter/Dart clients and native Rust installer. Use the remediated single-connection Hyper/Rustls/Tokio transport and injectable transport/keyring seams. The initial Reqwest direction was superseded to enforce the raw-header limit during reading, not after parsing; this document does not claim a fresh source/build audit. Production HTTP belongs in the service, never Flutter or installer. See [concrete seams](LOCAL-SMITH-NEXT-CLOUD-PROVIDERS.md#detected-stack-and-concrete-seams).
+Parent plan's base-source assessment identifies Rust 2021 service (`serde`/`serde_json`, declared Rust 1.83 minimum), Flutter/Dart clients and native Rust installer. Use the remediated single-connection Hyper/Rustls/Tokio transport and injectable transport/keyring seams. The initial Reqwest direction was superseded to enforce the raw-header limit during reading, not after parsing; this document does not claim a fresh source/build audit. Production HTTP belongs in the service, never Flutter or installer. See [concrete seams](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-CLOUD-PROVIDERS.md#detected-stack-and-concrete-seams).
 
 ## Frozen catalog and identity
 
@@ -52,9 +54,9 @@ Exactly fifteen static entries: seven OpenAI, then eight Anthropic, within exist
 | `anthropic` | Claude Opus 4.7 | `claude-opus-4-7` | `{claude-opus-4-7}` | 1M context / 128K synchronous output |
 | `anthropic` | Claude Sonnet 5 | `claude-sonnet-5` | `{claude-sonnet-5}` | 1M context / 128K synchronous output |
 
-Attempt eligibility is separately amended by the [saved-key contract](LOCAL-SMITH-NEXT-SAVED-KEY-ATTEMPTS.md): configured active generation plus exact supported route suffices, with no mandatory cached observation or previous successful validation. Observation/check/individual-model verification facts remain independently truthful; execution still retrieves the admitted exact credential before HTTP. Request/response shapes, identities, endpoints and budgets below are unchanged. Paired updated clients/installers are required for the new schema-3 availability semantics.
+Attempt eligibility is separately amended by the [saved-key contract](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-SAVED-KEY-ATTEMPTS.md): configured active generation plus exact supported route suffices, with no mandatory cached observation or previous successful validation. Observation/check/individual-model verification facts remain independently truthful; execution still retrieves the admitted exact credential before HTTP. Request/response shapes, identities, endpoints and budgets below are unchanged. Paired updated clients/installers are required for the new schema-3 availability semantics.
 
-Expansion evidence: architecture assessment in the [follow-up plan](LOCAL-SMITH-NEXT-CLOUD-CATALOG-EXPANSION.md) checked each exact OpenAI `/api/docs/models/<id>.md` page and the [Claude overview](https://platform.claude.com/docs/en/models/overview.md) plus corresponding individual current/legacy model pages. OpenAI's selected entries support Responses and low reasoning; all selected Claude IDs are pinned dateless snapshots. These are public-document checks, not authenticated availability tests.
+Expansion evidence: architecture assessment in the [follow-up plan](https://github.com/jdharrison/smith/blob/168865b0422b787f08ab33e89d052cd4adbd11f7/docs/plans/LOCAL-SMITH-NEXT-CLOUD-CATALOG-EXPANSION.md) checked each exact OpenAI `/api/docs/models/<id>.md` page and the [Claude overview](https://platform.claude.com/docs/en/models/overview.md) plus corresponding individual current/legacy model pages. OpenAI's selected entries support Responses and low reasoning; all selected Claude IDs are pinned dateless snapshots. These are public-document checks, not authenticated availability tests.
 
 The Astra page describes a context window, not a guarantee of 1,050,000 input tokens **plus** output. Reserve output and framing inside the context budget.
 

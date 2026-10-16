@@ -1,6 +1,0 @@
-.venv/
-.venv-tts/
-models/
-__pycache__/
-*.pyc
-.pytest_cache/
