@@ -264,26 +264,25 @@ fn verification_budget(deadline: Instant, cancelled: &dyn Fn() -> bool) -> Resul
     remaining(deadline).map(|_| ()).map_err(coded)
 }
 
+struct ParkedLease(Option<File>);
+
+impl Drop for ParkedLease {
+    fn drop(&mut self) {
+        if let Some(file) = self.0.as_ref() {
+            // SAFETY: a parked lease owns this descriptor without an active child.
+            // Explicit unlock also releases descriptions inherited before exec.
+            unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_UN) };
+        }
+    }
+}
+
 /// Keeps the hashed inode alive through child exec. This prevents pathname
 /// replacement, not writes by a hostile same-UID process to the held inode.
 pub struct VerifiedModel {
     file: File,
     path: PathBuf,
     sha256: String,
-    lease: Option<(PathBuf, Arc<Mutex<Option<File>>>)>,
-}
-impl Drop for VerifiedModel {
-    fn drop(&mut self) {
-        if let Some((_, lease)) = self.lease.as_ref() {
-            if let Ok(mut slot) = lease.lock() {
-                if let Some(file) = slot.take() {
-                    // SAFETY: the retained lease descriptor is owned by this
-                    // verified model and no runner can hold it while it is in the slot.
-                    unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_UN) };
-                }
-            }
-        }
-    }
+    lease: Option<(PathBuf, Arc<Mutex<ParkedLease>>)>,
 }
 
 /// Acquire the shared runner lease before inspecting or hashing model bytes.
@@ -300,7 +299,7 @@ pub fn verify_model_leased(
     let path = lock_path(roots);
     let lease = acquire_lock(&path).map_err(coded)?;
     let mut model = verify_model_held(&models_dir(roots), record, deadline, cancelled)?;
-    model.lease = Some((path, Arc::new(Mutex::new(Some(lease)))));
+    model.lease = Some((path, Arc::new(Mutex::new(ParkedLease(Some(lease))))));
     Ok(model)
 }
 
@@ -1315,7 +1314,7 @@ pub struct Runner {
     alias: String,
     context: u32,
     lock: Option<File>,
-    lease_return: Option<Arc<Mutex<Option<File>>>>,
+    lease_return: Option<Arc<Mutex<ParkedLease>>>,
     stderr: Arc<Mutex<Vec<u8>>>,
     evidence_stderr: Arc<Mutex<StartupEvidence>>,
     cancelled: Cancellation,
@@ -1418,6 +1417,7 @@ impl Runner {
             Some((path, lease)) if *path == config.lock => lease
                 .lock()
                 .map_err(|_| unavailable("Cannot carry runner lease"))?
+                .0
                 .take()
                 .ok_or_else(|| unavailable("Verified model lease already consumed"))?,
             Some(_) => return Err(unavailable("Verified model lease path mismatch")),
@@ -1864,7 +1864,7 @@ impl Runner {
         if let Some(lock) = self.lock.take() {
             if let Some(lease) = self.lease_return.take() {
                 match lease.lock() {
-                    Ok(mut slot) if slot.is_none() => *slot = Some(lock),
+                    Ok(mut slot) if slot.0.is_none() => slot.0 = Some(lock),
                     _ => return Err("Cannot return retained runner lease".into()),
                 }
             } else {
@@ -1883,6 +1883,10 @@ impl Drop for Runner {
         let _ = self.shutdown();
     }
 }
+
+#[cfg(test)]
+#[path = "runner_lease_tests.rs"]
+mod lease_tests;
 
 #[cfg(test)]
 mod tests {
