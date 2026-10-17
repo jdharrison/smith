@@ -202,20 +202,72 @@ fn peer_hmac(key: &[u8], data: &[u8]) -> [u8; 32] {
     digest.update(hash);
     digest.finalize().into()
 }
+fn peer_shared(public: &BigUint, prime: &BigUint, padded: bool) -> (BigUint, Vec<u8>) {
+    // Reuse consecutive powers instead of restarting exponentiation for every
+    // candidate inside the timed private-bus negotiation.
+    let mut shared = (public * public) % prime;
+    for private in 2u32..100_000 {
+        let bytes = shared.to_bytes_be();
+        if !padded || bytes.len() < 128 {
+            return (BigUint::from(private), bytes);
+        }
+        shared = (shared * public) % prime;
+    }
+    panic!("No leading-zero shared-secret fixture within the candidate bound");
+}
+#[test]
+fn incremental_peer_search_matches_modpow_reference() {
+    let prime = peer_prime();
+    for public in [
+        BigUint::from(2u8),
+        &prime - BigUint::from(2u8),
+        (&prime + BigUint::from(1u8)) >> 1usize,
+    ] {
+        for padded in [false, true] {
+            let expected = (2u32..100_000)
+                .find_map(|private| {
+                    let private = BigUint::from(private);
+                    let shared = public.modpow(&private, &prime).to_bytes_be();
+                    (!padded || shared.len() < 128).then_some((private, shared))
+                })
+                .unwrap();
+            assert_eq!(peer_shared(&public, &prime, padded), expected);
+        }
+    }
+}
+#[test]
+fn incremental_peer_search_preserves_first_padded_candidate() {
+    let prime = peer_prime();
+    let inverse_two = (&prime + BigUint::from(1u8)) >> 1usize;
+    let (private, shared) = peer_shared(&inverse_two, &prime, false);
+    assert_eq!(private, BigUint::from(2u8));
+    assert_eq!(
+        shared,
+        ((&prime + BigUint::from(1u8)) >> 2usize).to_bytes_be()
+    );
+    for private in 2u32..8 {
+        assert_eq!(
+            inverse_two
+                .modpow(&BigUint::from(private), &prime)
+                .to_bytes_be()
+                .len(),
+            128
+        );
+    }
+    let (private, shared) = peer_shared(&inverse_two, &prime, true);
+    assert_eq!(private, BigUint::from(8u8));
+    assert_eq!(shared.len(), 127);
+    assert_eq!(
+        shared,
+        ((&prime + BigUint::from(1u8)) >> 8usize).to_bytes_be()
+    );
+}
 fn negotiate_peer(state: &State, public: Vec<u8>, padded: bool) -> Vec<u8> {
     let prime = peer_prime();
     assert!(!public.is_empty() && public.len() <= 128);
     let public = BigUint::from_bytes_be(&public);
     assert!(public > BigUint::from(1u8) && public < &prime - BigUint::from(1u8));
-    // Small independent private exponents make a leading-zero shared-secret
-    // fixture inexpensive without replacing any production randomness.
-    let (private, shared) = (2u32..100_000)
-        .find_map(|n| {
-            let private = BigUint::from(n);
-            let shared = public.modpow(&private, &prime).to_bytes_be();
-            (!padded || shared.len() < 128).then_some((private, shared))
-        })
-        .unwrap();
+    let (private, shared) = peer_shared(&public, &prime, padded);
     let mut padded_shared = [0; 128];
     padded_shared[128 - shared.len()..].copy_from_slice(&shared);
     if padded {
