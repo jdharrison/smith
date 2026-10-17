@@ -1,5 +1,15 @@
 # Smith validation
 
+## Installer CLI executable-I/O fence — local CI-equivalent PASS
+
+**Implemented test-only race repair, not hosted CI acceptance.** [Run38994173360](https://github.com/jdharrison/smith/actions/runs/38994173360) exposed a different failure: two fixture spawns returned `ETXTBSY` (errno26), not the earlier30s watchdog. A fresh controlled Linux proof reproduced inherited CLOEXEC writer retention and successful execution after unrelated exec closed it; the historical hosted holder remains unknown.
+
+The [bounded repair](docs/plans/LOCAL-SMITH-CLI-EXECUTABLE-FENCE.md) shares a short executable-copy/process-spawn fence across all seven original launch sites. It releases before child lifetime, consent, waiting and fixture work. Original15 tests and all assertions/timeouts remain; two guard regressions are added. The small native payload fix stays intact. No production/workflow change, exec retry, hardlink substitution or disabled validation.
+
+Both private fence-bypass negative controls failed as expected (including errno26); fixed regressions passed. Five predefined parallel CLI runs each passed17 tests. Configured selected gates passed **283 native +nine GTK +41 actual-package =333 tests**, two native fixture ignores, no GTK/package skips; formatting/Clippy and no-Python runtime passed. A subsequent once-only local `make test installer/build` plus package verifier passed with **1,264 aggregate coverage** (263 service/283 installer/9 GTK/668 Flutter/41 package). Dagger reused the exact333-pass installer/GTK/package steps; service/Flutter supplied931 reported passes in that command. This is cache-using validation, not1,264 fresh executions. All1,230 core inputs remained stable;95 manifest-listed package files verified.
+
+[Evidence and source/artifact binding](docs/evidence/cli-executable-fence/README.md), [CI-equivalent results](docs/evidence/cli-executable-fence/ci-equivalent.json) and [independent review](docs/plans/LOCAL-SMITH-CLI-EXECUTABLE-FENCE-REVIEW.md) retain exact outcomes/limitations. No commit, push, hosted rerun, merge or installation occurred; actual PR CI remains a separate gate.
+
 ## Installer CLI fixture budget repair — local selected gates PASS
 
 **Implemented test-only repair, not hosted CI acceptance.** Under the [approved bounded plan](docs/plans/LOCAL-SMITH-CLI-FIXTURE-BUDGET.md), the actual Cargo-built installer still executes, while its three inert fixture payloads use a small genuine Ubuntu ELF (magic/≤1MiB guards). No production code, assertions, 30-second watchdog, consent/integrity check, workflow or validation gate was disabled or relaxed.

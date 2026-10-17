@@ -12,8 +12,25 @@ use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::OnceLock;
+use std::sync::{mpsc, Mutex, OnceLock};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+
+// CLOEXEC closes inherited writers at exec, not fork. Keep executable copies
+// and child creation mutually exclusive without locking whole test lifetimes.
+static EXECUTABLE_IO: Mutex<()> = Mutex::new(());
+fn executable_io<T>(action: impl FnOnce() -> T) -> T {
+    let _guard = EXECUTABLE_IO.lock().unwrap();
+    action()
+}
+fn copy_executable(destination: &Path) {
+    executable_io(|| {
+        fs::copy(env!("CARGO_BIN_EXE_smith-installer"), destination).unwrap();
+        fs::set_permissions(destination, fs::Permissions::from_mode(0o755)).unwrap();
+    });
+}
+fn spawn_fixture(command: &mut Command) -> std::io::Result<std::process::Child> {
+    executable_io(|| command.spawn())
+}
 
 fn parse(args: &[&str]) -> smith_installer::Result<Parsed> {
     cli::parse(args.iter().map(OsString::from))
@@ -117,6 +134,8 @@ const FIXTURE_NAMES: &[&str] = &[
     "artifact-read-only",
     "interleave-source",
     "interleave-peer",
+    "exec-fence-copy",
+    "exec-fence-spawn",
 ];
 static NAMESPACE: OnceLock<Namespace> = OnceLock::new();
 struct Namespace {
@@ -217,8 +236,7 @@ impl Fixture {
             directory(&package.join(path));
         }
         let executable = package.join("smith-installer");
-        fs::copy(env!("CARGO_BIN_EXE_smith-installer"), &executable).unwrap();
-        fs::set_permissions(&executable, fs::Permissions::from_mode(0o755)).unwrap();
+        copy_executable(&executable);
 
         // Keep the real installer above, but avoid repeatedly hashing its large
         // test-build bytes as inert payloads within the child watchdog budget.
@@ -283,7 +301,7 @@ impl Fixture {
         if input.is_some() {
             command.stdin(Stdio::piped());
         }
-        let mut child = command.spawn().unwrap();
+        let mut child = spawn_fixture(&mut command).unwrap();
         if let Some(input) = input {
             let mut stdin = child.stdin.take().unwrap();
             stdin.write_all(input).unwrap();
@@ -331,6 +349,84 @@ impl Drop for Fixture {
         }
     }
 }
+#[test]
+fn executable_copy_waits_for_the_shared_spawn_fence() {
+    let fixture = Fixture::new("exec-fence-copy");
+    let destination = fixture.elsewhere.join("installer-copy");
+    let copied = destination.clone();
+    let fence = EXECUTABLE_IO.lock().unwrap();
+    let (attempt_sender, attempt_receiver) = mpsc::channel();
+    let (result_sender, result_receiver) = mpsc::channel();
+    let thread = std::thread::spawn(move || {
+        attempt_sender.send(()).unwrap();
+        copy_executable(&copied);
+        result_sender.send(()).unwrap();
+    });
+    let attempted = attempt_receiver.recv_timeout(Duration::from_secs(5));
+    let premature = result_receiver.recv_timeout(Duration::from_millis(100));
+    drop(fence);
+    // Release the fence and join even when a deliberately broken helper escapes.
+    let escaped = match premature {
+        Ok(()) => true,
+        Err(mpsc::RecvTimeoutError::Timeout) => {
+            result_receiver
+                .recv_timeout(Duration::from_secs(5))
+                .unwrap();
+            false
+        }
+        Err(error) => panic!("fixture copy channel failed: {error}"),
+    };
+    thread.join().unwrap();
+    assert!(attempted.is_ok());
+    assert!(!escaped, "fixture copy escaped the executable-I/O fence");
+    assert_eq!(
+        fs::read(destination).unwrap(),
+        fs::read(env!("CARGO_BIN_EXE_smith-installer")).unwrap()
+    );
+}
+
+#[test]
+fn fixture_spawn_waits_until_the_executable_writer_is_closed() {
+    let fixture = Fixture::new("exec-fence-spawn");
+    let mut command = fixture.command();
+    command.arg("--version");
+    let fence = EXECUTABLE_IO.lock().unwrap();
+    let writer = fs::OpenOptions::new()
+        .write(true)
+        .open(&fixture.executable)
+        .unwrap();
+    let (attempt_sender, attempt_receiver) = mpsc::channel();
+    let (result_sender, result_receiver) = mpsc::channel();
+    let thread = std::thread::spawn(move || {
+        attempt_sender.send(()).unwrap();
+        result_sender
+            .send(spawn_fixture(&mut command).map(wait))
+            .unwrap();
+    });
+    let attempted = attempt_receiver.recv_timeout(Duration::from_secs(5));
+    let premature = result_receiver.recv_timeout(Duration::from_millis(100));
+    drop(writer);
+    drop(fence);
+    // A bypass must report ETXTBSY rather than hanging cleanup behind our guard.
+    let output = match premature {
+        Ok(result) => {
+            thread.join().unwrap();
+            panic!("fixture spawn escaped the executable writer fence: {result:?}");
+        }
+        Err(mpsc::RecvTimeoutError::Timeout) => result_receiver
+            .recv_timeout(Duration::from_secs(5))
+            .unwrap()
+            .unwrap(),
+        Err(error) => panic!("fixture spawn channel failed: {error}"),
+    };
+    thread.join().unwrap();
+    assert!(attempted.is_ok());
+    assert!(output.status.success());
+    assert!(String::from_utf8(output.stdout)
+        .unwrap()
+        .contains("smith-installer"));
+}
+
 fn wait(mut child: std::process::Child) -> Output {
     let mut stdout = child.stdout.take().unwrap();
     let mut stderr = child.stderr.take().unwrap();
@@ -460,14 +556,14 @@ fn known_child_exit_captures_status_and_available_output_without_waiting_for_oth
     }
     let (stdout_reader, stdout_writer) = pipe();
     let (stderr_reader, stderr_writer) = pipe();
-    let mut child = Command::new(env!("CARGO_BIN_EXE_smith-installer"))
+    let mut command = Command::new(env!("CARGO_BIN_EXE_smith-installer"));
+    command
         .arg("--unknown-capture-regression")
         .env_clear()
         .stdin(Stdio::null())
         .stdout(Stdio::from(stdout_writer.try_clone().unwrap()))
-        .stderr(Stdio::from(stderr_writer.try_clone().unwrap()))
-        .spawn()
-        .unwrap();
+        .stderr(Stdio::from(stderr_writer.try_clone().unwrap()));
+    let mut child = spawn_fixture(&mut command).unwrap();
     // Retain sibling-like writer references after child exit so both empty
     // streams produce EAGAIN rather than EOF. No extra process is adopted.
     child.stdout = Some(stdout_reader.into());
@@ -605,7 +701,7 @@ fn native_elf_help_version_are_finite_and_operationally_inert_even_with_no_envir
     for flag in ["--help", "--version"] {
         let mut command = f.command();
         command.env_clear().arg(flag);
-        let output = wait(command.spawn().unwrap());
+        let output = wait(spawn_fixture(&mut command).unwrap());
         assert_eq!(
             output.status.code(),
             Some(0),
@@ -711,7 +807,7 @@ fn default_package_root_is_real_executable_parent_not_cwd_argv0_or_symlink_alias
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     let before = f.destinations();
-    let output = wait(command.spawn().unwrap());
+    let output = wait(spawn_fixture(&mut command).unwrap());
     assert_eq!(
         output.status.code(),
         Some(0),
@@ -747,7 +843,7 @@ fn explicit_bundle_overrides_default_and_relative_explicit_inputs_are_supported(
     command
         .current_dir(&f.base)
         .args(["--bundle", "package", "--dry-run"]);
-    let output = wait(command.spawn().unwrap());
+    let output = wait(spawn_fixture(&mut command).unwrap());
     assert_eq!(
         output.status.code(),
         Some(0),
@@ -763,7 +859,7 @@ fn artifact_only_service_yes_uses_only_existing_data_root_and_never_registers_or
         .env_remove("HOME")
         .args(["--artifacts-only", "--yes", "--service"])
         .arg(f.package.join("payload/service/smith-service"));
-    let output = wait(command.spawn().unwrap());
+    let output = wait(spawn_fixture(&mut command).unwrap());
     assert_eq!(
         output.status.code(),
         Some(0),
@@ -796,7 +892,7 @@ fn artifact_only_client_and_service_flags_decline_and_dryrun_are_read_only() {
         if input.is_some() {
             command.stdin(Stdio::piped());
         }
-        let mut child = command.spawn().unwrap();
+        let mut child = spawn_fixture(&mut command).unwrap();
         if let Some(input) = input {
             child.stdin.take().unwrap().write_all(input).unwrap();
         }
