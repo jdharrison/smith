@@ -1,0 +1,38 @@
+SCENARIO: new regression with only spawn fence temporarily bypassed
+COMMAND: cargo test --offline --locked --test debug_service fixture_spawn_waits_until_executable_writer_is_closed -- --exact
+   Compiling smith-service v0.1.0 (<service-worktree>)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.35s
+     Running tests/debug_service.rs (target/debug/deps/debug_service-c6f96b13eb12999d)
+
+running 1 test
+test fixture_spawn_waits_until_executable_writer_is_closed ... FAILED
+
+failures:
+
+---- fixture_spawn_waits_until_executable_writer_is_closed stdout ----
+
+thread 'fixture_spawn_waits_until_executable_writer_is_closed' (279466) panicked at tests/debug_service.rs:764:13:
+fixture spawn escaped the executable writer fence: Err(Os { code: 26, kind: ExecutableFileBusy, message: "Text file busy" })
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    fixture_spawn_waits_until_executable_writer_is_closed
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--test debug_service`
+EXIT: 101
+
+SCENARIO: restored spawn fence
+COMMAND: cargo test --offline --locked --test debug_service fixture_spawn_waits_until_executable_writer_is_closed -- --exact
+   Compiling smith-service v0.1.0 (<service-worktree>)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.35s
+     Running tests/debug_service.rs (target/debug/deps/debug_service-c6f96b13eb12999d)
+
+running 1 test
+test fixture_spawn_waits_until_executable_writer_is_closed ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.11s
+
+EXIT: 0

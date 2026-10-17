@@ -1,0 +1,266 @@
+{
+  "aggregate_attempts": 1,
+  "artifact_location": "Snapshot: target/root-promotion/validation-source-v2; byte/mode-identical verified exports: service/dist, client/dist, installer/dist",
+  "attempt": 2,
+  "cli": {
+    "archive_sha256": "33eea0b08d6be444bada18e64b2216459100d6070abcb4b5345cee40c9fff982",
+    "path": "target/installer-pipeline/smith-dagger-0.21.9/dagger",
+    "sha256": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+    "verification": "pinned official release archive checksum and embedded executable equality",
+    "version": "0.21.9"
+  },
+  "commands": [
+    {
+      "command": [
+        "git",
+        "-c",
+        "init.defaultBranch=validation",
+        "init",
+        "--quiet"
+      ],
+      "duration_seconds": 0.0,
+      "exit": 0,
+      "log": "target/root-promotion/validation-v2/validation-git-init.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "git-init",
+      "timed_out": false,
+      "timeout_seconds": 30
+    },
+    {
+      "command": [
+        "make",
+        "help"
+      ],
+      "duration_seconds": 0.0,
+      "exit": 0,
+      "log": "target/root-promotion/validation-v2/validation-make-help.log",
+      "log_sha256": "3bb594842ce2adbf5fdea9ecfa36629577fb7e6a3ae50c35b4424b70c6be3d85",
+      "name": "make-help",
+      "timed_out": false,
+      "timeout_seconds": 30
+    },
+    {
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts/tests",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "duration_seconds": 1.92,
+      "exit": 0,
+      "log": "target/root-promotion/validation-v2/validation-helpers-before.log",
+      "log_sha256": "16dfe7be85d33782ba61998c285ef74323803fe50315510e0fc5ebc59f63f1d3",
+      "name": "helpers-before",
+      "timed_out": false,
+      "timeout_seconds": 180
+    },
+    {
+      "command": [
+        "<repository>/target/installer-pipeline/smith-dagger-0.21.9/dagger",
+        "version"
+      ],
+      "duration_seconds": 0.03,
+      "exit": 0,
+      "log": "target/root-promotion/validation-v2/validation-cli-version.log",
+      "log_sha256": "0819b1f6a5d2080e67735b51514107720e0fb59ba70a251bd80bbc056bd8288a",
+      "name": "cli-version",
+      "timed_out": false,
+      "timeout_seconds": 30
+    },
+    {
+      "command": [
+        "<repository>/target/installer-pipeline/smith-dagger-0.21.9/dagger",
+        "--mod",
+        "dagger",
+        "functions"
+      ],
+      "duration_seconds": 1.77,
+      "exit": 0,
+      "log": "target/root-promotion/validation-v2/validation-functions-preflight.log",
+      "log_sha256": "d19a48f490cb05d94a51ed7a89e310381912675978729ed912b8af55f27077b2",
+      "name": "functions-preflight",
+      "timed_out": false,
+      "timeout_seconds": 90
+    },
+    {
+      "command": [
+        "make",
+        "DAGGER=<repository>/target/installer-pipeline/smith-dagger-0.21.9/dagger",
+        "test",
+        "build"
+      ],
+      "duration_seconds": 270.81,
+      "exit": 0,
+      "log": "target/root-promotion/validation-v2/validation-aggregate.log",
+      "log_sha256": "1ef5542cf6732e8c608603618d506f48cb1a755e723660d4bbc88a19a15240d1",
+      "name": "aggregate",
+      "timed_out": false,
+      "timeout_seconds": 1800
+    },
+    {
+      "command": [
+        "python3",
+        "-B",
+        "dagger/package.py",
+        "--root",
+        "installer/dist",
+        "--verify"
+      ],
+      "duration_seconds": 0.36,
+      "exit": 0,
+      "log": "target/root-promotion/validation-v2/validation-package-verify.log",
+      "log_sha256": "4f6e997052bf8ed0fe4e97c0e068bea00d34f1891dc7ee807e21581cdbb6da2e",
+      "name": "package-verify",
+      "timed_out": false,
+      "timeout_seconds": 120
+    },
+    {
+      "command": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts/tests",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "duration_seconds": 25.1,
+      "exit": 0,
+      "log": "target/root-promotion/validation-v2/validation-helpers-actual-package.log",
+      "log_sha256": "d34b0125feeb3ec3067d99ac489ed66da03a1e187e746ec79375f1f2ec71c6cf",
+      "name": "helpers-actual-package",
+      "timed_out": false,
+      "timeout_seconds": 300
+    },
+    {
+      "command": [
+        "python3",
+        "-B",
+        "<repository>/target/root-promotion/validation-source-v2/dagger/package.py",
+        "--root",
+        "<repository>/installer/dist",
+        "--verify"
+      ],
+      "duration_seconds": 0.41,
+      "exit": 0,
+      "log": "target/root-promotion/validation-v2/validation-root-package-verify.log",
+      "log_sha256": "4f6e997052bf8ed0fe4e97c0e068bea00d34f1891dc7ee807e21581cdbb6da2e",
+      "name": "root-package-verify",
+      "timed_out": false,
+      "timeout_seconds": 120
+    }
+  ],
+  "core_sha256": "0617ce1780c0f88d5f325c4ee9e104aaf61e38905a3d1a6544945fc586a82670",
+  "discovery_preflight": {
+    "empty_git_boundary": true,
+    "expected": [
+      "build-client",
+      "build-installer",
+      "build-installer-binary",
+      "build-installer-ui",
+      "build-runner",
+      "build-service",
+      "test",
+      "test-client",
+      "test-installer",
+      "test-installer-ui",
+      "test-native-runtime",
+      "test-package",
+      "test-service"
+    ],
+    "found": [
+      "build-client",
+      "build-installer",
+      "build-installer-binary",
+      "build-installer-ui",
+      "build-runner",
+      "build-service",
+      "test",
+      "test-client",
+      "test-installer",
+      "test-installer-ui",
+      "test-native-runtime",
+      "test-package",
+      "test-service"
+    ],
+    "function_count": 13,
+    "status": "PASS"
+  },
+  "engine": {
+    "image": "registry.dagger.io/engine:v0.21.9",
+    "runner_host": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+  },
+  "environment": {
+    "DAGGER_CLOUD_TOKEN": "",
+    "DAGGER_NO_NAG": "1",
+    "DAGGER_PROGRESS": "plain",
+    "DO_NOT_TRACK": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "target/root-promotion/validation-v2/validation-tmp",
+    "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+  },
+  "evidence": {
+    "artifacts.json": {
+      "path": "docs/evidence/root-promotion/artifacts.json",
+      "sha256": "29f02fdefa8156271f1cfaa228e6909d079fd5ab4a4be098d239242c3c263cfb"
+    },
+    "component-results.json": {
+      "path": "docs/evidence/root-promotion/component-results.json",
+      "sha256": "269068a07de6e2e42a94f1aaaa509c1589af10396cb7cccee298d2e2bd90ad0e"
+    },
+    "source-manifest.json": {
+      "path": "docs/evidence/root-promotion/source-manifest.json",
+      "sha256": "12e79af9e5a26fbf62cbb55a91b94b2900127f2686f340c35cf0f41d5dc997de"
+    }
+  },
+  "finished": "2026-10-16T16:25:37.422137+00:00",
+  "harness_correction": {
+    "cause": "ignored nested snapshot lacked independent Git boundary",
+    "diagnostic": "target/root-promotion/diagnostic-discovery/RESULT.md",
+    "diagnostic_sha256": "1ec7f4f142116b718241295d87aa60cc97edb5c8fbe6388860bf46619c596248",
+    "production_source_changes": false
+  },
+  "prior_attempt": {
+    "artifacts": {
+      "path": "docs/evidence/root-promotion/attempt-1-artifacts.json",
+      "sha256": "0ac0b3bd78fc77bb91b88fffadf96074db9c391af57fb238dc6f599d678a60e7"
+    },
+    "component-results": {
+      "path": "docs/evidence/root-promotion/attempt-1-component-results.json",
+      "sha256": "5ee0eada448196f12259b83055a817e618de55a28ab47e2ce9538025e1ca8c41"
+    },
+    "source-manifest": {
+      "path": "docs/evidence/root-promotion/attempt-1-source-manifest.json",
+      "sha256": "ace00b30647885c9d34a487b7262a04187d443e7f830e003aa8a443017a3e665"
+    },
+    "validation": {
+      "path": "docs/evidence/root-promotion/attempt-1-validation.json",
+      "sha256": "920d646186ab31c45bf3451e70dbda2c8124244795d7eb4ee7ade617f03f8aad"
+    }
+  },
+  "prior_attempt_preserved_verbatim": true,
+  "production_source_fixes": false,
+  "raw_logs": "target/root-promotion/validation-v2/validation-*.log; original attempt logs remain target/root-promotion/validation-*.log",
+  "release_or_install_authority": false,
+  "schema": 1,
+  "scope": "Bounded final ROOT source/build/package validation and approved root dist export copies; not independent full-cutover assurance, release provenance, deployment or host acceptance.",
+  "snapshot": "target/root-promotion/validation-source-v2",
+  "snapshot_source_sha256": "e39161932c5914a01af649804a29f7a9d5020455cced71d0fc9763bb0b22ee16",
+  "source_manifest_note": "Fresh inventory includes generated evidence added after attempt 1; compare production/core inputs separately.",
+  "source_sha256": "e39161932c5914a01af649804a29f7a9d5020455cced71d0fc9763bb0b22ee16",
+  "stable_live_original_core_inputs": true,
+  "stable_live_original_non_generated_inputs": true,
+  "stable_snapshot_inputs": true,
+  "started": "2026-10-16T16:18:29.501559+00:00",
+  "status": "PASS",
+  "work": "LOCAL-SMITH-ROOT-PROMOTION"
+}

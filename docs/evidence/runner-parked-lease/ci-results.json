@@ -1,0 +1,507 @@
+{
+  "aggregate_attempts": 1,
+  "aggregate_passed": 1273,
+  "all_13_expected_functions_present": true,
+  "all_commands_zero_exit": true,
+  "approval_scope": "Local source gates and contained outputs only. No commit/push/hosted rerun/install/merge/release/accepted-risk decision; fresh independent review and canonical docs remain parent responsibility.",
+  "artifact_inventory_sha256": "4a03dca0e07b8a74b00091dc6f753e4401eaef4715bc8e5c64efac0c8ec69600",
+  "assessment": "source_gates_passed_live_index_preservation_unresolved",
+  "base": "c1339f3670c70582db05a158b46821353662b87b",
+  "branch": "feature/autonomy",
+  "budget_seconds": 1800,
+  "cache_disclosure": "Test withExec vertices show DONE, not CACHED. Setup/dependencies and some build operations reused caches, including service/CLI/GUI build operations in the second Dagger build call. This is neither cold nor hermetic.",
+  "cached_aggregate_tests": 0,
+  "command_record_sha256": "f96058baf98388f034cc81c9e28511615dd08be5c559e819b7588a9c21e77af2",
+  "compiled_rust_dart": {
+    "claims_excluded": "No live cloud/keyring/vendor/model/manager interaction or real graphical QA.",
+    "evidence": "Actual debug_service --no-run compilation, copied executable, both SMITH_TEST_SERVICE and SMITH_TEST_CLOUD_SERVICE supplied to full Flutter discovery; mandatory compiled fixture tests cannot take optional skip path. Flutter +668 final result contains no skips. Parallel progress does not individually name every completed fixture.",
+    "fixture_source_sha256": {
+      "client/test/message_timestamps_integration_test.dart": "d82f65dbf3a828e1187c243228e518a2935e3ca00d0d070b2146feee2f67e42c",
+      "client/test/rust_cloud_integration_test.dart": "3d3565f99aa01c7f6b536adf2dcef38bac47a231b97bd4f2ac4ff0f457d13deb",
+      "client/test/rust_socket_integration_test.dart": "0aec031d284b0f85db0275312132cd374fac26afcf0a989cb14a910a1b37307a"
+    },
+    "status": "passed_as_part_of_full_flutter_gate"
+  },
+  "controlled_ignored_entrypoints": [
+    {
+      "line": 4100,
+      "text": "24  : \u2506 [28.9s] | test cloud::http::tests::proxy_environment_child ... ignored, isolated proxy-environment subprocess fixture"
+    },
+    {
+      "line": 4126,
+      "text": "24  : \u2506 [29.0s] | test manager::tests::captured_helper_fixture ... ignored, fixture invoked only by captured-helper subprocess tests"
+    },
+    {
+      "line": 5858,
+      "text": "24  : \u2506 [37.3s] | test dart_cloud::dart_cloud_fixture ... ignored, launched explicitly by the Dart schema3 fixture gate"
+    },
+    {
+      "line": 8095,
+      "text": "54  : \u2506 [50.9s] | test launch::tests::launch_parent_fixture ... ignored, finite subprocess fixture, invoked only with private test roots"
+    },
+    {
+      "line": 8141,
+      "text": "54  : \u2506 [51.1s] | test model::tests::progress_output_probe_child ... ignored, controlled signal-probe child only"
+    }
+  ],
+  "counts": {
+    "flutter": {
+      "failed": 0,
+      "log_line": 14369,
+      "passed": 668,
+      "skip_evidence": "Final Flutter progress has +668 and no ~ skip count; supplied mandatory compiled fixture environments prevent optional fixture skip paths.",
+      "skipped": 0
+    },
+    "gtk": {
+      "failed": 0,
+      "filtered": 0,
+      "ignored": 0,
+      "passed": 9,
+      "targets": [
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 13691,
+          "measured": 0,
+          "passed": 9
+        }
+      ]
+    },
+    "installer": {
+      "failed": 0,
+      "filtered": 0,
+      "ignored": 2,
+      "passed": 283,
+      "targets": [
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 2,
+          "log_line": 9090,
+          "measured": 0,
+          "passed": 105
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 9097,
+          "measured": 0,
+          "passed": 0
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 10301,
+          "measured": 0,
+          "passed": 36
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 10315,
+          "measured": 0,
+          "passed": 8
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 10364,
+          "measured": 0,
+          "passed": 17
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 12520,
+          "measured": 0,
+          "passed": 20
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 12530,
+          "measured": 0,
+          "passed": 4
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 12547,
+          "measured": 0,
+          "passed": 11
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 12617,
+          "measured": 0,
+          "passed": 2
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 12709,
+          "measured": 0,
+          "passed": 20
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 12835,
+          "measured": 0,
+          "passed": 35
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 12866,
+          "measured": 0,
+          "passed": 25
+        }
+      ]
+    },
+    "package": {
+      "failed": 0,
+      "log_line": 13651,
+      "passed": 41,
+      "skipped": 0
+    },
+    "pipeline_helpers": {
+      "actual_package_fixture": true,
+      "failed": 0,
+      "ordering": "Executed only after aggregate/build and separate package verify passed.",
+      "passed": 34,
+      "roundtrip_archive_sha256": "6687d03a1d2c38e7574fb1573458f861f59a29116fb132184ba9747d2c0af91f",
+      "skipped": 0
+    },
+    "service": {
+      "failed": 0,
+      "filtered": 0,
+      "ignored": 3,
+      "passed": 272,
+      "targets": [
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 2,
+          "log_line": 5320,
+          "measured": 0,
+          "passed": 115
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 5330,
+          "measured": 0,
+          "passed": 1
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 5591,
+          "measured": 0,
+          "passed": 35
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 5827,
+          "measured": 0,
+          "passed": 34
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 5853,
+          "measured": 0,
+          "passed": 12
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 1,
+          "log_line": 12691,
+          "measured": 0,
+          "passed": 23
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 12747,
+          "measured": 0,
+          "passed": 11
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "log_line": 13290,
+          "measured": 0,
+          "passed": 41
+        }
+      ]
+    }
+  },
+  "execution_elapsed_seconds": 213.669,
+  "fresh_aggregate_tests": 1273,
+  "gate_retries": 0,
+  "git_boundary": {
+    "after": {
+      "exists": true,
+      "index_exists": false,
+      "objects": 943,
+      "packed_refs_exists": false,
+      "refs": 0
+    },
+    "before": {
+      "exists": true,
+      "index_exists": false,
+      "objects": 0,
+      "packed_refs_exists": false,
+      "refs": 0
+    },
+    "interpretation": "Initialized independently with git init only; no index, refs, commits or copied real Git metadata. Git object files appeared during Dagger tooling; retained, not removed."
+  },
+  "input_binding": {
+    "archive_all_other_files_exact": true,
+    "archive_export_omissions_core_count": 0,
+    "archive_export_omissions_count": 0,
+    "archive_export_omissions_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control_count": 77,
+    "core_count": 1231,
+    "core_definition": "client/, service/, installer/, dagger/ plus Makefile, dagger.toml, dagger.lock",
+    "core_manifest_sha256": "3f2e19c5867be87b6d03c9b26c305bad74340995018491eb6caeaf883446fdac",
+    "entire_snapshot_count": 1308,
+    "expected_core_count": 1231,
+    "overlay_hashes": {
+      "service/src/runner.rs": "3bd158de9566d0b84f8d296b6472bb3c3efc3d3b2a1631fdf77aaf83f7dc05c8",
+      "service/src/runner_lease_tests.rs": "6a504792ce009209c5ff58aecd0111b934f4b47ed0d6a27a8e9539c3f4281a19"
+    }
+  },
+  "live_preservation": {
+    "after_execution": {
+      "branch": "feature/autonomy",
+      "head": "c1339f3670c70582db05a158b46821353662b87b",
+      "index_sha256": "76a28643e868216e37d5c6af900a20697bda8eb6145bb81217be3e5de0d8eaa8",
+      "overlays": {
+        "service/src/runner.rs": "3bd158de9566d0b84f8d296b6472bb3c3efc3d3b2a1631fdf77aaf83f7dc05c8",
+        "service/src/runner_lease_tests.rs": "6a504792ce009209c5ff58aecd0111b934f4b47ed0d6a27a8e9539c3f4281a19"
+      },
+      "refs_sha256": "b3a0c6e2f7347a896d51e99a93a20f5a5e79925f850a381a652d754d201d0ad2"
+    },
+    "attribution": "Unresolved. No write/recovery/restore to the real index was performed by the recorder. Cannot establish byte-preservation or distinguish index refresh/concurrent change from retained hashes alone. Do not infer safety or acceptance of concurrent Projects work.",
+    "before": {
+      "branch": "feature/autonomy",
+      "head": "c1339f3670c70582db05a158b46821353662b87b",
+      "index_sha256": "dadf73f26466e47f5e9680ad21811c6bada9c596553f2bc578b2a2d0a3a534cb",
+      "overlays": {
+        "service/src/runner.rs": "3bd158de9566d0b84f8d296b6472bb3c3efc3d3b2a1631fdf77aaf83f7dc05c8",
+        "service/src/runner_lease_tests.rs": "6a504792ce009209c5ff58aecd0111b934f4b47ed0d6a27a8e9539c3f4281a19"
+      },
+      "refs_sha256": "b3a0c6e2f7347a896d51e99a93a20f5a5e79925f850a381a652d754d201d0ad2"
+    },
+    "fields_unchanged": {
+      "branch": true,
+      "head": true,
+      "index_sha256": false,
+      "overlays": true,
+      "refs_sha256": true
+    },
+    "index_changed_during_execution": true,
+    "index_mtime_unix": 1792214151.4514415,
+    "latest": {
+      "branch": "feature/autonomy",
+      "head": "c1339f3670c70582db05a158b46821353662b87b",
+      "index_sha256": "76a28643e868216e37d5c6af900a20697bda8eb6145bb81217be3e5de0d8eaa8",
+      "overlays": {
+        "service/src/runner.rs": "3bd158de9566d0b84f8d296b6472bb3c3efc3d3b2a1631fdf77aaf83f7dc05c8",
+        "service/src/runner_lease_tests.rs": "6a504792ce009209c5ff58aecd0111b934f4b47ed0d6a27a8e9539c3f4281a19"
+      },
+      "refs_sha256": "b3a0c6e2f7347a896d51e99a93a20f5a5e79925f850a381a652d754d201d0ad2"
+    }
+  },
+  "native_runtime": "Actual release ELF help/version/artifact dry-run in Ubuntu non-root worker, both Python paths absent, PATH=/unavailable; no publication or lock left.",
+  "original_and_intermediate_failure_evidence_unchanged": true,
+  "package": {
+    "inventory_files_including_manifest_and_checksums": 97,
+    "native_helpers_identical": true,
+    "paired_service_sha256": "65dcd05ffbec9f8c536be35687f57451eec4dfd2417bf87fac66831f02b9ca0f",
+    "roundtrip_archive_sha256": "6687d03a1d2c38e7574fb1573458f861f59a29116fb132184ba9747d2c0af91f",
+    "roundtrip_limit": "Synthetic source identity; archive temporary in helper fixture. Actual package round trip is not clean-source provenance.",
+    "top_level_identities": {
+      "SHA256SUMS": {
+        "bytes": 12073,
+        "elf": false,
+        "mode": "0o644",
+        "path": "SHA256SUMS",
+        "sha256": "b914632cda7a11291f0921bced3a45062dd057d16cf1dd340002b4ec050a27bd"
+      },
+      "manifest.json": {
+        "bytes": 17461,
+        "elf": false,
+        "mode": "0o644",
+        "path": "manifest.json",
+        "sha256": "abed507bef81fe2f08d1ab0806592fd44b85d1c232a25c234733b93c04e2f0aa"
+      },
+      "smith-installer": {
+        "bytes": 6690304,
+        "elf": true,
+        "mode": "0o755",
+        "path": "smith-installer",
+        "sha256": "4893e2a6a5c82cc9ed4d753f4e4a68685a83feadaeff29b00d29359170a51c46"
+      },
+      "smith-installer-ui": {
+        "bytes": 8178816,
+        "elf": true,
+        "mode": "0o755",
+        "path": "smith-installer-ui",
+        "sha256": "ae8c787ec30118a2277a691b19b7bbd150fcce919794af0625b6126e791ca279"
+      }
+    },
+    "verified_payload_entries": 95
+  },
+  "push_allowed": false,
+  "required_quality_commands": {
+    "client/scripts/test.sh": [
+      "dart format --output=none --set-exit-if-changed lib test",
+      "flutter analyze --no-pub",
+      "flutter test --no-pub"
+    ],
+    "installer/scripts/test.sh": [
+      "cargo fmt --package smith-installer --check",
+      "cargo clippy --all-targets --locked -- -D warnings",
+      "cargo test --all-targets --locked"
+    ],
+    "service/scripts/test.sh": [
+      "cargo fmt --all --check",
+      "cargo clippy --all-targets --locked -- -D warnings",
+      "cargo test --all-targets --locked"
+    ]
+  },
+  "schema_version": 1,
+  "snapshot_inputs_unchanged": true,
+  "test_execution_cache": {
+    "compiled_cloud_fixture_build": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 13673,
+        "text": "32  : \u2506 Container.withExec DONE [12.8s]"
+      },
+      "vertex": 32
+    },
+    "flutter": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 14056,
+        "text": "95  : \u2506 Container.withExec DONE [21.0s]"
+      },
+      "vertex": 95
+    },
+    "gtk": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 13676,
+        "text": "73  : \u2506 Container.withExec DONE [59.3s]"
+      },
+      "vertex": 73
+    },
+    "installer": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 12832,
+        "text": "54  : \u2506 Container.withExec DONE [43.4s]"
+      },
+      "vertex": 54
+    },
+    "interpreter_absence_local": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 271,
+        "text": "102 : \u2506 Container.withExec DONE [0.0s]"
+      },
+      "vertex": 102
+    },
+    "interpreter_absence_system": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 269,
+        "text": "101 : \u2506 Container.withExec DONE [0.0s]"
+      },
+      "vertex": 101
+    },
+    "native_dry_run": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 7365,
+        "text": "109 : \u2506 Container.withExec DONE [0.1s]"
+      },
+      "vertex": 109
+    },
+    "native_help": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 7333,
+        "text": "107 : \u2506 Container.withExec DONE [0.1s]"
+      },
+      "vertex": 107
+    },
+    "native_version": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 7363,
+        "text": "108 : \u2506 Container.withExec DONE [0.1s]"
+      },
+      "vertex": 108
+    },
+    "no_artifact_lock": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 289,
+        "text": "111 : \u2506 Container.withExec DONE [0.0s]"
+      },
+      "vertex": 111
+    },
+    "no_artifact_publication": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 287,
+        "text": "110 : \u2506 Container.withExec DONE [0.0s]"
+      },
+      "vertex": 110
+    },
+    "package": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 13643,
+        "text": "125 : \u2506 Container.withExec DONE [3.0s]"
+      },
+      "vertex": 125
+    },
+    "service": {
+      "fresh_execution": true,
+      "last_status": {
+        "line": 13287,
+        "text": "24  : \u2506 Container.withExec DONE [1m23s]"
+      },
+      "vertex": 24
+    }
+  },
+  "total_passed_including_helpers": 1307
+}

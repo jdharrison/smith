@@ -1,0 +1,18 @@
+Smith installer supplied-icon notice
+
+The archive, trash-2, check and x artwork originates from the operator-supplied
+smith-flutter-ui-redesign.zip, SHA256:
+c1ea52cebd00f860d61bd38b2fcad10234cdbfcde0fc4a8a6bbafc808a23a960
+
+Only the four reviewed next/client/assets/icons SVGs were copied. Their geometry
+is unchanged. The client normalized currentColor to literal white; the installer
+rasterizes these sources once to transparent 24px PNGs with #E3F0EE strokes.
+See README.md and SHA256SUMS for exact origins and derivative hashes.
+
+No icon copyright owner or redistribution license was supplied or independently
+established. This notice is NOT a license, an attribution to an inferred upstream
+project, or authorization to publish. Do not infer rights from visual similarity.
+The unresolved boundary applies to both the SVGs and PNG derivatives. Publication
+or redistribution remains blocked pending human resolution of rights and the
+repository's separate release approval. Local source implementation/self-check
+is not that resolution or approval.

@@ -1,0 +1,32 @@
+{
+  "checks": {
+    "actual_package_archive_roundtrip": "BLOCKED; no package",
+    "manifest_payload_counts_and_identities": "BLOCKED; no package",
+    "payload_checksum_verification": "FAILED; missing package",
+    "service_component_client_package_copy_equality": "BLOCKED; no exports"
+  },
+  "component_exports": {
+    "client/dist": {
+      "exists": false,
+      "status": "NOT PRODUCED"
+    },
+    "installer/dist": {
+      "exists": false,
+      "status": "NOT PRODUCED"
+    },
+    "service/dist/smith-service": {
+      "exists": false,
+      "status": "NOT PRODUCED"
+    }
+  },
+  "core_sha256": "0617ce1780c0f88d5f325c4ee9e104aaf61e38905a3d1a6544945fc586a82670",
+  "location": "target/root-promotion/validation-source",
+  "note": "No exports were copied to root installer/dist; no host artifact installation or service actions performed.",
+  "package_file_count": 0,
+  "package_files": [],
+  "root_installer_dist_updated": false,
+  "schema": 1,
+  "source_manifest_sha256": "ace00b30647885c9d34a487b7262a04187d443e7f830e003aa8a443017a3e665",
+  "source_sha256": "8a2ad6aa1d6b5a03147224610f010aca69d7786500e655f007ca993f1ad78cc5",
+  "status": "NOT PRODUCED"
+}

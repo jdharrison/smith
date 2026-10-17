@@ -1,0 +1,226 @@
+{
+  "record_type": "implemented_validation_observation",
+  "task": "LOCAL-SMITH-NEXT-SAVED-KEY-ATTEMPTS validation only",
+  "timestamp_utc": "2026-10-16T07:11:02.309898+00:00",
+  "head": "7f6a483ae82c4bcf647268f035f1e7cc80409d4b",
+  "branch": "feature/autonomy",
+  "verdict": "fail",
+  "release_gate_decision": "no-go",
+  "stopped_at": "first client-test failure",
+  "command_attempts": {
+    "client-test": 1,
+    "combined": 0,
+    "service-test": 0,
+    "installer-test": 0,
+    "build": 0,
+    "package-test": 0,
+    "package-verify": 0
+  },
+  "client_test": {
+    "command": [
+      "env",
+      "DAGGER_NO_NAG=1",
+      "DAGGER_CLOUD_TOKEN=",
+      "DAGGER_PROGRESS=plain",
+      "make",
+      "client/test"
+    ],
+    "cwd": "next",
+    "started_utc": "2026-10-16T07:05:48.172433+00:00",
+    "timeout_seconds": 1740,
+    "status": "failed",
+    "before_inventory_sha256": "7ff716129095837394ed5a102eca56d126fbce6c94ee3f68b604fdba4d5955e0",
+    "exit_code": 2,
+    "killed": false,
+    "ended_utc": "2026-10-16T07:07:08.895248+00:00",
+    "elapsed_seconds": 80.723,
+    "after_inventory_sha256": "7ff716129095837394ed5a102eca56d126fbce6c94ee3f68b604fdba4d5955e0",
+    "source_stable": true,
+    "changed_paths": [],
+    "file_count_before": 1291,
+    "file_count_after": 1291,
+    "log": "next/service/build/saved-key-attempts/client-test.log",
+    "log_sha256": "6ca1b1b8317c340dd539888a3e415f8b91d20d0cc9be2e9cbcaab47a32d0b702"
+  },
+  "client_counts": {
+    "passed": 663,
+    "failed": 3,
+    "skipped_reported": 0,
+    "controlled_ignores_reported_by_flutter": 0,
+    "summary": "00:20 +663 -3: Some tests failed.",
+    "summary_log_line": 2205
+  },
+  "format": {
+    "status": "passed",
+    "files": 81,
+    "changed": 0
+  },
+  "analyzer": {
+    "status": "passed",
+    "issues": 0
+  },
+  "client_fixture_evidence": {
+    "service_env_present": true,
+    "cloud_fixture_env_present": true,
+    "six_cloud_scenarios_declared_in": "next/client/test/rust_cloud_integration_test.dart",
+    "per_case_pass_not_separately_printed": true,
+    "no_fixture_skips_reported": true,
+    "whole_client_suite_pass": false
+  },
+  "failures": [
+    {
+      "test": "selected-route entrance recovery healthy selected local route still animates when an unselected optional destination is unavailable",
+      "error": "Expected <false>, Actual <true>; PROTOCOL: Invalid v2 application data.",
+      "source_locations": [
+        "next/client/test/cloud_routing_test.dart:253",
+        "next/client/test/workspace_entrance_test.dart:1261"
+      ],
+      "log_lines": [
+        2103,
+        2129
+      ]
+    },
+    {
+      "test": "selected-route entrance recovery selected openai route becoming unavailable mid-entrance settles permanently",
+      "error": "Expected false, Actual <true> for owner.stale.",
+      "source_locations": [
+        "next/client/test/workspace_entrance_test.dart:287",
+        "next/client/test/workspace_entrance_test.dart:1217"
+      ],
+      "log_lines": [
+        2140,
+        2164
+      ]
+    },
+    {
+      "test": "selected-route entrance recovery healthy selected openai route still animates when an unselected optional destination is unavailable",
+      "error": "Expected <false>, Actual <true>; PROTOCOL: Invalid v2 application data.",
+      "source_locations": [
+        "next/client/test/cloud_routing_test.dart:253",
+        "next/client/test/workspace_entrance_test.dart:1261"
+      ],
+      "log_lines": [
+        2167,
+        2194
+      ]
+    }
+  ],
+  "static_diagnosis": {
+    "classification": "test fixture contradicts updated saved-generation eligibility contract",
+    "evidence": [
+      "next/client/test/workspace_entrance_test.dart:228-244",
+      "next/client/lib/cloud_routing.dart:219-224"
+    ],
+    "detail": "Fake marks cloud model unavailable without removing its active generation; RouteCatalog requires availability to equal active-generation presence. This produces protocol rejection and stale state.",
+    "no_remediation_performed": true,
+    "independent_review": "not performed: no subagent-launch tool is available; same-session diagnosis is not fresh independent assurance"
+  },
+  "required_checks_not_run": [
+    "combined",
+    "service-test",
+    "installer-test",
+    "build",
+    "package-test",
+    "package-verify",
+    "fresh independent static assurance"
+  ],
+  "not_run_reason": "Explicit stop-on-any-client-failure instruction; no retries or aggregate fallback are authorized on this branch of the sequence.",
+  "prior_package_41_evidence": "Not reused, not rerun, and not assessed for final-source identity after the mandatory stop.",
+  "retained_prior_component_evidence_not_rerun": [
+    {
+      "name": "installer-providers",
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "installer/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--test",
+        "providers"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "source_stable": true,
+      "log": "next/service/build/saved-key-attempts/backend/installer-providers.log",
+      "log_sha256": "a9a689b8bd8e5ef7db80de0c3be0cad59f388283494f35b81217684c7cbfa4fe",
+      "test_totals": {
+        "passed": 20,
+        "failed": 0,
+        "ignored": 0
+      },
+      "log_hash_matches_summary": true,
+      "not_rerun_this_session": true,
+      "prior_component_only_not_current_combined_acceptance": true,
+      "ignored_lines": []
+    },
+    {
+      "name": "service-tests",
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "service/Cargo.toml",
+        "--all-targets",
+        "--locked",
+        "--offline"
+      ],
+      "status": "passed",
+      "exit_code": 0,
+      "source_stable": true,
+      "log": "next/service/build/saved-key-attempts/backend/service-tests.log",
+      "log_sha256": "3e29aa4244163ef4de3064e3542053de9db01a37d474fc2dfd85db2784b9d02b",
+      "test_totals": {
+        "passed": 263,
+        "failed": 0,
+        "ignored": 3
+      },
+      "log_hash_matches_summary": true,
+      "not_rerun_this_session": true,
+      "prior_component_only_not_current_combined_acceptance": true,
+      "ignored_lines": [
+        {
+          "line": 44,
+          "text": "test cloud::http::tests::proxy_environment_child ... ignored, isolated proxy-environment subprocess fixture"
+        },
+        {
+          "line": 68,
+          "text": "test manager::tests::captured_helper_fixture ... ignored, fixture invoked only by captured-helper subprocess tests"
+        },
+        {
+          "line": 226,
+          "text": "test dart_cloud::dart_cloud_fixture ... ignored, launched explicitly by the Dart schema3 fixture gate"
+        }
+      ]
+    }
+  ],
+  "source_manifest": {
+    "path": "next/service/build/saved-key-attempts/source-manifest.json",
+    "sha256": "acc1d5986568131e782ad336e5a274531f3e20c67bc07d09921dae4cdbf97e16"
+  },
+  "artifacts": {
+    "path": "next/service/build/saved-key-attempts/artifacts.json",
+    "sha256": "6ad71a0c0709a54819b918e78dc0b64d9fd3b06b064607f91aa1abf482828e3b"
+  },
+  "preserved_evidence": {
+    "path": "next/service/build/saved-key-attempts/preserved-evidence.json",
+    "sha256": "7471294f6d094aa150a7d9bc1d502e18258223a12dade7a999455d6a9ae1f97a"
+  },
+  "git_status": {
+    "path": "next/service/build/saved-key-attempts/git-status-final.txt",
+    "sha256": "4e028eb5fd4207bdbb8ef6610471a1e18aaa0a87de844a1a5f3f0a4fbefe72ac",
+    "timing": "after client failure; no session-start Git status was captured"
+  },
+  "source_stable_during_client_command": true,
+  "final_source_matches_client_command": true,
+  "initial_to_final_difference_count": 17,
+  "initial_to_final_counts": {
+    "added": 2,
+    "removed": 0,
+    "modified": 15
+  },
+  "all_existing_task_evidence_preserved": true,
+  "no_source_lock_docs_or_git_mutations_performed": true,
+  "no_real_host_keyring_api_inference_installed_or_publication_actions": true,
+  "discovery_cache_proposal_excluded": true
+}

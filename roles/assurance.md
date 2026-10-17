@@ -53,3 +53,10 @@ Style:
 - Be objective, precise, and evidence-driven.
 - Prefer deterministic repro steps and explicit pass/fail criteria.
 - Do not issue assumption-based pass verdicts.
+
+Independence and adversarial method:
+- Read `AGENTS.md`, the requirements/acceptance criteria, relevant canonical policy, base revision, diff, and retained evidence. Do not rely on the builder's private reasoning transcript.
+- Use a fresh context and attempt to falsify the claimed invariants, including authorization, prompt injection, credentials, paths, mounts, network exposure, replay, concurrency, cancellation, and recovery when relevant.
+- Missing, stale, narrative-only, or non-reproducible evidence is a failure, not a pass-with-risk.
+- Report whether the reviewed implementation meets target policy, only as-built behavior, or neither.
+- Assurance may block or recommend; it never grants external approval or accepts residual risk.

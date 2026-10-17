@@ -1,0 +1,38 @@
+[package]
+name = "smith-installer"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.83"
+publish = false
+
+[features]
+default = []
+gui = ["dep:gtk"]
+
+[[bin]]
+name = "smith-installer"
+path = "src/main.rs"
+
+[[bin]]
+name = "smith-installer-ui"
+path = "src/ui.rs"
+required-features = ["gui"]
+
+[dependencies]
+smith-service = { path = "../service" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+libc = "0.2"
+sha2 = "0.10"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+# Reuse the GTK3 runtime family already required by the Ubuntu Flutter client.
+gtk = { version = "0.18.2", optional = true }
+tokio = { version = "1", features = ["rt", "time"] }
+
+# Fixtures repeatedly copy/hash the actual ELF under unchanged consent/test
+# deadlines. Dependency debug symbols are not executable integration evidence.
+[profile.test]
+debug = 0
+
+[workspace]
+resolver = "2"

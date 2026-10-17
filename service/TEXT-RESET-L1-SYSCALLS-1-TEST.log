@@ -1,0 +1,27 @@
+COMMAND: strace -f -ttt -yy -e trace=execve,clone,clone3,vfork,fork,openat,close,copy_file_range,fchmod -o TEXT-RESET-L1-SYSCALLS-1.log cargo test --offline --locked --test debug_service
+   Compiling smith-service v0.1.0 (<service-worktree>)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.75s
+     Running tests/debug_service.rs (target/debug/deps/debug_service-c6f96b13eb12999d)
+
+running 17 tests
+test app_cli_stdin_envelope_is_separate_and_never_uses_endpoint_argv ... ok
+test compiled_identity_is_finite_and_ambient_manager_override_is_not_a_control_option ... ok
+test duplicate_daemon_does_not_adopt_or_remove_verified_socket ... ok
+test root_normalization_state_types_and_links_fail_closed ... ok
+test unsafe_roots_files_units_sockets_and_corrupt_state_fail_closed ... ok
+test real_socket_rejects_wrong_pid_bounded_frames_and_persists_on_client_detach ... ok
+test concurrent_apply_is_rejected_without_effects ... ok
+test stale_app_path_blocks_start_without_adoption_or_removal ... ok
+test action_time_source_paths_snapshot_and_replay_bindings ... ok
+test pending_reload_rejects_foreign_overridden_transient_and_ambiguous_runtime ... ok
+test app_buffered_large_frame_and_unknown_fields_are_rejected_without_provider_work ... ok
+test app_peer_conflict_and_corrupt_state_fail_closed_without_changing_core ... ok
+test separate_app_socket_verified_by_current_controller_facts_preserves_control ... ok
+test manager_fragment_binary_and_pid_drift_block_bridge_adoption ... ok
+test partial_manager_failure_preserves_files_and_never_falls_back ... ok
+test loaded_pending_reload_repairs_only_with_separate_consent_and_retries_failure ... ok
+test separate_consented_lifecycle_and_exact_json_contract ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.12s
+
+EXIT: 0

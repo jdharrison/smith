@@ -1,0 +1,13 @@
+{
+  "historical_not_current_validation": true,
+  "reason": "Superseded by parent-reviewed preconsent copy, assertions and teal selection CSS",
+  "superseded_png_bytes_removed": 141,
+  "per_png_json_metadata_retained": 141,
+  "original_run_source_environment_stdio_retained": true,
+  "previous_export_manifest": "../historical-final-SHA256SUMS",
+  "previous_export_manifest_sha256": "aeedbce49e00c61fdea0ded0dba09a0203047d6c1cc66568534d5f365b294467",
+  "current_capture_sets": [
+    "../gdk1-reviewed",
+    "../gdk2-reviewed"
+  ]
+}

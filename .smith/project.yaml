@@ -1,0 +1,114 @@
+# Portable self-project metadata, not an implemented policy/command runner.
+# Keep version-1 field shapes; no consumer enforcement is claimed.
+version: 1
+
+project:
+  id: smith
+  name: SMITH
+  # Repository-relative locator; no workstation-specific absolute binding.
+  workspace_root: .
+  platform_target: ubuntu_linux_workstation
+
+aliases:
+  "gh:smith":
+    provider: github
+    repository: jdharrison/smith
+
+repositories:
+  - id: smith
+    source: "gh:smith"
+    path: .
+    role: core
+    default_branch: main
+    integration_branch: main
+    # Run from the promoted repository root. Lists are descriptive, not a
+    # dependency scheduler. Aggregate test includes formatting/lint and compiled
+    # integration, isolated GTK and no-Python native CLI/package checks.
+    validation:
+      format: []
+      lint: []
+      build:
+        - make build
+      unit:
+        - make test
+      integration:
+        - python3 -B -m unittest discover -s scripts/tests -p 'test_*.py' -v
+        # Requires the complete package produced by make build/installer/build.
+        - python3 -B dagger/package.py --root installer/dist --verify
+      e2e: []
+      security: []
+
+# Optional Jira is unbound in portable metadata. Configure privately if enabled;
+# no private site, project or board identifiers are distributed here.
+project_management: []
+
+workflow:
+  ticket_required: false
+  bootstrap_exceptions:
+    - branch: feature/autonomy
+      reason: pre-policy self-hosting bootstrap branch
+  base_branch_precedence:
+    - repository_default
+  branch_patterns:
+    feature: feature/{ticket}-{slug}
+    fix: fix/{ticket}-{slug}
+    feature_without_ticket: feature/{slug}
+    fix_without_ticket: fix/{slug}
+    hotfix: hotfix/{ticket}-{slug}
+    release: release/v{version}
+  pull_requests:
+    start_as_draft: true
+    ticket_key_required: false
+    independent_review_required: true
+    human_merge_approval_required: true
+  releases:
+    branch_only_when_requested: true
+    tag_pattern: release/v{version}
+    annotated_tag_for_new_releases: true
+    human_release_approval_required: true
+  deployments:
+    separate_human_approval_required: true
+
+synchronization:
+  mode: optional
+  jira_to_github:
+    require_ticket_key_in_branch: false
+    require_ticket_key_in_pr: false
+    copy_acceptance_criteria_to_pr_checklist: false
+  github_to_jira:
+    link_branch: false
+    link_pull_requests: false
+    summarize_validation: false
+    transition_only_with_approval: true
+    completion_requires_merge: true
+
+agents:
+  architect:
+    permissions: [read, propose]
+  builder:
+    permissions: [read, local_write, local_test]
+  reviewer:
+    permissions: [read, review, add_failing_tests]
+    independent_context: true
+  adversary:
+    permissions: [read, isolated_execute, report]
+    independent_context: true
+  release:
+    permissions: [read, verify]
+    human_approval_required: true
+
+approvals:
+  default_scope: DISCOVERY_READ_ONLY
+  external_mutations: human
+  merge: human
+  release: human
+  deployment: human
+  destructive_operations: human
+  accepted_risk: human
+
+security:
+  secrets_in_manifest: forbidden
+  untrusted_external_content: true
+  least_privilege_tools: true
+  immutable_audit_expectation: true
+  self_approval: forbidden

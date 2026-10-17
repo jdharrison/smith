@@ -1,0 +1,5 @@
+{
+  "historical_not_current_validation": true,
+  "redundant_intermediate_pngs_removed": 141,
+  "retained": "run/source/environment/stdio records only; final current captures are gdk1-final and gdk2-final"
+}

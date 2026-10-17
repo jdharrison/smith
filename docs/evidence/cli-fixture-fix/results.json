@@ -1,0 +1,126 @@
+{
+  "base": "766d63b481702c21f5fee6ca9c2dc64c30a4d80d",
+  "branch": "feature/autonomy",
+  "claim": "implemented fixture-only local repair and executed selected gates; not hosted CI acceptance",
+  "changed_test": "installer/tests/cli.rs",
+  "test_sha256": "becb112caaebdafb3b08f53de2c4889df4f9b2aaca78f494f446a5f741dd53d8",
+  "production_source_changed": false,
+  "watchdog_seconds_unchanged": 30,
+  "validation_disabled": false,
+  "payload_contract": "small genuine /usr/bin/true ELF, at most 1MiB; three independent equal 0755 inert payloads; actual Cargo-built installer remains executed",
+  "controlled_exact_test": {
+    "scope": "actual unchanged CLI test with fixture-only repair; four synthetic same-CPU competitors, not hosted CPU measurement",
+    "official_child_watchdog_seconds": 30,
+    "exit": 0,
+    "wall_seconds": 0.3245,
+    "user_cpu_seconds": 0.0186,
+    "system_cpu_seconds": 0.0107
+  },
+  "local_native_commands": [
+    {
+      "name": "format",
+      "command": [
+        "cargo",
+        "fmt",
+        "--manifest-path",
+        "target/cli-fixture-fix/source/installer/Cargo.toml",
+        "--check"
+      ],
+      "exit": 0,
+      "seconds": 0.264
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "--manifest-path",
+        "target/cli-fixture-fix/source/installer/Cargo.toml",
+        "--target-dir",
+        "target/cli-fixture-fix/build",
+        "--locked",
+        "--offline",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit": 0,
+      "seconds": 9.281
+    },
+    {
+      "name": "native-tests",
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "target/cli-fixture-fix/source/installer/Cargo.toml",
+        "--target-dir",
+        "target/cli-fixture-fix/build",
+        "--locked",
+        "--offline",
+        "--all-targets"
+      ],
+      "exit": 0,
+      "seconds": 23.855
+    }
+  ],
+  "configured_gates": {
+    "command": [
+      "make",
+      "DAGGER=<verified-official-0.21.9>",
+      "installer/test",
+      "package/test"
+    ],
+    "exit": 0,
+    "seconds": 176.867,
+    "input_files": 1062,
+    "inputs_unchanged": true,
+    "input_changes": [],
+    "log": "target/cli-fixture-fix/configured-gates.log",
+    "log_sha256": "424b58ff417bb4c64f0df3d7319bd6ec02695c48805dc25b449a5c19d1c956c9"
+  },
+  "counts": {
+    "native_installer_passed": 281,
+    "gtk_passed": 9,
+    "actual_native_package_passed": 41,
+    "selected_configured_total_passed": 331,
+    "native_fixture_ignores": 2,
+    "gtk_package_skips": 0,
+    "cli_passed_within_native": 15
+  },
+  "input_manifest_sha256": "ba7d0348f3ec7808086029bd4cf881260e850c2e552ae20276c7bd7b42023ac1",
+  "input_count": 1062,
+  "logs": {
+    "clippy.log": {
+      "path": "target/cli-fixture-fix/clippy.log",
+      "sha256": "355b594e036395f0917ca848e1a74cdb9046d1855edd66377de462509d1d5fd4"
+    },
+    "native-tests.log": {
+      "path": "target/cli-fixture-fix/native-tests.log",
+      "sha256": "e35ea2069840b2dc9e15acc17138cd1d9e132b0eff0cd9d9b0d93c7a80e3e70c"
+    },
+    "format.log": {
+      "path": "target/cli-fixture-fix/format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "configured-gates.log": {
+      "path": "target/cli-fixture-fix/configured-gates.log",
+      "sha256": "424b58ff417bb4c64f0df3d7319bd6ec02695c48805dc25b449a5c19d1c956c9"
+    },
+    "compile.log": {
+      "path": "target/cli-fixture-fix/compile.log",
+      "sha256": "746c09f25c6061d57ae2e825953b127f581b899d3057e7590abc84b681f7c4bc"
+    },
+    "constrained-cli.log": {
+      "path": "target/cli-fixture-fix/constrained-cli.log",
+      "sha256": "e74aa7d1ce09e90dabe4b0f988ee435ed24f6a653a9611fef37122719fd2b372"
+    }
+  },
+  "limitations": [
+    "Hosted run38982647442 remains failed; no new push or rerun performed",
+    "Historical hosted CPU/backend/scheduling cause not established",
+    "No full service/Flutter aggregate rerun for this test-only repair",
+    "No actual installation, provider/model, GUI session, commit or remote mutation"
+  ]
+}

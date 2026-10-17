@@ -1,3 +1,11 @@
 * text=auto eol=lf
 *.rs text eol=lf
 
+
+# Preserve provenance and recorded output bytes; source whitespace stays checked.
+docs/evidence/clean-checkpoint/** -whitespace
+docs/plans/LOCAL-SMITH-NEXT-GPU-STARTUP-FIX-*.log -whitespace
+client/assets/fonts/**/OFL.txt -whitespace
+installer/assets/fonts/**/OFL.txt -whitespace
+installer/tests/fixtures/ui-redesign/**/test-output.txt -whitespace
+

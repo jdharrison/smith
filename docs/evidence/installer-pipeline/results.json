@@ -1,0 +1,142 @@
+{
+  "aggregate": {
+    "actual_cli_server_version": "v0.21.9",
+    "build_input_changes_during_gate": [],
+    "command": "env DAGGER_NO_NAG=1 DAGGER_CLOUD_TOKEN= DAGGER_PROGRESS=plain DO_NOT_TRACK=1 make -C next DAGGER=<verified-v0.21.9-cli> test installer/build",
+    "controlled_fixture_ignores": {
+      "installer": 2,
+      "service": 3
+    },
+    "exit_code": 0,
+    "flutter_package_skips": 0,
+    "formatter_changes": 0,
+    "formatter_files": 81,
+    "image_pin_enforcement": "not established; retained beta-workspace lock is not claimed effective",
+    "local_log": "target/installer-pipeline/aggregate.log",
+    "log_sha256": "eb1c16b03e9f28984fc9d909b56f955f21331661b92585c824723a062f9f0c7f",
+    "source_count": 1230,
+    "source_manifest_sha256": "c587cd29a698fe7d13f91660679abe7820c52bbef93e09c847b8d158e31271ab",
+    "tests_passed": {
+      "flutter": 668,
+      "gtk": 9,
+      "native_installer": 281,
+      "native_package": 41,
+      "service": 263
+    },
+    "timeout_seconds": 1200
+  },
+  "base_revision": "168865b0422b787f08ab33e89d052cd4adbd11f7",
+  "branch": "feature/autonomy",
+  "final_tooling_sources": {
+    ".github/workflows/ci.yml": "0724cf4f906e20efa836f9d66073a0653f901ea77b152ddd1f03f32d75a3393f",
+    ".github/workflows/release.yml": "3fdfae46d6d29f3790100db60a906d0f4c2a599e258a64e26511d673b2b7dfa0",
+    "next/Makefile": "c3ac9ef90fe532ebc80d61fb15fcd7dadd7776a6346fbd4d77990e3e095ed81a",
+    "next/dagger/dagger.json": "e825f7fa5c17534cab2d6ca193b80937677c5fc6b099858258650bfbe80d20ba",
+    "scripts/install-dagger-ci.sh": "baf77bbc84817f012cb1e663f33ffdbf971105fc7112085e311a13e83e534f2f",
+    "scripts/prepare-installer-release.py": "d6d3d295b990868c804c6c7a32c1edfdf50cdb15802861d5fe8bf1aed3823a71",
+    "scripts/tests/test_installer_release.py": "f4b01144892c8b89281db97abc4bae201062cbf47625811ba8e109ba51d5c4f5",
+    "scripts/tests/test_pipeline_config.py": "9548e55c9b5a9cb79931e38868fe989a4262db16fabf79d3eb42f5fe75e80635"
+  },
+  "legacy_checks": [
+    {
+      "command": [
+        "cargo",
+        "fmt",
+        "--check"
+      ],
+      "duration_seconds": 0.264,
+      "exit_code": 0,
+      "local_log": "target/installer-pipeline/root-rust-validation-s50_n95c/fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "started_utc": "2026-10-16T14:35:27.707146+00:00",
+      "status": "pass"
+    },
+    {
+      "command": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "duration_seconds": 9.986,
+      "exit_code": 0,
+      "local_log": "target/installer-pipeline/root-rust-validation-s50_n95c/clippy.log",
+      "sha256": "dd536ec52d555e940f71acb64ce28a99b799658401155e9e3401b69449a8c17c",
+      "started_utc": "2026-10-16T14:35:27.971493+00:00",
+      "status": "pass"
+    },
+    {
+      "command": [
+        "cargo",
+        "build",
+        "--locked"
+      ],
+      "duration_seconds": 11.884,
+      "exit_code": 0,
+      "local_log": "target/installer-pipeline/root-rust-validation-s50_n95c/build.log",
+      "sha256": "64bf429666c9d628f07b02da0eec7a7caab0773dd6a13f5b2deca046f5c25374",
+      "started_utc": "2026-10-16T14:35:37.957548+00:00",
+      "status": "pass"
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked"
+      ],
+      "duration_seconds": 9.227,
+      "exit_code": 0,
+      "local_log": "target/installer-pipeline/root-rust-validation-s50_n95c/test.log",
+      "sha256": "7b539b20d04066f1430ed256de70eac929d7a39838be3b128eaa3e0716c743a8",
+      "started_utc": "2026-10-16T14:35:49.841853+00:00",
+      "status": "pass"
+    }
+  ],
+  "legacy_distinct_tests_passed": 127,
+  "package": {
+    "bundled_helper_matches": true,
+    "embedded_readme_matches": true,
+    "manifest_files": 95,
+    "manifest_sha256": "94d90e5c0ba36219df39063cad753c1de4166fa4124d985806bed8d6644178d9",
+    "service_sha256": "5cfe584b8e597771319b3d4a3da9572bd30df9059d89f4f68e6e38fd5b2c4dcb"
+  },
+  "pipeline_tests": {
+    "actual_archive_fixture_sha256": "8c0931efae2ef66cfa8eb49ad8de9d1e85599226f978d38ed13d75a52091f219",
+    "command": "SMITH_TEST_PACKAGE=<workspace>/next/installer/dist PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p test_*.py -v",
+    "completed_utc": "2026-10-16T14:58:07.841740+00:00",
+    "exit_code": 0,
+    "failed": 0,
+    "local_log": "target/installer-pipeline/final-helper-tests.log",
+    "log_sha256": "75f5090f56862fe8e2258c31fbe210f1fab540f267f00ec8f4b2ba1982c7e471",
+    "passed": 30,
+    "skipped": 0,
+    "source_identity": "synthetic isolated Git fixture, not real release provenance",
+    "started_utc": "2026-10-16T14:57:43.947547+00:00"
+  },
+  "post_aggregate_changes": "Checkout annotation correction, pin provenance comment and regression tests validated separately. Later developer pipeline README wording only; no executable/tooling logic or recipient README/payload changes.",
+  "prior_failures": [
+    "Dagger v0.21.0 default discovery returned No functions found",
+    "v0.21.0 explicit Python SDK failed OpenTelemetry Go import cycle",
+    "Initial lint single-quote/ShellCheck findings corrected",
+    "Independent review found both default checkouts could strip tag annotation; fixed with explicit full event tag ref and real-Git regression"
+  ],
+  "recorded_utc": "2026-10-16T14:59:12.566645+00:00",
+  "scope": "local pipeline self-check; not hosted CI, clean-clone, release or deployment",
+  "static_checks": {
+    "actionlint": "v1.7.12 passed",
+    "git_diff_check": "passed",
+    "shell_syntax": "passed",
+    "shellcheck": "passed"
+  },
+  "unverified": [
+    "hosted GitHub run and settings",
+    "remote tag/release state",
+    "clean-source reproducibility and signed provenance",
+    "native recipient/graphical/model/GPU/provider/restore acceptance",
+    "redistribution licensing/SBOM and supplied-icon rights",
+    "human publication/deployment approval"
+  ]
+}

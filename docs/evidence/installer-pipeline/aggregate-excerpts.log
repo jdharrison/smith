@@ -1,0 +1,44 @@
+[95m3   : [0m[90;2m┆ [0m[90m[0.1s] [0m[90m|[0m [2m07:47:31[0m [92mINF[0m connected [2mname=[0md4139a37e7e8 [2mclient-version=[0mv0.21.9 [2mserver-version=[0mv0.21.9
+[95m28  : [0m[90;2m┆ [0m[90m[1m7s] [0m[90m|[0m test result: ok. 106 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 13.09s
+[95m28  : [0m[90;2m┆ [0m[90m[1m7s] [0m[90m|[0m test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+[95m28  : [0m[90;2m┆ [0m[90m[1m10s] [0m[90m|[0m test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.90s
+[95m28  : [0m[90;2m┆ [0m[90m[1m11s] [0m[90m|[0m test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.47s
+[95m28  : [0m[90;2m┆ [0m[90m[1m11s] [0m[90m|[0m test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+[95m60  : [0m[90;2m┆ [0m[90m[1m11s] [0m[90m|[0m test result: ok. 105 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 15.54s
+[95m60  : [0m[90;2m┆ [0m[90m[1m11s] [0m[90m|[0m test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+[95m60  : [0m[90;2m┆ [0m[90m[1m19s] [0m[90m|[0m test result: ok. 36 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.81s
+[95m60  : [0m[90;2m┆ [0m[90m[1m20s] [0m[90m|[0m test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+[95m60  : [0m[90;2m┆ [0m[90m[1m29s] [0m[90m|[0m test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.02s
+[95m60  : [0m[90;2m┆ [0m[90m[1m30s] [0m[90m|[0m test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.95s
+[95m60  : [0m[90;2m┆ [0m[90m[1m30s] [0m[90m|[0m test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+[95m60  : [0m[90;2m┆ [0m[90m[1m30s] [0m[90m|[0m test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+[95m60  : [0m[90;2m┆ [0m[90m[1m30s] [0m[90m|[0m test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s
+[95m60  : [0m[90;2m┆ [0m[90m[1m31s] [0m[90m|[0m test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.72s
+[95m60  : [0m[90;2m┆ [0m[90m[1m32s] [0m[90m|[0m test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.42s
+[95m60  : [0m[90;2m┆ [0m[90m[1m32s] [0m[90m|[0m test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+[95m28  : [0m[90;2m┆ [0m[90m[1m37s] [0m[90m|[0m test result: ok. 23 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 25.99s
+[95m28  : [0m[90;2m┆ [0m[90m[1m37s] [0m[90m|[0m test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Native recipient package verified: 88 files; reviewed text-only payload paths
+[95m124 : [0m[90;2m┆ [0m[90m[1m40s] [0m[90m|[0m Ran 41 tests in 2.535s
+[95m94  : [0m[90;2m┆ [0m[90m[1m46s] [0m[90m|[0m Formatted 81 files (0 changed) in 0.44 seconds.
+[95m94  : [0m[90;2m┆ [0m[90m[1m52s] [0m[90m|[0m No issues found! (ran in 5.9s)
+[95m28  : [0m[90;2m┆ [0m[90m[1m60s] [0m[90m|[0m test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.83s
+[95m72  : [0m[90;2m┆ [0m[90m[2m28s] [0m[90m|[0m test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.71s
+[95m94  : [0m[90;2m┆ [0m[90m[2m20s] [0m[90m|[0m 00:21 +668: All tests passed!
+Text service/client, native Rust installer and builder-only package tests passed.<workspace>/target/installer-pipeline/smith-dagger-0.21.9/dagger --mod dagger call -o installer/dist build-installer --installer installer --client client --service service --tooling dagger
+[95m3   : [0m[90;2m┆ [0m[90m[0.1s] [0m[90m|[0m [2m07:53:05[0m [92mINF[0m connected [2mname=[0md4139a37e7e8 [2mclient-version=[0mv0.21.9 [2mserver-version=[0mv0.21.9
+[95m140 : [0m[90;2m┆ [0m[90m[28.0s] [0m[90m|[0m Native recipient package verified: 95 files; reviewed text-only payload paths
+Native recipient package verified: 95 files; reviewed text-only payload paths

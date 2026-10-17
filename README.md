@@ -1,269 +1,113 @@
-# smith
+# Smith
 
-smith — open-source control plane for local agent orchestration
+Local-first text conversations for one trusted operator on a prepared **Ubuntu 24.04 LTS x86_64 workstation**.
 
-<img width="512" src="https://github.com/user-attachments/assets/8483313d-3d82-4c21-8751-ab6e63abd9a5" />
+**Implemented in source:** a Flutter desktop, an independent persistent Rust service, and a native CLI/GTK3 installer. The service owns bounded saved conversations and accepted work; closing the desktop detaches without stopping it. Local inference uses bundled, separate CPU/Vulkan llama.cpp runtimes and separately provisioned curated models—**no external Ollama is required**. Optional OpenAI API and Anthropic API routes require explicit configuration and context-sharing consent, never automatic local-to-cloud fallback.
 
-## Status
+**Status:** development candidate under active hardening, not a production-release or installed-host guarantee. Source/build checks do not establish real-model/GPU performance, clean-host/graphical acceptance, provider entitlement, licensing/SBOM clearance or deployment readiness. Broader agent orchestration, tools, roles and pipelines are **target/deferred product capabilities**, not implemented chat features. See [validation](VALIDATION.md) and [scope](docs/SCOPE.md).
 
-> **Note:** This project is complete but not yet stable. Use in production at your own risk.
+## Use Smith
 
-**Supported platforms:** Linux and macOS. On Windows, use [WSL](https://docs.microsoft.com/en-us/windows/wsl/) to run smith.
+Obtain the **complete paired installer package**, verify its archive digest through an independently trusted channel, extract into a fresh directory and check its internal checksums before execution. Keep both installer executables, `payload/`, `manifest.json`, `SHA256SUMS` and `README.txt` together for maintenance. Follow the [recipient guide](dagger/INSTALLER.md#acquire-verify-extract-and-run); recipients do not need the repository, Python, Rust, Flutter, Docker or Dagger.
 
-## Installation
+From the extracted package, choose the visual installer or CLI:
 
-### Option 1: Install from Cargo (Recommended)
-
-Install directly from the GitHub repository using Cargo:
-
-```bash
-# Install Rust & Cargo
-curl --proto '=https' --tlsv1.2 -sfSf https://sh.rustup.rs | sh
-
-# Install latest release
-cargo install --git https://github.com/jdharrison/smith.git
+```sh
+./smith-installer-ui
+# Display-free artifact preflight; not a service/model readiness test:
+./smith-installer --dry-run
+# Interactive full recipient setup:
+./smith-installer
 ```
 
-**Prerequisites:** Rust 1.83+ (stable recommended). Install via [rustup](https://rustup.rs/) so the project's `rust-toolchain.toml` is used.
+Recipients need compatible native runtime libraries, safe existing owner-controlled XDG roots and a usable unprivileged systemd user manager. The GTK3 installer and Flutter desktop also need native desktop libraries and a graphical session; the CLI requires neither GTK nor a display. Native does not mean statically linked or portable to arbitrary Linux distributions. Smith does not provision OS libraries, GPU drivers, user managers or keyrings. See [host requirements](docs/HOST_PROFILE.md).
 
-### Option 2: Download Pre-built Binaries
+### Installation and models
 
-Pre-built binaries for Linux and macOS are available in [GitHub Releases](https://github.com/jdharrison/smith/releases). (Windows is not supported; use Linux binary with WSL.)
+The visual entry screen offers **INSTALL / UPGRADE** and **UNINSTALL**. Fresh setup publishes the paired app/service, then separately confirms registration/reload, persistent login **Enable**, and **Start**. Enable does not start now; Start does not enable. This is login-scoped operation, not pre-login/post-logout or reboot assurance; lingering is unchanged.
 
-## Quick Start
+Local Model setup offers seven revision-pinned curated choices. Qwen3-14B Q4_K_M is preselected only for fresh GUI setup (about 8.38 GiB of weights, plus runtime/KV/buffer memory); reruns preserve saved selection. Preselection authorizes nothing. Download, checked preference and service-backed inference each need separate consent. No weights are bundled, and model inventory or a saved preference is not inference verification.
 
-### Prerequisites
+For the CLI, list exact supported identities, then select one explicitly:
 
-- Rust 1.83+
-- **Docker** — container runtime used by smith.
-
-### Build and Run
-
-```bash
-# After installing the binary
-smith install   # one-time setup wizard
-smith status    # monitor smith services/systems
-smith help
-
-# Development
-cargo build
-cargo run -- help
+```sh
+./smith-installer --models
+./smith-installer --model qwen3-4b:q4_k_m --download-model --verify-inference
 ```
 
-### Pipeline commands (run ask / dev / review)
+The second command performs **full recipient setup**, not model-only maintenance. The CLI has no default model; `--pull-model` aliases `--download-model`. There is no blanket recipient `--yes`. Download/check failures preserve prior effects rather than implying rollback. Use **Manage models** from visual setup/results to add/select/check/remove without republishing artifacts. Selected or loaded models block removal.
 
-Run pipeline workflows via `smith run <cmd>`.
+The service attempts fixed full offload on `Vulkan0`; only classified startup failures with confirmed cleanup permit one independent CPU fallback. Completion failures never replay on CPU. This is not device discovery or proof of acceleration, fit or performance.
 
-```bash
-# Ask a question (read-only); default branch is main, use --base to ask about another branch
-smith run ask "How does auth work?" --project myproject
-smith run ask "What's in this branch?" --project myproject --base feature/x
+### Optional cloud providers
 
-# Run a development task (commit + push); use --pr to create or update a PR
-smith run dev "Add login endpoint" --branch feature/login --project myproject
-smith run dev "Fix bug" --branch fix/123 --project myproject --pr --verbose
+The optional **Providers** step follows local Model setup. **Manage providers** on rerun, or `./smith-installer --providers`, performs no artifact/lifecycle work. Configure either or both APIs independently; API access and billing are separate from ChatGPT/Claude app subscriptions.
 
-# Review a branch
-smith run review feature/login --project myproject
-smith run review feature/login --project myproject --base main --verbose
+Enter credentials only through masked installer or hidden terminal input. Keys use an existing, unlocked same-user **GNOME Keyring Secret Service/default collection**, never flags, environment variables, chat or plaintext fallback. Smith does not activate/unlock the keyring. Save/Replace and potentially billable synthetic Validate require separate confirmation. Replacement retains old generations; there is no credential purge, and Uninstall neither removes keyring items nor revokes vendor credentials.
+
+Each chat has a **LOCAL / CLOUD** selector for future sends over a fixed fifteen-model cloud catalog. A saved active key permits an explicit attempt without prior successful validation; it does not prove key access or model entitlement. First sharing to a provider/credential generation requires context-sharing consent. Retained consent covers later explicit sends in that chat, including intervening retained history; new generations require new consent. No automatic provider/model fallback, discovery or retry. See [architecture](docs/ARCHITECTURE.md) and [provider prerequisites](docs/HOST_PROFILE.md#current-next-cloud-provider-prerequisites).
+
+### Chat and maintenance
+
+Launch **smith** from the app menu, the installer's explicit post-success **Launch Smith** action, or `~/.local/bin/smith-next`. Boot observes the exact enabled service and synchronizes conversations before mounting chat. It never automatically installs, enables, downloads, infers or resends; only an exact enabled, safely stopped installation offers separately confirmed **Start Smith**. Retry observes/synchronizes; it does not resend uncertain work.
+
+Chats support rename/archive/reactivate/confirmed logical delete. History is bounded (32 saved chats, at most 16 complete turn pairs/64 KiB per chat), not an unlimited archive. Up to four service requests may be outstanding with one executing inference; restart interrupts unfinished work without replay. Waiting desktop follow-ups and unsent drafts are process-local, not durable scheduling. There is no voice, tools/search or automatic replay.
+
+Current application protocol is **schema 3**, persisted application state **schema 4**, and Core lifecycle **schema 2**. Older binaries cannot read disk4. An approved installed-state migration/rollback needs a pre-migration snapshot and compatible paired binaries with exact keyring-generation references—not binary-only downgrade.
+
+Use explicitly confirmed **Upgrade** for differing managed binaries; ordinary Install/Make refuses them. **Uninstall** stops/quiesces, disables/verifies and removes active integration while retaining **all conversations, preferences, models, releases, backups, preserved objects and keyring items**. It is not purge. Decline, error, expiry and cancellation preserve accepted/uncertain effects, with no automatic rollback or retry. Legacy `smith.service` installations are not migrated by this source-layout change.
+
+## Develop from the repository root
+
+```text
+client/       Flutter desktop, assets and tests
+service/      Independent Rust service workspace and lockfile
+installer/    Independent Rust CLI/GTK workspace; paired package in dist/
+dagger/       Builder tooling and recipient instructions
+scripts/      Repository/pipeline helpers and tests
+docs/         Canonical policy, active contracts, evidence and history
 ```
 
-### Spawn pipeline lifecycle (v0.3.0)
+Builders need Docker Engine, the reviewed Dagger CLI, Git and Python for builder-only package tooling; native client development additionally needs Rust/Flutter and Ubuntu development libraries. Dagger uses explicit `--mod dagger` selection; current CI CLI/module is v0.21.9. `DAGGER` can select a reviewed alternate executable. Retained compatibility/lock files do not prove hermetic builds. There is **no root Cargo workspace**: do not use the retired root `cargo build/test` instructions.
 
-The plan/develop/release pipeline uses project+branch scoped spawned containers (`agent_<project>_<branch>`).
+Run from the repository root:
 
-- `smith run plan` auto-starts the spawned container if needed and leaves it running.
-- `smith run review` fails fast when the spawned container is not running.
-- `smith run develop` fails fast when the spawned container is not running (expects plan-initialized workspace/state).
-- `smith run release` requires the container to be running and only stops it after full successful release.
-- Use `smith run release --keep-agent` to keep the container running after success for debugging.
-- If release is blocked or fails, the container remains running for diagnosis.
-
-Use **SSH repository URLs** (e.g. `git@github.com:user/repo.git`). The pipeline mounts your host `~/.ssh` and forwards `SSH_AUTH_SOCK` when set, so host auth (e.g. `ssh-add`) works. Use `--ssh-key <path>` to supply a specific key. Projects can store an image and SSH key via `smith project add/update`.
-
-### How does the pipeline choose the container image?
-
-The **base image targets the project’s environment**, not OpenCode. When you don’t pass `--image` (and the project has no image in config), Smith clones the repo, detects the project type from manifest files (`Cargo.toml` → Rust, `package.json` → Node, `go.mod` → Go, `requirements.txt`/`pyproject.toml` → Python), and picks an env-focused image:
-
-- **Rust** → `rust:1-bookworm` (Rust + cargo; respects `rust-toolchain.toml` e.g. nightly)
-- **Node** → `node:22-bookworm-slim`
-- **Go** → `golang:1-bookworm`
-- **Python** → `python:3.12-bookworm-slim`
-- **Unknown** → `debian:bookworm-slim`
-
-Only **one runtime** is installed (the one for that project type); the image usually already provides it. **OpenCode** is installed by trying the [official install script](https://opencode.ai/docs) first, then `npm install -g opencode-ai` if the script fails (e.g. on minimal images), so both glibc-based and Node-based images work. Override with `--image` or project config when you need a specific image.
-
----
-
-## Agent pipeline and feedback loops
-
-All pipeline commands (ask, dev, review) use the same high-level flow.
-
-### Phases
-
-1. **Setup**
-   - **Setup Run** — Clone repo, install deps (cargo check / npm install / go mod / pip), bootstrap opencode-ai. If install fails, the run fails with a clear message.
-   - **Setup Check** — Build and run tests. If this fails, the agent is given the failure output and asked to fix the project (deps/config/code); we re-run install and re-check. Repeats up to 3 times.
-3. **Execute**
-   - **Execute Run** — Run the agent (ask: answer the question; dev: run the task; review: run the review prompt).
-   - **Execute Check** — Validate the output (for dev, format and build). If this fails, the agent is given the failure, asked to fix the code, then re-checks. Repeats up to 3 times.
-5. **Assurance** — Depends on the command:
-   - **Ask:** **Ask assurance** — Filter step: the raw answer is passed through a cleanup prompt (trim preamble/cruft); that can run up to 2 passes (feed back into itself). Does not fail the run.
-   - **Dev:** **Assurance loop** — Agent reviews recent changes. If the review reports issues, the agent is asked to address them; we re-run execute check, then assurance again. Up to 3 attempts; then we continue to commit.
-6. **Commit & Push (dev only)** — Commit, `git fetch` + rebase onto remote branch when it exists, then push. Push failures (e.g. non–fast-forward) are reported.
-
-All commands **fetch from the configured remote** and **reset/checkout to the latest remote ref** for the base branch. Features are created from up-to-date remote base; reviews compare against the latest remote base. Base branch and remote name are configurable per project (see Project commands) or via `--base` for the branch.
-
-### Summary
-
-| Command | Setup loop | Execute | Execute-check loop | Assurance | Commit/push |
-|--------|------------|---------|--------------------|-----------|-------------|
-| **ask**  | ✓ | Question → answer | — | Cleanup filter (2 passes) | — |
-| **dev**  | ✓ | Task → edits | ✓ | Review → fix loop | ✓ |
-| **review** | ✓ | Review prompt → text | — | — | — |
-
----
-
-## Commands and options
-
-### System commands
-
-- **`smith status [--verbose]`**  
-  Show status of dependencies, models, agents, and projects.
-
-- **`smith install`**  
-  Interactive setup: check/install Docker (Linux: get.docker.com), optionally enable Docker at boot, create config dir, add models and projects.
-
-### Pipeline commands — `smith run <cmd>`
-
-- **`smith run ask "<question>"`**  
-  Ask the agent about the project (read-only).  
-  - `--base <branch>` — Branch to clone and ask about (default: `main`).  
-  - `--repo <url>` — Override repo (SSH URL).  
-  - `--project <name>` — Use repo/image/ssh_key from config.  
-  - `--image <image>` — Override Docker image (default: auto from repo: Rust/Node/Go/Python image; must be glibc-based or have Node for OpenCode).  
-  - `--ssh-key <path>` — SSH key path (overrides project config and `SSH_KEY_PATH`).  
-  - `--keep-alive` — Keep container alive after run (debugging).  
-  - `--timeout <sec>` — Timeout for agent run (default: 300).  
-  - `--verbose` — Show detailed pipeline output.
-
-- **`smith run dev "<task>" --branch <branch>`**  
-  Run a development task, validate, commit, and push.  
-  - `--branch <branch>` — **(required)** Target branch to work on and push.  
-  - `--base <branch>` — Base branch to start from (default: `main`).  
-  - `--repo`, `--project`, `--image`, `--ssh-key`, `--keep-alive` — Same as ask.  
-  - `--pr` — Create or update a GitHub PR after push (requires token).  
-  - `--timeout <sec>`, `--verbose` — As above.
-
-- **`smith run review <branch>`**  
-  Review the given branch (read-only).  
-  - `--base <branch>` — Base branch to compare against (optional).  
-  - `--repo`, `--project`, `--image`, `--ssh-key`, `--keep-alive`, `--timeout`, `--verbose` — Same as above.
-
-### Model profile env passthrough
-
-Use model profile env mappings to inject host environment variables into spawned project agent containers.
-
-- Add/update mappings with repeatable `--env` flags:
-  ```bash
-  smith model add opencode --provider openai --model gpt-5 --env 'OPENAI_API_KEY=$OPENAI_API_KEY'
-  smith model update opencode --env 'OPENAI_API_KEY=$OPENAI_API_KEY' --env 'OPENROUTER_API_KEY=$OPENROUTER_API_KEY'
-  ```
-- Clear mappings on update by passing an empty env value:
-  ```bash
-  smith model update opencode --env ''
-  ```
-- Always quote the `--env` value so your shell does not expand `$HOST_ENV` before smith parses it.
-- If a mapped host env is missing or empty at runtime, `smith agent start` fails fast with a clear error.
-- Security note: injected values are passed to Docker as container environment variables; treat host access and Docker inspect permissions accordingly.
-
-### Project commands — `smith project <cmd>`
-
-- **`smith project add <name> --repo <path-or-url>`**  
-  Register a project.  
-  - `--image <image>` — Docker image for this project.  
-  - `--ssh-key <path>` — SSH key path for this project.  
-  - `--base-branch <branch>` — Base branch for clone/compare (default: `main`).  
-  - `--remote <name>` — Remote name for fetch/push (default: `origin`).  
-  - `--github-token <token>` — GitHub personal access token for PR creation (per-repository).
-
-- **`smith project list`**  
-  List registered projects (shows repo, image, ssh_key, base_branch, remote, and whether github-token is set).
-
-- **`smith project status [--project <name>] [--verbose]`**  
-  Validate project configuration and connectivity.
-
-- **`smith project update <name>`**  
-  Update a project.  
-  - `--repo <url>`, `--image <image>`, `--ssh-key <path>`, `--base-branch <branch>`, `--remote <name>`, `--github-token <token>` — Set new value; pass `""` to clear optional fields.
-
-- **`smith project remove <name>`**  
-  Remove a project.
-
-### Agent commands — `smith agent <cmd>`
-
-Agents are identified by **name** (id). Each agent has:
-- **name** — Unique id/name.
-- **image** — Docker image (default: `ghcr.io/anomalyco/opencode`). Use a custom image for advanced customization.
-- **model** — Model to use (e.g. `anthropic/claude-sonnet-4-5`, `openrouter/google/gemini-2.0-flash`). Baked into container.
-- **small_model** — Smaller model for internal operations (reduces API costs, e.g. `openrouter/google/gemini-2.0-flash:free`).
-- **provider** — Provider name (e.g. `anthropic`, `openai`, `openrouter`). Baked into container config.
-- **base_url** — Custom base URL for provider (for proxies/custom endpoints).
-
-**API Keys**: Set the corresponding environment variable on your host before starting agents. The agent will automatically forward it to the container:
-- `anthropic` → `ANTHROPIC_API_KEY`
-- `openai` → `OPENAI_API_KEY`
-- `openrouter` → `OPENROUTER_API_KEY`
-
-- **`smith agent add <name>`**  
-  Register an agent.  
-  - `--image <image>` — Docker image (default: `ghcr.io/anomalyco/opencode`).  
-  - `--model <model>` — Model to use (e.g. `anthropic/claude-sonnet-4-5`).  
-  - `--small-model <model>` — Small model for internal ops.  
-  - `--provider <name>` — Provider name (`anthropic`, `openai`, `openrouter`, etc.).  
-  - `--base-url <url>` — Custom base URL for provider.
-
-- **`smith agent status`**  
-  Show status of all configured agents (active/inactive, image, port, model, provider).
-
-- **`smith agent build [<name>] [--all] [--force] [--verbose]`**  
-  Build Docker image for one agent or all. Generates Dockerfile if missing, then runs `docker build`. Use `--all` to build all configured agents, `--force` for clean build (remove image, build with `--no-cache`), `--verbose` to print Dockerfile path and docker build command.
-
-- **`smith agent update <name>`**  
-  Update an agent.  
-  - `--image <image>`, `--model <model>`, `--small-model <model>`, `--provider <name>`, `--base-url <url>` — Set new value; pass `""` to clear.
-
-- **`smith agent remove <name>`**  
-  Remove an agent.
-
-- **`smith agent start [--verbose]`**  
-  Start all configured agents. Each agent runs in its own container with the configured model/provider. Skips agents that already have a running container. Use `--verbose` to print docker command and health-check details.
-
-- **`smith agent stop`**  
-  Stop all running agent containers (smith-agent-*).
-
-- **`smith agent logs <name>`**  
-  Stream live logs from an agent container (`docker logs -f`).
----
-
-## GitHub Pull Requests
-
-1. Add or update a project with a GitHub token (one per repository):
-   ```bash
-   smith project add myproject --repo git@github.com:user/repo.git --github-token <your-github-token>
-   # or
-   smith project update myproject --github-token <your-github-token>
-   ```
-2. Use `--pr` with `run dev` and that project:
-   ```bash
-   smith run dev "Add new feature" --branch feature/new-feature --project myproject --pr
-   ```
-   This creates a PR if none exists for the branch, or updates the existing one. The task is used as the PR title. Base branch comes from project config or `--base` (default `main`).
-
-## Development
-
-```bash
-cargo test
-cargo fmt
-cargo clippy --all-targets -- -D warnings
+```sh
+make help
+make test              # Component quality, integration and isolated installer/package gates
+make build             # Export service, paired client and complete recipient package
+make service/test
+make client/test
+make installer/test    # Rust quality, isolated GTK and no-Python CLI runtime gates
+make installer/ui-test
+make package/test      # Builder metadata/native entrypoint tests
+make service/build     # service/dist/smith-service
+make client/build      # client/dist/ (including service and native runtimes)
+make installer/build   # installer/dist/; includes package verification
+python3 -B dagger/package.py --root installer/dist --verify
+python3 -B -m unittest discover -s scripts/tests -p 'test_*.py' -v
 ```
+
+Formatting, lint and compiled integration checks are part of `/test` gates, not separate public Make format/lint targets. For the configured aggregate source check:
+
+```sh
+env DAGGER_NO_NAG=1 DAGGER_CLOUD_TOKEN= DAGGER_PROGRESS=plain make test build
+```
+
+These build/test commands are not host installation approval. **Operator actions with live effects:** `make installer/run` builds/verifies then launches the full visual installer; `make client/run` launches the development desktop with an explicit helper and still needs a compatible installed service. `make install`, `make client/install` and `make service/install` publish developer artifacts only; they do not register/enable/start or provision models/providers and do not bypass differing-binary guards. `make installer/ui` exports only a GUI binary, not a complete recipient package.
+
+## CI and authority
+
+[CI](.github/workflows/ci.yml) validates PRs targeting `main` and pushes to `main`; [candidate automation](.github/workflows/release.yml) handles pushed `release/*` tags through the reusable CI. The release helper checks canonical annotated `release/vMAJOR.MINOR.PATCH`, exact source/tag/HEAD, fetched `main` ancestry, clean tracked source and matching component versions before accepting a verified full-package archive. Root promotion requires workflows/helper/tests to be rebased together; old root-Cargo gates are not current-product validation.
+
+Tagged candidates retain `smith-installer_vX.Y.Z.tar.gz`, its checksum, build record and validation/CLI evidence in an Actions artifact for **14 days**. PR/main builds do not retain distributable packages. Workflows have read-only contents permissions and do not create GitHub Releases, mutate tags or deploy. Artifact upload is still remote disclosure: exact tag push, destination/visibility/retention and redistribution rights require separate approval. Checksums and green jobs are not human approval or signed provenance. Never move/reuse an existing release tag.
+
+Read [AGENTS.md](AGENTS.md), [Scope](docs/SCOPE.md), [Architecture](docs/ARCHITECTURE.md), [Process](docs/PROCESS.md), [Design](docs/DESIGN.md) and [Host Profile](docs/HOST_PROFILE.md) before changing or operating Smith. The [pipeline plan](docs/plans/LOCAL-SMITH-INSTALLER-PIPELINE.md) records candidate scope; [VALIDATION.md](VALIDATION.md) records evidence and limitations, not inherited acceptance of a later source tree.
+
+## History and compatibility
+
+The former root orchestration/chat CLI and legacy client are **retired from source support**, without compatibility shims. This does not uninstall or change existing installations. Historical source, retired guides and voice/Python reference snapshots are retained through immutable Git history, not a copied legacy tree; see [History](docs/HISTORY.md).
+
+Repository promotion does **not** rename `smith-next.service`, the `smith-next` launcher/XDG namespaces, desktop IDs, keyring identities, wire identities or deterministic ownership bytes. A runtime rebrand would require a separate migration.
+
+[License](LICENSE) · [Security](SECURITY.md)

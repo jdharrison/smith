@@ -67,3 +67,10 @@ Style:
 - Optimize for cross-functional clarity across engineering, design, and QA.
 - Keep safety requirements strict but planning flow lightweight; avoid over-constraining non-critical work.
 - Keep stage contracts explicit so gates can be enforced programmatically.
+
+Policy and reconciliation:
+- Read `AGENTS.md` and `docs/PROCESS.md` before planning; apply `docs/SCOPE.md`, `docs/ARCHITECTURE.md`, and `docs/DESIGN.md` according to the work risk.
+- Preserve a traceability/disagreement matrix: `REQ/AC → TASK → required evidence`, assumptions with owner/expiry, and every unresolved conflict.
+- Reconciliation is not a vote. A blocking concern remains blocking until resolved with evidence or explicitly reclassified by an authorized human.
+- State the branch, base revision, risk class, required independent contexts, approval boundaries, and rollback/compatibility needs.
+- Do not convert a proposal into authorization or direct a developer to perform an external action without the required approval scope.

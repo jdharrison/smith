@@ -1,0 +1,1301 @@
+{
+  "base": "c1339f3670c70582db05a158b46821353662b87b",
+  "branch": "feature/autonomy",
+  "corrected_full_target": {
+    "approved_snapshot_source_sha256": {
+      "service/src/runner.rs": "3bd158de9566d0b84f8d296b6472bb3c3efc3d3b2a1631fdf77aaf83f7dc05c8",
+      "service/src/runner_lease_tests.rs": "6a504792ce009209c5ff58aecd0111b934f4b47ed0d6a27a8e9539c3f4281a19"
+    },
+    "binding": "Preserved isolated initial snapshot only; current service/tree neither read nor used. Concurrent Projects work excluded.",
+    "command_argv": [
+      "/usr/bin/bwrap",
+      "--unshare-all",
+      "--die-with-parent",
+      "--new-session",
+      "--ro-bind",
+      "/usr",
+      "/usr",
+      "--ro-bind",
+      "/lib",
+      "/lib",
+      "--ro-bind",
+      "/lib64",
+      "/lib64",
+      "--symlink",
+      "usr/bin",
+      "/bin",
+      "--dir",
+      "/etc/alternatives",
+      "--symlink",
+      "/usr/bin/gcc",
+      "/etc/alternatives/cc",
+      "--ro-bind",
+      "toolchain/rust-1.98.0",
+      "/toolchain",
+      "--bind",
+      "target/runner-parked-lease/targeted-c1339f3/candidate",
+      "/work",
+      "--ro-bind",
+      "target/runner-parked-lease/targeted-c1339f3/candidate/snapshot",
+      "scratch/snapshot",
+      "--proc",
+      "/proc",
+      "--dev",
+      "/dev",
+      "--bind",
+      "target/runner-parked-lease/targeted-c1339f3/candidate/tmp",
+      "/tmp",
+      "--dir",
+      "/home",
+      "--clearenv",
+      "--setenv",
+      "PATH",
+      "toolchain/rust-1.98.0/bin:/usr/bin:/bin",
+      "--setenv",
+      "HOME",
+      "scratch/home",
+      "--setenv",
+      "CARGO_HOME",
+      "scratch/cargo-home",
+      "--setenv",
+      "CARGO_TARGET_DIR",
+      "scratch/target",
+      "--setenv",
+      "RUSTC",
+      "toolchain/rust-1.98.0/bin/rustc",
+      "--setenv",
+      "RUSTDOC",
+      "toolchain/rust-1.98.0/bin/rustdoc",
+      "--setenv",
+      "CARGO_NET_OFFLINE",
+      "true",
+      "--setenv",
+      "CARGO_PROFILE_TEST_DEBUG",
+      "0",
+      "--setenv",
+      "CARGO_PROFILE_TEST_OPT_LEVEL",
+      "0",
+      "--setenv",
+      "CARGO_BUILD_JOBS",
+      "2",
+      "--setenv",
+      "TMPDIR",
+      "/tmp",
+      "--setenv",
+      "XDG_DATA_HOME",
+      "scratch/xdg-data",
+      "--setenv",
+      "XDG_CONFIG_HOME",
+      "scratch/xdg-config",
+      "--setenv",
+      "XDG_CACHE_HOME",
+      "scratch/xdg-cache",
+      "--setenv",
+      "XDG_STATE_HOME",
+      "scratch/xdg-state",
+      "--setenv",
+      "XDG_RUNTIME_DIR",
+      "scratch/runtime",
+      "--setenv",
+      "LANG",
+      "C.UTF-8",
+      "--chdir",
+      "scratch/snapshot/service",
+      "--",
+      "scratch/target/debug/deps/runner-6791028eb42a466c",
+      "--nocapture"
+    ],
+    "elapsed_seconds": 22.7,
+    "end_utc": "2026-10-17T05:10:24.809361+00:00",
+    "exit_code": 0,
+    "label": "corrected-environment-complete-runner-one-shot",
+    "log": "corrected-full-target.log",
+    "log_sha256": "0214d35a40fe8c965048f36eb84816a4d8e23bc341bab09791519186652f1677",
+    "original_57_evidence_files_unchanged": true,
+    "purpose": "One separately approved diagnosis-driven infrastructure correction, not replacement of prior failed gate. No retry, recompile, stress or aggregate.",
+    "scope_limitations": [
+      "Unknown cleanup remains OWNERSHIP-STATE SIMULATION ONLY; no actual child-timeout proof.",
+      "This invocation is the unchanged real-socket fake-runner integration target, not real llama.cpp/GPU/model/provider/service/GUI validation.",
+      "Original full target 2 passed / 39 failed and missing-cc compile failure remain unchanged in original reports.",
+      "Parent owns pinned-base plus two-file-overlay Dagger/full gates and independent review."
+    ],
+    "start_utc": "2026-10-17T05:10:02.108815+00:00",
+    "test_summaries": [
+      {
+        "failed": 0,
+        "filtered_out": 0,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 41,
+        "status": "ok"
+      }
+    ],
+    "timed_out": false,
+    "timeout_seconds": 180
+  },
+  "evidence_distinctions": [
+    "Seven new tests execute actual private Runner::stop/Drop using no-child/already-cleaned state, duplicate OFDs and independent-open probes; no real child timeout or GPU/model operation.",
+    "Unknown cleanup and poisoned-empty tests simulate raw active-file/empty parked-slot ownership. The real unconfirmed-child-exit return before handback is unchanged and requires static review; it was not forced to time out.",
+    "Ten predeclared exact original fake-runner test samples passed: three normal, three single CPU, four single CPU with four competitors each; no replacement samples.",
+    "Initial cc resolution and mode0775 sandbox ancestry failures are preserved. Compiler-path exposure and0700 owned-root corrections changed only the harness. One separately recorded corrected full-runner invocation passed41 tests.",
+    "No-op destructor and premature-handback-unlock controls intentionally fail and are not candidate required-test failures.",
+    "Repeated target/unit executions are not added to unique aggregate coverage.",
+    "Whole live worktree changed during targeted execution. CI instead archived the approved base and overlaid exactly the two unchanged runner sources. Neither result accepts unrelated Projects changes.",
+    "Live index byte identity changed during CI, without resolved attribution. No index restore or staged content manipulation was performed by this repair; snapshot stability is separate from live-index preservation."
+  ],
+  "external_effects": "No commit, push, hosted rerun, merge, release, installation or live service/GPU/model/provider/keyring operation authorized/performed.",
+  "independent_review": "Pending fresh-context source/evidence review; consult REVIEW.md when present.",
+  "negative_controls": {
+    "a": {
+      "expected": "terminal/final-release assertions fail",
+      "observed_failed": 5,
+      "observed_passed": 2,
+      "sensitivity_demonstrated": true
+    },
+    "b": {
+      "expected": "live-model handback exclusion fails",
+      "observed_failed": 1,
+      "observed_passed": 6,
+      "sensitivity_demonstrated": true
+    }
+  },
+  "raw_records": [
+    {
+      "bytes": 106928,
+      "path": "target/runner-parked-lease/targeted-c1339f3/results.json",
+      "sha256": "7770b89da224661f6654ce0f897c597be44553867b5d14ab84c076cb396aa7e5"
+    },
+    {
+      "bytes": 8577,
+      "path": "target/runner-parked-lease/targeted-c1339f3/README.md",
+      "sha256": "8368f8d93287ec7a3c41afe9dad7c497b75fc95304cfc79b4857a874b2a27e37"
+    },
+    {
+      "bytes": 5163,
+      "path": "target/runner-parked-lease/targeted-c1339f3/SHA256SUMS",
+      "sha256": "2a7384402458b0e7819a8fc559ae9316bc1c64316f2e099056b9d8836f0a7276"
+    },
+    {
+      "bytes": 19147,
+      "path": "target/runner-parked-lease/targeted-c1339f3/corrected-full-target.json",
+      "sha256": "4cad679e09f9ec50f12127bc5047a1affc81e0b100bc25a20eefaa494ed0bd71"
+    },
+    {
+      "bytes": 3142,
+      "path": "target/runner-parked-lease/targeted-c1339f3/corrected-full-target.log",
+      "sha256": "0214d35a40fe8c965048f36eb84816a4d8e23bc341bab09791519186652f1677"
+    },
+    {
+      "bytes": 267,
+      "path": "target/runner-parked-lease/targeted-c1339f3/supplemental.sha256",
+      "sha256": "76dd88c48336e25f5831c797af1be0ca2d133f32c6c1c8d4913cb071053436c8"
+    },
+    {
+      "bytes": 3691,
+      "path": "target/runner-parked-lease/ci-c1339f3/results.json",
+      "sha256": "f8016fb4e84f386b940c75f1acf715c216a1fb6929e2c5dc40d1f0d067ffbfa7"
+    },
+    {
+      "bytes": 3592,
+      "path": "target/runner-parked-lease/ci-c1339f3/continuation-results.json",
+      "sha256": "840e438b81805188facfcf0533896918387f209c5f04d6c97b3fcc582f30d16d"
+    },
+    {
+      "bytes": 4530,
+      "path": "target/runner-parked-lease/ci-c1339f3/execution-results.json",
+      "sha256": "8e05670c064cca8143a7522cda49ba3d95f5234990511fa401f5075bbef8f130"
+    },
+    {
+      "bytes": 11343,
+      "path": "target/runner-parked-lease/ci-c1339f3/execution2-results.json",
+      "sha256": "f96058baf98388f034cc81c9e28511615dd08be5c559e819b7588a9c21e77af2"
+    },
+    {
+      "bytes": 16159,
+      "path": "target/runner-parked-lease/ci-c1339f3/final-results.json",
+      "sha256": "9d34c9f62ad18d8ea629280dcef71772fed5465b02560b31a3ee204e0d657540"
+    },
+    {
+      "bytes": 8366,
+      "path": "target/runner-parked-lease/ci-c1339f3/final-log-evidence.json",
+      "sha256": "1502f7e5b7b4069916f59a1c0678cdce1494bca02ee848ef4849e459f50275fd"
+    },
+    {
+      "bytes": 1997876,
+      "path": "target/runner-parked-lease/ci-c1339f3/execution2-aggregate-build.log",
+      "sha256": "364d3005396cd9478c69f454dabe9ed80575f4a75190cb88ff2c2dc91fa6a215"
+    },
+    {
+      "bytes": 78,
+      "path": "target/runner-parked-lease/ci-c1339f3/execution2-package-verify.log",
+      "sha256": "4f6e997052bf8ed0fe4e97c0e068bea00d34f1891dc7ee807e21581cdbb6da2e"
+    },
+    {
+      "bytes": 4842,
+      "path": "target/runner-parked-lease/ci-c1339f3/execution2-pipeline-helpers-after-build.log",
+      "sha256": "1dd409830a9baca0ef827c2b2adf8dd3279495d3b6cf55f79f40ba50c194c669"
+    }
+  ],
+  "runs": [
+    {
+      "artifact_identity_record": null,
+      "command": "/usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- toolchain/rust-1.98.0/bin/cargo test --locked --offline --lib --test runner --no-run --message-format=json",
+      "competitors": [],
+      "compiler_error_count": 2,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 0.204,
+      "end_utc": "2026-10-17T04:58:56.925234+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 101,
+      "inner_argv": [
+        "/toolchain/bin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "--lib",
+        "--test",
+        "runner",
+        "--no-run",
+        "--message-format=json"
+      ],
+      "inner_argv_sha256": "3fa2810f1ae3b94e35a3bd566397466b23fccb1ca11d5c27240b1226b36c8687",
+      "label": "candidate-compile",
+      "log": "candidate-compile.log",
+      "log_sha256": "71ebe794fb5e932b2db81d622373cd92059eaaf3483cb0bb7401b6c783c52021",
+      "sanitized_command_sha256": "81ded1b24d7241e0216b02a6fb55ffae4d63ac027fe32da11bd757a652d39029",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T04:58:56.720361+00:00",
+      "test_summaries": [],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": null,
+      "command": "/usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- toolchain/rust-1.98.0/bin/cargo test --locked --offline --lib --test runner --no-run --message-format=json",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 24.861,
+      "end_utc": "2026-10-17T04:59:41.757111+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/toolchain/bin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "--lib",
+        "--test",
+        "runner",
+        "--no-run",
+        "--message-format=json"
+      ],
+      "inner_argv_sha256": "3fa2810f1ae3b94e35a3bd566397466b23fccb1ca11d5c27240b1226b36c8687",
+      "label": "candidate-compile-environment-correction",
+      "log": "candidate-compile-environment-correction.log",
+      "log_sha256": "61821374377d8acadbcb7cf8a004f1b7bfb18746c9c944797923c098b6ce74b8",
+      "sanitized_command_sha256": "d1b121e322d4f80a01511d2ddfb1cff900fe0d8c25f15c4fd4b09defa01e8b77",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T04:59:16.895102+00:00",
+      "test_summaries": [],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/smith_service-7c11b7ac37ef8548 runner::lease_tests:: --nocapture",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 0.007,
+      "end_utc": "2026-10-17T04:59:45.582212+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/work/target/debug/deps/smith_service-7c11b7ac37ef8548",
+        "runner::lease_tests::",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "3f5dfd148c92ca85c518bd749e2767f1842c3098fa67d2a7d66fa102c8d1b420",
+      "label": "candidate-ownership",
+      "log": "candidate-ownership.log",
+      "log_sha256": "738fa0c4266c07b33d95db4cb4fc2526011562da96b285d6dd8ba6e22cd8cb3a",
+      "sanitized_command_sha256": "c83f2566b641dda2643b8a4e6b1261946f09a626b8041752e35f6c38e31a838a",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T04:59:45.574532+00:00",
+      "test_summaries": [
+        {
+          "failed": 0,
+          "filtered_out": 110,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 7,
+          "status": "ok"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/smith_service-7c11b7ac37ef8548 runner::tests:: --nocapture",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 0.168,
+      "end_utc": "2026-10-17T04:59:45.750806+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/work/target/debug/deps/smith_service-7c11b7ac37ef8548",
+        "runner::tests::",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "5f90026796a0778af5458bd4f482be3c3ba532b9d7234a07deb5c937ec2e3779",
+      "label": "candidate-existing-runner-unit",
+      "log": "candidate-existing-runner-unit.log",
+      "log_sha256": "6542f2b6383b6b7355e0f5265c86803f4e727a5a29da1970f14229b44c136248",
+      "sanitized_command_sha256": "5dd97ff092c9458bd55b7ced4a975e393be07d88930f436b019c5b529c8ffc4a",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T04:59:45.582577+00:00",
+      "test_summaries": [
+        {
+          "failed": 0,
+          "filtered_out": 109,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 8,
+          "status": "ok"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/runner-6791028eb42a466c --nocapture",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 10.424,
+      "end_utc": "2026-10-17T04:59:56.201343+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 101,
+      "inner_argv": [
+        "/work/target/debug/deps/runner-6791028eb42a466c",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "8df595b0914d8f4d55a0be6d9ee27c70ddc7f98ca35eedbc09b81338553d8f59",
+      "label": "candidate-runner-all",
+      "log": "candidate-runner-all.log",
+      "log_sha256": "b6719d4cc5559e1cb1c9cb97623668257ff11815f1206df728b263fab43bd735",
+      "sanitized_command_sha256": "2160218bc767f64aad7774b262b2845128d3098207bb960d0f0a79426e6f07ed",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T04:59:45.776447+00:00",
+      "test_summaries": [
+        {
+          "failed": 39,
+          "filtered_out": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 2,
+          "status": "FAILED"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/runner-6791028eb42a466c provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch --exact --nocapture",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 22.382,
+      "end_utc": "2026-10-17T05:00:43.004497+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/work/target/debug/deps/runner-6791028eb42a466c",
+        "provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch",
+        "--exact",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "4fff04fe7139454601204404b2dc6ec7b7fda477b9d3ab10fe5fc24f0cfd21cc",
+      "label": "normal-1",
+      "log": "normal-1.log",
+      "log_sha256": "e78e67ad3195a4ade14dcee3f019febae41228f395263fac853c8b026d36e550",
+      "sanitized_command_sha256": "5f85888b68b6c3a540647a05767c52e6e7d32ed83aa5ffc2fff49f3a623374b9",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T05:00:20.622423+00:00",
+      "test_summaries": [
+        {
+          "failed": 0,
+          "filtered_out": 40,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 1,
+          "status": "ok"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/runner-6791028eb42a466c provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch --exact --nocapture",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 22.428,
+      "end_utc": "2026-10-17T05:01:05.459229+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/work/target/debug/deps/runner-6791028eb42a466c",
+        "provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch",
+        "--exact",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "4fff04fe7139454601204404b2dc6ec7b7fda477b9d3ab10fe5fc24f0cfd21cc",
+      "label": "normal-2",
+      "log": "normal-2.log",
+      "log_sha256": "336fae9aee5b2dc18434479d9b4b68d24abbef0df99b06dd8b16e3fbd0bf9196",
+      "sanitized_command_sha256": "5f85888b68b6c3a540647a05767c52e6e7d32ed83aa5ffc2fff49f3a623374b9",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T05:00:43.031199+00:00",
+      "test_summaries": [
+        {
+          "failed": 0,
+          "filtered_out": 40,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 1,
+          "status": "ok"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/runner-6791028eb42a466c provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch --exact --nocapture",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 22.768,
+      "end_utc": "2026-10-17T05:01:28.254941+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/work/target/debug/deps/runner-6791028eb42a466c",
+        "provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch",
+        "--exact",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "4fff04fe7139454601204404b2dc6ec7b7fda477b9d3ab10fe5fc24f0cfd21cc",
+      "label": "normal-3",
+      "log": "normal-3.log",
+      "log_sha256": "db52183edf4afb39e66b1d1c38c6be16a067e31b2cf0e0957197ecc331f45efd",
+      "sanitized_command_sha256": "5f85888b68b6c3a540647a05767c52e6e7d32ed83aa5ffc2fff49f3a623374b9",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T05:01:05.486914+00:00",
+      "test_summaries": [
+        {
+          "failed": 0,
+          "filtered_out": 40,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 1,
+          "status": "ok"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/runner-6791028eb42a466c provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch --exact --nocapture",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 22.573,
+      "end_utc": "2026-10-17T05:01:55.266531+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/work/target/debug/deps/runner-6791028eb42a466c",
+        "provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch",
+        "--exact",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "4fff04fe7139454601204404b2dc6ec7b7fda477b9d3ab10fe5fc24f0cfd21cc",
+      "label": "single-cpu-1",
+      "log": "single-cpu-1.log",
+      "log_sha256": "fbfe51ce6eaa9a9a2c0be7a6467a4fd4ad384886545f4232337b44d20f8f48e0",
+      "sanitized_command_sha256": "c83ae84ec1ba7dc01061f30466e0e7440ba68227eb0d5a867c839371fbfe6738",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T05:01:32.693133+00:00",
+      "test_summaries": [
+        {
+          "failed": 0,
+          "filtered_out": 40,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 1,
+          "status": "ok"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/runner-6791028eb42a466c provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch --exact --nocapture",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 22.633,
+      "end_utc": "2026-10-17T05:02:17.927324+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/work/target/debug/deps/runner-6791028eb42a466c",
+        "provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch",
+        "--exact",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "4fff04fe7139454601204404b2dc6ec7b7fda477b9d3ab10fe5fc24f0cfd21cc",
+      "label": "single-cpu-2",
+      "log": "single-cpu-2.log",
+      "log_sha256": "ce56d3d0db7c50a68b4531b0dbc21d261f3835852c5a05e6f0f15ca07bc2ace0",
+      "sanitized_command_sha256": "c83ae84ec1ba7dc01061f30466e0e7440ba68227eb0d5a867c839371fbfe6738",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T05:01:55.294391+00:00",
+      "test_summaries": [
+        {
+          "failed": 0,
+          "filtered_out": 40,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 1,
+          "status": "ok"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/runner-6791028eb42a466c provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch --exact --nocapture",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 22.565,
+      "end_utc": "2026-10-17T05:02:40.519401+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/work/target/debug/deps/runner-6791028eb42a466c",
+        "provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch",
+        "--exact",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "4fff04fe7139454601204404b2dc6ec7b7fda477b9d3ab10fe5fc24f0cfd21cc",
+      "label": "single-cpu-3",
+      "log": "single-cpu-3.log",
+      "log_sha256": "f957037825a7a35a5281631919de0ffe091fc62bdfa7304ce731d23fad5af251",
+      "sanitized_command_sha256": "c83ae84ec1ba7dc01061f30466e0e7440ba68227eb0d5a867c839371fbfe6738",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T05:02:17.954085+00:00",
+      "test_summaries": [
+        {
+          "failed": 0,
+          "filtered_out": 40,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 1,
+          "status": "ok"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/runner-6791028eb42a466c provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch --exact --nocapture",
+      "competitors": [
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1481893,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        },
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1481894,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        },
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1481895,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        },
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1481896,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        }
+      ],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 42.982,
+      "end_utc": "2026-10-17T05:03:30.602455+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/work/target/debug/deps/runner-6791028eb42a466c",
+        "provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch",
+        "--exact",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "4fff04fe7139454601204404b2dc6ec7b7fda477b9d3ab10fe5fc24f0cfd21cc",
+      "label": "contended-1",
+      "log": "contended-1.log",
+      "log_sha256": "593e64d0fa9f5f364cd5dc98b794e23ea54fb3a92bc1db26c5d196cf686edd83",
+      "sanitized_command_sha256": "c83ae84ec1ba7dc01061f30466e0e7440ba68227eb0d5a867c839371fbfe6738",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T05:02:47.586574+00:00",
+      "test_summaries": [
+        {
+          "failed": 0,
+          "filtered_out": 40,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 1,
+          "status": "ok"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/runner-6791028eb42a466c provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch --exact --nocapture",
+      "competitors": [
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1484769,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        },
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1484770,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        },
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1484771,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        },
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1484772,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        }
+      ],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 42.677,
+      "end_utc": "2026-10-17T05:04:13.332781+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/work/target/debug/deps/runner-6791028eb42a466c",
+        "provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch",
+        "--exact",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "4fff04fe7139454601204404b2dc6ec7b7fda477b9d3ab10fe5fc24f0cfd21cc",
+      "label": "contended-2",
+      "log": "contended-2.log",
+      "log_sha256": "0decb2f806a5928100dcceb5ca1870c1066ebbb30ca39ba0e5672527c19bd5d5",
+      "sanitized_command_sha256": "c83ae84ec1ba7dc01061f30466e0e7440ba68227eb0d5a867c839371fbfe6738",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T05:03:30.632608+00:00",
+      "test_summaries": [
+        {
+          "failed": 0,
+          "filtered_out": 40,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 1,
+          "status": "ok"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/runner-6791028eb42a466c provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch --exact --nocapture",
+      "competitors": [
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1485872,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        },
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1485873,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        },
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1485874,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        },
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1485875,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        }
+      ],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 42.676,
+      "end_utc": "2026-10-17T05:04:56.072360+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/work/target/debug/deps/runner-6791028eb42a466c",
+        "provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch",
+        "--exact",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "4fff04fe7139454601204404b2dc6ec7b7fda477b9d3ab10fe5fc24f0cfd21cc",
+      "label": "contended-3",
+      "log": "contended-3.log",
+      "log_sha256": "1bad18f3b268863ff318393b043a13828df57e0f908cd10f8f24f7db79334b63",
+      "sanitized_command_sha256": "c83ae84ec1ba7dc01061f30466e0e7440ba68227eb0d5a867c839371fbfe6738",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T05:04:13.361228+00:00",
+      "test_summaries": [
+        {
+          "failed": 0,
+          "filtered_out": 40,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 1,
+          "status": "ok"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": "candidate-artifacts.json",
+      "command": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/runner-6791028eb42a466c provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch --exact --nocapture",
+      "competitors": [
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1487924,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        },
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1487925,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        },
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1487926,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        },
+        {
+          "argv": "/usr/bin/taskset -c 0 /usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/candidate /work --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/snapshot scratch/snapshot --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/candidate/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- /usr/bin/python3 -c import time\nend=time.monotonic()+190\nx=1\nwhile time.monotonic()<end:\n x=(x*1664525+1013904223)%4294967296",
+          "bound_seconds": 190,
+          "exit_code": -15,
+          "owned_wrapper_absent_final_check": true,
+          "pid": 1487927,
+          "reaped": true,
+          "running_before_owned_cleanup": true,
+          "stderr": ""
+        }
+      ],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 42.507,
+      "end_utc": "2026-10-17T05:05:38.641980+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/work/target/debug/deps/runner-6791028eb42a466c",
+        "provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch",
+        "--exact",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "4fff04fe7139454601204404b2dc6ec7b7fda477b9d3ab10fe5fc24f0cfd21cc",
+      "label": "contended-4",
+      "log": "contended-4.log",
+      "log_sha256": "4460ace46c50805a1df1d57abd05658924c1562deb4ac691b59f8d8cee35ba0c",
+      "sanitized_command_sha256": "c83ae84ec1ba7dc01061f30466e0e7440ba68227eb0d5a867c839371fbfe6738",
+      "source_inventory_record": "candidate-source-before.json",
+      "start_utc": "2026-10-17T05:04:56.100277+00:00",
+      "test_summaries": [
+        {
+          "failed": 0,
+          "filtered_out": 40,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 1,
+          "status": "ok"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "candidate"
+    },
+    {
+      "artifact_identity_record": null,
+      "command": "/usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/negative-a /work --ro-bind target/runner-parked-lease/targeted-c1339f3/negative-a/snapshot scratch/snapshot --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/cargo-home/registry scratch/cargo-home/registry --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/negative-a/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- toolchain/rust-1.98.0/bin/cargo test --locked --offline --lib --test runner --no-run --message-format=json",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 26.635,
+      "end_utc": "2026-10-17T05:06:12.876024+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/toolchain/bin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "--lib",
+        "--test",
+        "runner",
+        "--no-run",
+        "--message-format=json"
+      ],
+      "inner_argv_sha256": "3fa2810f1ae3b94e35a3bd566397466b23fccb1ca11d5c27240b1226b36c8687",
+      "label": "negative-a-compile",
+      "log": "negative-a-compile.log",
+      "log_sha256": "53ec19d127cdeb8be9619e41390150ff6875e76938e58dc3aaf86aade404266a",
+      "sanitized_command_sha256": "1206e55343fe30620163ce69ca080e8cf3938df166e187cece8d662b18c3c8a7",
+      "source_inventory_record": "negative-a-source-patched.json",
+      "start_utc": "2026-10-17T05:05:46.239974+00:00",
+      "test_summaries": [],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "negative-a"
+    },
+    {
+      "artifact_identity_record": "negative-a-artifacts.json",
+      "command": "/usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/negative-a /work --ro-bind target/runner-parked-lease/targeted-c1339f3/negative-a/snapshot scratch/snapshot --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/cargo-home/registry scratch/cargo-home/registry --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/negative-a/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/smith_service-7c11b7ac37ef8548 runner::lease_tests:: --nocapture",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 0.007,
+      "end_utc": "2026-10-17T05:06:12.938288+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 101,
+      "inner_argv": [
+        "/work/target/debug/deps/smith_service-7c11b7ac37ef8548",
+        "runner::lease_tests::",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "3f5dfd148c92ca85c518bd749e2767f1842c3098fa67d2a7d66fa102c8d1b420",
+      "label": "negative-a-ownership",
+      "log": "negative-a-ownership.log",
+      "log_sha256": "92bb40e5fb86f1d7035176547ec4bed8caa8d4f57f821818070aefc4640aa5ee",
+      "sanitized_command_sha256": "384f3660bad5f3bf37b0f2e7b0e2c0be6b2a6a3dedaab754533462ec77ab03f4",
+      "source_inventory_record": "negative-a-source-patched.json",
+      "start_utc": "2026-10-17T05:06:12.930646+00:00",
+      "test_summaries": [
+        {
+          "failed": 5,
+          "filtered_out": 110,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 2,
+          "status": "FAILED"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "negative-a"
+    },
+    {
+      "artifact_identity_record": null,
+      "command": "/usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/negative-b /work --ro-bind target/runner-parked-lease/targeted-c1339f3/negative-b/snapshot scratch/snapshot --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/cargo-home/registry scratch/cargo-home/registry --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/negative-b/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- toolchain/rust-1.98.0/bin/cargo test --locked --offline --lib --test runner --no-run --message-format=json",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 26.797,
+      "end_utc": "2026-10-17T05:06:39.772942+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 0,
+      "inner_argv": [
+        "/toolchain/bin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "--lib",
+        "--test",
+        "runner",
+        "--no-run",
+        "--message-format=json"
+      ],
+      "inner_argv_sha256": "3fa2810f1ae3b94e35a3bd566397466b23fccb1ca11d5c27240b1226b36c8687",
+      "label": "negative-b-compile",
+      "log": "negative-b-compile.log",
+      "log_sha256": "9051d73d2605f97096165b250cace4a1708beb99532126f0b15381f8b5af2f69",
+      "sanitized_command_sha256": "857c8e8610ddca84a81a0ae4e2a2a29daec2957b1b8cc6b3ee18ede541b61709",
+      "source_inventory_record": "negative-b-source-patched.json",
+      "start_utc": "2026-10-17T05:06:12.974744+00:00",
+      "test_summaries": [],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "negative-b"
+    },
+    {
+      "artifact_identity_record": "negative-b-artifacts.json",
+      "command": "/usr/bin/bwrap --unshare-all --die-with-parent --new-session --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 --symlink usr/bin /bin --dir /etc/alternatives --symlink /usr/bin/gcc /etc/alternatives/cc --ro-bind toolchain/rust-1.98.0 /toolchain --bind target/runner-parked-lease/targeted-c1339f3/negative-b /work --ro-bind target/runner-parked-lease/targeted-c1339f3/negative-b/snapshot scratch/snapshot --ro-bind target/runner-parked-lease/targeted-c1339f3/candidate/cargo-home/registry scratch/cargo-home/registry --proc /proc --dev /dev --bind target/runner-parked-lease/targeted-c1339f3/negative-b/tmp /tmp --dir /home --clearenv --setenv PATH toolchain/rust-1.98.0/bin:/usr/bin:/bin --setenv HOME scratch/home --setenv CARGO_HOME scratch/cargo-home --setenv CARGO_TARGET_DIR scratch/target --setenv RUSTC toolchain/rust-1.98.0/bin/rustc --setenv RUSTDOC toolchain/rust-1.98.0/bin/rustdoc --setenv CARGO_NET_OFFLINE true --setenv CARGO_PROFILE_TEST_DEBUG 0 --setenv CARGO_PROFILE_TEST_OPT_LEVEL 0 --setenv CARGO_BUILD_JOBS 2 --setenv TMPDIR /tmp --setenv XDG_DATA_HOME scratch/xdg-data --setenv XDG_CONFIG_HOME scratch/xdg-config --setenv XDG_CACHE_HOME scratch/xdg-cache --setenv XDG_STATE_HOME scratch/xdg-state --setenv XDG_RUNTIME_DIR scratch/runtime --setenv LANG C.UTF-8 --chdir scratch/snapshot/service -- scratch/target/debug/deps/smith_service-7c11b7ac37ef8548 runner::lease_tests:: --nocapture",
+      "competitors": [],
+      "compiler_error_count": 0,
+      "compiler_warning_count": 0,
+      "elapsed_seconds": 0.007,
+      "end_utc": "2026-10-17T05:06:39.834873+00:00",
+      "environment_and_profile_record": "environment.json",
+      "exit_code": 101,
+      "inner_argv": [
+        "/work/target/debug/deps/smith_service-7c11b7ac37ef8548",
+        "runner::lease_tests::",
+        "--nocapture"
+      ],
+      "inner_argv_sha256": "3f5dfd148c92ca85c518bd749e2767f1842c3098fa67d2a7d66fa102c8d1b420",
+      "label": "negative-b-ownership",
+      "log": "negative-b-ownership.log",
+      "log_sha256": "fe45d6b934d3b01b9e4a881e4efb61062da0222ef752697f993d038225fec9c5",
+      "sanitized_command_sha256": "4afc87d3f4359765584887669daf972b4035b1d617ec7aef0121740762c566cf",
+      "source_inventory_record": "negative-b-source-patched.json",
+      "start_utc": "2026-10-17T05:06:39.827156+00:00",
+      "test_summaries": [
+        {
+          "failed": 1,
+          "filtered_out": 110,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 6,
+          "status": "FAILED"
+        }
+      ],
+      "timed_out": false,
+      "timeout_seconds": 180,
+      "variant": "negative-b"
+    }
+  ],
+  "schedule": [
+    "candidate-compile",
+    "candidate-ownership",
+    "candidate-existing-runner-unit",
+    "candidate-runner-all",
+    "normal-1",
+    "normal-2",
+    "normal-3",
+    "single-cpu-1",
+    "single-cpu-2",
+    "single-cpu-3",
+    "contended-1",
+    "contended-2",
+    "contended-3",
+    "contended-4",
+    "negative-a-compile",
+    "negative-a-ownership",
+    "negative-b-compile",
+    "negative-b-ownership"
+  ],
+  "schedule_deviations": {
+    "compile_setup_failure": "Hidden cc alternatives symlink; preserved candidate-compile exit 101. Single separately named bounded environment-correction compile passed. No source/profile/dependency change.",
+    "integration_setup_failure": "Scratch /tmp and /work mode 0775 caused unsafe ancestor rejection. candidate-runner-all exit 101 with 2 pass and 39 fail retained WITHOUT replacement. Set owned roots 0700 before unexecuted fixed measurements/controls.",
+    "permission_changes": [
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "candidate"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "candidate/home"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "candidate/cargo-home"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "candidate/tmp"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "candidate/xdg-data"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "candidate/xdg-config"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "candidate/xdg-cache"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "candidate/xdg-state"
+      },
+      {
+        "after": "0o700",
+        "before": "0o700",
+        "path": "candidate/runtime"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-a"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-a/home"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-a/cargo-home"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-a/tmp"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-a/xdg-data"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-a/xdg-config"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-a/xdg-cache"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-a/xdg-state"
+      },
+      {
+        "after": "0o700",
+        "before": "0o700",
+        "path": "negative-a/runtime"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-b"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-b/home"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-b/cargo-home"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-b/tmp"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-b/xdg-data"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-b/xdg-config"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-b/xdg-cache"
+      },
+      {
+        "after": "0o700",
+        "before": "0o775",
+        "path": "negative-b/xdg-state"
+      },
+      {
+        "after": "0o700",
+        "before": "0o700",
+        "path": "negative-b/runtime"
+      }
+    ],
+    "schedule_deviation": "One additional compile infrastructure correction only; no integration or measurement replacement. No acceptance claim."
+  },
+  "schema_version": 1,
+  "scope": "Bounded parked-slot release repair; source gates on isolated pinned base plus two approved source overlays, not concurrent live Projects work or hosted/installed acceptance.",
+  "self_check": {
+    "ci_command_log_hashes_verified": 7,
+    "ci_indexed_evidence_files_verified": 40,
+    "original_indexed_files_verified": 57,
+    "supplemental_indexed_files_verified": 3
+  },
+  "source": {
+    "service/src/runner.rs": "3bd158de9566d0b84f8d296b6472bb3c3efc3d3b2a1631fdf77aaf83f7dc05c8",
+    "service/src/runner_lease_tests.rs": "6a504792ce009209c5ff58aecd0111b934f4b47ed0d6a27a8e9539c3f4281a19"
+  },
+  "targeted_original_record_summary": {
+    "candidate_compile": {
+      "corrected_compiler_errors": 0,
+      "corrected_compiler_warnings": 0,
+      "initial_cargo_warning_lines": 1,
+      "initial_compiler_errors": 2,
+      "initial_setup_attempt_exit": 101,
+      "single_environment_correction_exit": 0
+    },
+    "candidate_existing_runner_unit": {
+      "failed": 0,
+      "ignored": 0,
+      "passed": 8
+    },
+    "candidate_ownership": {
+      "failed": 0,
+      "ignored": 0,
+      "passed": 7
+    },
+    "competitors": {
+      "absent_at_final_check": 16,
+      "launched": 16,
+      "reaped": 16
+    },
+    "exact_samples": {
+      "contended_passed": 4,
+      "failed": 0,
+      "ignored": 0,
+      "normal_passed": 3,
+      "single_cpu_passed": 3
+    },
+    "full_integration_initial_harness_failure": {
+      "failed": 39,
+      "ignored": 0,
+      "passed": 2,
+      "replacement_run": false
+    },
+    "production_acceptance": "not established; full target failed; aggregate gates not run"
+  },
+  "targeted_original_record_summary_limit": "Original summary is historical and preserved verbatim; its failed full-target attempt is not relabelled PASS. See the separately recorded corrected full target and CI results for subsequent evidence.",
+  "work_id": "LOCAL-SMITH-RUNNER-PARKED-LEASE"
+}

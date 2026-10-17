@@ -1,0 +1,96 @@
+GATE: cargo fmt --all --check
+EXIT: 0
+
+GATE: cargo clippy --offline --locked --all-targets -- -D warnings
+    Checking smith-service v0.1.0 (<service-worktree>)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.40s
+EXIT: 0
+
+GATE: cargo test --offline --locked --all-targets
+   Compiling smith-service v0.1.0 (<service-worktree>)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.37s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-0d749e4086120ae3)
+
+running 12 tests
+test manager::tests::captured_helper_fixture ... ignored, fixture invoked only by captured-helper subprocess tests
+test app_transport::tests::truncated_app_frame_is_not_a_request ... ok
+test manager::tests::properties_fail_closed ... ok
+test providers::tests::text_only_response_rejects_tools_remote_identity_and_limits ... ok
+test manager::tests::parent_changed_before_guard_armed_prevents_exec ... ok
+test providers::tests::transport_refuses_redirect_and_bounds_chunked_bodies ... ok
+test manager::tests::abrupt_helper_death_kills_captured_direct_fake_manager_child ... ok
+test app_transport::tests::app_frames_accept_exact_4mib_payload_but_reject_overflow_and_multiple ... ok
+test manager::tests::cooperative_helper_termination_cleans_captured_fake_manager_group ... ok
+test providers::tests::transport_budget_is_finite_and_expired_budget_cannot_retry ... ok
+test manager::tests::injected_fake_command_deadline_output_and_pipe_cleanup_are_bounded ... ok
+test app_transport::tests::blocked_helper_output_has_finite_budget_and_restores_flags ... ok
+
+test result: ok. 11 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 2.00s
+
+     Running unittests src/main.rs (target/debug/deps/smith_service-f15770cc9c754a05)
+
+running 1 test
+test tests::production_preflight_rejects_root_and_accepts_unprivileged_identity ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/application.rs (target/debug/deps/application-af179250441ce98b)
+
+running 24 tests
+test installed_models_reject_cloud_remote_substitution_and_malformed_digest ... ok
+test installed_inventory_rejects_raw_duplicate_names_before_eligibility_filtering ... ok
+test production_source_has_no_speech_transport_or_audio_execution ... ok
+test corrupt_unsupported_symlink_and_unsafe_app_state_preserved ... ok
+test legacy_null_audio_is_strict_and_corrupt_migration_never_rewrites ... ok
+test retired_requests_reject_without_execution_and_tombstones_win ... ok
+test live_text_inventory_retires_speech_and_configure_requires_explicit_null ... ok
+test corrupt_nested_result_and_inconsistent_operation_status_are_preserved ... ok
+test unsafe_destination_change_blocks_admission_without_inference ... ok
+test strict_requests_ids_exact_tags_and_text_limits ... ok
+test multiple_running_jobs_are_corrupt_before_reconciliation_and_preserved ... ok
+test failed_generation_does_not_append_partial_history ... ok
+test long_text_answer_is_not_truncated_or_regenerated ... ok
+test active_worker_keeps_state_poll_responsive_and_blocks_queue_and_config ... ok
+test voice_v1_migration_preserves_preferences_history_results_ids_and_no_replay ... ok
+test restart_interrupts_pending_preserves_terminal_and_never_replays ... ok
+test invalid_live_inventory_is_bounded_failure_not_persisted_corruption ... ok
+test every_legacy_running_kind_interrupts_without_replay ... ok
+test maximal_valid_inventory_metadata_stays_pollable_across_restart ... ok
+test durable_identifier_capacity_is_explicit_not_silent_forgetting ... ok
+test dropped_gated_worker_cannot_publish_into_reopened_roots ... ok
+test operation_and_speech_errors_require_bounded_semantics_and_nullable_fields ... ok
+test history_is_bounded_in_complete_pairs_and_evicted_ids_cannot_resurrect ... ok
+test nested_inventory_semantic_type_and_size_corruption_is_preserved ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.88s
+
+     Running tests/debug_service.rs (target/debug/deps/debug_service-c6f96b13eb12999d)
+
+running 18 tests
+test app_cli_stdin_envelope_is_separate_and_never_uses_endpoint_argv ... ok
+test compiled_identity_is_finite_and_ambient_manager_override_is_not_a_control_option ... ok
+test fixture_spawn_waits_until_executable_writer_is_closed ... ok
+test duplicate_daemon_does_not_adopt_or_remove_verified_socket ... ok
+test root_normalization_state_types_and_links_fail_closed ... ok
+test unsafe_roots_files_units_sockets_and_corrupt_state_fail_closed ... ok
+test real_socket_rejects_wrong_pid_bounded_frames_and_persists_on_client_detach ... ok
+test concurrent_apply_is_rejected_without_effects ... ok
+test pending_reload_rejects_foreign_overridden_transient_and_ambiguous_runtime ... ok
+test stale_app_path_blocks_start_without_adoption_or_removal ... ok
+test loaded_pending_reload_repairs_only_with_separate_consent_and_retries_failure ... ok
+test app_buffered_large_frame_and_unknown_fields_are_rejected_without_provider_work ... ok
+test app_peer_conflict_and_corrupt_state_fail_closed_without_changing_core ... ok
+test manager_fragment_binary_and_pid_drift_block_bridge_adoption ... ok
+test separate_app_socket_verified_by_current_controller_facts_preserves_control ... ok
+test action_time_source_paths_snapshot_and_replay_bindings ... ok
+test separate_consented_lifecycle_and_exact_json_contract ... ok
+test partial_manager_failure_preserves_files_and_never_falls_back ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.37s
+
+EXIT: 0
+
+GATE: cargo build --offline --release --locked
+   Compiling smith-service v0.1.0 (<service-worktree>)
+    Finished `release` profile [optimized] target(s) in 1.76s
+EXIT: 0

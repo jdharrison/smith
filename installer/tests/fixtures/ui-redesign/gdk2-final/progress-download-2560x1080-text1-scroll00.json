@@ -1,0 +1,26 @@
+{
+  "decorations": "client area only; no window manager in Xvfb",
+  "font_family": "JetBrains Mono",
+  "gdk_scale_factor": 2,
+  "gtk_font_name": "Sans 10",
+  "gtk_xft_dpi": 98304,
+  "heading_pango_font": "JetBrains Mono Semi-Bold 16.485",
+  "logical_size": [
+    2560,
+    1080
+  ],
+  "png_bytes": 95198,
+  "png_size": [
+    5120,
+    2160
+  ],
+  "renderer": "GTK3 Widget.draw / Cairo ImageSurface / GdkPixbuf PNG",
+  "scroll": {
+    "page_size": 936.0,
+    "upper": 936.0,
+    "value": 0.0
+  },
+  "sha256": "0c76cd9c56c9ba1ea1a8f4226e5af818c2cd5c2a19b37048bb5b5c81c17fe137",
+  "synthetic": true,
+  "text_scale": 1
+}

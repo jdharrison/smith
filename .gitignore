@@ -1,1 +1,25 @@
-/target
+/target/
+
+# Flutter generated state and outputs
+/client/.dart_tool/
+/client/.flutter-plugins-dependencies
+/client/.pub-cache/
+/client/.pub/
+/client/build/
+/client/dist/
+/client/**/doc/api/
+/client/test/failures/
+
+# Rust component outputs and exported recipient package
+/service/build/
+/service/dist/
+/service/target/
+/installer/build/
+/installer/dist/
+/installer/target/
+
+# Developer-only generated SDK/environment and Python caches
+/dagger/sdk/
+/dagger/.venv/
+__pycache__/
+*.py[cod]
