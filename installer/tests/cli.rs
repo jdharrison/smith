@@ -220,8 +220,15 @@ impl Fixture {
         fs::copy(env!("CARGO_BIN_EXE_smith-installer"), &executable).unwrap();
         fs::set_permissions(&executable, fs::Permissions::from_mode(0o755)).unwrap();
 
-        // Real native bytes for both helper copies; never executed as a service.
-        let native = fs::read(&executable).unwrap();
+        // Keep the real installer above, but avoid repeatedly hashing its large
+        // test-build bytes as inert payloads within the child watchdog budget.
+        let native =
+            fs::read("/usr/bin/true").expect("Ubuntu provides a small native true executable");
+        assert!(
+            native.starts_with(b"\x7fELF"),
+            "Payload must be a native ELF"
+        );
+        assert!(native.len() <= 1024 * 1024, "Keep inert CLI payloads small");
         file(
             &package.join("payload/service/smith-service"),
             &native,

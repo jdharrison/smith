@@ -1,5 +1,13 @@
 # Smith validation
 
+## Installer CLI fixture budget repair — local selected gates PASS
+
+**Implemented test-only repair, not hosted CI acceptance.** Under the [approved bounded plan](docs/plans/LOCAL-SMITH-CLI-FIXTURE-BUDGET.md), the actual Cargo-built installer still executes, while its three inert fixture payloads use a small genuine Ubuntu ELF (magic/≤1MiB guards). No production code, assertions, 30-second watchdog, consent/integrity check, workflow or validation gate was disabled or relaxed.
+
+The formerly failing actual Rust test passed under controlled CPU contention in **0.3245s**. Direct native tests passed **281**, including all **15 CLI tests**, with two existing controlled fixture ignores; formatting and locked warning-denied Clippy passed. Configured `make installer/test package/test` with verified official Dagger v0.21.9 passed **281 native +nine isolated GTK +41 actual-ELF package =331 tests**, including interpreter-free Ubuntu CLI execution; zero GTK/package skips. All **1,062 selected inputs** remained stable. Full service/Flutter aggregate was not rerun for this test-only change, and repeated direct/native checks are not double-counted.
+
+[Evidence](docs/evidence/cli-fixture-fix/README.md), [command/input binding](docs/evidence/cli-fixture-fix/results.json), [source manifest](docs/evidence/cli-fixture-fix/source-manifest.json) and [independent review](docs/plans/LOCAL-SMITH-CLI-FIXTURE-BUDGET-REVIEW.md) distinguish these local results from the failed [hosted run38982647442](https://github.com/jdharrison/smith/actions/runs/38982647442). Controlled diagnosis reproduced payload-cost sensitivity but did not establish historical runner scheduling/backend details. Existing hosted failure is not relabelled PASS. No commit, push, hosted rerun, merge, release or installation occurred in this fix scope.
+
 ## Root promotion — fresh local source/build/package validation PASS
 
 The approved [root-promotion plan](docs/plans/LOCAL-SMITH-ROOT-PROMOTION.md) promotes the former `next/` product to the repository root and intentionally retires the old root source/CLI. Installed `smith-next` identities, application/Core/storage contracts, credentials, models and live services are unchanged.
