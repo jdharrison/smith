@@ -1,0 +1,105 @@
+COMMAND: flutter test --no-pub test/dev_jobs_test.dart test/dev_jobs_controller_list_test.dart test/dev_jobs_list_view_test.dart --reporter expanded
+00:00 +0: loading <workspace>/client/test/dev_jobs_test.dart
+00:00 +0: <workspace>/client/test/dev_jobs_test.dart: reconciled preserves uncertain history and requires quiescence evidence
+00:00 +1: <workspace>/client/test/dev_jobs_test.dart: frozen pre-reconciled v2 status allowlist rejects the new value
+00:00 +2: <workspace>/client/test/dev_jobs_test.dart: NativeAppApi validates reconciled state and detail responses
+00:00 +3: <workspace>/client/test/dev_jobs_test.dart: strict exact v2 summary, statuses, reply and cleanup invariants
+00:00 +4: <workspace>/client/test/dev_jobs_test.dart: canonical u64 config revision stays a literal string at all boundaries
+00:00 +5: <workspace>/client/test/dev_jobs_test.dart: strict state, capacity, model and detail schemas and correlation
+00:00 +6: <workspace>/client/test/dev_jobs_test.dart: NativeAppApi freezes v2 get arguments without legacy fallback
+00:00 +7: <workspace>/client/test/dev_jobs_test.dart: TRANSPORT: shared guard, original identity, query-only Resolve
+00:00 +8: <workspace>/client/test/dev_jobs_test.dart: APP_UNAVAILABLE: shared guard, original identity, query-only Resolve
+00:00 +9: <workspace>/client/test/dev_jobs_test.dart: APP_UNAVAILABLE accepted before ack preserves original detail and capacity
+00:00 +10: <workspace>/client/test/dev_jobs_test.dart: Resolve keeps original result but another retained active job still guards desktop
+00:00 +11: <workspace>/client/test/dev_jobs_test.dart: foreign admission or detail never releases uncertainty
+00:00 +12: <workspace>/client/test/dev_jobs_test.dart: missing model/readiness, service mismatch, revision drift gate Start
+00:00 +13: <workspace>/client/test/dev_jobs_test.dart: missing previously accepted identity is a sticky protocol block
+00:00 +14: <workspace>/client/test/dev_jobs_test.dart: used includes legacy capacity without loading Agent records
+00:00 +15: <workspace>/client/test/dev_jobs_controller_list_test.dart: reconciled terminal preserves other admission blocker: none
+00:00 +16: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +17: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +18: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +19: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +20: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +21: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +22: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +23: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +24: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +25: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +26: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +27: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +28: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +29: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +30: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +31: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +32: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +33: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +34: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +35: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +36: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +37: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +38: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +39: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +40: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +41: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +42: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +43: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +44: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +45: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +46: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +47: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +48: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +49: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +50: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +51: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +52: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +53: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +54: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +55: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +56: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +57: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +58: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +59: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +60: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +61: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +62: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +63: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +64: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +65: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +66: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +67: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +68: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +69: <workspace>/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +70: <workspace>/client/test/dev_jobs_list_view_test.dart: reconciled list/details reply=false narrow-text2=false remain read-only
+00:00 +71: <workspace>/client/test/dev_jobs_test.dart: confirmation disclosures, newer typing retained, selectable reply and cleanup uncertainty
+00:00 +72: <workspace>/client/test/dev_jobs_test.dart: confirmation disclosures, newer typing retained, selectable reply and cleanup uncertainty
+00:00 +73: <workspace>/client/test/dev_jobs_test.dart: confirmation disclosures, newer typing retained, selectable reply and cleanup uncertainty
+00:01 +74: <workspace>/client/test/dev_jobs_test.dart: confirmation disclosures, newer typing retained, selectable reply and cleanup uncertainty
+00:01 +75: <workspace>/client/test/dev_jobs_list_view_test.dart: all keyed rows, full identities, stable order and cross-project details
+00:01 +76: <workspace>/client/test/dev_jobs_test.dart: narrow enlarged form, IME, and cancelled confirmation retain exact draft
+00:01 +77: <workspace>/client/test/dev_jobs_test.dart: narrow enlarged form, IME, and cancelled confirmation retain exact draft
+00:01 +78: <workspace>/client/test/dev_jobs_list_view_test.dart: empty is distinct from unavailable and legacy-only full capacity
+00:01 +79: <workspace>/client/test/dev_jobs_list_view_test.dart: empty is distinct from unavailable and legacy-only full capacity
+00:01 +80: <workspace>/client/test/dev_jobs_list_view_test.dart: empty is distinct from unavailable and legacy-only full capacity
+00:01 +81: <workspace>/client/test/dev_jobs_list_view_test.dart: initial list failure is unavailable, never an empty list
+00:01 +82: <workspace>/client/test/dev_jobs_list_view_test.dart: failed refresh retains labelled stale rows and their readable details
+00:01 +83: <workspace>/client/test/dev_jobs_list_view_test.dart: late detail A cannot replace B; close/reopen coalesces A without new timers
+00:01 +84: <workspace>/client/test/dev_jobs_list_view_test.dart: keyed detail failure keeps one coherent stale snapshot and no invented repository absence
+00:01 +85: <workspace>/client/test/dev_jobs_list_view_test.dart: running detail explains no stop, separate cleanup certainty and blocked admission
+00:01 +86: <workspace>/client/test/dev_jobs_list_view_test.dart: unknown detail explains no stop, separate cleanup certainty and blocked admission
+00:02 +87: <workspace>/client/test/dev_jobs_list_view_test.dart: cleanup_unknown detail explains no stop, separate cleanup certainty and blocked admission
+00:02 +88: <workspace>/client/test/dev_jobs_list_view_test.dart: active observation updates the open keyed detail and stops without modal polling
+00:02 +89: <workspace>/client/test/dev_jobs_list_view_test.dart: IME/draft changes invalidate review; an obsolete Start cannot consume a replacement review
+00:02 +90: <workspace>/client/test/dev_jobs_list_view_test.dart: one named modal Edit -> Review -> Start; duplicate callback submits exactly once
+00:02 +91: <workspace>/client/test/dev_jobs_list_view_test.dart: closed/reopened pending modal retains full newer editing value after late ack
+00:02 +92: <workspace>/client/test/dev_jobs_list_view_test.dart: known refusal and unknown admission keep exact drafts; no automatic resubmission
+00:02 +93: <workspace>/client/test/dev_jobs_list_view_test.dart: project and model revision drift invalidate review and obsolete callbacks
+00:03 +94: <workspace>/client/test/dev_jobs_list_view_test.dart: hiding origin removes its covered named modal, never the unrelated top route
+00:03 +95: <workspace>/client/test/dev_jobs_list_view_test.dart: hiding a pending source detaches and late acknowledgement retains its draft
+00:03 +96: <workspace>/client/test/dev_jobs_list_view_test.dart: disposing a pending origin cannot close another route on late acknowledgement
+00:03 +97: <workspace>/client/test/dev_jobs_list_view_test.dart: two views retain independent modal projects and exact drafts
+00:03 +98: <workspace>/client/test/dev_jobs_list_view_test.dart: 360x400 text2 rows and short modals scroll with 48px actions
+00:03 +99: <workspace>/client/test/dev_jobs_list_view_test.dart: 400x400 text2 rows and short modals scroll with 48px actions
+00:03 +100: All tests passed!
+
+EXIT: 0

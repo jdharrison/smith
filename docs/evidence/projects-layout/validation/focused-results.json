@@ -1,0 +1,258 @@
+{
+  "changed_core_paths": [],
+  "commands": [
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/projects_view_test.dart",
+        "test/projects_navigation_test.dart",
+        "test/projects_layout_test.dart",
+        "test/projects_layout_golden_test.dart",
+        "test/projects_controller_test.dart",
+        "test/projects_protocol_test.dart"
+      ],
+      "changed_core_paths": [],
+      "core_after_sha256": "b749d0d251a641d746520cf2315f1d172db09fe1a96a6dcebcc2d3c8546d5443",
+      "core_before_sha256": "b749d0d251a641d746520cf2315f1d172db09fe1a96a6dcebcc2d3c8546d5443",
+      "cwd": "<repo>/client",
+      "duration_seconds": 12.185,
+      "environment": {
+        "CI": "true",
+        "DAGGER_CLOUD_TOKEN": "",
+        "DAGGER_NO_NAG": "1",
+        "DAGGER_PROGRESS": "plain",
+        "DART_SUPPRESS_ANALYTICS": "true",
+        "DNT": "1",
+        "DO_NOT_TRACK": "1",
+        "FLUTTER_ALREADY_LOCKED": "true",
+        "FLUTTER_ROOT": "<home>/snap/flutter/common/flutter",
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_PAGER": "cat",
+        "GIT_TERMINAL_PROMPT": "0",
+        "HOME": "<home>",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LOGNAME": "jdharrison",
+        "PATH": "<home>/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "TERM": "dumb",
+        "TZ": "UTC",
+        "USER": "jdharrison",
+        "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+      },
+      "environment_policy": "explicit complete allowlist; no inherited provider credentials, session bus, display, analytics/cloud tokens",
+      "executable": {
+        "mode": 493,
+        "mode_octal": "0o755",
+        "path": "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "sha256": "d2246ffda6151d044b45bd5d8a7cb829d189eb7d1827ddf73789bfb912a463a2",
+        "size": 4792704,
+        "type": "file"
+      },
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:21:57.658637+00:00",
+      "log": "docs/evidence/projects-layout/validation/focused-projects.log",
+      "log_sha256": "61b8cb1d3274fb81ff5364d256427bbeaf1f735922cfb56f7a04693fffcccd1a",
+      "name": "focused-projects",
+      "recorder_error": null,
+      "skip_reason": null,
+      "stable_inputs": true,
+      "started_at": "2026-10-17T21:21:45.473636+00:00",
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 180
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/ui_foundation_assets_test.dart"
+      ],
+      "changed_core_paths": [],
+      "core_after_sha256": "b749d0d251a641d746520cf2315f1d172db09fe1a96a6dcebcc2d3c8546d5443",
+      "core_before_sha256": "b749d0d251a641d746520cf2315f1d172db09fe1a96a6dcebcc2d3c8546d5443",
+      "cwd": "<repo>/client",
+      "duration_seconds": 2.327,
+      "environment": {
+        "CI": "true",
+        "DAGGER_CLOUD_TOKEN": "",
+        "DAGGER_NO_NAG": "1",
+        "DAGGER_PROGRESS": "plain",
+        "DART_SUPPRESS_ANALYTICS": "true",
+        "DNT": "1",
+        "DO_NOT_TRACK": "1",
+        "FLUTTER_ALREADY_LOCKED": "true",
+        "FLUTTER_ROOT": "<home>/snap/flutter/common/flutter",
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_PAGER": "cat",
+        "GIT_TERMINAL_PROMPT": "0",
+        "HOME": "<home>",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LOGNAME": "jdharrison",
+        "PATH": "<home>/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "TERM": "dumb",
+        "TZ": "UTC",
+        "USER": "jdharrison",
+        "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+      },
+      "environment_policy": "explicit complete allowlist; no inherited provider credentials, session bus, display, analytics/cloud tokens",
+      "executable": {
+        "mode": 493,
+        "mode_octal": "0o755",
+        "path": "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "sha256": "d2246ffda6151d044b45bd5d8a7cb829d189eb7d1827ddf73789bfb912a463a2",
+        "size": 4792704,
+        "type": "file"
+      },
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:21:59.987656+00:00",
+      "log": "docs/evidence/projects-layout/validation/focused-assets.log",
+      "log_sha256": "e48059c91009a9b595e3e4cc1138f43a0166f1db23bf6d7245302a333bdfde56",
+      "name": "focused-assets",
+      "recorder_error": null,
+      "skip_reason": null,
+      "stable_inputs": true,
+      "started_at": "2026-10-17T21:21:57.660217+00:00",
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/rust_projects_integration_test.dart"
+      ],
+      "changed_core_paths": [],
+      "core_after_sha256": "b749d0d251a641d746520cf2315f1d172db09fe1a96a6dcebcc2d3c8546d5443",
+      "core_before_sha256": "b749d0d251a641d746520cf2315f1d172db09fe1a96a6dcebcc2d3c8546d5443",
+      "cwd": "<repo>/client",
+      "duration_seconds": 2.722,
+      "environment": {
+        "CI": "true",
+        "DAGGER_CLOUD_TOKEN": "",
+        "DAGGER_NO_NAG": "1",
+        "DAGGER_PROGRESS": "plain",
+        "DART_SUPPRESS_ANALYTICS": "true",
+        "DNT": "1",
+        "DO_NOT_TRACK": "1",
+        "FLUTTER_ALREADY_LOCKED": "true",
+        "FLUTTER_ROOT": "<home>/snap/flutter/common/flutter",
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_PAGER": "cat",
+        "GIT_TERMINAL_PROMPT": "0",
+        "HOME": "<home>",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LOGNAME": "jdharrison",
+        "PATH": "<home>/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "SMITH_TEST_CLOUD_SERVICE": "<repo>/service/target/debug/deps/debug_service-0a4be2ddda80d80f",
+        "TERM": "dumb",
+        "TZ": "UTC",
+        "USER": "jdharrison",
+        "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+      },
+      "environment_policy": "explicit complete allowlist; no inherited provider credentials, session bus, display, analytics/cloud tokens",
+      "executable": {
+        "mode": 493,
+        "mode_octal": "0o755",
+        "path": "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "sha256": "d2246ffda6151d044b45bd5d8a7cb829d189eb7d1827ddf73789bfb912a463a2",
+        "size": 4792704,
+        "type": "file"
+      },
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:22:02.851692+00:00",
+      "log": "docs/evidence/projects-layout/validation/compiled-projects.log",
+      "log_sha256": "429fc83adc97e594433f184fae4b006dcd9cd5908b4401891a26244e75ea6a88",
+      "name": "compiled-projects",
+      "recorder_error": null,
+      "skip_reason": null,
+      "stable_inputs": true,
+      "started_at": "2026-10-17T21:22:00.129857+00:00",
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 120
+    }
+  ],
+  "core_after_sha256": "b749d0d251a641d746520cf2315f1d172db09fe1a96a6dcebcc2d3c8546d5443",
+  "core_before_sha256": "b749d0d251a641d746520cf2315f1d172db09fe1a96a6dcebcc2d3c8546d5443",
+  "finished_at": "2026-10-17T21:22:03.029662+00:00",
+  "fixture_after": {
+    "mode": 509,
+    "mode_octal": "0o775",
+    "path": "service/target/debug/deps/debug_service-0a4be2ddda80d80f",
+    "sha256": "b3a00963d5cf4733baf85a1a299b653c231c90c4a3323ed83aab5dba212b926f",
+    "size": 25469216,
+    "type": "file"
+  },
+  "passed": true,
+  "stable_inputs": true,
+  "started_at": "2026-10-17T21:21:45.083590+00:00",
+  "test_summaries": {
+    "compiled-projects": {
+      "failure_lines": [],
+      "flutter_terminal_results": [
+        {
+          "failed": 0,
+          "message": "All tests passed!",
+          "passed": 7,
+          "skipped": 0
+        }
+      ],
+      "python_suites": [],
+      "rust_suites": [],
+      "skip_or_ignore_lines": []
+    },
+    "focused-assets": {
+      "failure_lines": [],
+      "flutter_terminal_results": [
+        {
+          "failed": 0,
+          "message": "All tests passed!",
+          "passed": 5,
+          "skipped": 0
+        }
+      ],
+      "python_suites": [],
+      "rust_suites": [],
+      "skip_or_ignore_lines": []
+    },
+    "focused-projects": {
+      "failure_lines": [],
+      "flutter_terminal_results": [
+        {
+          "failed": 0,
+          "message": "All tests passed!",
+          "passed": 157,
+          "skipped": 0
+        }
+      ],
+      "python_suites": [],
+      "rust_suites": [],
+      "skip_or_ignore_lines": []
+    }
+  }
+}

@@ -1,0 +1,95 @@
+   Compiling unicode-ident v1.0.27
+   Compiling libc v0.2.190
+   Compiling find-msvc-tools v0.1.14
+   Compiling smallvec v1.16.3
+   Compiling equivalent v1.0.3
+   Compiling zeroize v1.9.1
+   Compiling icu_properties_data v2.3.0
+   Compiling icu_normalizer_data v2.3.0
+   Compiling rustls v0.23.46
+   Compiling serde_json v1.0.154
+   Compiling base64 v0.23.1
+   Compiling indexmap v2.14.2
+   Compiling proc-macro2 v1.0.107
+   Compiling rustls-pki-types v1.15.1
+   Compiling cc v1.8.0
+   Compiling webpki-roots v1.0.9
+   Compiling quote v1.0.47
+   Compiling syn v3.0.9
+   Compiling syn v2.0.119
+   Compiling toml_edit v0.25.17+spec-1.1.0
+   Compiling ring v0.17.14
+   Compiling proc-macro-crate v3.5.0
+   Compiling getrandom v0.2.17
+   Compiling errno v0.3.14
+   Compiling mio v1.2.4
+   Compiling socket2 v0.6.5
+   Compiling xdg-home v1.3.0
+   Compiling nix v0.29.0
+   Compiling signal-hook-registry v1.4.8
+   Compiling rand_core v0.6.4
+   Compiling rand_chacha v0.3.1
+   Compiling rand v0.8.8
+   Compiling zvariant_utils v2.1.0
+   Compiling synstructure v0.14.0
+   Compiling tracing-attributes v0.1.31
+   Compiling enumflags2_derive v0.7.12
+   Compiling zvariant_derive v4.2.0
+   Compiling zbus_macros v4.4.0
+   Compiling zerofrom-derive v0.1.8
+   Compiling yoke-derive v0.8.4
+   Compiling zerovec-derive v0.11.6
+   Compiling displaydoc v0.2.7
+   Compiling tokio-macros v2.7.2
+   Compiling serde_derive v1.0.229
+   Compiling async-trait v0.1.92
+   Compiling serde_repr v0.1.21
+   Compiling rustls-webpki v0.103.15
+   Compiling tokio v1.53.3
+   Compiling tracing v0.1.44
+   Compiling zerofrom v0.1.8
+   Compiling yoke v0.8.3
+   Compiling zerovec v0.11.8
+   Compiling zerotrie v0.2.5
+   Compiling tinystr v0.8.4
+   Compiling potential_utf v0.1.6
+   Compiling icu_collections v2.3.0
+   Compiling icu_locale_core v2.3.0
+   Compiling serde v1.0.229
+   Compiling icu_provider v2.3.1
+   Compiling icu_properties v2.3.0
+   Compiling icu_normalizer v2.3.0
+   Compiling enumflags2 v0.7.12
+   Compiling serde_urlencoded v0.7.1
+   Compiling zvariant v4.2.0
+   Compiling idna_adapter v1.2.2
+   Compiling idna v1.1.0
+   Compiling url v2.5.8
+   Compiling hyper v1.12.0
+   Compiling tokio-rustls v0.26.6
+   Compiling tower v0.5.3
+   Compiling zbus_names v3.0.0
+   Compiling tower-http v0.6.11
+   Compiling zbus v4.4.0
+   Compiling hyper-util v0.1.21
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.12.28
+   Compiling smith-service v0.1.0 (<PROJECT>/service)
+   Compiling smith-installer v0.1.0 (<PROJECT>/installer)
+   Compiling smith-coordinated-driver v0.1.0 (<PROJECT>/docs/evidence/dev-buffered-frames/coordinated-driver)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.80s
+     Running unittests src/main.rs (<PROJECT>/installer/target/debug/deps/smith_coordinated_driver-6be0be702a98eab6)
+
+running 8 tests
+test tests::changed_result_before_start_refused ... ok
+test tests::every_effect_must_match ... ok
+test tests::expired_and_drift_refused ... ok
+test tests::hook_only_exact_progress_once ... ok
+test tests::ordered_once_and_fresh_each_effect ... ok
+test tests::reconciliation_identity_is_exact ... ok
+test tests::start_requires_successful_hook_and_result ... ok
+test tests::unexpected_titles_and_order_refused ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit=0

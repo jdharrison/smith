@@ -1,0 +1,47 @@
+# LOCAL-SMITH-DEV-NAVIGATION
+
+## Authority and scope
+
+**LOCAL_PLAN_APPROVED:** the operator explicitly requested a dummy selectable Dev root and collapsible hierarchy: Chat / Dev → Projects, Agents / Settings, while Agents implementation finishes. This approves scoped local navigation, presentation-preference compatibility, documentation and isolated validation. It supersedes only the previous disclosure-only Dev constraint, not the Agents contract or its original approval record. No commit/branch/remote mutation, app launch/install, live migration/provider/model/keyring/manager/repository operation, execution feature or accepted risk is included. Approval expires at completion or material scope drift. [Approval boundaries](../PROCESS.md#approval-boundaries).
+
+Preserve the current dirty `feature/autonomy` worktree and all concurrent Agents/Global Context/Projects work. HEAD alone is not the baseline. Capture actual source bytes before editing; use the existing bootstrap branch exception without creating/renaming branches. Risk is elevated only for presentation-preference compatibility and retained focus/state; no service/API/disk8 change is authorized.
+
+## Independent inputs and reconciliation
+
+- Producer `0da268c0-48a5-4ae3-857a8252f08a`: inert root, independent disclosure, retained editors/queues, strict versioning, zero navigation-induced service effects.
+- Architect `57e49c14-6bc0-44f4-9c4e-ea8163f5a0d7`: exact three production touchpoints; v4 writes with strict v1–v4 reads; stable keyed page slots and Agents-first ordering coverage; preserve no-preference session-only startup.
+- Designer `13f85dab-6263-4f29-b0f6-fcf40a68b066`: separate48px root/disclosure controls, visible focus, truthful static copy, collapse links not content. Preferred104px wide rail; explicitly identified stacked controls in56px as the smaller alternative.
+- Planner chooses the architect/producer's **existing56px rail**, stacking the separate disclosure directly below Dev. This retains current shell/content geometry and avoids an unrequested wider sidebar; the tradeoff is vertical rather than inline root/chevron arrangement in the existing icon rail. No concern about overlapping/small targets is waived: both remain48×48. Wide children are inline below the disclosure; compact disclosure opens the existing labelled chooser. No general labelled-sidebar redesign, new glyph assets or dependencies.
+
+## Reconciled behavior
+
+1. **Dev root:** selecting Dev at any width sets only that pane's `dev` destination. The existing title/tooltip/semantics say Dev. Static body: “Development workspace placeholder. Use Projects or Agents from Dev navigation.” No action, Run button, dashboard, readiness status, error/retry strip or service dependency.
+2. **Independent disclosure:** root activation never toggles links. A distinct labelled chevron expands/collapses wide Projects/Agents links without changing the page, input, work or selection. Compact disclosure opens a bounded scrollable chooser; expanded semantics reflect actual chooser visibility. Dismissal changes no page. Initial wide disclosure is collapsed, retained session-locally per pane through resizing/hiding, not persisted and never forced open by a selected child.
+3. **Selection and focus:** only the actual destination has selected semantics. Disclosure owns expanded semantics. Preserve existing visible keyboard focus and48px targets at400×400/2× text. Collapsing focused child navigation moves focus to disclosure; hidden links/pages cannot retain focus. Ignore stale modal results after origin page/pane becomes ineligible.
+4. **Retention/laziness:** collapse affects links only. Keep Chat/Projects/Agents mounted/lazy as currently implemented with stable page keys, Offstage/TickerMode/ExcludeFocus. Preserve drafts, selections, query, text selection, editor/reading offsets, pending/uncertain operations and existing shared controllers. Explicitly test Agents-first → Dev → first Projects → Agents, resizing, destinations and four panes. Root/disclosure alone never mounts/loads Projects/Agents or performs a new API effect; existing background observation/work continues normally.
+5. **Preferences:** existing exact shape, paths, limits, locking, fallback and session-only isolation stay unchanged. Write v4. Read v1 Chat/Settings; v2 Chat/Projects/Settings; v3 Chat/Projects/Agents/Settings; v4 adds Dev. Reject Dev in all older versions and unknown v5. Upgrade only on the next actual presentation save, not a load-time rewrite. Store no disclosure, child selection, editor or prompt fields. Older readers may reject v4; do not promise downgrade readability.
+
+## Ownership and tasks
+
+| Task / requirement | Write scope | Blocking evidence |
+|---|---|---|
+| T0 bounded scope/baseline | Parent plan and new task evidence | Actual source snapshot, preserved concurrent inputs |
+| T1 root/disclosure, DEV01–05/07 | One UI owner: `client/lib/ui/smith_workspace.dart`; new Dev navigation/golden tests and directly affected existing navigation helpers/assertions | Separate root/toggle behavior; static inert page; selected/expanded semantics; keyboard/48px/focus/draft/scroll/first-open/four-pane/compact retention; no API deltas |
+| T2 safe route persistence, DEV06 | Separate preferences owner: `client/lib/workspace_preferences.dart`; exact `main.dart::WorkspacePresentation.setPage` allowlist; preference/restore tests only | Complete strict version/destination matrix, hidden Dev restoration, no load rewrite, corruption/fallback and session-only no-store regressions |
+| T3 docs and validation | Parent affected Design/Architecture/Process/Host contracts and detail sections; new evidence/ledgers | Focused format/analyzer/tests first; relevant full client/Linux-build and combined/package gates where available; preserve failures/skips/cache/source drift; fresh independent assurance |
+
+Implementers must re-read owned shared files immediately before minimal edits, preserve all Agents work and stop on conflicting contract changes. Do not edit Agents/Projects controllers or editor internals, service/installer sources, API models, preference IO machinery, global theme/fonts/header, or prior evidence. Preserve the original Agents plan as approval history; this additive record governs Dev-root behavior. Changed shell goldens are allowed only for the requested Dev navigation hierarchy (including the in-flight group and extra root/disclosure control), with per-image proof of zero changed pixels outside the existing rail. Preserve pre-edit mismatch evidence; never regenerate unrelated editor/content images to mask failures.
+
+## Acceptance and boundaries
+
+All selected criteria are blocking for this slice: T1/T2 behavior and preservation; exact v1–v4 compatibility; no navigation-induced effects; correct old/new snapshots; independent source review. Native Ubuntu graphical/IME/accessibility, installed behavior, release provenance/rights/publication and deployment remain separately approved gates. Missing/failing required checks block applicable acceptance; this task cannot waive unrelated Agents/global-context gates or promote old exports as current.
+
+The initial plan claimed no implementation or verification result. Subsequent execution is recorded separately under `docs/evidence/dev-navigation/`, not by rewriting existing Agents/layout/default-project evidence.
+
+## Execution disposition
+
+**Implemented selected navigation behavior; bounded feature-source assessment PASS; overall assurance/combined acceptance BLOCKED.** T0–T2 and documentation are complete for this scope. Exactly three production files changed: shell navigation/body/title/focus retention; preferences v4 compatibility; `main.dart` destination allowlist only. New tests cover root/disclosure separation, no eager effects, stale modal rejection, Agents-first ordering, uncertainty/drafts/scroll/four panes, strict legacy restoration and session-only boundaries. Twenty-three shell PNGs changed only within the existing rail (159,815 pixels/zero outside); thirteen editor-only PNGs remain unchanged; three Dev fixtures were added.
+
+T3 ran against1,296 stable core records, SHA256 `b86b9d04d2867a23994b142d3850f1b4ea0a5a72c6df7f1d2321ec2f2a180777`. One focused run passed305 tests/no skips; full formatting/analyzer and the Linux client build passed. Full configured client tests had989 passes/15 failures/no skips. The initial copied-module root discovery failure is retained as harness evidence; one corrected actual original-module root run failed service unit tests (143 pass/20 fail/two controlled ignores), without reaching build. Current full-package verification/helpers are NOT RUN; the private standalone client build is not full-package acceptance.
+
+[Task evidence](../evidence/dev-navigation/README.md) and [independent review](../evidence/dev-navigation/REVIEW.md) retain exact bindings, handoff/image proofs, all intermediate failures and separate reviewer execution ownership. No feature-owned defect or required feature fix was identified. Combined failure/acceptance and release remain NO-GO with no accepted-risk waiver. Resolving the separate backend/compiled/legacy/editor-visual failures and rerunning stable whole-candidate/package gates remains owner follow-up, not authority to change unrelated code here. No commit, remote action, installed migration, product launch, new service capability or Dev execution is included or performed.

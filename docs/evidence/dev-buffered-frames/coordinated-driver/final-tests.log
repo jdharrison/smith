@@ -1,0 +1,20 @@
+   Compiling smith-coordinated-driver v0.1.0 (<PROJECT>/docs/evidence/dev-buffered-frames/coordinated-driver)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.47s
+     Running unittests src/main.rs (<PROJECT>/installer/target/debug/deps/smith_coordinated_driver-6be0be702a98eab6)
+
+running 11 tests
+test tests::changed_result_before_start_refused ... ok
+test tests::drift_is_checked_again_before_stop_hook_and_start ... ok
+test tests::every_effect_must_match ... ok
+test tests::expired_and_drift_refused ... ok
+test tests::failed_hook_cannot_be_invoked_again ... ok
+test tests::hook_only_exact_progress_once ... ok
+test tests::incomplete_native_outcome_is_failure ... ok
+test tests::ordered_once_and_fresh_each_effect ... ok
+test tests::reconciliation_identity_is_exact ... ok
+test tests::start_requires_successful_hook_and_result ... ok
+test tests::unexpected_titles_and_order_refused ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit=0

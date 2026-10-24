@@ -1,0 +1,514 @@
+{
+  "method": "Existing FakeInputs/FakeCommands in disposable temporary roots. Independently injected invalidation after each listed fake command; authorize refuses approval invalidation, unchanged refuses source invalidation, cancellation/deadline flags set directly. Assert no subsequent work mutations/CLI, retained pending marker, failure and owned stop where CID exists. After fake CLI joins, alter one inspected field and assert operational drift stops owned CID as failed/unknown, foreign ownership never stops. No live commands, network, staged markers or receipts.",
+  "offline_only": true,
+  "results": [
+    {
+      "after": [
+        "pull"
+      ],
+      "kind": "approval",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "pull"
+      ],
+      "kind": "source",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "pull"
+      ],
+      "kind": "cancel",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "pull"
+      ],
+      "kind": "deadline",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "image",
+        "inspect"
+      ],
+      "kind": "approval",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "image",
+        "inspect"
+      ],
+      "kind": "source",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "image",
+        "inspect"
+      ],
+      "kind": "cancel",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "image",
+        "inspect"
+      ],
+      "kind": "deadline",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "volume",
+        "create"
+      ],
+      "kind": "approval",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "volume",
+        "create"
+      ],
+      "kind": "source",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "volume",
+        "create"
+      ],
+      "kind": "cancel",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "volume",
+        "create"
+      ],
+      "kind": "deadline",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "volume",
+        "inspect"
+      ],
+      "kind": "approval",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "volume",
+        "inspect"
+      ],
+      "kind": "source",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "volume",
+        "inspect"
+      ],
+      "kind": "cancel",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "volume",
+        "inspect"
+      ],
+      "kind": "deadline",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 0
+    },
+    {
+      "after": [
+        "create"
+      ],
+      "kind": "approval",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 1
+    },
+    {
+      "after": [
+        "create"
+      ],
+      "kind": "source",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 1
+    },
+    {
+      "after": [
+        "create"
+      ],
+      "kind": "cancel",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 1
+    },
+    {
+      "after": [
+        "create"
+      ],
+      "kind": "deadline",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 1
+    },
+    {
+      "after": [
+        "start"
+      ],
+      "kind": "approval",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "verified_stopped",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 1
+    },
+    {
+      "after": [
+        "start"
+      ],
+      "kind": "source",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 1
+    },
+    {
+      "after": [
+        "start"
+      ],
+      "kind": "cancel",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "verified_stopped",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 1
+    },
+    {
+      "after": [
+        "start"
+      ],
+      "kind": "deadline",
+      "later_work_mutations": [],
+      "pass": true,
+      "result": {
+        "cleanup": "verified_stopped",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "invalidation",
+      "stop_attempts": 1
+    },
+    {
+      "cli_joined": true,
+      "drift": "pids",
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "post_join_drift",
+      "stop_attempts": 1
+    },
+    {
+      "cli_joined": true,
+      "drift": "cpu",
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "post_join_drift",
+      "stop_attempts": 1
+    },
+    {
+      "cli_joined": true,
+      "drift": "memory",
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "post_join_drift",
+      "stop_attempts": 1
+    },
+    {
+      "cli_joined": true,
+      "drift": "namespace",
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "post_join_drift",
+      "stop_attempts": 1
+    },
+    {
+      "cli_joined": true,
+      "drift": "privileged",
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "post_join_drift",
+      "stop_attempts": 1
+    },
+    {
+      "cli_joined": true,
+      "drift": "mounts",
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "post_join_drift",
+      "stop_attempts": 1
+    },
+    {
+      "cli_joined": true,
+      "drift": "missing_hostconfig",
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "running_at_return": false,
+      "scenario": "post_join_drift",
+      "stop_attempts": 1
+    },
+    {
+      "cli_joined": true,
+      "drift": "foreign_label",
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "policy_denied"
+      },
+      "running_at_return": true,
+      "scenario": "post_join_drift",
+      "stop_attempts": 0
+    },
+    {
+      "cli_joined": true,
+      "drift": "foreign_image",
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "policy_denied"
+      },
+      "running_at_return": true,
+      "scenario": "post_join_drift",
+      "stop_attempts": 0
+    },
+    {
+      "cli_joined": true,
+      "drift": "foreign_name",
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "policy_denied"
+      },
+      "running_at_return": true,
+      "scenario": "post_join_drift",
+      "stop_attempts": 0
+    },
+    {
+      "cli_joined": true,
+      "drift": "foreign_cid",
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "policy_denied"
+      },
+      "running_at_return": true,
+      "scenario": "post_join_drift",
+      "stop_attempts": 0
+    }
+  ],
+  "scenarios": 35,
+  "script_sha256": "3f6f16e7aef5a0264d7d3a0d2695e4c212eb2a37214ccd1e88904970edbec6bc",
+  "tests_sha256": "c603d8bf647e7daa4aef6987ca92b75ae0c6e0bc0cc75200784a27a474891aec",
+  "utc": "2026-10-21T01:15:50.164912+00:00"
+}

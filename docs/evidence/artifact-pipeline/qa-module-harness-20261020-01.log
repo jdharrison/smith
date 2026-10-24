@@ -1,0 +1,5 @@
+Independent SOURCE QA harness initial attempt (2026-10-20).
+Command: PYTHONDONTWRITEBYTECODE=1 python3 -B - (inline offline QA harness)
+Exit: 1
+Failure: harness used test_module_source.decode to inspect an oversized serialized host request before probing parse_request. decode correctly raised smith_agent.protocol.Invalid: invalid_json at protocol.py:69. This is a harness sequencing failure; no test failure inferred. Reproduction and complete test outcomes follow in qa-module-offline-20261020-01.log.
+No source edited; no engine/image/SDK installation/network/provider/credential/installed actions performed.

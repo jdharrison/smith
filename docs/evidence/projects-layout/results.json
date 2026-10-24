@@ -1,0 +1,53 @@
+{
+  "HEAD": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+  "aggregate_coverage": 1497,
+  "approval": "local implementation/testing only; no external effects or accepted risk",
+  "approved_slice": "0",
+  "artifact_record": {
+    "mode": 436,
+    "path": "docs/evidence/projects-layout/validation-rebound/final-artifact-binding.json",
+    "sha256": "9ad3df28a6182c05f9a1364088b370f19aeaebed751798b0c4f91f3deef23694",
+    "size": 6231
+  },
+  "baseline_sha256": "740cc41d9ba4bc8265d5ea69a34fe5bf5ac8e11596ef4223357232a6756a44c3",
+  "branch": "feature/autonomy",
+  "cached_installer_passes": 283,
+  "controlled_ignores_cached": 2,
+  "controlled_ignores_fresh": 3,
+  "core_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+  "failures_preserved": [
+    "validation/",
+    "review/",
+    "remediation/",
+    "validation-final/",
+    "review-final/",
+    "validation-closeout/"
+  ],
+  "final_required_failures": [],
+  "fresh_component_passes": 1214,
+  "fresh_helpers": 34,
+  "gate_record": {
+    "mode": 436,
+    "path": "docs/evidence/projects-layout/validation-rebound/final-results.json",
+    "sha256": "8df032114ba88f608959f3ee5aeb7295f67af031c930c82664d112e04da2b156",
+    "size": 10349
+  },
+  "native_installed_release_acceptance": false,
+  "other_skips": 0,
+  "package_tree_sha256": "d168fdf131402ee099b516ea752fb510c8b86f2eece1c7aca6b4f0e0e048f725",
+  "recorded_at": "2026-10-17T22:45:33.857798+00:00",
+  "review_record": {
+    "mode": 436,
+    "path": "docs/evidence/projects-layout/review-closeout/review-summary.json",
+    "sha256": "87ab51283caabefc69f42e4e952b948060ee1430ff1262f85a47a785fa49a3d9",
+    "size": 5662
+  },
+  "review_report": {
+    "mode": 436,
+    "path": "docs/evidence/projects-layout/REVIEW-CLOSEOUT.md",
+    "sha256": "afae2a497ec9b54eacc01ba3c1b3357c376be55782fb2cb491aa521f9bccc449",
+    "size": 21517
+  },
+  "status": "implemented; local configured gates and independent bounded-source review pass",
+  "work_id": "LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT"
+}

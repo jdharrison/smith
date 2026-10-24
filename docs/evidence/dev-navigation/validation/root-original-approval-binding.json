@@ -1,0 +1,61 @@
+{
+  "authority": "Explicit user follow-up: one new actual-repository root make test build, original --mod dagger, official verified CLI, pinned existing engine, 900 seconds, normal generated exports permitted, no further retry; full package verify/helpers only after full root build succeeds.",
+  "branch": "feature/autonomy",
+  "changes_since_previous": [],
+  "cli": {
+    "mode": 493,
+    "mode_octal": "0o755",
+    "path": "target/installer-pipeline/smith-dagger-0.21.9/dagger",
+    "sha256": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+    "size": 64573602,
+    "type": "file"
+  },
+  "core_sha256": "b86b9d04d2867a23994b142d3850f1b4ea0a5a72c6df7f1d2321ec2f2a180777",
+  "cwd": "<repo>",
+  "expected_cli_sha256": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+  "head": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+  "makefile": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "Makefile",
+    "sha256": "9ec05f06bdf245e8d071a9c54e01213e61bd303ac53640daa2f7fb7b16a8f285",
+    "size": 4074,
+    "type": "file"
+  },
+  "module": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "dagger/dagger.json",
+    "sha256": "e825f7fa5c17534cab2d6ca193b80937677c5fc6b099858258650bfbe80d20ba",
+    "size": 113,
+    "type": "file"
+  },
+  "module_source": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "dagger/src/smith_next/main.py",
+    "sha256": "1fad146c2caef24a09a4fa3792b6b3154bae93ec84dc8668921dccf6ead4dc1a",
+    "size": 16732,
+    "type": "file"
+  },
+  "prior_attempt": "root-test-build was invalid copied-module harness discovery, not execution of required real root gate. Prior records preserved verbatim.",
+  "recorded_at": "2026-10-18T01:29:35.378226+00:00",
+  "recorder": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "target/dev-navigation/validation/recorder.py",
+    "sha256": "14670f79194828d61738a06a9ef649e72f336695e56803d0dc848fd13abfc5df",
+    "size": 11986,
+    "type": "file"
+  },
+  "runner": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "target/dev-navigation/validation/root_original.py",
+    "sha256": "da83ec48cbec71ff3fb068aa6f16f7e20be134fecaaec658ffde2ddcf586f7d4",
+    "size": 5806,
+    "type": "file"
+  },
+  "stable_since_previous": true,
+  "wrapper_used": false
+}

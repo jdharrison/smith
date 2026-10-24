@@ -1,0 +1,161 @@
+# Reproduction driver (Python 3). Run from repository root:
+# python3 docs/evidence/artifact-pipeline/qa-launcher-reproduce.log
+# Compiles only copied current source modules with existing cached Rust dependencies.
+# Own temporary fake CLI only; no real Dagger/network/provider/service effects.
+import pathlib, tempfile, subprocess, hashlib, os
+repo = pathlib.Path.cwd()
+evidence = repo / 'docs/evidence/artifact-pipeline/qa-launcher-results.log'
+extra = r'''
+    #[test]
+    fn qa_history_corruption_matrix() {
+        for variant in 0..10 {
+            let f = Fixture::new("exit 0");
+            let mut runner = f.runner(positive(), Duration::from_secs(3));
+            assert!(f.call(&mut runner, 1).unwrap().owned_cleanup_verified);
+            let key = format!("{}-setup-1", hex(&[1;16]));
+            let record = f.roots.state.join(format!("{key}.record"));
+            let quiet = f.roots.state.join(format!("{key}.quiescent"));
+            let original = fs::read(&record).unwrap();
+            match variant {
+                0 => { fs::remove_file(&record).unwrap(); },
+                1 => { fs::remove_file(&quiet).unwrap(); },
+                2 => { fs::write(&record, b"").unwrap(); fs::write(&quiet, b"").unwrap(); },
+                3 => { fs::write(&record, &original[..original.len()-1]).unwrap(); fs::write(&quiet, &original[..original.len()-1]).unwrap(); },
+                4 => { fs::write(&quiet, b"truncated").unwrap(); },
+                5 => { let bytes=String::from_utf8(original.clone()).unwrap().replace("smith-launch-v1", "smith-launch-v2"); fs::write(&record,&bytes).unwrap(); fs::write(&quiet,&bytes).unwrap(); },
+                6 => { publish(&f.roots.state.join("pending"), b"", 0o600).unwrap(); },
+                7 => { publish(&f.roots.state.join("unknown"), b"", 0o600).unwrap(); },
+                8 => { fs::set_permissions(&record, fs::Permissions::from_mode(0o644)).unwrap(); },
+                _ => { let bytes=String::from_utf8(original.clone()).unwrap().replace("request=", "request=Z"); fs::write(&record,&bytes).unwrap(); fs::write(&quiet,&bytes).unwrap(); },
+            }
+            let mut restarted = f.runner(positive(), Duration::from_secs(3));
+            assert_eq!(error(f.call(&mut restarted, 2)), RunnerError::OutcomeUnknown, "variant {variant}");
+            assert_eq!(fs::read_dir(&f.roots.workspace).unwrap().count(),1);
+        }
+    }
+
+    #[test]
+    fn qa_history_cap_blocks_257th_attempt() {
+        let f=Fixture::new("exit 0");
+        for n in 0..MAX_HISTORY {
+            let key=format!("{:032x}-setup-1",n+1);
+            let marker=format!("smith-launch-v1\nattempt={key}\nrequest={}\nexecutable={}\nmodule={}\n", "a".repeat(64),"b".repeat(64),"c".repeat(64));
+            publish(&f.roots.state.join(format!("{key}.record")), marker.as_bytes(),0o600).unwrap();
+            publish(&f.roots.state.join(format!("{key}.quiescent")), marker.as_bytes(),0o600).unwrap();
+        }
+        let mut runner=f.runner(positive(),Duration::from_secs(3));
+        assert_eq!(error(f.call(&mut runner,77)),RunnerError::Unavailable);
+        assert_eq!(fs::read_dir(&f.roots.workspace).unwrap().count(),0);
+        publish(&f.roots.state.join("extra"),b"",0o600).unwrap();
+        publish(&f.roots.state.join("extra2"),b"",0o600).unwrap();
+        assert!(f.call(&mut runner,78).is_err());
+    }
+
+    #[test]
+    fn qa_spawn_failure_is_durably_fenced() {
+        let f=Fixture::new("exit 0");
+        fs::write(&f.roots.executable,b"#!/nonexistent-smith-qa-interpreter\n").unwrap();
+        let mut runner=f.runner(positive(),Duration::from_secs(3));
+        assert_eq!(error(f.call(&mut runner,1)),RunnerError::OutcomeUnknown);
+        f.assert_pending();
+        let mut restarted=f.runner(positive(),Duration::from_secs(3));
+        assert_eq!(error(f.call(&mut restarted,2)),RunnerError::OutcomeUnknown);
+        fs::remove_file(f.roots.state.join("pending")).unwrap();
+        assert_eq!(error(f.call(&mut restarted,3)),RunnerError::OutcomeUnknown);
+    }
+
+    #[test]
+    fn qa_before_record_failure_never_spawns_or_consumes() {
+        let f=Fixture::new("exit 0");
+        let key=format!("{}-setup-1",hex(&[1;16]));
+        private_mkdir(&f.roots.workspace.join(key)).unwrap();
+        let mut runner=f.runner(positive(),Duration::from_secs(3));
+        assert_eq!(error(f.call(&mut runner,1)),RunnerError::Unavailable);
+        assert!(!f.roots.state.join("pending").exists());
+        assert_eq!(fs::read_dir(&f.roots.state).unwrap().count(),1);
+        assert!(f.call(&mut runner,2).unwrap().owned_cleanup_verified);
+    }
+
+    #[test]
+    fn qa_snapshot_modes_and_bytes_are_private() {
+        let f=Fixture::new("exit 0");
+        fs::set_permissions(f.roots.module.join("src/main.py"),fs::Permissions::from_mode(0o755)).unwrap();
+        let mut runner=f.runner(positive(),Duration::from_secs(3));
+        f.call(&mut runner,1).unwrap();
+        let work=fs::read_dir(&f.roots.workspace).unwrap().next().unwrap().unwrap().path();
+        for (path,mode) in [("cli",0o700),("request.json",0o600),("module/src/main.py",0o600),("module/src",0o700)] {
+            assert_eq!(fs::metadata(work.join(path)).unwrap().mode()&0o777,mode);
+        }
+        assert_eq!(fs::read(work.join("cli")).unwrap(),fs::read(&f.roots.executable).unwrap());
+        assert_eq!(fs::read(work.join("module/src/main.py")).unwrap(),fs::read(f.roots.module.join("src/main.py")).unwrap());
+    }
+
+    #[test]
+    fn qa_cancellation_during_positive_verification_must_not_publish_produced() {
+        struct CancelAtVerification;
+        impl QuiescenceVerifier for CancelAtVerification {
+            fn verify(&mut self,_:AttemptId,_:ContentHash,_:Instant,cancelled:&AtomicBool)->Quiescence {
+                // Deterministic interleaving: operator cancels while an already
+                // completed independent quiescence observation is returned.
+                cancelled.store(true,Ordering::Release);
+                Quiescence::Verified
+            }
+        }
+        let f=Fixture::new(r#"exec /usr/bin/python3 -c 'import pathlib,hashlib,json,sys; b=pathlib.Path(sys.argv[-1]).read_bytes(); print(json.dumps(dict(schema_version=1,request_sha256=hashlib.sha256(b).hexdigest(),outcome="produced",body="qa response",error=None)))' "$@""#);
+        let mut runner=f.runner(Box::new(CancelAtVerification),Duration::from_secs(3));
+        let mut adapter=Adapter::new(f.binding());
+        let mut pipeline=Pipeline::new(RunId::new([1;16]).unwrap(),b"contract",Duration::from_secs(5)).unwrap();
+        let result=adapter.dispatch(&mut pipeline,TASK,Duration::ZERO,&mut runner);
+        println!("QA cancellation flag={}, dispatch={:?}, pending={}",runner.cancelled.load(Ordering::Acquire),result.as_ref().map(|p|p.body()),f.roots.state.join("pending").exists());
+        assert!(result.is_err(),"cancelled dispatch accepted produced response");
+    }
+
+    #[test]
+    fn qa_noncanonical_history_names_are_rejected() {
+        let f=Fixture::new("exit 0");
+        let marker=format!("smith-launch-v1\nattempt=not-an-attempt\nrequest={}\nexecutable={}\nmodule={}\n", "a".repeat(64),"b".repeat(64),"c".repeat(64));
+        for suffix in ["record","quiescent"] { publish(&f.roots.state.join(format!("not-an-attempt.{suffix}")),marker.as_bytes(),0o600).unwrap(); }
+        let mut runner=f.runner(positive(),Duration::from_secs(3));
+        let result=f.call(&mut runner,1);
+        println!("QA noncanonical paired history admitted={}",result.is_ok());
+        assert!(result.is_err(),"malformed attempt history accepted");
+    }
+'''
+lines=[]
+def log(s):
+    lines.extend(str(s).splitlines())
+def command(cmd, timeout=60):
+    result=subprocess.run(cmd,capture_output=True,text=True,timeout=timeout)
+    log('COMMAND: '+ ' '.join(str(x).replace(str(repo),'<repo>') for x in cmd))
+    log('exit='+str(result.returncode))
+    log(result.stdout)
+    log(result.stderr)
+    return result.returncode
+with tempfile.TemporaryDirectory(prefix='smith-qa-launcher-') as tmp:
+    root=pathlib.Path(tmp)
+    os.chmod(root,0o700)
+    log('SOURCE ONLY: current source copied without production edits; cached deps; temporary fake executables.')
+    for name in ['artifact_dagger','artifact_pipeline','artifact_dagger_process']:
+        src=(repo/'service/src'/ (name+'.rs')).read_bytes()
+        log('sha256 service/src/'+name+'.rs '+hashlib.sha256(src).hexdigest())
+        text=src.decode()
+        if name=='artifact_dagger_process':
+            # Insert independent probes inside the copied existing test module.
+            text=text.rsplit('}',1)[0]+extra+'}\n'
+        (root/(name+'.rs')).write_text(text)
+    # Exact duplicate-key decoder; only unrelated service error type is mapped to ().
+    cloud=(repo/'service/src/cloud_http.rs').read_text().splitlines()
+    decoder='\n'.join(cloud[417:481]).replace('AppResult<Value>','Result<Value, ()>').replace('error("CLOUD_PROTOCOL")','()')
+    (root/'cloud.rs').write_text('use serde::{Deserialize,de::{Visitor,MapAccess,SeqAccess}}; use serde_json::{Value,json}; use std::fmt;\n'+decoder)
+    (root/'main.rs').write_text('mod cloud; mod artifact_dagger; mod artifact_pipeline; mod artifact_dagger_process;\n')
+    deps=repo/'service/target/debug/deps'
+    cmd=['rustc','--edition=2021','--test',str(root/'main.rs'),'-o',str(root/'qa'),'-L','dependency='+str(deps),'-A','dead_code']
+    for dep in ['serde','serde_json','sha2','libc']:
+        lib=max(deps.glob('lib'+dep+'-*.rlib'),key=lambda x:x.stat().st_mtime)
+        cmd+=['--extern',dep+'='+str(lib)]
+    rc=command(cmd)
+    if rc==0:
+        command([str(root/'qa'),'artifact_dagger_process::tests::','--test-threads=1','--nocapture'],90)
+    safe='\n'.join(line[:1800].replace(str(root),'<temporary-own-root>').replace(str(repo),'<repo>').replace(str(pathlib.Path.home()),'<home>') for line in lines)
+    evidence.write_text(safe[:28000]+'\n')
+    print(safe[-16000:])

@@ -1,0 +1,5 @@
+Analyzing rust_projects_integration_test.dart...                
+
+  error • Local variable 'diskFile' can't be referenced before it is declared. Try moving the declaration to before the first use, or renaming the local variable so that it doesn't hide a name from an enclosing scope • test/rust_projects_integration_test.dart:84:20 • referenced_before_declaration
+
+1 issue found. (ran in 2.6s)

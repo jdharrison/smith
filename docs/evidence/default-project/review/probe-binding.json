@@ -1,0 +1,15 @@
+{
+  "changes": [
+    {
+      "original_sha256": "6f827d392dd1d8dac2fcd63f6951913a636ddd875aac71ad5236725a655d664a",
+      "path": "service/src/app_projects_tests.rs",
+      "probe_sha256": "ad697597a1c19f350162c7a740afbaa9f7cb99083f24135b3f181ac6122263ad"
+    },
+    {
+      "original_sha256": "7b29a067bab48228af44377abecb4cb3156ff39c308ba4277d79478adadbddf4",
+      "path": "service/src/filesystem.rs",
+      "probe_sha256": "1c09cd0cbd9d4e36b9d251d7efbb9866f33e7168ed5c19cad340180b3447a21a"
+    }
+  ],
+  "note": "Only isolated private copy changed. Fault hook returns an error after successful hard-link/unlink, before directory sync. Synthetic failure, not a real disk fault."
+}

@@ -1,0 +1,96 @@
+source binding verified f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164 1265 files; 1261 shared paths, no conflicts
+parent evidence verified: 11 commands; 38 raw excerpts; 1214 fresh + 283 cached = 1497, plus 34 helpers
+actual package tree verified d168fdf131402ee099b516ea752fb510c8b86f2eece1c7aca6b4f0e0e048f725 99 files/26 assets
+{
+  "started_utc": "2026-10-17T22:29:29.033632+00:00",
+  "result": "pass",
+  "icon_names_before": [
+    "archive",
+    "check",
+    "chevron-down",
+    "chevron-right",
+    "ellipsis-vertical",
+    "info",
+    "menu",
+    "message-square",
+    "pencil",
+    "plus",
+    "rotate-ccw",
+    "send",
+    "settings",
+    "trash-2",
+    "x"
+  ],
+  "icon_names_after": [
+    "archive",
+    "check",
+    "chevron-down",
+    "chevron-right",
+    "ellipsis-vertical",
+    "git-branch",
+    "info",
+    "layers",
+    "menu",
+    "message-square",
+    "pencil",
+    "plus",
+    "rotate-ccw",
+    "send",
+    "settings",
+    "trash-2",
+    "x"
+  ],
+  "asset_count_before": 24,
+  "asset_count_after": 26,
+  "exact_asset_additions": [
+    "data/flutter_assets/assets/icons/git-branch.svg",
+    "data/flutter_assets/assets/icons/layers.svg"
+  ],
+  "package_code_only_exact_set_additions": true,
+  "svg_checks": [
+    {
+      "path": "client/assets/icons/layers.svg",
+      "sha256": "00adb0125d9692f03e4a64037e07499c3df717fd0aa5f575c0783501f2904a37",
+      "safe_local_outline": true
+    },
+    {
+      "path": "client/assets/icons/git-branch.svg",
+      "sha256": "b7dd6ca760a47aec57e93a6f1b9bc0a8ed835490193ca317a7bfbc497fcfaae4",
+      "safe_local_outline": true
+    }
+  ],
+  "baseline_omitted_tracked_files": [
+    {
+      "path": ".gitattributes",
+      "unchanged_from_HEAD": true,
+      "sha256": "f4ec9e91c60fcb97b8fd597a9e10489e155c7abecb3969311bc77cd645269af4"
+    },
+    {
+      "path": ".gitignore",
+      "unchanged_from_HEAD": true,
+      "sha256": "9afc8f14ac2c90d116b906566f6fb360b837accacc4f82a12bd3d5c9703862ce"
+    },
+    {
+      "path": ".smith/project.yaml",
+      "unchanged_from_HEAD": true,
+      "sha256": "27a67eedbda755358fa41845dab1cb7206e5509d551693ce0b578b5d52e3636c"
+    },
+    {
+      "path": "LICENSE",
+      "unchanged_from_HEAD": true,
+      "sha256": "5bf5a2c68615e14acaac87732dd4173f362d0aec107e7f3e195cfb8bba107363"
+    },
+    {
+      "path": "SECURITY.md",
+      "unchanged_from_HEAD": true,
+      "sha256": "0cbe8033584eacdc10df3f0f7921f1a6471e60c8c9296dbe5e9894774b8c9c3e"
+    }
+  ],
+  "scratch_fixture_ignored": true,
+  "limitations": [
+    "Safe SVG structure and provenance consistency are not an independent authorship or redistribution-license attestation.",
+    "Synthetic payload checks are not actual native package acceptance."
+  ]
+}
+Native recipient package verified: 97 files; reviewed text-only payload paths
+

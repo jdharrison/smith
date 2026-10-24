@@ -1,0 +1,21 @@
+UTC 2026-10-19T19:35:29.637042+00:00
+COMMAND cargo test --offline --locked --lib app::timestamps::tests::timestamps_local_completion_is_atomic_exact_and_stable_on_replay_restart_and_job_eviction -- --exact --nocapture
+EXIT 101
+    Finished `test` profile [unoptimized] target(s) in 0.05s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-7c11b7ac37ef8548)
+
+running 1 test
+
+thread 'app::timestamps::tests::timestamps_local_completion_is_atomic_exact_and_stable_on_replay_restart_and_job_eviction' (191255) panicked at src/app_timestamps_tests.rs:107:28:
+called `Result::unwrap()` on an `Err` value: "Invalid instructions state; preserved"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test app::timestamps::tests::timestamps_local_completion_is_atomic_exact_and_stable_on_replay_restart_and_job_eviction ... FAILED
+
+failures:
+
+failures:
+    app::timestamps::tests::timestamps_local_completion_is_atomic_exact_and_stable_on_replay_restart_and_job_eviction
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 325 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

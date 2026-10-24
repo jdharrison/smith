@@ -4,6 +4,8 @@ import argparse
 import hashlib
 import json
 import os
+import re
+import shlex
 import stat
 from pathlib import Path
 
@@ -49,6 +51,8 @@ UI_ASSET_FILES = {
     "data/flutter_assets/assets/icons/info.svg",
     "data/flutter_assets/assets/icons/check.svg",
     "data/flutter_assets/assets/icons/chevron-down.svg",
+    "data/flutter_assets/assets/icons/layers.svg",
+    "data/flutter_assets/assets/icons/git-branch.svg",
 }
 CLIENT_FILES |= UI_ASSET_FILES
 COMMON_RUNTIME_FILES = set(runtime.FILES) | {
@@ -71,6 +75,69 @@ CLIENT_DIRS = {str(parent) for name in CLIENT_FILES for parent in Path(name).par
 def require(condition, message):
     if not condition:
         raise ValueError(message)
+
+
+def check_location(root, *, create=False):
+    """Gate exports without following links; preparation may create one output leaf."""
+    spelling = os.fspath(root)
+    require(isinstance(spelling, str)
+            and re.fullmatch(r"/?[A-Za-z0-9_./-]+", spelling)
+            and all(part and part not in (".", "..")
+                    for part in spelling.removeprefix("/").split("/")),
+            "Build location requires normalized spelling without empty, dot or parent components")
+    root = Path(spelling).absolute()
+    require(re.fullmatch(r"/[A-Za-z0-9_./-]+", str(root))
+            and all(part not in (".", "..") for part in root.parts[1:]),
+            "Build location requires a restricted absolute path without parent components")
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
+    fd = os.open("/", flags)
+    current = Path("/")
+    try:
+        for index, part in enumerate(root.parts[1:]):
+            current /= part
+            final = index == len(root.parts) - 2
+            created = False
+            try:
+                child = os.open(part, flags, dir_fd=fd)
+            except FileNotFoundError as error:
+                require(final and create,
+                        f"Build location blocked: missing directory {current}; "
+                        "only the final generated output directory may be created")
+                try:
+                    os.mkdir(part, mode=0o700, dir_fd=fd)
+                    created = True
+                except FileExistsError:
+                    pass  # A competing creator must pass the same no-follow checks.
+                try:
+                    child = os.open(part, flags, dir_fd=fd)
+                except OSError as error:
+                    raise ValueError(f"Build location blocked: {current}; "
+                                     "expected a safe non-symlink directory") from error
+            except OSError as error:
+                raise ValueError(f"Build location blocked: {current}; "
+                                 "expected an accessible non-symlink directory") from error
+            os.close(fd)
+            fd = child
+            info = os.fstat(fd)
+            detail = (f"Build location blocked: {current} "
+                      f"(mode={stat.S_IMODE(info.st_mode):04o}, uid={info.st_uid}). ")
+            require(info.st_uid == os.geteuid() or (not final and info.st_uid == 0),
+                    detail + "Expected current-user ownership (or root for ancestors); "
+                    "choose a safe output location. Existing permissions were not changed.")
+            sticky_ancestor = not final and info.st_uid == 0 and info.st_mode & stat.S_ISVTX
+            if info.st_mode & 0o022 and not sticky_ancestor:
+                remedy = ("After reviewing shared access, remove unintended write access "
+                          f"on this directory only: chmod go-w -- {shlex.quote(str(current))}. "
+                          if info.st_uid == os.geteuid() else "")
+                raise ValueError(detail + "Group/world-writable directories are unsafe. "
+                                 + remedy + "Or choose a safe output location. "
+                                 "Existing permissions were not changed; no automatic repair or retry.")
+            require(not created or stat.S_IMODE(info.st_mode) == 0o700,
+                    detail + "New generated output must remain private (0700); "
+                    "no automatic permission repair.")
+    finally:
+        os.close(fd)
+    return root
 
 
 def identity(info):
@@ -185,7 +252,7 @@ def write_new(path, content):
 
 
 def build(root, readme):
-    root = root.absolute()
+    root = check_location(root)
     # Native executable and paired outputs are supplied explicitly by Dagger.
     write_new(root / "README.txt", readme.read_text())
     client_digest, helper_digest = check_payload(root)
@@ -207,7 +274,7 @@ def checksum_text(root, files):
 
 
 def verify(root):
-    root = root.absolute()
+    root = check_location(root)
     record = json.loads(file_bytes(root / "manifest.json"))
     require(record["schema_version"] == 1 and record["product"] == "smith-installer"
             and record["installer_runtime"] == "native" and record["installer_ui"] == "gtk3"
@@ -225,16 +292,27 @@ def verify(root):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, required=True)
+    parser.add_argument("--root", required=True)
     parser.add_argument("--readme", type=Path)
-    parser.add_argument("--verify", action="store_true")
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument("--verify", action="store_true")
+    action.add_argument("--check-location", action="store_true",
+                        help="read-only ancestor and output-directory permission check")
+    action.add_argument("--prepare-location", action="store_true",
+                        help="check ancestors and create only an absent output leaf as 0700")
     args = parser.parse_args()
-    if args.verify:
-        verify(args.root)
-    else:
-        if args.readme is None:
-            parser.error("--readme is required for assembly")
-        build(args.root, args.readme)
+    try:
+        if args.check_location or args.prepare_location:
+            root = check_location(args.root, create=args.prepare_location)
+            print(f"Build output location checked: {root}; not installation approval")
+        elif args.verify:
+            verify(args.root)
+        else:
+            if args.readme is None:
+                parser.error("--readme is required for assembly")
+            build(args.root, args.readme)
+    except (ValueError, OSError) as error:
+        parser.exit(1, f"Package/build check failed: {error}\n")
 
 
 if __name__ == "__main__":

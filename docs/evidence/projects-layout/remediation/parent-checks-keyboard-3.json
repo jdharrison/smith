@@ -1,0 +1,53 @@
+[
+  {
+    "argv": [
+      "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+      "format",
+      "lib/ui/projects_view.dart",
+      "test/projects_layout_test.dart"
+    ],
+    "cwd": "client",
+    "exit_code": 0,
+    "finished_at": "2026-10-17T22:03:05.793939+00:00",
+    "inputs_after": {
+      "client/lib/ui/projects_view.dart": "8cca857c1e956c37fea12e4ad7161ede08ff27088f72235657efc676e7bd6590",
+      "client/test/projects_layout_test.dart": "c9860a4481e88b5e8f0d2eb124a23a9d0c44ce4fac12e2f40d5ad2c84d8e54ba"
+    },
+    "inputs_before": {
+      "client/lib/ui/projects_view.dart": "8cca857c1e956c37fea12e4ad7161ede08ff27088f72235657efc676e7bd6590",
+      "client/test/projects_layout_test.dart": "c9860a4481e88b5e8f0d2eb124a23a9d0c44ce4fac12e2f40d5ad2c84d8e54ba"
+    },
+    "log_sha256": "11a57d97889bc161aad83f19055424c45a757ed0654809f75c0ad99f31bb11b7",
+    "name": "format-keyboard-3",
+    "started_at": "2026-10-17T22:03:05.719328+00:00"
+  },
+  {
+    "argv": [
+      "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+      "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+      "--suppress-analytics",
+      "--no-version-check",
+      "test",
+      "--no-pub",
+      "--concurrency=1",
+      "--reporter",
+      "expanded",
+      "test/projects_layout_test.dart",
+      "../target/projects-layout/assurance/final/keyboard_wrap_probe_test.dart"
+    ],
+    "cwd": "client",
+    "exit_code": 0,
+    "finished_at": "2026-10-17T22:03:14.569514+00:00",
+    "inputs_after": {
+      "client/lib/ui/projects_view.dart": "8cca857c1e956c37fea12e4ad7161ede08ff27088f72235657efc676e7bd6590",
+      "client/test/projects_layout_test.dart": "c9860a4481e88b5e8f0d2eb124a23a9d0c44ce4fac12e2f40d5ad2c84d8e54ba"
+    },
+    "inputs_before": {
+      "client/lib/ui/projects_view.dart": "8cca857c1e956c37fea12e4ad7161ede08ff27088f72235657efc676e7bd6590",
+      "client/test/projects_layout_test.dart": "c9860a4481e88b5e8f0d2eb124a23a9d0c44ce4fac12e2f40d5ad2c84d8e54ba"
+    },
+    "log_sha256": "a196b7041b07c84f80a2d2f4b0ae4c5b2a0bfea41155c88ce6ca75bd0c32d8a9",
+    "name": "regression-keyboard-3",
+    "started_at": "2026-10-17T22:03:05.794180+00:00"
+  }
+]

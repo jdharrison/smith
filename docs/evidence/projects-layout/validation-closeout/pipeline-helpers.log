@@ -1,0 +1,41 @@
+test_actual_package_roundtrip_with_synthetic_source_identity (test_installer_release.ArchiveTests.test_actual_package_roundtrip_with_synthetic_source_identity) ... ok
+test_archive_tamper_missing_and_mode_fail_reverification (test_installer_release.ArchiveTests.test_archive_tamper_missing_and_mode_fail_reverification) ... ok
+test_archive_unsafe_paths_links_modes_and_duplicates (test_installer_release.ArchiveTests.test_archive_unsafe_paths_links_modes_and_duplicates) ... ok
+test_cli_normal_default_repo_and_import_from_unrelated_cwd (test_installer_release.ArchiveTests.test_cli_normal_default_repo_and_import_from_unrelated_cwd) ... ok
+test_existing_output_and_dangling_symlink_refused (test_installer_release.ArchiveTests.test_existing_output_and_dangling_symlink_refused) ... ok
+test_full_roundtrip_metadata_and_modes (test_installer_release.ArchiveTests.test_full_roundtrip_metadata_and_modes) ... ok
+test_invalid_payloads_leave_no_output (test_installer_release.ArchiveTests.test_invalid_payloads_leave_no_output) ... ok
+test_invalid_source_and_nested_output_write_nothing (test_installer_release.ArchiveTests.test_invalid_source_and_nested_output_write_nothing) ... ok
+test_next_only_tooling_refused (test_installer_release.PackageLoaderTests.test_next_only_tooling_refused) ... ok
+test_root_tooling_ignores_next_decoy (test_installer_release.PackageLoaderTests.test_root_tooling_ignores_next_decoy) ... ok
+test_bad_tags_and_branch_only (test_installer_release.SourceTests.test_bad_tags_and_branch_only) ... ok
+test_checkout_commit_fallback_loses_annotation_but_explicit_tag_preserves_it (test_installer_release.SourceTests.test_checkout_commit_fallback_loses_annotation_but_explicit_tag_preserves_it)
+Replay v4.2.2 fetch/ref semantics with real local Git, not a hosted action. ... ok
+test_dirty_staged_and_unstaged (test_installer_release.SourceTests.test_dirty_staged_and_unstaged) ... ok
+test_lightweight_tag (test_installer_release.SourceTests.test_lightweight_tag) ... ok
+test_missing_main_ref (test_installer_release.SourceTests.test_missing_main_ref) ... ok
+test_next_only_layout_refused (test_installer_release.SourceTests.test_next_only_layout_refused) ... ok
+test_root_versions_ignore_next_decoys (test_installer_release.SourceTests.test_root_versions_ignore_next_decoys) ... ok
+test_strict_pubspec_and_lock_versions (test_installer_release.SourceTests.test_strict_pubspec_and_lock_versions) ... ok
+test_tagged_side_branch_not_in_main_history (test_installer_release.SourceTests.test_tagged_side_branch_not_in_main_history) ... ok
+test_untracked_allowed (test_installer_release.SourceTests.test_untracked_allowed) ... ok
+test_valid_annotated_identity_and_cli (test_installer_release.SourceTests.test_valid_annotated_identity_and_cli) ... ok
+test_version_mismatch (test_installer_release.SourceTests.test_version_mismatch) ... ok
+test_wrong_head (test_installer_release.SourceTests.test_wrong_head) ... ok
+test_wrong_or_abbreviated_sha (test_installer_release.SourceTests.test_wrong_or_abbreviated_sha) ... ok
+test_bad_download_fails_checksum_before_extraction_execution_or_path_write (test_pipeline_config.DaggerSetupTests.test_bad_download_fails_checksum_before_extraction_execution_or_path_write) ... ok
+test_module_and_installer_have_reviewed_version_and_digest (test_pipeline_config.DaggerSetupTests.test_module_and_installer_have_reviewed_version_and_digest) ... ok
+test_wrong_platform_refuses_before_download (test_pipeline_config.DaggerSetupTests.test_wrong_platform_refuses_before_download) ... ok
+test_custom_dagger_executable_preserves_module (test_pipeline_config.MakeConfigTests.test_custom_dagger_executable_preserves_module) ... ok
+test_every_dagger_recipe_has_explicit_module (test_pipeline_config.MakeConfigTests.test_every_dagger_recipe_has_explicit_module) ... ok
+test_both_checkouts_select_full_tag_ref_only_for_candidates (test_pipeline_config.WorkflowContractTests.test_both_checkouts_select_full_tag_ref_only_for_candidates) ... ok
+test_candidate_upload_is_gated_after_checks_build_and_archive (test_pipeline_config.WorkflowContractTests.test_candidate_upload_is_gated_after_checks_build_and_archive) ... ok
+test_main_and_pr_validate_without_candidate_default (test_pipeline_config.WorkflowContractTests.test_main_and_pr_validate_without_candidate_default) ... ok
+test_release_is_tag_only_reusable_ci_caller (test_pipeline_config.WorkflowContractTests.test_release_is_tag_only_reusable_ci_caller) ... ok
+test_ubuntu_only_read_only_credential_free_pinned_actions (test_pipeline_config.WorkflowContractTests.test_ubuntu_only_read_only_credential_free_pinned_actions) ... ok
+
+----------------------------------------------------------------------
+Ran 34 tests in 24.956s
+
+OK
+Actual package fixture roundtrip (NOT clean-source provenance): 55d52d4d219426390685a7733a47e219dab300f58fa98ed53f57bc5ecd4d4b50

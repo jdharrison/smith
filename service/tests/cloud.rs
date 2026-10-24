@@ -712,7 +712,7 @@ fn save_is_local_validation_is_exact_synthetic_and_no_secret_is_durable() {
     }
     assert_eq!(
         serde_json::from_str::<Value>(&disk).unwrap()["schema_version"],
-        4
+        6
     );
 }
 #[test]
@@ -1539,7 +1539,7 @@ fn v2_disk_migration_preserves_unknown_models_u64_and_rejects_missing_v3_extensi
     );
     drop(app);
     let mut disk: Value = serde_json::from_slice(&fs::read(f.disk()).unwrap()).unwrap();
-    assert_eq!(disk["schema_version"], 4);
+    assert_eq!(disk["schema_version"], 6);
     disk.as_object_mut().unwrap().remove("cloud");
     let bytes = serde_json::to_vec(&disk).unwrap();
     fs::write(f.disk(), &bytes).unwrap();
@@ -1826,6 +1826,7 @@ fn timestamps_disk3_migration_preserves_routed_receipts_and_never_dates_old_pair
     let mut old: Value = serde_json::from_slice(&fs::read(f.disk()).unwrap()).unwrap();
     old["schema_version"] = json!(3);
     old.as_object_mut().unwrap().remove("timestamps");
+    old.as_object_mut().unwrap().remove("projects");
     fs::write(f.disk(), serde_json::to_vec(&old).unwrap()).unwrap();
     let calls = f.http.calls.lock().unwrap().len();
     f.clock.advance(100);
@@ -1853,7 +1854,7 @@ fn timestamps_disk3_migration_preserves_routed_receipts_and_never_dates_old_pair
     );
     assert_eq!(f.http.calls.lock().unwrap().len(), calls);
     let saved: Value = serde_json::from_slice(&fs::read(f.disk()).unwrap()).unwrap();
-    assert_eq!(saved["schema_version"], 4);
+    assert_eq!(saved["schema_version"], 6);
     assert_eq!(saved["cloud"], old["cloud"]);
     assert_eq!(saved["jobs"], old["jobs"]);
 }

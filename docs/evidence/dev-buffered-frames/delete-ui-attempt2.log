@@ -1,0 +1,241 @@
+00:00 +0: loading <workspace>/client/test/dev_jobs_list_view_test.dart
+00:00 +0: completed Delete is detail-only and Cancel never mutates
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 2 widgets with text "Project: smith": [
+            Text("Project: smith", dependencies: [DefaultSelectionStyle, DefaultTextStyle,
+MediaQuery]),
+            Text("Project: smith", dependencies: [DefaultSelectionStyle, DefaultTextStyle,
+MediaQuery]),
+          ]>
+   Which: is too many
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<workspace>/client/test/dev_jobs_list_view_test.dart:232:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<workspace>/client/test/dev_jobs_list_view_test.dart line 232
+The test description was:
+  completed Delete is detail-only and Cancel never mutates
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: completed Delete is detail-only and Cancel never mutates [E]
+  Test failed. See exception logs above.
+  The test description was: completed Delete is detail-only and Cancel never mutates
+  
+00:00 +0 -1: failed Delete is detail-only and Cancel never mutates
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 2 widgets with text "Project: smith": [
+            Text("Project: smith", dependencies: [DefaultSelectionStyle, DefaultTextStyle,
+MediaQuery]),
+            Text("Project: smith", dependencies: [DefaultSelectionStyle, DefaultTextStyle,
+MediaQuery]),
+          ]>
+   Which: is too many
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<workspace>/client/test/dev_jobs_list_view_test.dart:232:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<workspace>/client/test/dev_jobs_list_view_test.dart line 232
+The test description was:
+  failed Delete is detail-only and Cancel never mutates
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -2: failed Delete is detail-only and Cancel never mutates [E]
+  Test failed. See exception logs above.
+  The test description was: failed Delete is detail-only and Cancel never mutates
+  
+00:00 +0 -2: reconciled Delete is detail-only and Cancel never mutates
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 2 widgets with text "Project: smith": [
+            Text("Project: smith", dependencies: [DefaultSelectionStyle, DefaultTextStyle,
+MediaQuery]),
+            Text("Project: smith", dependencies: [DefaultSelectionStyle, DefaultTextStyle,
+MediaQuery]),
+          ]>
+   Which: is too many
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<workspace>/client/test/dev_jobs_list_view_test.dart:232:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<workspace>/client/test/dev_jobs_list_view_test.dart line 232
+The test description was:
+  reconciled Delete is detail-only and Cancel never mutates
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -3: reconciled Delete is detail-only and Cancel never mutates [E]
+  Test failed. See exception logs above.
+  The test description was: reconciled Delete is detail-only and Cancel never mutates
+  
+00:01 +0 -3: running has no Delete action
+00:01 +1 -3: unknown has no Delete action
+00:01 +2 -3: cleanup_unknown has no Delete action
+00:01 +3 -3: delete binds exact target and consumes duplicate callbacks; detail becomes deleted
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 2 widgets with text "Request: 44444444444444444444444444444444":
+[
+            Text("Request: 44444444444444444444444444444444", dependencies: [DefaultSelectionStyle,
+DefaultTextStyle, MediaQuery]),
+            EditableText-[LabeledGlobalKey<EditableTextState>#a5bc6](controller:
+_TextSpanEditingController#b5f09(TextEditingValue(text: ┤Request: 44444444444444444444444444444444├,
+selection: TextSelection.invalid, composing: TextRange(start: -1, end: -1))), focusNode:
+FocusNode#e4f40, readOnly: true, autocorrect: true, debugLabel: (englishLike bodyMedium
+2021).merge((((whiteMountainView bodyMedium).apply).apply).copyWith), inherit: false, color:
+Color(alpha: 1.0000, red: 0.8902, green: 0.9412, blue: 0.9333, colorSpace: ColorSpace.sRGB), family:
+JetBrains Mono, size: 14.0, weight: 400, letterSpacing: 0.3, baseline: alphabetic, height: 1.5x,
+leadingDistribution: even, decoration: Color(alpha: 1.0000, red: 0.8902, green: 0.9412, blue:
+0.9333, colorSpace: ColorSpace.sRGB) TextDecoration.none, textAlign: start, maxLines: null,
+keyboardType: TextInputType(name: TextInputType.multiline, signed: null, decimal: null),
+dependencies: [Directionality, MediaQuery, _EffectiveTickerMode], state:
+EditableTextState#c65de(tickers: tracking 1 ticker)),
+          ]>
+   Which: is too many
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<workspace>/client/test/dev_jobs_list_view_test.dart:274:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<workspace>/client/test/dev_jobs_list_view_test.dart line 274
+The test description was:
+  delete binds exact target and consumes duplicate callbacks; detail becomes deleted
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +3 -4: delete binds exact target and consumes duplicate callbacks; detail becomes deleted [E]
+  Test failed. See exception logs above.
+  The test description was: delete binds exact target and consumes duplicate callbacks; detail becomes deleted
+  
+00:01 +3 -4: unknown deletion Resolve only queries; other unknown job stays blocking
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 2 widgets with text "Deletion unconfirmed.": [
+            Text("Deletion unconfirmed.", dependencies: [DefaultSelectionStyle, DefaultTextStyle,
+MediaQuery]),
+            Text("Deletion unconfirmed.", dependencies: [DefaultSelectionStyle, DefaultTextStyle,
+MediaQuery]),
+          ]>
+   Which: is too many
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<workspace>/client/test/dev_jobs_list_view_test.dart:321:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<workspace>/client/test/dev_jobs_list_view_test.dart line 321
+The test description was:
+  unknown deletion Resolve only queries; other unknown job stays blocking
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +3 -5: unknown deletion Resolve only queries; other unknown job stays blocking [E]
+  Test failed. See exception logs above.
+  The test description was: unknown deletion Resolve only queries; other unknown job stays blocking
+  
+00:01 +3 -5: stale confirmation cannot dispatch after hide or instance change
+00:01 +4 -5: late delete never pops replacement New job or loses draft
+00:02 +5 -5: more than 32 retained rows have no count warning and allow Review
+00:02 +6 -5: narrow text2 confirmation wraps with 48px keyboard-safe Cancel default
+00:02 +7 -5: new job edit shows fields without technical or consent boilerplate
+00:02 +8 -5: new job blockers are concise with expandable diagnostics at 1.0
+00:02 +9 -5: new job blockers are concise with expandable diagnostics at 2.0
+00:02 +10 -5: reconciled list/details reply=false narrow-text2=false remain read-only
+00:02 +11 -5: reconciled list/details reply=false narrow-text2=true remain read-only
+00:03 +12 -5: reconciled list/details reply=true narrow-text2=false remain read-only
+00:03 +13 -5: reconciled list/details reply=true narrow-text2=true remain read-only
+00:03 +14 -5: all keyed rows, full identities, stable order and cross-project details
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: no matching candidates
+  Actual: _WidgetPredicateWidgetFinder:<Found 1 widget with widget matching predicate: [
+            TextButton(style: ButtonStyle#bc538(minimumSize: WidgetStatePropertyAll(Size(48.0,
+48.0)), mouseCursor: WidgetStateMapper<MouseCursor?>({WidgetState.disabled: null, WidgetState.any:
+null})), dependencies: [IconTheme, InheritedCupertinoTheme, MediaQuery, _InheritedTheme,
+_LocalizationsScope-[GlobalKey#db8f3]], state: _ButtonStyleState#52dbf),
+          ]>
+   Which: means one was found but none were expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<workspace>/client/test/dev_jobs_list_view_test.dart:681:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<workspace>/client/test/dev_jobs_list_view_test.dart line 681
+The test description was:
+  all keyed rows, full identities, stable order and cross-project details
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:03 +14 -6: all keyed rows, full identities, stable order and cross-project details [E]
+  Test failed. See exception logs above.
+  The test description was: all keyed rows, full identities, stable order and cross-project details
+  
+00:03 +14 -6: row keyboard activation, cached reopen, read-only force refresh and focus return
+00:03 +15 -6: empty is distinct from unavailable without legacy count admission cap
+00:03 +16 -6: initial list failure is unavailable, never an empty list
+00:03 +17 -6: failed refresh retains labelled stale rows and their readable details
+00:03 +18 -6: late detail A cannot replace B; close/reopen coalesces A without new timers
+00:03 +19 -6: keyed detail failure keeps one coherent stale snapshot and no invented repository absence
+00:03 +20 -6: running detail explains no stop, separate cleanup certainty and blocked admission
+00:03 +21 -6: unknown detail explains no stop, separate cleanup certainty and blocked admission
+00:04 +22 -6: cleanup_unknown detail explains no stop, separate cleanup certainty and blocked admission
+00:04 +23 -6: active observation updates the open keyed detail and stops without modal polling
+00:04 +24 -6: IME/draft changes invalidate review; an obsolete Start cannot consume a replacement review
+00:04 +25 -6: one named modal Edit -> Review -> Start; duplicate callback submits exactly once
+00:04 +26 -6: closed/reopened pending modal retains full newer editing value after late ack
+00:04 +27 -6: known refusal and unknown admission keep exact drafts; no automatic resubmission
+00:04 +28 -6: project and model revision drift invalidate review and obsolete callbacks
+00:04 +29 -6: hiding origin removes its covered named modal, never the unrelated top route
+00:05 +30 -6: hiding a pending source detaches and late acknowledgement retains its draft
+00:05 +31 -6: disposing a pending origin cannot close another route on late acknowledgement
+00:05 +32 -6: two views retain independent modal projects and exact drafts
+00:05 +33 -6: 360x400 text2 rows and short modals scroll with 48px actions
+00:05 +34 -6: 400x400 text2 rows and short modals scroll with 48px actions
+00:05 +35 -6: Some tests failed.
+
+Failing tests:
+  <workspace>/client/test/dev_jobs_list_view_test.dart: all keyed rows, full identities, stable order and cross-project details
+  <workspace>/client/test/dev_jobs_list_view_test.dart: completed Delete is detail-only and Cancel never mutates
+  <workspace>/client/test/dev_jobs_list_view_test.dart: delete binds exact target and consumes duplicate callbacks; detail becomes deleted
+  <workspace>/client/test/dev_jobs_list_view_test.dart: failed Delete is detail-only and Cancel never mutates
+  ... and 2 more

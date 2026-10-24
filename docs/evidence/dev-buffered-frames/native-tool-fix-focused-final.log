@@ -1,0 +1,34 @@
+COMMAND: rustfmt --edition 2021 src/runner.rs src/runner_tool_tests.rs src/runner_lease_tests.rs tests/runner.rs
+
+EXIT: 0
+
+COMMAND: cargo test --offline --locked --lib runner::tool_tests -- --test-threads=1
+   Compiling smith-service v0.1.0 (<workspace>/service)
+    Finished `test` profile [unoptimized] target(s) in 2.15s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-7c11b7ac37ef8548)
+
+running 19 tests
+test runner::tool_tests::absent_third_requires_packaged_profile_not_native_version_text ... ok
+test runner::tool_tests::actual_request_template_and_context_guards_remain_exact ... ok
+test runner::tool_tests::cached_success_does_not_grant_unknown_profiles_or_null_third ... ok
+test runner::tool_tests::controlled_history_passes_actual_broker_without_any_io_or_generation ... ok
+test runner::tool_tests::definition_arguments_system_and_call_structure_must_survive ... ok
+test runner::tool_tests::dropped_altered_duplicate_or_reordered_text_evidence_is_rejected ... ok
+test runner::tool_tests::explicit_false_null_and_nonboolean_third_never_take_exception ... ok
+test runner::tool_tests::failed_or_cancelled_expired_or_malformed_probe_never_caches_or_generates ... ok
+test runner::tool_tests::json_echo_missing_prompt_malformed_or_oversized_rendering_is_not_semantic_proof ... ok
+test runner::tool_tests::loader_hash_or_self_reported_version_alone_cannot_identify_profile ... ok
+test runner::tool_tests::probe_is_broker_valid_and_covers_call_counts_content_and_argument_shapes ... ok
+test runner::tool_tests::profile_requires_complete_pinned_inventory_including_modes_and_libraries ... ok
+test runner::tool_tests::required_props_are_objects_and_exact_booleans ... ok
+test runner::tool_tests::runner_failure_and_shutdown_clear_instance_success_even_without_a_child ... ok
+test runner::tool_tests::semantic_evidence_supports_every_four_call_result_permutation ... ok
+test runner::tool_tests::semantic_probe_accepts_object_or_string_arguments_without_call_ids ... ok
+test runner::tool_tests::status_malformed_duplicate_and_nonobject_capabilities_are_rejected ... ok
+test runner::tool_tests::success_cache_is_per_instance_and_still_rechecks_props ... ok
+test runner::tool_tests::verified_profile_cannot_be_reused_for_a_different_executable_path ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 341 filtered out; finished in 0.12s
+
+
+EXIT: 0

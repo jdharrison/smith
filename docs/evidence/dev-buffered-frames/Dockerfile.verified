@@ -1,0 +1,6 @@
+FROM smith-dev-worker-local:before-buffered-20261019
+COPY --chown=0:0 dist/smith-service /usr/local/bin/smith-service
+RUN printf "af6f560867cbfa17b9d374a47dde95bb1f415d6c9f65de669b27e85aafd993c7  /usr/local/bin/smith-service\n40504069bc2548e7d1da3c9a47cecda3ee1be77e2be3a60bbdaac737e25ef310  /etc/smith-opencode/guard.mjs\n" | sha256sum --check --strict \
+    && stat -c "%u:%g:%a" /usr/local/bin/smith-service | grep -Fx "0:0:555" \
+    && stat -c "%u:%g:%a" /usr/local/bin/opencode | grep -Fx "0:0:555" \
+    && /usr/local/bin/smith-service --help >/dev/null

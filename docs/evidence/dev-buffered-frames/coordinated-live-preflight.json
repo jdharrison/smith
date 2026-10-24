@@ -1,0 +1,21 @@
+{
+  "pid": 321258,
+  "active": "active",
+  "sub": "running",
+  "unit_state": "enabled",
+  "no_dropins": true,
+  "needs_reload": "no",
+  "service_sha256": "b7790a585d568373c0c3207e34ea4bbbeec080f863ff9ecec0a08b60a25c9d10",
+  "helper_sha256": "b7790a585d568373c0c3207e34ea4bbbeec080f863ff9ecec0a08b60a25c9d10",
+  "selected_release": "9f670a310ffc1f883c5fdb6b93ebcebdf93b035de8928b8ba98e789b0c9343fb",
+  "unit_sha256": "d1deeb0d1525212edbc56bbb5a8eb72bec327612e97f7b30aba045cf95c49ab3",
+  "local_ledger_sha256": "1cd468a8b41cdf2bf5360b912ffe652a4e09610564f0b1657261de4e63ac2b38",
+  "local_ledger_schema": 1,
+  "record_count": 7,
+  "target_status": "unknown",
+  "target_cleanup": true,
+  "target_may_have_sent": true,
+  "target_image": "sha256:e799b3750e8f8e6dd3f7256f040e625996a2301d7566a934c1d14ea706e94df7",
+  "app_pending": 0,
+  "artifact_sha256": "9bb0228c61bf762c7899f15f7105924d666b6e534102a33c6ecea8779fee77ec"
+}

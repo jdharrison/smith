@@ -1,0 +1,45 @@
+{"tests": 39, "failures": 0, "errors": 0, "skips": 0}
+test_all_continuation_markers_fence (independent_continuation_tests.BindingTests.test_all_continuation_markers_fence) ... ok
+test_check_and_stage_read_only (independent_continuation_tests.BindingTests.test_check_and_stage_read_only) ... ok
+test_cli_uses_explicit_root (independent_continuation_tests.BindingTests.test_cli_uses_explicit_root) ... ok
+test_each_original_file_drift (independent_continuation_tests.BindingTests.test_each_original_file_drift) ... ok
+test_expired_check_still_read_only (independent_continuation_tests.BindingTests.test_expired_check_still_read_only) ... ok
+test_explicit_root_required_no_process (independent_continuation_tests.BindingTests.test_explicit_root_required_no_process) ... ok
+test_unexpected_file_directory_and_original_dispatch (independent_continuation_tests.BindingTests.test_unexpected_file_directory_and_original_dispatch) ... ok
+test_builder_rejected (independent_continuation_tests.ReceiptTests.test_builder_rejected) ... ok
+test_expired_receipt (independent_continuation_tests.ReceiptTests.test_expired_receipt) ... ok
+test_fresh_receipts_valid_but_do_not_renew_end (independent_continuation_tests.ReceiptTests.test_fresh_receipts_valid_but_do_not_renew_end) ... ok
+test_not_independent (independent_continuation_tests.ReceiptTests.test_not_independent) ... ok
+test_receipt_hash_drift_rejected (independent_continuation_tests.ReceiptTests.test_receipt_hash_drift_rejected) ... ok
+test_receipts_outside_snapshot_rejected (independent_continuation_tests.ReceiptTests.test_receipts_outside_snapshot_rejected) ... ok
+test_same_actor_rejected (independent_continuation_tests.ReceiptTests.test_same_actor_rejected) ... ok
+test_stale_receipt (independent_continuation_tests.ReceiptTests.test_stale_receipt) ... ok
+test_wrong_exact_binding (independent_continuation_tests.ReceiptTests.test_wrong_exact_binding) ... ok
+test_ambiguous_start_still_stops (independent_continuation_tests.RunTests.test_ambiguous_start_still_stops) ... ok
+test_approval_drift_after_start_still_stops (independent_continuation_tests.RunTests.test_approval_drift_after_start_still_stops) ... ok
+test_authorization_refusal_no_commands (independent_continuation_tests.RunTests.test_authorization_refusal_no_commands) ... ok
+test_bad_envelope_not_success (independent_continuation_tests.RunTests.test_bad_envelope_not_success) ... ok
+test_cancel_after_start_still_stops (independent_continuation_tests.RunTests.test_cancel_after_start_still_stops) ... ok
+test_cleanup_inspect_failure_still_stops (independent_continuation_tests.RunTests.test_cleanup_inspect_failure_still_stops) ... ok
+test_cli_workspace_generation_allowed_only_after_dispatch (independent_continuation_tests.RunTests.test_cli_workspace_generation_allowed_only_after_dispatch) ... ok
+test_config_drift_after_start_still_stops_unknown (independent_continuation_tests.RunTests.test_config_drift_after_start_still_stops_unknown) ... ok
+test_deadlines_and_rollback_before_commands (independent_continuation_tests.RunTests.test_deadlines_and_rollback_before_commands) ... ok
+test_exact_oom_types_and_no_mutation (independent_continuation_tests.RunTests.test_exact_oom_types_and_no_mutation) ... ok
+test_expiry_after_start_still_stops (independent_continuation_tests.RunTests.test_expiry_after_start_still_stops) ... ok
+test_foreign_identity_never_started (independent_continuation_tests.RunTests.test_foreign_identity_never_started) ... ok
+test_invalid_baseline_oom_rejected (independent_continuation_tests.RunTests.test_invalid_baseline_oom_rejected) ... ok
+test_missing_scope_unknown (independent_continuation_tests.RunTests.test_missing_scope_unknown) ... ok
+test_observed_wall_rollback_rejected (independent_continuation_tests.RunTests.test_observed_wall_rollback_rejected) ... ok
+test_original_bound_drift_no_commands (independent_continuation_tests.RunTests.test_original_bound_drift_no_commands) ... ok
+test_original_cleanup_and_observe_reused (independent_continuation_tests.RunTests.test_original_cleanup_and_observe_reused) ... ok
+test_other_config_comparisons_unchanged (independent_continuation_tests.RunTests.test_other_config_comparisons_unchanged) ... ok
+test_own_digest_drift_no_commands (independent_continuation_tests.RunTests.test_own_digest_drift_no_commands) ... ok
+test_populated_scope_unknown (independent_continuation_tests.RunTests.test_populated_scope_unknown) ... ok
+test_quiescence_cancel_suppresses_success (independent_continuation_tests.RunTests.test_quiescence_cancel_suppresses_success) ... ok
+test_success_fixed_endpoints_single_dispatch_stop_and_replay_fence (independent_continuation_tests.RunTests.test_success_fixed_endpoints_single_dispatch_stop_and_replay_fence) ... ok
+test_workspace_generation_before_dispatch_refused (independent_continuation_tests.RunTests.test_workspace_generation_before_dispatch_refused) ... ok
+
+----------------------------------------------------------------------
+Ran 39 tests in 2.987s
+
+OK

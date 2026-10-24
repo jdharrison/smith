@@ -1,0 +1,33 @@
+{
+  "binding_verified": true,
+  "fixture": {
+    "mode": 509,
+    "mode_octal": "0o775",
+    "path": "service/target/debug/deps/debug_service-0a4be2ddda80d80f",
+    "sha256": "b3a00963d5cf4733baf85a1a299b653c231c90c4a3323ed83aab5dba212b926f",
+    "size": 25469216,
+    "type": "file"
+  },
+  "helper": {
+    "mode": 509,
+    "mode_octal": "0o775",
+    "path": "service/target/debug/smith-service",
+    "sha256": "3e95bad4e8ef4ee5f3cad523ab832e4639f74c103753adc79df9a8611353ec4a",
+    "size": 24306872,
+    "type": "file"
+  },
+  "limit": "Revalidates preserved binary/helper and unchanged whole-service inputs; not clean-source reconstruction.",
+  "prior_binding": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "target/projects-layout/validation-final/compiled-fixture-binding.json",
+    "sha256": "f5d5a59abb6627ef83618784a055c81beb32a1f3396cca8f29f7e013f41924ee",
+    "size": 1915,
+    "type": "file"
+  },
+  "rebuild_performed": false,
+  "recorded_at": "2026-10-17T22:05:37.765323+00:00",
+  "service_source_count": 54,
+  "service_source_sha256": "b166840f14a2ad11c1f8c2482ab910f6c48e355e091788649bd29cf2162ed147",
+  "service_unchanged": true
+}

@@ -1,0 +1,4 @@
+COMMAND: dart format --output=none --set-exit-if-changed lib/dev_jobs.dart lib/ui/dev_jobs_view.dart test/dev_jobs_test.dart test/dev_jobs_controller_list_test.dart test/dev_jobs_list_view_test.dart
+Formatted 5 files (0 changed) in 0.08 seconds.
+
+EXIT: 0

@@ -372,8 +372,19 @@ pub fn context(
     history: &[Message],
     input: &str,
 ) -> AppResult<Vec<Message>> {
+    context_with_instructions(vendor, id, history, input, "")
+}
+
+pub fn context_with_instructions(
+    vendor: Vendor,
+    id: &str,
+    history: &[Message],
+    input: &str,
+    instructions: &str,
+) -> AppResult<Vec<Message>> {
     let m = model(vendor, id).ok_or_else(|| error("ROUTE_UNAVAILABLE"))?;
-    if input.trim().is_empty()
+    if instructions.len() > 2048
+        || input.trim().is_empty()
         || input.len() > crate::app::MAX_TEXT
         || history.len() > 32
         || history.len() % 2 != 0
@@ -389,9 +400,15 @@ pub fn context(
     }
     let mut messages = history.to_vec();
     loop {
-        let bytes = messages.iter().map(|m| m.content.len()).sum::<usize>() + input.len();
+        let bytes = messages.iter().map(|m| m.content.len()).sum::<usize>()
+            + input.len()
+            + instructions.len();
         if bytes <= crate::app::MAX_CONTEXT
-            && bytes + (messages.len() + 1) * 256 + 4096 + OUTPUT_TOKENS as usize <= m.context
+            && bytes
+                + (messages.len() + 1 + usize::from(!instructions.is_empty())) * 256
+                + 4096
+                + OUTPUT_TOKENS as usize
+                <= m.context
         {
             break;
         }

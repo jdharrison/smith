@@ -52,16 +52,22 @@ installer/ui-test:
 	$(DAGGER) --mod dagger call test-installer-ui --source installer --service service
 
 installer/ui:
-	$(DAGGER) --mod dagger call -o installer/build/smith-installer-ui build-installer-ui --source installer --service service
+	python3 -B dagger/package.py --root installer/build --prepare-location
+	umask 077; $(DAGGER) --mod dagger call -o installer/build/smith-installer-ui build-installer-ui --source installer --service service
+	python3 -B dagger/package.py --root installer/build --check-location
 
 installer/binary:
-	$(DAGGER) --mod dagger call -o installer/build/smith-installer build-installer-binary --source installer --service service
+	python3 -B dagger/package.py --root installer/build --prepare-location
+	umask 077; $(DAGGER) --mod dagger call -o installer/build/smith-installer build-installer-binary --source installer --service service
+	python3 -B dagger/package.py --root installer/build --check-location
 
 installer/build:
-	$(DAGGER) --mod dagger call -o installer/dist build-installer --installer installer --client client --service service --tooling dagger
-	python3 dagger/package.py --root installer/dist --verify
+	python3 -B dagger/package.py --root installer/dist --prepare-location
+	umask 077; $(DAGGER) --mod dagger call -o installer/dist build-installer --installer installer --client client --service service --tooling dagger
+	python3 -B dagger/package.py --root installer/dist --verify
 
 installer/run: installer/build
+	python3 -B dagger/package.py --root installer/dist --check-location
 	./installer/dist/smith-installer-ui
 
 install: service/build client/build installer/binary
@@ -76,10 +82,14 @@ service/install: service/build installer/binary
 build: service/build client/build installer/build
 
 service/build:
-	$(DAGGER) --mod dagger call -o service/dist/smith-service build-service --source service
+	python3 -B dagger/package.py --root service/dist --prepare-location
+	umask 077; $(DAGGER) --mod dagger call -o service/dist/smith-service build-service --source service
+	python3 -B dagger/package.py --root service/dist --check-location
 
 client/build:
-	$(DAGGER) --mod dagger call -o client/dist build-client --source client --service service
+	python3 -B dagger/package.py --root client/dist --prepare-location
+	umask 077; $(DAGGER) --mod dagger call -o client/dist build-client --source client --service service
+	python3 -B dagger/package.py --root client/dist --check-location
 
 client/run:
 	cd service && sh scripts/build.sh

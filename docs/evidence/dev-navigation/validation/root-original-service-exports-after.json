@@ -1,0 +1,19 @@
+{
+  "directory_count": 0,
+  "entries": [
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "service/dist/smith-service",
+      "sha256": "30202135a35e4b188aa2ffd7f332d552c969585f0cf8a050ce23eb806e262d65",
+      "size": 9621032,
+      "type": "file"
+    }
+  ],
+  "exists": true,
+  "file_count": 1,
+  "recorded_at": "2026-10-18T01:31:09.600254+00:00",
+  "root": "service/dist",
+  "sha256": "37795320c22f09ebf877ec6f737a852571d2a6f24c13dfb9618b5c90669edc86",
+  "total_file_bytes": 9621032
+}

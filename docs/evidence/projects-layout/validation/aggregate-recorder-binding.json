@@ -1,0 +1,75 @@
+{
+  "cache_limits": [
+    "Existing approved Dagger engine and caches retained; no clean-cache or hermetic-build claim.",
+    "Retained dagger.lock/dagger.toml do not prove effective image-lock enforcement.",
+    "Fresh host command invocation is distinct from cached internal test/build vertices.",
+    "No host product/GUI/manager/provider/model launch; Dagger uses isolated native/GTK/private fixtures only."
+  ],
+  "changed_since_focused_start": [],
+  "configured_dagger_toolchains": {
+    "client_and_installer_tests_os": "ubuntu:24.04",
+    "engine": "v0.21.9",
+    "flutter_tag": "3.47.2",
+    "implementation": {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "dagger/src/smith_next/main.py",
+      "sha256": "1fad146c2caef24a09a4fa3792b6b3154bae93ec84dc8668921dccf6ead4dc1a",
+      "size": 16732,
+      "type": "file"
+    },
+    "module": {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "dagger/dagger.json",
+      "sha256": "e825f7fa5c17534cab2d6ca193b80937677c5fc6b099858258650bfbe80d20ba",
+      "size": 113,
+      "type": "file"
+    },
+    "package_native_env": {
+      "SMITH_TEST_INSTALLER": "/opt/smith-installer",
+      "SMITH_TEST_INSTALLER_UI": "/opt/smith-installer-ui"
+    },
+    "rust_image": "rust:1.98.0-bookworm",
+    "service_tests_os": "rust:1.98.0-bookworm",
+    "test_user": "1000:1000",
+    "ui_fixture": "xvfb-run, GDK_BACKEND=x11"
+  },
+  "core_count": 1265,
+  "core_sha256": "b749d0d251a641d746520cf2315f1d172db09fe1a96a6dcebcc2d3c8546d5443",
+  "host": {
+    "gid": 1000,
+    "machine": "x86_64",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "python_executable": {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "/usr/bin/python3.12",
+      "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "size": 8020928,
+      "type": "file"
+    },
+    "system": "Linux",
+    "uid": 1000
+  },
+  "recorded_at": "2026-10-17T21:22:52.201605+00:00",
+  "recorder_sources": [
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/projects-layout/validation-run/recorder.py",
+      "sha256": "ecc55954ecf9dbf65e727f30d4fd479c634dcff5e8625d807965d534feb1a9da",
+      "size": 11202,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/projects-layout/validation-run/run_gates.py",
+      "sha256": "3c3dc6e407ac15d611954794a27324b17a1c0a113c6d790a70bb0e5479184be5",
+      "size": 8695,
+      "type": "file"
+    }
+  ],
+  "stable_since_focused_start": true
+}

@@ -1,0 +1,61 @@
+COMMAND: cargo test --offline --locked dev_worker_local
+EXIT: 0
+    Finished `test` profile [unoptimized] target(s) in 0.05s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-7c11b7ac37ef8548)
+
+running 10 tests
+test dev_worker_local::tests::clone_branch_and_checkout_evidence_share_identity ... ok
+test dev_worker_local::tests::buffered_completion_becomes_compatible_sse ... ok
+test dev_worker_local::tests::final_reply_uses_only_exact_correlated_text ... ok
+test dev_worker_local::tests::original_inference_deadline_does_not_reset_with_phase_changes ... ok
+test dev_worker_local::tests::sealed_fetch_and_unguarded_model_never_emit_requests ... ok
+test dev_worker_local::tests::prepared_git_command_has_no_ambient_helpers_or_protocol_fallback ... ok
+test dev_worker_local::tests::strict_headers_reject_duplicates_and_smuggling ... ok
+test dev_worker_local::tests::guard_system_literal_and_no_pure ... ok
+test dev_worker_local::tests::central_reader_rejects_oversized_uncorrelated_and_eof_frames ... ok
+test dev_worker_local::tests::central_reader_correlates_sequence_zero_and_chunks_without_eof ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 307 filtered out; finished in 0.05s
+
+     Running unittests src/main.rs (target/debug/deps/smith_service-80afba02e21e3b70)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/application.rs (target/debug/deps/application-aea4793544d3bc27)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 35 filtered out; finished in 0.00s
+
+     Running tests/cloud.rs (target/debug/deps/cloud-5262b1b2d0cad470)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s
+
+     Running tests/cloud_protocol.rs (target/debug/deps/cloud_protocol-d2d8df0c7e4b49c7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+     Running tests/debug_service.rs (target/debug/deps/debug_service-0a4be2ddda80d80f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.00s
+
+     Running tests/maintenance.rs (target/debug/deps/maintenance-5c42ba82129f2fdf)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+
+     Running tests/runner.rs (target/debug/deps/runner-6791028eb42a466c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 42 filtered out; finished in 0.00s
+

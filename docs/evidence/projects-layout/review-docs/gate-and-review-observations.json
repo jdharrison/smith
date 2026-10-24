@@ -1,0 +1,399 @@
+{
+  "classification": "hash/log observations, not rerun Make/Flutter/native/helper gates",
+  "excerpts": [
+    {
+      "component": "service",
+      "text": "21  : \u2506 [38.2s] | test result: ok. 137 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 6.22s"
+    },
+    {
+      "component": "service",
+      "text": "21  : \u2506 [38.2s] | test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    },
+    {
+      "component": "service",
+      "text": "21  : \u2506 [39.3s] | test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.14s"
+    },
+    {
+      "component": "service",
+      "text": "21  : \u2506 [40.3s] | test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.91s"
+    },
+    {
+      "component": "service",
+      "text": "21  : \u2506 [40.5s] | test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s"
+    },
+    {
+      "component": "service",
+      "text": "21  : \u2506 [1m5s] | test result: ok. 24 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 24.98s"
+    },
+    {
+      "component": "service",
+      "text": "21  : \u2506 [1m6s] | test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s"
+    },
+    {
+      "component": "service",
+      "text": "21  : \u2506 [1m29s] | test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.37s"
+    },
+    {
+      "component": "installer_gtk",
+      "text": "60  : \u2506 [1m32s] | test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.96s"
+    },
+    {
+      "component": "flutter",
+      "line": 3277,
+      "text": "125 : \u2506 [1m4s] | 00:29 +869: All tests passed!"
+    },
+    {
+      "component": "installer_native",
+      "line": 190,
+      "text": "72  : \u2506 Container.withExec CACHED [0.0s]"
+    },
+    {
+      "component": "native_interpreter_free_runtime",
+      "line": 232,
+      "text": "89  : \u2506 Container.stdout DONE [0.0s]"
+    }
+  ],
+  "index_results": [
+    {
+      "canonical_sha256": "b4823f54e9a845f40cbb4f46c0ec3e1b541fe33f9fc7e633e2d02e5a6f1b1141",
+      "files": 77,
+      "path": "docs/evidence/projects-layout/validation-rebound/evidence-index-final.json"
+    },
+    {
+      "canonical_sha256": "b2a0fdffbbc2800f838d86ad6db44a030d67a69f0bcfca63aec5aab88e666db6",
+      "files": 45,
+      "path": "docs/evidence/projects-layout/review-closeout/evidence-manifest.json"
+    },
+    {
+      "canonical_sha256": "3733c51f1e38a1ca2fc97606c3d14d6debcf591c687cc1c40eb23f7ad93ce075",
+      "files": 458,
+      "path": "docs/evidence/projects-layout/review-closeout/prior-preservation-before.json"
+    }
+  ],
+  "newly_executed_tests": 0,
+  "parent_commands": [
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "<repo>/target/projects-layout/validation-rebound/probe_processes.py"
+      ],
+      "exit_code": 0,
+      "log": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/process-observation-before-focused.log",
+        "sha256": "50d2207db4aeb6420e0248877b2c0fb288ce877f6b409efcaeb80600b15346a1",
+        "size": 323
+      },
+      "name": "process-observation-before-focused",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/process-observation-before-focused.json",
+        "sha256": "b47d834d58e7614e0a4ef0901d32f63ad9ccced71fa83db40fb7cabcd9677d63",
+        "size": 1885,
+        "type": "file"
+      }
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/projects_view_test.dart",
+        "test/projects_navigation_test.dart",
+        "test/projects_layout_test.dart",
+        "test/projects_layout_golden_test.dart",
+        "test/projects_controller_test.dart",
+        "test/projects_protocol_test.dart"
+      ],
+      "exit_code": 0,
+      "log": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/focused-projects.log",
+        "sha256": "d2b63ae96985cece2b108f16e54b7d0ce06d7264eb98e731b18f34727d6ec9fe",
+        "size": 24435
+      },
+      "name": "focused-projects",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/focused-projects.json",
+        "sha256": "f4d048e0f847fb44ae951dd366ebfd3716ae2f3599d371eaf5814facf6ff9c0d",
+        "size": 2440,
+        "type": "file"
+      }
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/ui_foundation_assets_test.dart"
+      ],
+      "exit_code": 0,
+      "log": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/focused-assets.log",
+        "sha256": "e48059c91009a9b595e3e4cc1138f43a0166f1db23bf6d7245302a333bdfde56",
+        "size": 458
+      },
+      "name": "focused-assets",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/focused-assets.json",
+        "sha256": "7b3e12f81ece7b95173a316d5bea50f98f2a68d657b3ab57648720a949671c49",
+        "size": 2234,
+        "type": "file"
+      }
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/rust_projects_integration_test.dart"
+      ],
+      "exit_code": 0,
+      "log": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/compiled-projects.log",
+        "sha256": "429fc83adc97e594433f184fae4b006dcd9cd5908b4401891a26244e75ea6a88",
+        "size": 723
+      },
+      "name": "compiled-projects",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/compiled-projects.json",
+        "sha256": "268efc83a48f1e8d5b3d5819dcf6362a2659bcd5000d452cb9cec5aa87bde94a",
+        "size": 2345,
+        "type": "file"
+      }
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "<repo>/target/projects-layout/validation-rebound/probe_processes.py"
+      ],
+      "exit_code": 0,
+      "log": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/process-observation-before-aggregate.log",
+        "sha256": "50d2207db4aeb6420e0248877b2c0fb288ce877f6b409efcaeb80600b15346a1",
+        "size": 323
+      },
+      "name": "process-observation-before-aggregate",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/process-observation-before-aggregate.json",
+        "sha256": "57a57910973e8cd314828d3dd6121d186a84ba96274f67d0267b0a4cabfacb25",
+        "size": 1889,
+        "type": "file"
+      }
+    },
+    {
+      "argv": [
+        "<repo>/target/installer-pipeline/smith-dagger-0.21.9/dagger",
+        "version"
+      ],
+      "exit_code": 0,
+      "log": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/dagger-version.log",
+        "sha256": "0819b1f6a5d2080e67735b51514107720e0fb59ba70a251bd80bbc056bd8288a",
+        "size": 88
+      },
+      "name": "dagger-version",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/dagger-version.json",
+        "sha256": "ebc6a0020ccfcf27b1dcc851d95aae8d96bb3625329bf123d8f3119d158ca421",
+        "size": 1861,
+        "type": "file"
+      }
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{\"running\":{{json .State.Running}},\"status\":{{json .State.Status}},\"image\":{{json .Config.Image}},\"image_id\":{{json .Image}},\"started_at\":{{json .State.StartedAt}}}",
+        "smith-installer-pipeline-dagger-v0.21.9"
+      ],
+      "exit_code": 0,
+      "log": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/engine-readiness.log",
+        "sha256": "015c6a729be581b654b45d5517a2345e1cf8f9a5dfda8e4d85ff5c665b2053e0",
+        "size": 210
+      },
+      "name": "engine-readiness",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/engine-readiness.json",
+        "sha256": "4bcfe2ebcb913b1cfc15410c283f2a25d08cf04e975cfe22fdca15a77d334fd7",
+        "size": 2020,
+        "type": "file"
+      }
+    },
+    {
+      "argv": [
+        "make",
+        "DAGGER=target/installer-pipeline/smith-dagger-0.21.9/dagger",
+        "test",
+        "build"
+      ],
+      "exit_code": 0,
+      "log": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/root-gates.log",
+        "sha256": "f09c423c6c3625c1de3571f2349efde5e6889f394650e4b2ce4dd7d44443986c",
+        "size": 438795
+      },
+      "name": "root-gates",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/root-gates.json",
+        "sha256": "c38114875499d30daf342ae09965dcdfcfd5b45507172a0074855f52a1f8ab17",
+        "size": 1837,
+        "type": "file"
+      }
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "dagger/package.py",
+        "--root",
+        "installer/dist",
+        "--verify"
+      ],
+      "exit_code": 0,
+      "log": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/package-verify.log",
+        "sha256": "dbb15ef4b875625b2df9589ec18961d93c26d400ab83f45478df083083a73904",
+        "size": 78
+      },
+      "name": "package-verify",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/package-verify.json",
+        "sha256": "5d5ed049451c682e47732760951a0101e9ba2c24dfed71ec61827bd847bd47ac",
+        "size": 1847,
+        "type": "file"
+      }
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts/tests",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "log": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/pipeline-helpers.log",
+        "sha256": "33bb4dbf151009faefaddbfaa399a117735198d6f579551e107441380d6611fc",
+        "size": 4842
+      },
+      "name": "pipeline-helpers",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/pipeline-helpers.json",
+        "sha256": "7600bb696544063cec9316ccd3fde2933f550a9fb474e908e8b1f25b51714d78",
+        "size": 1930,
+        "type": "file"
+      }
+    },
+    {
+      "argv": [
+        "git",
+        "--no-pager",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "log": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/diff-check.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      "name": "diff-check",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/diff-check.json",
+        "sha256": "4dac63f93f76b2af2449a203002ff072b6085e156e9979fa15b1df768e7e2975",
+        "size": 1785,
+        "type": "file"
+      }
+    }
+  ],
+  "review_counts": [
+    {
+      "name": "original-m2-unchanged",
+      "passed": 2
+    },
+    {
+      "name": "mapped-m1-one-action",
+      "passed": 2
+    },
+    {
+      "name": "focused",
+      "passed": 161
+    },
+    {
+      "name": "reveal-policy",
+      "passed": 10
+    },
+    {
+      "name": "visual",
+      "passed": 30
+    },
+    {
+      "name": "retained-return-guards",
+      "passed": 12
+    },
+    {
+      "name": "neighboring",
+      "passed": 102
+    },
+    {
+      "name": "original-nondefect-probes",
+      "passed": 3
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+    "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+    "--suppress-analytics",
+    "test",
+    "--no-pub",
+    "--reporter",
+    "expanded",
+    "--concurrency",
+    "1",
+    "test/assurance_recovery_test.dart",
+    "test/assurance_delete_restart_test.dart"
+  ],
+  "cwd": "target/projects-assurance/client",
+  "exit_code": 0,
+  "finished_at": "2026-10-17T06:20:06.806337+00:00",
+  "log": "reviewer-records/final-repros.log",
+  "log_sha256": "b0f966f6f9881b6ebeaa1bb67312cb9db818f79a9de2f97d022e6fe36db26b8b",
+  "started_at": "2026-10-17T06:20:03.036074+00:00",
+  "timed_out": false
+}

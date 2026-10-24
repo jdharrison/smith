@@ -1,0 +1,28 @@
+{
+  "command": [
+    "<HOME>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+    "<HOME>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+    "--suppress-analytics",
+    "--no-version-check",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "../target/projects-layout/assurance/defect_confirmation_test.dart"
+  ],
+  "cwd": "client",
+  "duration_seconds": 3.031,
+  "environment_overrides": {
+    "CI": "true",
+    "DART_SUPPRESS_ANALYTICS": "true",
+    "FLUTTER_ALREADY_LOCKED": "true",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true"
+  },
+  "exit_code": 0,
+  "label": "defect-confirmation",
+  "log": "defect-confirmation.log",
+  "log_sha256": "1eecc669abb19e39b8eff05c5d5f265a1b046a81a0717e0cf65439280a22c7ea",
+  "started_utc": "2026-10-17T21:26:10.751385+00:00",
+  "timed_out": false,
+  "timeout_seconds": 240
+}

@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "rustc",
+    "--version",
+    "--verbose"
+  ],
+  "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+  "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+  "cwd": "<repo>/target/default-project/assurance/candidate/service",
+  "duration_seconds": 0.08668889299951843,
+  "environment": {
+    "CARGO_INCREMENTAL": "0",
+    "CARGO_NET_OFFLINE": "true",
+    "CARGO_TARGET_DIR": "<repo>/target/default-project/assurance/cargo-original",
+    "HOME": "<home>",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "<home>/.cargo/bin:/usr/bin:/bin",
+    "TMPDIR": "<repo>/target/default-project/assurance/tmp"
+  },
+  "exit": 0,
+  "log_sha256": "3975d062e234a9f3921955bf6ae5b90f5819df94fa825d057f76b34a35ed0f4d",
+  "start": "2026-10-17T23:29:29.758848+00:00",
+  "timed_out": false,
+  "timeout_seconds": 20
+}

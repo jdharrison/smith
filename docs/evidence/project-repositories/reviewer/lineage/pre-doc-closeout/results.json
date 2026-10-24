@@ -1,0 +1,1155 @@
+{
+  "artifacts": {
+    "manifest_entries": 95,
+    "package_regular_files": 97,
+    "path": "artifacts.json",
+    "regular_files": 189,
+    "sha256": "27ebd839cdc70e8dbcfed47b843fdcb05c446badb834132c6328a67aa0d03dd1"
+  },
+  "baseline": {
+    "archive_path": "target/project-repositories/baseline-source.tar.gz",
+    "archive_sha256": "b8b5ca53ae28bd3146389e32326e57757508865c5ebc9e35d650f705a000f0bb",
+    "canonical_manifest_sha256": "41bea2ed038625478da27b4cc5a8b276eeec2ef5b51cb9d3b4334b2b416c215c",
+    "manifest_file_sha256": "0301584b838c5bdca1a30c14903ac6b2b80f54178c208cd031a153008ffe63f5",
+    "manifest_path": "target/project-repositories/baseline-manifest.json",
+    "prior_projects_evidence_files_unchanged": 28,
+    "selected_file_count": 1357
+  },
+  "branch": "feature/autonomy",
+  "builder_limit": "Only existing exact pinned validation container restarted; immediate unsuitable buildctl probe failed, later official CLI probe succeeded. No cause established for prior exit255 or initial installer artifact-guard failures.",
+  "builder_probe": {
+    "argv": [
+      "target/installer-pipeline/smith-dagger-0.21.9/dagger",
+      "--mod",
+      "dagger",
+      "functions"
+    ],
+    "engine": "existing unchanged smith-installer-pipeline-dagger-v0.21.9",
+    "exit_code": 0,
+    "finished_at": "2026-10-17T19:29:29.786647+00:00",
+    "log": "target/project-repositories/builder-probe.log",
+    "started_at": "2026-10-17T19:29:10.496792+00:00",
+    "timeout_seconds": 60
+  },
+  "builder_recovery": {
+    "actions": [
+      {
+        "argv": [
+          "docker",
+          "inspect",
+          "--format",
+          "{{.Name}}|{{.State.Status}}|{{.State.OOMKilled}}|{{.State.ExitCode}}|{{.Config.Image}}|{{.Image}}",
+          "smith-installer-pipeline-dagger-v0.21.9"
+        ],
+        "exit_code": 0,
+        "finished_at": "2026-10-17T19:27:10.281143+00:00",
+        "output": "/smith-installer-pipeline-dagger-v0.21.9|exited|false|255|registry.dagger.io/engine:v0.21.9|sha256:3c4e0cedaea400d7e30155e050f94910ea5f381b6f5942dd2172382657628cb4\n",
+        "started_at": "2026-10-17T19:27:10.268385+00:00"
+      },
+      {
+        "argv": [
+          "docker",
+          "start",
+          "smith-installer-pipeline-dagger-v0.21.9"
+        ],
+        "exit_code": 0,
+        "finished_at": "2026-10-17T19:27:10.431589+00:00",
+        "output": "smith-installer-pipeline-dagger-v0.21.9\n",
+        "started_at": "2026-10-17T19:27:10.281293+00:00"
+      },
+      {
+        "argv": [
+          "docker",
+          "inspect",
+          "--format",
+          "{{.Name}}|{{.State.Status}}|{{.State.OOMKilled}}|{{.State.ExitCode}}|{{.Config.Image}}|{{.Image}}",
+          "smith-installer-pipeline-dagger-v0.21.9"
+        ],
+        "exit_code": 0,
+        "finished_at": "2026-10-17T19:27:10.444411+00:00",
+        "output": "/smith-installer-pipeline-dagger-v0.21.9|running|false|0|registry.dagger.io/engine:v0.21.9|sha256:3c4e0cedaea400d7e30155e050f94910ea5f381b6f5942dd2172382657628cb4\n",
+        "started_at": "2026-10-17T19:27:10.431757+00:00"
+      },
+      {
+        "argv": [
+          "docker",
+          "exec",
+          "smith-installer-pipeline-dagger-v0.21.9",
+          "buildctl",
+          "debug",
+          "info"
+        ],
+        "exit_code": 1,
+        "finished_at": "2026-10-17T19:27:10.506019+00:00",
+        "output": "Error: dial unix /run/dagger/engine.sock: connect: connection refused\nUsage:\n  dial-stdio [flags]\n\nFlags:\n      --addr string   The address serving the grpc api (default \"unix:///run/dagger/engine.sock\")\n  -h, --help          help for dial-stdio\n      --timeout int   The timeout in seconds for connecting to the grpc api (default 5)\n\n",
+        "started_at": "2026-10-17T19:27:10.444580+00:00"
+      }
+    ],
+    "scope": "Existing approved Dagger validation engine only; no Smith service or runtime worker action"
+  },
+  "cache_boundary": "Fresh test-execution vertices; dependency/setup/build cache reuse. Not a clean-cache/hermetic build.",
+  "compiled_counts": {
+    "coverage_note": "Standalone corroboration; compiled Projects coverage is also included in834 aggregate Flutter passes.",
+    "failed": 0,
+    "passed": 7,
+    "skipped": 0
+  },
+  "compiled_projects": {
+    "argv": [
+      "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+      "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+      "--suppress-analytics",
+      "--no-version-check",
+      "test",
+      "--no-pub",
+      "--reporter",
+      "expanded",
+      "test/rust_projects_integration_test.dart"
+    ],
+    "cwd": "client",
+    "environment": {
+      "CI": "true",
+      "DART_SUPPRESS_ANALYTICS": "true",
+      "FLUTTER_ALREADY_LOCKED": "true",
+      "FLUTTER_ROOT": "<home>/snap/flutter/common/flutter",
+      "SMITH_TEST_CLOUD_SERVICE": "<repo>/service/target/debug/deps/debug_service-0a4be2ddda80d80f"
+    },
+    "exit_code": 0,
+    "finished_at": "2026-10-17T19:29:57.814595+00:00",
+    "inputs_after": {
+      "client/lib/app_api.dart": "92c7a940312e67e32f08326fffc8190562463efc239fce7094ace7e05f257beb",
+      "client/lib/cloud_routing.dart": "1374dd11845316c13dec5476436fee86c1a39a50986a45279edc9c621e883e9e",
+      "client/lib/projects.dart": "d93f8dcfd9850e1c93cdca46adcf45ab291c2b1f3027e8b8b0fad82cac9aef1f",
+      "client/lib/projects_controller.dart": "80826fb7c992af7b6d5e27aeb32cf6803ba8d0cfa1344d4fd62ea73c83793985",
+      "client/test/rust_cloud_integration_test.dart": "3d3565f99aa01c7f6b536adf2dcef38bac47a231b97bd4f2ac4ff0f457d13deb",
+      "client/test/rust_projects_integration_test.dart": "ef2f197f0e0b722b2d8fcfec66df4aba402d50e4cc039a677fcee2422297b564",
+      "service/src/app.rs": "bf18822d2675d7c8d7efaa19ad157323c141eff9edbb3bc94e423232c0fa5b94",
+      "service/src/app_projects.rs": "9e67428d5040d1abb05b578076e21322b910cbb89834f9985f96fd74128c9d2f",
+      "service/src/app_v2.rs": "41b85e3a07a9adf0f3f8e9ea052c05a71a4f36ab9f307d9eb32ef96c49b5a237",
+      "service/src/app_v3.rs": "d8ba0e7af755e3b56433a56841f07e132419ec974ad09c2dc24c8375908dda28",
+      "service/target/debug/deps/debug_service-0a4be2ddda80d80f": "b3a00963d5cf4733baf85a1a299b653c231c90c4a3323ed83aab5dba212b926f",
+      "service/tests/debug_service.rs": "021803ec93a2b452bb298303df68359b17500ac3f629fd07b99d17827cc49498"
+    },
+    "inputs_before": {
+      "client/lib/app_api.dart": "92c7a940312e67e32f08326fffc8190562463efc239fce7094ace7e05f257beb",
+      "client/lib/cloud_routing.dart": "1374dd11845316c13dec5476436fee86c1a39a50986a45279edc9c621e883e9e",
+      "client/lib/projects.dart": "d93f8dcfd9850e1c93cdca46adcf45ab291c2b1f3027e8b8b0fad82cac9aef1f",
+      "client/lib/projects_controller.dart": "80826fb7c992af7b6d5e27aeb32cf6803ba8d0cfa1344d4fd62ea73c83793985",
+      "client/test/rust_cloud_integration_test.dart": "3d3565f99aa01c7f6b536adf2dcef38bac47a231b97bd4f2ac4ff0f457d13deb",
+      "client/test/rust_projects_integration_test.dart": "ef2f197f0e0b722b2d8fcfec66df4aba402d50e4cc039a677fcee2422297b564",
+      "service/src/app.rs": "bf18822d2675d7c8d7efaa19ad157323c141eff9edbb3bc94e423232c0fa5b94",
+      "service/src/app_projects.rs": "9e67428d5040d1abb05b578076e21322b910cbb89834f9985f96fd74128c9d2f",
+      "service/src/app_v2.rs": "41b85e3a07a9adf0f3f8e9ea052c05a71a4f36ab9f307d9eb32ef96c49b5a237",
+      "service/src/app_v3.rs": "d8ba0e7af755e3b56433a56841f07e132419ec974ad09c2dc24c8375908dda28",
+      "service/target/debug/deps/debug_service-0a4be2ddda80d80f": "b3a00963d5cf4733baf85a1a299b653c231c90c4a3323ed83aab5dba212b926f",
+      "service/tests/debug_service.rs": "021803ec93a2b452bb298303df68359b17500ac3f629fd07b99d17827cc49498"
+    },
+    "log": "target/project-repositories/attempt-2/compiled-projects.log",
+    "log_sha256": "429fc83adc97e594433f184fae4b006dcd9cd5908b4401891a26244e75ea6a88",
+    "passed": true,
+    "stable_inputs": true,
+    "started_at": "2026-10-17T19:29:55.378535+00:00",
+    "timed_out": false
+  },
+  "configured_service_environment": "Rust1.98 Bookworm; not additional Ubuntu service proof. Other configured component/GTK/Flutter/runtime gates use Ubuntu24.04.",
+  "counts": {
+    "aggregate_executions": 1462,
+    "controlled_ignores": 5,
+    "failures": 0,
+    "flutter": 834,
+    "gtk": 9,
+    "installer": 283,
+    "other_skips": 0,
+    "package": 41,
+    "pipeline_helpers": 34,
+    "service": 295
+  },
+  "environment_overrides": {
+    "CI": "true",
+    "DAGGER_CLOUD_TOKEN": "",
+    "DAGGER_NO_NAG": "1",
+    "DAGGER_PROGRESS": "plain",
+    "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9",
+    "pipeline_helpers_SMITH_TEST_PACKAGE": "<repo>/installer/dist"
+  },
+  "failure_history": {
+    "aggregate_attempt_1": {
+      "base_commit": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+      "cli_sha256": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+      "cli_version": "dagger v0.21.9 (docker-container://smith-installer-pipeline-dagger-v0.21.9) linux/amd64",
+      "commands": [
+        {
+          "argv": [
+            "make",
+            "DAGGER=target/installer-pipeline/smith-dagger-0.21.9/dagger",
+            "test",
+            "build"
+          ],
+          "duration_seconds": 600.058,
+          "exit_code": 2,
+          "finished_at": "2026-10-17T19:23:14.580114+00:00",
+          "log": "target/project-repositories/attempt-1/root-gates.log",
+          "name": "root-gates",
+          "started_at": "2026-10-17T19:13:14.521746+00:00",
+          "timed_out": false
+        }
+      ],
+      "core_after_sha256": "53b9a86f83b4c222514a2e8361a354e7d2149295e1ea9807e8f82cf5fc91e627",
+      "core_before_sha256": "53b9a86f83b4c222514a2e8361a354e7d2149295e1ea9807e8f82cf5fc91e627",
+      "core_input_count": 1242,
+      "finished_at": "2026-10-17T19:23:14.625749+00:00",
+      "passed": false,
+      "stable_inputs": true,
+      "started_at": "2026-10-17T19:13:14.503722+00:00"
+    },
+    "aggregate_attempt_1_note": "Pre-test Dagger connection failure: existing builder stopped before this attempt. No component tests/builds or later verifier/helpers ran.",
+    "client_owner_notes": "Initial missing-brace style lints were corrected; original standalone owner logs unavailable. New duplicate-key reviewer repro initially failed3/3, now passes unchanged after preflight/depth fix.",
+    "file_tool_setup_note": "File-copy tools could not discover retained ignored recorder files; finite filesystem check verified their actual hashes, then adapted recorder scripts were prepared locally. Prior records were not modified.",
+    "focused_attempt_1": {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/rust_projects_integration_test.dart"
+      ],
+      "cwd": "client",
+      "environment": {
+        "CI": "true",
+        "DART_SUPPRESS_ANALYTICS": "true",
+        "FLUTTER_ALREADY_LOCKED": "true",
+        "FLUTTER_ROOT": "<home>/snap/flutter/common/flutter",
+        "SMITH_TEST_CLOUD_SERVICE": "<repo>/service/target/debug/deps/debug_service-0a4be2ddda80d80f"
+      },
+      "exit_code": 1,
+      "finished_at": "2026-10-17T19:11:52.945883+00:00",
+      "inputs_after": {
+        "client/lib/app_api.dart": "a61d48796e2301b198caf81b9b0ee3ed01715f1ccf33cea8e33bda614bb89081",
+        "client/lib/cloud_routing.dart": "1374dd11845316c13dec5476436fee86c1a39a50986a45279edc9c621e883e9e",
+        "client/lib/projects.dart": "d93f8dcfd9850e1c93cdca46adcf45ab291c2b1f3027e8b8b0fad82cac9aef1f",
+        "client/lib/projects_controller.dart": "80826fb7c992af7b6d5e27aeb32cf6803ba8d0cfa1344d4fd62ea73c83793985",
+        "client/test/rust_cloud_integration_test.dart": "3d3565f99aa01c7f6b536adf2dcef38bac47a231b97bd4f2ac4ff0f457d13deb",
+        "client/test/rust_projects_integration_test.dart": "6571f857ab4c126f5910b5c9cf913111a05fb013d8e4a4704219222b7f433169",
+        "service/src/app.rs": "bf18822d2675d7c8d7efaa19ad157323c141eff9edbb3bc94e423232c0fa5b94",
+        "service/src/app_projects.rs": "9e67428d5040d1abb05b578076e21322b910cbb89834f9985f96fd74128c9d2f",
+        "service/src/app_v2.rs": "41b85e3a07a9adf0f3f8e9ea052c05a71a4f36ab9f307d9eb32ef96c49b5a237",
+        "service/src/app_v3.rs": "d8ba0e7af755e3b56433a56841f07e132419ec974ad09c2dc24c8375908dda28",
+        "service/target/debug/deps/debug_service-0a4be2ddda80d80f": "b3a00963d5cf4733baf85a1a299b653c231c90c4a3323ed83aab5dba212b926f",
+        "service/tests/debug_service.rs": "021803ec93a2b452bb298303df68359b17500ac3f629fd07b99d17827cc49498"
+      },
+      "inputs_before": {
+        "client/lib/app_api.dart": "a61d48796e2301b198caf81b9b0ee3ed01715f1ccf33cea8e33bda614bb89081",
+        "client/lib/cloud_routing.dart": "1374dd11845316c13dec5476436fee86c1a39a50986a45279edc9c621e883e9e",
+        "client/lib/projects.dart": "d93f8dcfd9850e1c93cdca46adcf45ab291c2b1f3027e8b8b0fad82cac9aef1f",
+        "client/lib/projects_controller.dart": "80826fb7c992af7b6d5e27aeb32cf6803ba8d0cfa1344d4fd62ea73c83793985",
+        "client/test/rust_cloud_integration_test.dart": "3d3565f99aa01c7f6b536adf2dcef38bac47a231b97bd4f2ac4ff0f457d13deb",
+        "client/test/rust_projects_integration_test.dart": "6571f857ab4c126f5910b5c9cf913111a05fb013d8e4a4704219222b7f433169",
+        "service/src/app.rs": "bf18822d2675d7c8d7efaa19ad157323c141eff9edbb3bc94e423232c0fa5b94",
+        "service/src/app_projects.rs": "9e67428d5040d1abb05b578076e21322b910cbb89834f9985f96fd74128c9d2f",
+        "service/src/app_v2.rs": "41b85e3a07a9adf0f3f8e9ea052c05a71a4f36ab9f307d9eb32ef96c49b5a237",
+        "service/src/app_v3.rs": "d8ba0e7af755e3b56433a56841f07e132419ec974ad09c2dc24c8375908dda28",
+        "service/target/debug/deps/debug_service-0a4be2ddda80d80f": "b3a00963d5cf4733baf85a1a299b653c231c90c4a3323ed83aab5dba212b926f",
+        "service/tests/debug_service.rs": "021803ec93a2b452bb298303df68359b17500ac3f629fd07b99d17827cc49498"
+      },
+      "log": "target/project-repositories/attempt-1/compiled-projects.log",
+      "log_sha256": "43ddb63c52a23afc720ef4d58d3a93dd22fb08bfdb0b53c51e684de8f5d57a07",
+      "passed": false,
+      "stable_inputs": true,
+      "started_at": "2026-10-17T19:11:50.644924+00:00",
+      "timed_out": false
+    },
+    "focused_attempt_1_note": "Incorrect parent test compared restart-cleared inventory as durable. Exact failing source/log/record retained; corrected test explicitly checks volatile reset plus durable projection preservation.",
+    "reviewer_history": "Original duplicate-key failures and two reviewer harness setup failures retained under assurance; final parser-followup-1 closes the finding without overwriting originals. Counts/repros are separately bound by REVIEW.md.",
+    "service_owner_retrospective": {
+      "compiled_fixture": {
+        "control_command": {
+          "fixture": "seed_disk5_projects"
+        },
+        "driver": "Inline Python socket/assertion harness executed through python3 - <<'PY'. The original full harness text is in the session tool transcript only, not retained as a script or standalone log. This field does not claim the Rust subprocess command alone performs the socket assertions.",
+        "environment": "SMITH_DART_CLOUD_ROOT set to a newly created private temporary directory; SMITH_DART_CLOUD_SAVED_ONLY=1. Temporary paths intentionally omitted.",
+        "outcome": "Passed on final source: actual disk5 URL-string registry seeded after dropping the app, normal reopen migrated to disk6, repository name and all six branch/type leaves null, original receipt queryable across restart, all four legacy operations rejected with UPGRADE_REQUIRED, legacy ID reuse through v2 rejected with ID_CONFLICT, expired ID rejected with REQUEST_EXPIRED, inference/HTTP/keyring counters all zero.",
+        "rust_fixture_failed": 0,
+        "rust_fixture_filtered_out": 24,
+        "rust_fixture_ignored": 0,
+        "rust_fixture_passed": 1,
+        "rust_subprocess_command": "cargo test --manifest-path service/Cargo.toml --locked --offline --test debug_service dart_cloud::dart_cloud_fixture -- --ignored --exact --nocapture",
+        "rust_subprocess_exit_code": 0,
+        "standalone_harness_log_path": null,
+        "standalone_harness_log_sha256": null
+      },
+      "date": "2026-10-17",
+      "evidence_limits": {
+        "acceptance": "Developer self-check only; not independent assurance, parent Dart integration, installed acceptance, or live migration evidence. Full-suite counts are omitted where they were not captured in the returned transcript excerpts. Existing ignored fixtures are not represented as ordinary passing tests.",
+        "original_log_path": null,
+        "original_log_sha256": null,
+        "original_log_status": "Unavailable: command output was not retained as a standalone log file by this owner. No original log path or hash is claimed.",
+        "source": "Command results in the implementation session tool transcript; this record is a retrospective summary, not an original command log.",
+        "source_snapshot_binding": "No final source snapshot digest was recorded by this owner."
+      },
+      "final_validation": {
+        "complete_installer_suite_total": null,
+        "complete_service_suite_total": null,
+        "exact_combined_command": "cargo fmt --manifest-path service/Cargo.toml -- --check && cargo fmt --manifest-path installer/Cargo.toml -- --check && cargo clippy --manifest-path service/Cargo.toml --locked --offline --all-targets -- -D warnings && cargo clippy --manifest-path installer/Cargo.toml --locked --offline --all-targets -- -D warnings && cargo build --manifest-path service/Cargo.toml --locked --offline && cargo build --manifest-path installer/Cargo.toml --locked --offline && cargo test --manifest-path service/Cargo.toml --locked --offline && cargo test --manifest-path installer/Cargo.toml --locked --offline",
+        "exit_code": 0,
+        "observed_test_group_counts": [
+          {
+            "exact_command": "cargo test --manifest-path service/Cargo.toml --locked --offline --lib projects -- --test-threads=2",
+            "failed": 0,
+            "filtered_out": 117,
+            "group": "Focused Projects library tests",
+            "ignored": 0,
+            "outcome": "Passed after the final shared frozen/current registry validation change; subsequent source change only renamed one test before final full validation.",
+            "passed": 22
+          },
+          {
+            "exact_command": "cargo test --manifest-path installer/Cargo.toml --locked --offline --test multi_chat_compatibility",
+            "failed": 0,
+            "group": "Installer multi-chat compatibility",
+            "ignored": 0,
+            "outcome": "Passed; also included in subsequent complete installer runs.",
+            "passed": 2
+          },
+          {
+            "failed": 0,
+            "group": "Service runner integration tests",
+            "ignored": 0,
+            "outcome": "Observed passing in an earlier complete service run; final complete service command also passed.",
+            "passed": 41
+          },
+          {
+            "failed": 0,
+            "group": "Installer wizard integration tests",
+            "ignored": 0,
+            "outcome": "Observed in final combined command output.",
+            "passed": 25
+          }
+        ],
+        "outcome": "Both formatting checks, warning-denied all-target Clippy checks, locked/offline builds, and complete test commands passed on the final source.",
+        "working_directory": "repository root"
+      },
+      "initial_installer_failure": {
+        "causal_limit": "Root cause not established. Other validation/build commands were running during the initial failure, but concurrency is contextual information, not a demonstrated cause. Passing reruns do not explain or invalidate the initial failures.",
+        "exact_command": "cargo test --manifest-path installer/Cargo.toml --locked --offline",
+        "exit_code": 101,
+        "failed": 2,
+        "failures": [
+          {
+            "actual": "Err(\"Artifacts or destinations changed after confirmation\")",
+            "assertion": "assertion left == right failed",
+            "assertion_location": "installer/src/artifact.rs:1093:9",
+            "expected": "Ok(Installed)",
+            "test": "artifact::tests::dependencies_reverified_after_exchange_before_success"
+          },
+          {
+            "actual": "Artifacts or destinations changed after confirmation",
+            "assertion": "called Result::unwrap() on an Err value",
+            "assertion_location": "installer/src/launch.rs:138:31",
+            "test": "launch::tests::native_launch_reports_spawn_then_reaps_even_without_receiver"
+          }
+        ],
+        "ignored": 2,
+        "observed_group": "Installer library tests; command stopped before completing remaining test binaries.",
+        "original_log_path": null,
+        "original_log_sha256": null,
+        "original_log_status": "Unavailable: original standalone log was not retained. Test names, locations, and assertion text were transcribed from returned command output; temporary fixture paths were omitted.",
+        "passed": 103,
+        "subsequent_observation": "A subsequent complete installer test command passed without unrelated installer source edits, and the final combined validation command also passed."
+      },
+      "intermediate_failures": [
+        {
+          "exact_command": "cargo test --manifest-path service/Cargo.toml --locked --offline --lib projects -- --test-threads=2",
+          "exit_code": 101,
+          "failure": "serde_json json! macro rejected array repetition syntax json!([\"https://a/repo\"; 17]); no rules expected the string token.",
+          "limit": "Location belongs to the intermediate source, not necessarily final line numbering.",
+          "reported_location": "service/src/app_projects_tests.rs:1498:71",
+          "resolution": "Changed to json!(vec![\"https://a/repo\"; 17]); subsequent compilation and focused tests passed."
+        },
+        {
+          "exact_command": "cargo test --manifest-path service/Cargo.toml --locked --offline --lib projects -- --test-threads=2",
+          "exit_code": 101,
+          "failure": "E0271: type mismatch resolving <i32 as Add>::Output == usize in the synthetic legacy receipt closure.",
+          "limit": "Location belongs to the intermediate source.",
+          "reported_location": "service/src/app_projects_tests.rs:1540:67",
+          "resolution": "Explicit usize/boolean closure parameter types; subsequent focused tests passed."
+        },
+        {
+          "exact_command": "rustfmt --edition 2021 --config skip_children=true service/src/app_projects.rs service/src/app_projects_tests.rs service/src/app_v2.rs service/src/app_v3.rs service/src/app_timestamps_tests.rs service/tests/cloud.rs service/tests/debug_service.rs installer/tests/multi_chat_compatibility.rs && cargo test --manifest-path service/Cargo.toml --locked --offline",
+          "exit_code": 101,
+          "failure": "E0603: smith_service::filesystem is private; fixture could not call its digest function.",
+          "reported_location": "service/tests/debug_service.rs:1248:42",
+          "resolution": "Used the existing sha2 dependency inside the test fixture; no production API visibility or dependencies changed."
+        },
+        {
+          "exact_command": "cargo clippy --manifest-path service/Cargo.toml --locked --offline --all-targets -- -D warnings",
+          "exit_code": 101,
+          "failure": "clippy::needless_borrows_for_generic_args in test fixture Sha256::digest input.",
+          "reported_location": "service/tests/debug_service.rs:1252-1253",
+          "resolution": "Removed the unnecessary borrow; final warning-denied Clippy passed."
+        },
+        {
+          "exact_command": "cargo test --manifest-path service/Cargo.toml --locked --offline",
+          "exit_code": 101,
+          "failure": "assertion failed: f.reopen().is_err(); the unsupported-schema fixture still included now-current disk6.",
+          "observed_group_counts": {
+            "failed": 1,
+            "filtered_out": 0,
+            "ignored": 2,
+            "passed": 136
+          },
+          "reported_location": "service/src/app_timestamps_tests.rs:389:9",
+          "resolution": "Changed the unsupported schema vector from disk6 to disk7; final complete service tests passed.",
+          "test": "app::timestamps::tests::timestamps_strict_current_disk_and_frozen_disk3_preserve_malformed_bytes"
+        },
+        {
+          "exact_command": "cargo test --manifest-path service/Cargo.toml --locked --offline",
+          "exit_code": 101,
+          "failure": "Schema assertion left Number(6), right 5.",
+          "observed_group_counts": {
+            "failed": 1,
+            "filtered_out": 0,
+            "ignored": 0,
+            "passed": 33
+          },
+          "reported_location": "service/tests/cloud.rs:713:5",
+          "resolution": "Updated the current-schema assertion to disk6; final complete service tests passed.",
+          "test": "save_is_local_validation_is_exact_synthetic_and_no_secret_is_durable"
+        }
+      ],
+      "quality_gate": {
+        "final_formatting": "PASS",
+        "final_locked_offline_builds": "PASS for both workspaces",
+        "final_locked_offline_tests": "PASS for both workspaces; existing ignored fixtures remain distinct",
+        "final_warning_denied_clippy": "PASS for both workspaces",
+        "remaining_gates": "Parent-owned Dart integration, broader acceptance/evidence binding, and fresh independent assurance were not completed by this owner. No live effects authorized or performed.",
+        "scoped_diff_check": {
+          "exact_command": "git --no-pager diff --check -- service/src/app_projects.rs service/src/app_projects_tests.rs service/src/app_v2.rs service/src/app_v3.rs service/src/app_timestamps_tests.rs service/tests/cloud.rs service/tests/debug_service.rs installer/tests/multi_chat_compatibility.rs",
+          "exit_code": 0,
+          "limit": "Git diff --check does not inspect untracked files. Formatting checks separately covered the Rust modules."
+        }
+      },
+      "record_type": "T1 service-owner local validation self-check",
+      "scope": "Approved LOCAL-SMITH-PROJECT-REPOSITORIES T1; scratch validation record only. No source edits or additional test runs performed to create this record."
+    },
+    "ui_owner_notes": "Intermediate focus assertions and a test-edit syntax error were corrected; original standalone owner logs unavailable. Final49-case owner UI/navigation self-check reported passing, corroborated by final aggregate and independent tests."
+  },
+  "final_gates": {
+    "base_commit": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+    "cli_sha256": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+    "cli_version": "dagger v0.21.9 (docker-container://smith-installer-pipeline-dagger-v0.21.9) linux/amd64",
+    "commands": [
+      {
+        "argv": [
+          "make",
+          "DAGGER=target/installer-pipeline/smith-dagger-0.21.9/dagger",
+          "test",
+          "build"
+        ],
+        "duration_seconds": 371.305,
+        "exit_code": 0,
+        "finished_at": "2026-10-17T19:36:06.372742+00:00",
+        "log": "target/project-repositories/attempt-2/root-gates.log",
+        "name": "root-gates",
+        "started_at": "2026-10-17T19:29:55.067330+00:00",
+        "timed_out": false
+      },
+      {
+        "argv": [
+          "python3",
+          "-B",
+          "dagger/package.py",
+          "--root",
+          "installer/dist",
+          "--verify"
+        ],
+        "duration_seconds": 0.357,
+        "exit_code": 0,
+        "finished_at": "2026-10-17T19:36:06.730046+00:00",
+        "log": "target/project-repositories/attempt-2/package-verify.log",
+        "name": "package-verify",
+        "started_at": "2026-10-17T19:36:06.373082+00:00",
+        "timed_out": false
+      },
+      {
+        "argv": [
+          "python3",
+          "-B",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "scripts/tests",
+          "-p",
+          "test_*.py",
+          "-v"
+        ],
+        "duration_seconds": 25.111,
+        "exit_code": 0,
+        "finished_at": "2026-10-17T19:36:31.840807+00:00",
+        "log": "target/project-repositories/attempt-2/pipeline-helpers.log",
+        "name": "pipeline-helpers",
+        "started_at": "2026-10-17T19:36:06.730288+00:00",
+        "timed_out": false
+      },
+      {
+        "argv": [
+          "git",
+          "--no-pager",
+          "diff",
+          "--check"
+        ],
+        "duration_seconds": 0.022,
+        "exit_code": 0,
+        "finished_at": "2026-10-17T19:36:31.863118+00:00",
+        "log": "target/project-repositories/attempt-2/diff-check.log",
+        "name": "diff-check",
+        "started_at": "2026-10-17T19:36:31.841001+00:00",
+        "timed_out": false
+      }
+    ],
+    "core_after_sha256": "ed6dc46ef3938f7753ffb9a7a0c76e6be1a2ea88ed0ff760835610fa7cd53481",
+    "core_before_sha256": "ed6dc46ef3938f7753ffb9a7a0c76e6be1a2ea88ed0ff760835610fa7cd53481",
+    "core_input_count": 1243,
+    "finished_at": "2026-10-17T19:36:31.910166+00:00",
+    "passed": true,
+    "stable_inputs": true,
+    "started_at": "2026-10-17T19:29:55.045290+00:00"
+  },
+  "head": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+  "limitations": [
+    "No Git mutations, repository connections or workflow/PR execution",
+    "No runtime agent/container, Smith installation/launch or live migration/restore",
+    "No normal-session manager/keyring/provider/model/GPU validation",
+    "No native graphical/IME/accessibility/multi-monitor or real recipient acceptance",
+    "No clean-host/source provenance, effective lock/hermeticity, license/icon/SBOM or publication clearance",
+    "Historical unexplained installer guard failures remain unexplained; passing reruns are not causal proof",
+    "Owner-writable digests detect drift, not authenticity or human approval"
+  ],
+  "raw_evidence": [
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/actual-baseline.diff",
+      "sha256": "d8f95b26a4c8dcf1a085893892b0befeca6476de4101379dda65b59b9c11c60c",
+      "size": 256569
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/compiled-fresh.json",
+      "sha256": "232d5624732cc01411fea32dfc687f64bf6e4c2bb561b14effe585ae365b9283",
+      "size": 56032
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/compiled-fresh.log",
+      "sha256": "a2cb609a7207964e16677f2b7fc81dd974cc4c8bede053feab927e5ebeeecd85",
+      "size": 723
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/duplicate_reply_test.dart",
+      "sha256": "95281814c4378c501721a319df92e1b285efcef45150566e1bf629873d709058",
+      "size": 1778
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/duplicates.json",
+      "sha256": "72468be2ec52e4e8e3f9f260b75cbc98a73d5ccca52b8f37aa2788ecad7c93e1",
+      "size": 368120
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/duplicates.log",
+      "sha256": "8216082ab70c86c66e3c01b5770aee3da79ccb551c100fc1c0e7d237ec3e17db",
+      "size": 2186
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/evidence-index.json",
+      "sha256": "92990190801547923ef43f6c369bce97294d236d2bb7abaecb34bac6a3c93164",
+      "size": 2936
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/existing.json",
+      "sha256": "05433064ae3058a3f963cae6aff540baa2feb7550f4c2f633ad4b9ca895f5e81",
+      "size": 368338
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/existing.log",
+      "sha256": "4eb5e0703a828f12cf08629dbfc46cbbc395cf758af9ed20915a5486e8b37766",
+      "size": 19697
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/final-raw-gates-1/audit.json",
+      "sha256": "77ec5a3c256f5bf2597ea5d004c3a7f1f8ca478e0351ff3d9146e8548717304b",
+      "size": 37704
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/final-raw-gates-1/audit.py",
+      "sha256": "bb0a6e8f50404433fa5e5cf5a94284499a5cac82d41924002027bb6201ec9b9e",
+      "size": 7183
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/final-raw-gates-1/helpers.log",
+      "sha256": "486cda5b2b47ce94cd921879d6f1d3a208751c07b98084cfb27558731e91be12",
+      "size": 4842
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/final-raw-gates-1/index.json",
+      "sha256": "b674fc8d092ce45483e7b74543514131139b5a976207b07f0a565b05d385260b",
+      "size": 429
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/final-raw-gates-1/root-selected.log",
+      "sha256": "bdfed67e9e14452594be159eb5947c2fc2f0fb3dcc0f6a1ea096b5fea6909026",
+      "size": 130024
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/final-raw-gates-1/verify.log",
+      "sha256": "4f6e997052bf8ed0fe4e97c0e068bea00d34f1891dc7ee807e21581cdbb6da2e",
+      "size": 78
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/inspect.py",
+      "sha256": "e58ae54ea7d02a3891517a8a9d59efd44659b03ae152542f9e2b858c928228a4",
+      "size": 1778
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/native-extra-0.log",
+      "sha256": "d07fa381e7871a4718ff713df62420998c1199cef42fcb653c1351ab2a919b12",
+      "size": 1230
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/native-extra-1.log",
+      "sha256": "005fd71ab6098bb73e317b5d6d9563276fb562a4e5f76367589c089eaa05d33f",
+      "size": 456
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/native-extra.json",
+      "sha256": "06ba7164b156a7ee6ae8d2a2ef4a737fb044bbf4ff344e0677902b4be2dc3374",
+      "size": 1065
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/parser-followup-1/index.json",
+      "sha256": "d4d959f5523bed6af2ef28c75cc161bd26f91b76ab117f40e3abbc32e8cfc125",
+      "size": 2853
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/parser-followup-1/neighbors.json",
+      "sha256": "d4b98dea0d1cf6232dfab23c8fed87d4f4f548aa7929f3a4290a397666e0800e",
+      "size": 57914
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/parser-followup-1/neighbors.log",
+      "sha256": "4a9ff5523e1a8568a773e8e746fc2e6fd19ff2fbbe5373286f5167add5eea692",
+      "size": 25949
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/parser-followup-1/parser-edge-cases.json",
+      "sha256": "e4769f06573107eb0e2ed9886cc7d6aff4328165bbd0585655ab7b1c5ead0ee9",
+      "size": 57787
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/parser-followup-1/parser-edge-cases.log",
+      "sha256": "cda802adb29ff5bfc638e67c3b2ab42cc4bad6ac9eb9d8dc8009eb8fd997fcc5",
+      "size": 4534
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/parser-followup-1/parser_adversarial_test.dart",
+      "sha256": "5e386f7b4f12631b8e5ce9243631f4747eed4b51f18d7291a574fb4f00b4358a",
+      "size": 5318
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/parser-followup-1/run.py",
+      "sha256": "b5607ce72e201c9ca6661fbd2e16b2f5925bb456f5e8f83da054bbc28ac275c7",
+      "size": 3278
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/parser-followup-1/unchanged-repro.json",
+      "sha256": "fd0b79cb7272cf1cbd31f4ab8d40d5ba296e87f9e050b7ef61510d5e7bb5e1f2",
+      "size": 57729
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/parser-followup-1/unchanged-repro.log",
+      "sha256": "d64b21b72d4c7e654785e789d87c1ebfc1d341408a978b30480c061e6589b042",
+      "size": 323
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/reviewer-initial-source.dart",
+      "sha256": "d91051cd8b3e2facca2939169cfab5e36d323be86106407af4cbe58439169b69",
+      "size": 4038
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/reviewer-initial.json",
+      "sha256": "485ea9512ec9c6ebb76054b10dff03ac042f69d67526baec2084d5f57e30516b",
+      "size": 368113
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/reviewer-initial.log",
+      "sha256": "6a3a11cb2e5b64df4ab81ce9425bfddb24c5651371b97e60cef445c39bb69ebb",
+      "size": 13677
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/reviewer-second-source.dart",
+      "sha256": "efe38352af7b044fa648034862d286b5aa22b309c2845677d726ace1db4e9b21",
+      "size": 4044
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/reviewer-second.json",
+      "sha256": "bdba5950e139919d318a7d1435faa9edb93673a2801412a7bf34fbf3d20e3003",
+      "size": 368113
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/reviewer-second.log",
+      "sha256": "6924f1f2fffcdd1fd7a5e421ad203f37125b8adce2973112b7bc47a0f677e19c",
+      "size": 13893
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/reviewer.json",
+      "sha256": "61df139047f591003d2becf26cc77ede537689f0a255367f82793108ffbaff3f",
+      "size": 368113
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/reviewer.log",
+      "sha256": "95f144a85acd892f576812c8491e3d5182b559a0fbb4abd11cf7a4cd6dbc3a35",
+      "size": 770
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/reviewer_native.rs",
+      "sha256": "9e65032bb31600c1d762cf3393bb62a8c09ed0dbfbce34455173ecf5846a80a4",
+      "size": 3644
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/reviewer_test.dart",
+      "sha256": "1584ec00d4261ea3af67250f81ecf58e0f9d36ce65babf793086e9a7ebb7fc3d",
+      "size": 4082
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/run.py",
+      "sha256": "a019f417f1e04685ec3aa419731d4554d5d3f1f479716d72f8343a5c7419db09",
+      "size": 2592
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/run_fresh_compiled.py",
+      "sha256": "d7e8473e0a6457cab8d3ec2d3c3ec80f742a3c1a14a9bbc9c0c5ff54cea09c62",
+      "size": 1930
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/run_native_extra.py",
+      "sha256": "f2b60601b07d48260221e83e6ef84b075d8a1f8ebd5edbfe60545c545e4aec05",
+      "size": 1312
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/rust.json",
+      "sha256": "46eca63e0ec0de1a06503882cfbff2b0d5b15efde82c58b27d419cfc23eef9a3",
+      "size": 367944
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/rust.log",
+      "sha256": "d57b5bda1edb4f9c6f2ace9d1f56b798cc41c31cce480d79f8e5e5d99c6fc9d4",
+      "size": 6435
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/source-binding.json",
+      "sha256": "78bd5d3ae6b9ce516eef488118dc425c3c3e3c20cbbce29ad6e96e8045b947a5",
+      "size": 212688
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/transport.json",
+      "sha256": "e99caf3e8b511991839760f744eacaeb639b8fda7dadd696af2ec8fd916d0425",
+      "size": 55897
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/assurance/transport.log",
+      "sha256": "dfe86ba0fffcb8e382b9ad2afa873f053a24ceacbe5d94b02d3219a0bd1047ec",
+      "size": 724
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-1/compiled-projects.json",
+      "sha256": "572f1b820de23f9af4bed44b7d6e4c49b921b47a55588aa685de4053b651b993",
+      "size": 3589
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-1/compiled-projects.log",
+      "sha256": "429fc83adc97e594433f184fae4b006dcd9cd5908b4401891a26244e75ea6a88",
+      "size": 723
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-1/core-manifest-after.json",
+      "sha256": "6dd756c51eecece4bfab034d4250b746eb9033855c3ff0be10ee525155d02c95",
+      "size": 283019
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-1/core-manifest-before.json",
+      "sha256": "6dd756c51eecece4bfab034d4250b746eb9033855c3ff0be10ee525155d02c95",
+      "size": 283019
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-1/results.json",
+      "sha256": "0cb00b74c2c6760868203182ecf1d3a0a830635017910e9f0268dbd62393e80e",
+      "size": 1085
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-1/root-gates.json",
+      "sha256": "09fb4f2fa5c645833d73c4fbd14afd36f6e52dfa6b00c0f5a0e18576448d92da",
+      "size": 388
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-1/root-gates.log",
+      "sha256": "16e623b6a4bbf3444cdb7fccbde58d19f6905dccde4f0f271ceb89000e42559c",
+      "size": 365630
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/compiled-projects.json",
+      "sha256": "9353c4f0f0941580ec93c5790bf4c80cb19a7af093918fb50fd832bb35aac2f3",
+      "size": 3589
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/compiled-projects.log",
+      "sha256": "429fc83adc97e594433f184fae4b006dcd9cd5908b4401891a26244e75ea6a88",
+      "size": 723
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/core-manifest-after.json",
+      "sha256": "76eece017d883147e895eb051ff80420df7a2b5237eaa80ef4972e013e967586",
+      "size": 283210
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/core-manifest-before.json",
+      "sha256": "76eece017d883147e895eb051ff80420df7a2b5237eaa80ef4972e013e967586",
+      "size": 283210
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/diff-check.json",
+      "sha256": "bac95df7b6fb1e8b46f8f8bc18332275193279d5ac503013f2ee9fb20c28b60b",
+      "size": 338
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/package-verify.json",
+      "sha256": "5ca5c67845b57900e8673b33a5183be92fee29a81a7441900d894117a34f2970",
+      "size": 392
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/package-verify.log",
+      "sha256": "4f6e997052bf8ed0fe4e97c0e068bea00d34f1891dc7ee807e21581cdbb6da2e",
+      "size": 78
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/pipeline-helpers.json",
+      "sha256": "86aa0bfe1aa0ac8b7f4d0bd816780ed32b29329551e81094569df4e80e612fde",
+      "size": 430
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/pipeline-helpers.log",
+      "sha256": "4e5258d10ccb0ec97581f4736c0e1b7ca2aab7b4caf553293750303f4ce24825",
+      "size": 4842
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/results.json",
+      "sha256": "989ea9e3ada99063cf26c6a2c112381e5ba7571ce663a05a8a5e2ce22dafb2e7",
+      "size": 2459
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/root-gates.json",
+      "sha256": "f95bd3fd477ab2abe782b93368fe0e25650293afd10480dac7c874029b703971",
+      "size": 388
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/attempt-2/root-gates.log",
+      "sha256": "f25151838ac32ba49f73d107d9d3c557aad1fe7e618e0077776f42e62be15665",
+      "size": 2229172
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/baseline-manifest.json",
+      "sha256": "0301584b838c5bdca1a30c14903ac6b2b80f54178c208cd031a153008ffe63f5",
+      "size": 305787
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/builder-probe.json",
+      "sha256": "e2e905f884dbf2e236b04c7f0b590745a34b08dc69f9ae2289379bdb29d89c1f",
+      "size": 403
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/builder-probe.log",
+      "sha256": "06d7ad65bc5936c5dbeeb648176a49ad4151d638d9d2bff551bcd71fce5ad240",
+      "size": 2486
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/builder-recovery.json",
+      "sha256": "c33de696e082bd0930d9b7fbb2e1f1d53fff8bc418570b8e86c84a6636bd7a28",
+      "size": 2265
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/export_evidence.py",
+      "sha256": "a9286ece05c782f7180b47c9224b40c9820fae5c4fffde9aa1cf282f988e1f1b",
+      "size": 12490
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/focused-attempt-1/compiled-projects.json",
+      "sha256": "27d3d42b59529a23aa5423776f640b1b44d98a3a4529ec93cec2a474d24fe3fc",
+      "size": 3590
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/focused-attempt-1/compiled-projects.log",
+      "sha256": "43ddb63c52a23afc720ef4d58d3a93dd22fb08bfdb0b53c51e684de8f5d57a07",
+      "size": 6418
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/focused-attempt-1/rust_projects_integration_test.dart",
+      "sha256": "6571f857ab4c126f5910b5c9cf913111a05fb013d8e4a4704219222b7f433169",
+      "size": 18409
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/run_focused.py",
+      "sha256": "d9cb57415ed18dc1de45cdd37e0b8a70f01d722757903499cd2716671a0979d6",
+      "size": 2986
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/run_gates.py",
+      "sha256": "5f9e72204c1031a8ac937c92cb04d56ae74466185ef04b4cc435eba4685f31fd",
+      "size": 5247
+    },
+    {
+      "mode": 436,
+      "path": "target/project-repositories/service-owner-validation.json",
+      "sha256": "8989cfc6ee31ea0d4fcd964cb2ffa47c088f12e7a0860df2010513149e64f6ab",
+      "size": 10923
+    }
+  ],
+  "rust_stdout_summaries": [
+    {
+      "controlled_ignores": 2,
+      "failed": 0,
+      "passed": 137,
+      "stdout": "29  : \u2506 [54.3s] | test result: ok. 137 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 6.32s",
+      "vertex": 29
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 1,
+      "stdout": "29  : \u2506 [54.4s] | test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out     Running tests/application.rs (target/debug/deps/application-aea4793544d3bc27)",
+      "vertex": 29
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 35,
+      "stdout": "29  : \u2506 [55.1s] | test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.70s",
+      "vertex": 29
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 34,
+      "stdout": "29  : \u2506 [57.3s] | test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.19s",
+      "vertex": 29
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 12,
+      "stdout": "29  : \u2506 [57.4s] | test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s",
+      "vertex": 29
+    },
+    {
+      "controlled_ignores": 2,
+      "failed": 0,
+      "passed": 105,
+      "stdout": "62  : \u2506 [57.4s] | test result: ok. 105 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 5.81s",
+      "vertex": 62
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 0,
+      "stdout": "62  : \u2506 [57.4s] | test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "vertex": 62
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 36,
+      "stdout": "62  : \u2506 [58.8s] | test result: ok. 36 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.35s",
+      "vertex": 62
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 8,
+      "stdout": "62  : \u2506 [1m1s] | test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.85s",
+      "vertex": 62
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 17,
+      "stdout": "62  : \u2506 [1m1s] | test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.43s",
+      "vertex": 62
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 20,
+      "stdout": "62  : \u2506 [1m3s] | test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.48s",
+      "vertex": 62
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 4,
+      "stdout": "62  : \u2506 [1m3s] | test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "vertex": 62
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 11,
+      "stdout": "62  : \u2506 [1m3s] | test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+      "vertex": 62
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 2,
+      "stdout": "62  : \u2506 [1m3s] | test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s",
+      "vertex": 62
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 20,
+      "stdout": "62  : \u2506 [1m5s] | test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.20s",
+      "vertex": 62
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 35,
+      "stdout": "62  : \u2506 [1m7s] | test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.47s",
+      "vertex": 62
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 25,
+      "stdout": "62  : \u2506 [1m7s] | test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s",
+      "vertex": 62
+    },
+    {
+      "controlled_ignores": 1,
+      "failed": 0,
+      "passed": 24,
+      "stdout": "29  : \u2506 [1m26s] | test result: ok. 24 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 28.81s",
+      "vertex": 29
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 11,
+      "stdout": "29  : \u2506 [1m26s] | test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s",
+      "vertex": 29
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 41,
+      "stdout": "29  : \u2506 [1m51s] | test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 24.40s",
+      "vertex": 29
+    },
+    {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 9,
+      "stdout": "76  : \u2506 [2m32s] | test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.52s",
+      "vertex": 76
+    }
+  ],
+  "source": {
+    "baseline_changes_sha256": "52f067b4b2366744e6b766fa5e3d6a9dd212bdc3e559603170fae459efba0da6",
+    "before_after_current_equal": true,
+    "canonical_array_sha256": "ed6dc46ef3938f7753ffb9a7a0c76e6be1a2ea88ed0ff760835610fa7cd53481",
+    "core_count": 1243,
+    "core_manifest_sha256": "21b5cc01ba2da3127af2e6843385e872ec952bf4b1dff94dcf6eaaf8fa6511ad",
+    "supporting_snapshot_note": "Final post-gate controls/documentation snapshot; not retrospective before/after documentation stability.",
+    "supporting_snapshot_sha256": "d59995f94d1d2e1d2541aca5c13d6d71488cd55d6e436c36221ba8a7723ec3d4"
+  },
+  "status": "Final configured local source gates PASS; independent verdict/binding retained separately in REVIEW.md. Not installed/release acceptance.",
+  "work_id": "LOCAL-SMITH-PROJECT-REPOSITORIES"
+}

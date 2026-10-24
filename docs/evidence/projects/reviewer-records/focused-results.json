@@ -1,0 +1,87 @@
+{
+  "all_passed": true,
+  "base_head": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+  "commands": [
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "--concurrency",
+        "1",
+        "test/assurance_recovery_test.dart"
+      ],
+      "duration_seconds": 2.24,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T06:00:14.499027+00:00",
+      "log": "target/projects-assurance/recovery-rereview-2/unchanged-repro.log",
+      "name": "unchanged-repro",
+      "started_at": "2026-10-17T06:00:12.258913+00:00",
+      "timed_out": false
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "--concurrency",
+        "1",
+        "test/recovery_controller_test.dart",
+        "test/recovery_view_test.dart"
+      ],
+      "duration_seconds": 6.378,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T06:00:20.877038+00:00",
+      "log": "target/projects-assurance/recovery-rereview-2/owner-regressions.log",
+      "name": "owner-regressions",
+      "started_at": "2026-10-17T06:00:14.499128+00:00",
+      "timed_out": false
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "--concurrency",
+        "1",
+        "test/assurance_delete_restart_test.dart"
+      ],
+      "duration_seconds": 2.183,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T06:00:23.060080+00:00",
+      "log": "target/projects-assurance/recovery-rereview-2/delete-restart.log",
+      "name": "delete-restart",
+      "started_at": "2026-10-17T06:00:20.877144+00:00",
+      "timed_out": false
+    }
+  ],
+  "environment_overrides": {
+    "CI": "true",
+    "DART_SUPPRESS_ANALYTICS": "true",
+    "FLUTTER_ALREADY_LOCKED": "true",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true"
+  },
+  "finished_at": "2026-10-17T06:00:23.064513+00:00",
+  "mirror_matches_source": true,
+  "production_source_stable": true,
+  "sdk_sha256": {
+    "dart": "d2246ffda6151d044b45bd5d8a7cb829d189eb7d1827ddf73789bfb912a463a2",
+    "flutter_tools.snapshot": "37f00e1841ecccfcae9a2787c2cd7e6edbccd05349288c9f175cceb70b8c4b81"
+  },
+  "started_at": "2026-10-17T06:00:12.181689+00:00",
+  "test_inputs_stable": true,
+  "unchanged_repro_sha256": "b395fb737e3452339f5f87dc625e293a50c1310cf46fc6c260df312145252579",
+  "working_directory": "target/projects-assurance/client"
+}

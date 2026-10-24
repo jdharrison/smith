@@ -324,7 +324,7 @@ void main() {
       await tester.pumpAndSettle();
       for (final key in [
         'local-user-pending',
-        'local-status-pending',
+        if (!active) 'local-status-pending',
         'local-user-answered',
         'terminal-answer-answered',
         'terminal-answer-reattached',
@@ -332,6 +332,15 @@ void main() {
         expect(tester.widget<MessageHeader>(headerIn(key)).timestampMs, isNull);
         expect(
           find.descendant(of: headerIn(key), matching: find.byType(Tooltip)),
+          findsNothing,
+        );
+      }
+      if (active) {
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('local-status-pending')),
+            matching: find.byType(MessageHeader),
+          ),
           findsNothing,
         );
       }

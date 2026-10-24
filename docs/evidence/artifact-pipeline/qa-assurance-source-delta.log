@@ -1,0 +1,204 @@
+Prior snapshot reconstruction SHA-256 matches: True service/src/artifact_dagger.rs
+--- prior/service/src/artifact_dagger.rs
++++ current/service/src/artifact_dagger.rs
+@@ -15,6 +15,8 @@
+ 
+ pub const PROTOCOL_VERSION: u8 = 1;
+ pub const MAX_INPUT: usize = 16 * 1024;
++/// Complete serialized request, including JSON escaping and identity fields.
++pub const MAX_REQUEST: usize = 32 * 1024;
+ pub const MAX_STDOUT: usize = 64 * 1024;
+ pub const MAX_STDERR: usize = 64 * 1024;
+ 
+@@ -257,6 +259,9 @@
+             input,
+         })
+         .map_err(|_| Error::Protocol)?;
++        if request.len() > MAX_REQUEST {
++            return Err(Error::InvalidInput);
++        }
+         let invocation = Invocation {
+             binding: self.binding.clone(),
+             attempt,
+@@ -639,6 +644,34 @@
+         }
+     }
+     #[test]
++    fn qa_serialized_request_limit_refuses_before_attempt_consumption() {
++        let (mut adapter, mut pipeline) = pair();
++        let mut fake = Fake::produced();
++        let baseline = "def clamp(value, low, high):\n    if value < low:\n        return high\n    if value > high:\n        return low\n    return value\n";
++        let payload = serde_json::to_string(&json!({
++            "schema_version": 1,
++            "baseline": {"path": "clamp.py", "content": baseline,
++                "sha256": hex(ContentHash::of(baseline.as_bytes()).bytes())}
++        }))
++        .unwrap();
++        let input = "\n".repeat(MAX_INPUT - payload.len()) + &payload;
++        assert_eq!(input.len(), MAX_INPUT);
++        assert!(serde_json::from_str::<serde_json::Value>(&input).is_ok());
++        assert!(matches!(
++            adapter.dispatch(&mut pipeline, &input, Duration::from_secs(1), &mut fake),
++            Err(Error::InvalidInput)
++        ));
++        assert_eq!(fake.calls, 0);
++        assert!(adapter.dispatched.is_empty());
++        assert!(pipeline.current_attempt().is_some());
++        let shorter = &input[200..];
++        assert!(adapter
++            .dispatch(&mut pipeline, shorter, Duration::from_secs(1), &mut fake)
++            .is_ok());
++        assert_eq!(fake.calls, 1);
++    }
++
++    #[test]
+     fn invalid_input_and_expired_deadline_never_invoke_runner() {
+         let (mut adapter, mut pipeline) = pair();
+         let mut fake = Fake::produced();
+Prior snapshot reconstruction SHA-256 matches: True service/src/artifact_dagger_process.rs
+--- prior/service/src/artifact_dagger_process.rs
++++ current/service/src/artifact_dagger_process.rs
+@@ -8,7 +8,7 @@
+ //! defense against a hostile same-UID writer, nor a hard-real-time filesystem API.
+ 
+ use crate::artifact_dagger::{
+-    Invocation, Observation, Runner, RunnerError, MAX_STDERR, MAX_STDOUT,
++    Invocation, Observation, Runner, RunnerError, MAX_REQUEST, MAX_STDERR, MAX_STDOUT,
+ };
+ use crate::artifact_pipeline::{AttemptId, ContentHash, Phase};
+ use std::collections::BTreeMap;
+@@ -116,7 +116,7 @@
+             || invocation.binding().executable() != self.roots.executable
+             || invocation.binding().module() != self.roots.module
+             || ContentHash::of(invocation.request()) != invocation.request_hash()
+-            || invocation.request().len() > 32 * 1024
++            || invocation.request().len() > MAX_REQUEST
+             || invocation.environment() != &fixed_environment()
+         {
+             return Err(RunnerError::Unavailable);
+@@ -225,7 +225,7 @@
+         // Verify source drift even on normal transport success. Snapshots themselves
+         // remain private/retained; source failure cannot be accepted as artifact proof.
+         let stable = executable.unchanged().is_ok() && source.unchanged(&self.roots.module).is_ok();
+-        let engine_quiet = if Instant::now() < deadline {
++        let engine_quiet = if budget.check().is_ok() {
+             self.verifier.verify(
+                 invocation.attempt(),
+                 invocation.request_hash(),
+@@ -235,10 +235,11 @@
+         } else {
+             false
+         };
+-        let within_budget = Instant::now() < deadline;
++        let within_budget = budget.check().is_ok();
+         let local_quiet = child.reaped && child.group_absent();
+         let verified = engine_quiet && local_quiet && within_budget;
+         if verified {
++            budget.check()?;
+             state.unchanged().map_err(|_| RunnerError::OutcomeUnknown)?;
+             // Positive engine observation + local reap, never response claims.
+             publish(
+@@ -251,6 +252,7 @@
+                 .file
+                 .sync_all()
+                 .map_err(|_| RunnerError::OutcomeUnknown)?;
++            budget.check()?;
+             fs::remove_file(self.roots.state.join("pending"))
+                 .map_err(|_| RunnerError::OutcomeUnknown)?;
+             state
+@@ -262,6 +264,9 @@
+             return Err(RunnerError::OutcomeUnknown);
+         }
+         let capture = capture?;
++        if self.cancelled.load(Ordering::Acquire) {
++            return Err(RunnerError::Interrupted);
++        }
+         Ok(Observation {
+             exit_code: capture.exit_code,
+             stdout: capture.stdout,
+@@ -1476,6 +1481,42 @@
+     }
+ 
+     #[test]
++    fn qa_cancellation_during_verification_retains_pending_and_refuses_success() {
++        struct CancelDuringVerification;
++        impl QuiescenceVerifier for CancelDuringVerification {
++            fn verify(
++                &mut self,
++                _: AttemptId,
++                _: ContentHash,
++                _: Instant,
++                cancelled: &AtomicBool,
++            ) -> Quiescence {
++                cancelled.store(true, Ordering::Release);
++                Quiescence::Verified
++            }
++        }
++        let f = Fixture::new("exit 0");
++        let mut runner = f.runner(Box::new(CancelDuringVerification), Duration::from_secs(3));
++        assert!(matches!(
++            f.call(&mut runner, 1),
++            Err(RunnerError::Interrupted)
++        ));
++        f.assert_pending();
++        assert!(!fs::read_dir(&f.roots.state).unwrap().any(|entry| {
++            entry
++                .unwrap()
++                .file_name()
++                .to_string_lossy()
++                .ends_with(".quiescent")
++        }));
++        let mut recreated = f.runner(positive(), Duration::from_secs(3));
++        assert_eq!(
++            error(f.call(&mut recreated, 2)),
++            RunnerError::OutcomeUnknown
++        );
++    }
++
++    #[test]
+     fn cancelled_before_dispatch_does_not_publish_or_spawn() {
+         let f = Fixture::new("exit 0");
+         let mut runner = f.runner(positive(), Duration::from_secs(3));
+Prior snapshot reconstruction SHA-256 matches: True pipeline/src/smith_agent/protocol.py
+--- prior/pipeline/src/smith_agent/protocol.py
++++ current/pipeline/src/smith_agent/protocol.py
+@@ -7,6 +7,7 @@
+ 
+ MAX_INPUT = 16 * 1024
+ MAX_REQUEST = 32 * 1024
++MAX_RESPONSE = 64 * 1024
+ ERRORS = frozenset({
+     "authentication", "default_unavailable", "quota", "provider",
+     "policy_denied", "prerequisite",
+@@ -136,4 +137,7 @@
+         if not body.strip():
+             raise Invalid("invalid_response")
+         result.update(outcome="produced", body=body)
+-    return encode(result)
++    encoded = encode(result)
++    if len(encoded.encode("utf-8")) > MAX_RESPONSE:
++        raise Invalid("response_size")
++    return encoded
+Prior snapshot reconstruction SHA-256 matches: True pipeline/tests/test_module_source.py
+--- prior/pipeline/tests/test_module_source.py
++++ current/pipeline/tests/test_module_source.py
+@@ -125,6 +125,19 @@
+                     b'{"a":Infinity}', b" " * 32769, b"[" * 2000):
+             with self.subTest(raw=raw[:30]), self.assertRaises(Invalid):
+                 parse_request(raw)
++
++    def test_qa_encoded_response_cannot_exceed_host_capture_bound(self):
++        for body in (chr(1) * 16384, '\\' * 16384):
++            with self.subTest(kind=ord(body[0])):
++                try:
++                    encoded = response(wire(), body=body).encode('utf-8')
++                except Invalid:
++                    continue
++                self.assertLessEqual(len(encoded), 65536)
++        for body in ('é' * 8192, '😀' * 4096, 'x' * 16384):
++            encoded = response(wire(), body=body).encode('utf-8')
++            self.assertLessEqual(len(encoded), 65536)
++            self.assertEqual(decode_bytes(encoded, limit=65536)['body'], body)
+ 
+     def test_response_exclusivity_bounds_and_error_allowlist(self):
+         for error in ERRORS:

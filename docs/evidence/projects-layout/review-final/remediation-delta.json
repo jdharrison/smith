@@ -1,0 +1,38 @@
+{
+  "additive_regression_block_sha256": "f553d6cfe931129292be47ef8a79af1d99b219e42640e591f9d0840f7f660df5",
+  "changes": [
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/lib/ui/projects_view.dart",
+        "sha256": "63174aabca0e5287c3a564bfe5227e91f959ed859395f46e7cffe5a647ada94b",
+        "size": 44069
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/lib/ui/projects_view.dart",
+        "sha256": "130cf5bf70ac1f6f52186ae220ea1f7053015b46e0aefd39ddb5cee1c8804396",
+        "size": 43414
+      }
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/test/projects_layout_test.dart",
+        "sha256": "c14b89ef88664f482bf3a75d18ab4893009da4d6cfc0aba257a647673277784e",
+        "size": 26135
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/test/projects_layout_test.dart",
+        "sha256": "99e1e5d63b477034ae43e6cb814351d5f117e372a21b7afad4c5ec2fcfb519e2",
+        "size": 21068
+      }
+    }
+  ],
+  "followup_core_sha256": "f4d41081455f331ab29e69183aa4213d73f666b50c029e1338eb3319b4403ea0",
+  "initial_review_core_sha256": "5f1f8b7070ad71fd424c23b873ecd5eeffe4e19eee68c601a3470932f19b0f98",
+  "layout_test_change_additive_only": true,
+  "new_regression_scenarios": 8,
+  "original_existing_layout_test_bytes_preserved": true
+}

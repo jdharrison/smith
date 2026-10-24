@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "python3",
+    "-B",
+    "target/projects-layout/assurance/closeout/verify_closeout_evidence.py"
+  ],
+  "cwd": "repository root",
+  "duration_seconds": 1.14,
+  "exit_code": 0,
+  "log": "binding-verifier.log",
+  "log_sha256": "935b081eb32a73df2f6778048b134d8b285e12b382e700596c3967df4a128929",
+  "reviewer_execution": true,
+  "started_utc": "2026-10-17T22:29:28.416696+00:00",
+  "timeout_seconds": 90
+}

@@ -1,0 +1,135 @@
+{
+  "checks": {
+    "v2-verified-format": 0,
+    "v2-verified-format-check": 0,
+    "v2-verified-tests": 0,
+    "v2-repeat-tests": 0,
+    "v2-verified-clippy": 0,
+    "v2-verified-release-build": 0
+  },
+  "artifacts": [
+    {
+      "path": "installer/target/release/deps/libsmith_service-a1e8c081e4bcb1f0.rlib",
+      "sha256": "170ab2b2d15ed4cbf194bcd199049bc6491256cb30dd6aa72b52f1292019ae0d"
+    },
+    {
+      "path": "installer/target/release/deps/libsmith_installer-46b2d10b5e473317.rlib",
+      "sha256": "2d946b3b33ccb8abe5378af7dda62242d94dfa8fa0f532358e925294b585dfc2"
+    },
+    {
+      "path": "installer/target/release/smith-coordinated-driver",
+      "sha256": "37d1708b7221d68ede0e0142171512cc80983292f209b515ea93cd86b6f7b3f8"
+    }
+  ],
+  "live_execution": false,
+  "status": "implemented-built-not-applied",
+  "driver": {
+    "path": "docs/evidence/dev-buffered-frames/coordinated-driver/smith-coordinated-driver",
+    "sha256": "37d1708b7221d68ede0e0142171512cc80983292f209b515ea93cd86b6f7b3f8"
+  },
+  "argument_guard": [
+    {
+      "args": [],
+      "exit": 1,
+      "sanitized": true
+    },
+    {
+      "args": [
+        "--help"
+      ],
+      "exit": 1,
+      "sanitized": true
+    },
+    {
+      "args": [
+        "--apply-approved-update",
+        "extra"
+      ],
+      "exit": 1,
+      "sanitized": true
+    }
+  ],
+  "candidate": {
+    "bundle": ".smith-dev-coordinated-candidate-v2",
+    "client_manifest_sha256": "49ba82e101bd54799948d4104cd6faa892d54ed1b2bc3511c4ac28e029abc9b5",
+    "package_manifest_sha256": "ddb1e8077249da1b5d9bdd229519f7894d8443e4eeb775318c3429da3e01436a",
+    "service_sha256": "9bb0228c61bf762c7899f15f7105924d666b6e534102a33c6ecea8779fee77ec",
+    "old_service_and_selected_release": "unchanged"
+  },
+  "inputs": {
+    "docs/evidence/dev-buffered-frames/coordinated-driver/Cargo.toml": "9cbad27637e2d46f41ab12cdb4413b733b0d2767bb0efc0ab09f7596f4c1e96f",
+    "docs/evidence/dev-buffered-frames/coordinated-driver/Cargo.lock": "14d18e5914bd1d9b8946a9ea4b6d53a91391279a67b15edafe5ac5922a2ee578",
+    "docs/evidence/dev-buffered-frames/coordinated-driver/src/main.rs": "c6ef42feefc003caf11053174e6a8cbabcac7303076ec4b72dfdeff868fd7a31",
+    "docs/evidence/dev-buffered-frames/coordinated-driver/src/hook.rs": "58b1f96f4038a27a1ec7f7c97925c0156989a75b277b2edb7f4b7d0ea84949ea",
+    "installer/src/maintenance.rs": "c1d009744ad805cd73a1efbed6b2f542c0291667ec2f59339fc6b2740d75ee03",
+    "installer/src/consent.rs": "86b033d8a1ef383641cc124c8da441b32c6f3906ea475082d72dd9b95475ee6b"
+  },
+  "validation": {
+    "tests": "19 passed twice; owned Python-only fixtures, including TERM-ignoring grandchild ESRCH/ECHILD proofs, unrelated-group survival and isolated consent-cancellation Start refusal",
+    "format": "cargo fmt -- --check",
+    "clippy": "cargo clippy --offline --locked --target-dir <PROJECT>/installer/target --all-targets -- -D warnings",
+    "release": "cargo build --release --offline --locked --target-dir <PROJECT>/installer/target --message-format=json",
+    "working_directory": "docs/evidence/dev-buffered-frames/coordinated-driver",
+    "timeout_per_command_seconds": 240,
+    "apply_check_only_hook_or_external_log_creation": false
+  },
+  "timeout_protocol": {
+    "startup": "Outer coordinator creates driver session with setsid and durably records driver PID before dispatch. Driver checks SID=PGID=PID before Native effects.",
+    "hook_spawn": "Only hook child gets process_group(0), PR_SET_PDEATHSIG=SIGKILL and parent-PID race check. It remains in driver session, separate group. Driver enables PR_SET_CHILD_SUBREAPER; no unscoped waits.",
+    "hook_budget_seconds": 45,
+    "failure_triggers": [
+      "timeout",
+      "consent cancellation",
+      "nonzero leader exit",
+      "leader exit with remaining group",
+      "pipe/log errors",
+      "unrecognized or excessive output"
+    ],
+    "cleanup": "Send SIGTERM exclusively to captured negative hook PGID, reap with waitpid(-hook_pgid,WNOHANG), after 250ms send SIGKILL to that group; poll/reap every 10ms until kill(-hook_pgid,0) reports ESRCH. Drop guard runs same join on early error/unwind.",
+    "cleanup_deadline": "None: unknown/uninterruptible group retains installation/Core/runner leases inside the callback; no callback return, Start or rollback while unproven.",
+    "outer_cancel": "TERM owned driver/session and wait for exact driver child without second forced-kill deadline. Never SIGKILL driver during lease-held cleanup.",
+    "coordinator_observation": "Read-only inspection of current supervise_driver/cancel_join showed cooperative TERM and exact-child wait without a second kill deadline; parent must independently rebind/review final coordinator.",
+    "subprocess_contract": "Hook and every Docker/isolated-reader subprocess must retain hook PGID: no setsid/setpgid, daemonization or detached jobs. This is an integration precondition, not an enforced general sandbox.",
+    "abrupt_death_limit": "Uncatchable driver death releases kernel locks; direct-child PDEATHSIG does not guarantee grandchild quiescence. Outer coordinator must not claim such a guarantee.",
+    "partial_effects": "Retained; one hook attempt only; any failure/consent cancellation blocks later Start; no retry/rollback/reprepare."
+  },
+  "diagnostics": {
+    "destination": "Parent-prepared external private QA backup directory under HOME, as explicitly requested; exact location is encoded only in source, not raw exception output.",
+    "file": "driver-hook-<driver-pid>.log, O_EXCL/O_NOFOLLOW/O_CLOEXEC mode0600; parent directories opened individually without following symlinks; final directory private; no mkdir or permission repair",
+    "pre_effect": "Open log before Native::new/execute; unavailable or unsafe directory refuses before effects",
+    "capture": "Separate nonblocking stdout/stderr pipes, bounded polling, maximum160-byte lines and64KiB combined raw input; raw text never persisted",
+    "log_byte_cap": 8192,
+    "format": "phase=<allowlisted-phase> errorcode=<allowlisted-code>",
+    "phases": [
+      "stopped-hook",
+      "snapshot",
+      "quiescence",
+      "reconciliation",
+      "worker-image",
+      "verification",
+      "complete",
+      "driver"
+    ],
+    "errorcodes": [
+      "OK",
+      "FAILED",
+      "REFUSED",
+      "TIMEOUT",
+      "CANCELLED",
+      "IO",
+      "INCOMPLETE",
+      "REDACTED",
+      "OUTPUT_LIMIT"
+    ],
+    "legacy_fixed_lines": "Only the two exact existing coordinator success/failure status sentences normalize to complete/OK or stopped-hook/INCOMPLETE; arbitrary text redacts and fails closed",
+    "durability": "Direct bounded writes; sync_all after owned-group join, failure remains incomplete"
+  },
+  "remaining": [
+    "No apply, check-only, actual stopped-hook, live service/Docker actions, private external log creation or ledger mutation occurred.",
+    "Parent must rebind coordinator/approval to this exact executable hash and complete fresh independent review.",
+    "Parent hook must satisfy retained-group and sanitized-output contracts; source inspection is not live quiescence proof.",
+    "Native original tokens/deadlines unchanged; cleanup may outlast approval deadlines, but cannot authorize later effects.",
+    "Known timestamp-fixture failure remains overall release NO-GO, not waived.",
+    "No plan/canonical docs or production source modified or freshness-pinned by this driver update."
+  ]
+}

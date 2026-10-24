@@ -1,0 +1,308 @@
+{
+  "aggregate_total": 1493,
+  "build_cache_limits": [
+    "Existing engine and setup/dependency/runtime caches were reused; service release export explicitly reused a cached build.",
+    "All five test vertices show fresh test terminal results and are not marked CACHED.",
+    "Both Linux client build invocations show fresh build output. No cold-cache or hermetic/clean-source reconstruction claim.",
+    "Configured Rust/Flutter image/tag identities are recorded separately; retained lockfiles are not proof of effective image locking."
+  ],
+  "cached_test_vertices": [],
+  "cached_vertex_counts_by_invocation": {
+    "0": 27,
+    "1": 12,
+    "2": 78,
+    "3": 53
+  },
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "<repo>/target/projects-layout/validation-final/probe_processes.py"
+      ],
+      "core_after_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "duration_seconds": 0.367,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:36:29.076812+00:00",
+      "log": "docs/evidence/projects-layout/validation-final/process-observation-before-focused.log",
+      "log_sha256": "50d2207db4aeb6420e0248877b2c0fb288ce877f6b409efcaeb80600b15346a1",
+      "name": "process-observation-before-focused",
+      "started_at": "2026-10-17T21:36:28.709839+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "<repo>/service/target/debug/deps/debug_service-0a4be2ddda80d80f",
+        "--exact",
+        "fixture_spawn_waits_until_executable_writer_is_closed",
+        "--nocapture"
+      ],
+      "core_after_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "duration_seconds": 0.46,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:36:29.538543+00:00",
+      "log": "docs/evidence/projects-layout/validation-final/original-fixture-reproduction.log",
+      "log_sha256": "647f5c2bbd26a947f62cd638bf5aa0982ff3ae3de651cc66f55ab56f42d4c2d0",
+      "name": "original-fixture-reproduction",
+      "started_at": "2026-10-17T21:36:29.078283+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/projects_view_test.dart",
+        "test/projects_navigation_test.dart",
+        "test/projects_layout_test.dart",
+        "test/projects_layout_golden_test.dart",
+        "test/projects_controller_test.dart",
+        "test/projects_protocol_test.dart"
+      ],
+      "core_after_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "duration_seconds": 11.423,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:36:40.990286+00:00",
+      "log": "docs/evidence/projects-layout/validation-final/focused-projects.log",
+      "log_sha256": "3195be50e3a54aa48f48a69670e7ab9bb458cd610bf629f28ce7123bc8ad2af4",
+      "name": "focused-projects",
+      "started_at": "2026-10-17T21:36:29.567148+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/ui_foundation_assets_test.dart"
+      ],
+      "core_after_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "duration_seconds": 2.211,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:36:43.202599+00:00",
+      "log": "docs/evidence/projects-layout/validation-final/focused-assets.log",
+      "log_sha256": "e48059c91009a9b595e3e4cc1138f43a0166f1db23bf6d7245302a333bdfde56",
+      "name": "focused-assets",
+      "started_at": "2026-10-17T21:36:40.992062+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/rust_projects_integration_test.dart"
+      ],
+      "core_after_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "duration_seconds": 2.592,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:36:45.796095+00:00",
+      "log": "docs/evidence/projects-layout/validation-final/compiled-projects.log",
+      "log_sha256": "429fc83adc97e594433f184fae4b006dcd9cd5908b4401891a26244e75ea6a88",
+      "name": "compiled-projects",
+      "started_at": "2026-10-17T21:36:43.204160+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "<repo>/target/projects-layout/validation-final/probe_processes.py"
+      ],
+      "core_after_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "duration_seconds": 0.366,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:36:55.518444+00:00",
+      "log": "docs/evidence/projects-layout/validation-final/process-observation-before-aggregate.log",
+      "log_sha256": "50d2207db4aeb6420e0248877b2c0fb288ce877f6b409efcaeb80600b15346a1",
+      "name": "process-observation-before-aggregate",
+      "started_at": "2026-10-17T21:36:55.152703+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "<repo>/target/installer-pipeline/smith-dagger-0.21.9/dagger",
+        "version"
+      ],
+      "core_after_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "duration_seconds": 0.392,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:36:55.911797+00:00",
+      "log": "docs/evidence/projects-layout/validation-final/dagger-version.log",
+      "log_sha256": "0819b1f6a5d2080e67735b51514107720e0fb59ba70a251bd80bbc056bd8288a",
+      "name": "dagger-version",
+      "started_at": "2026-10-17T21:36:55.519869+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{\"running\":{{json .State.Running}},\"status\":{{json .State.Status}},\"image\":{{json .Config.Image}},\"image_id\":{{json .Image}},\"started_at\":{{json .State.StartedAt}}}",
+        "smith-installer-pipeline-dagger-v0.21.9"
+      ],
+      "core_after_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "duration_seconds": 0.409,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:36:56.321808+00:00",
+      "log": "docs/evidence/projects-layout/validation-final/engine-readiness.log",
+      "log_sha256": "015c6a729be581b654b45d5517a2345e1cf8f9a5dfda8e4d85ff5c665b2053e0",
+      "name": "engine-readiness",
+      "started_at": "2026-10-17T21:36:55.913292+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "make",
+        "DAGGER=target/installer-pipeline/smith-dagger-0.21.9/dagger",
+        "test",
+        "build"
+      ],
+      "core_after_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "duration_seconds": 191.991,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:40:08.345714+00:00",
+      "log": "docs/evidence/projects-layout/validation-final/root-gates.log",
+      "log_sha256": "68de38f0204d46ebd5079682b2f2030d56f2806a0b1023a7d0c42ac8c5f4b679",
+      "name": "root-gates",
+      "started_at": "2026-10-17T21:36:56.354520+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "dagger/package.py",
+        "--root",
+        "installer/dist",
+        "--verify"
+      ],
+      "core_after_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "duration_seconds": 0.718,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:40:09.069377+00:00",
+      "log": "docs/evidence/projects-layout/validation-final/package-verify.log",
+      "log_sha256": "dbb15ef4b875625b2df9589ec18961d93c26d400ab83f45478df083083a73904",
+      "name": "package-verify",
+      "started_at": "2026-10-17T21:40:08.351814+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts/tests",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "core_after_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "duration_seconds": 25.291,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:40:34.362379+00:00",
+      "log": "docs/evidence/projects-layout/validation-final/pipeline-helpers.log",
+      "log_sha256": "a0bc3531f7ce6d7b7fbe413bc7063c14b511814b5cc94fcff4e3582e198fc326",
+      "name": "pipeline-helpers",
+      "started_at": "2026-10-17T21:40:09.070948+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "git",
+        "--no-pager",
+        "diff",
+        "--check"
+      ],
+      "core_after_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+      "duration_seconds": 0.381,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T21:40:34.745362+00:00",
+      "log": "docs/evidence/projects-layout/validation-final/diff-check.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "diff-check",
+      "started_at": "2026-10-17T21:40:34.364111+00:00",
+      "status": "pass"
+    }
+  ],
+  "controlled_fixture_ignores": 5,
+  "core_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+  "flutter_passed": 865,
+  "fresh_test_vertices": [
+    21,
+    73,
+    65,
+    95,
+    125
+  ],
+  "helpers_passed": 34,
+  "native_package_passed": 41,
+  "no_assertion_deadline_or_concurrency_change": true,
+  "observed_at_utc": "2026-10-17T21:53:13.430715+00:00",
+  "official_cli_sha256_independently_verified": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+  "ordinary_skips": 0,
+  "original_fixture_passes_observed": [
+    "focused 1-case",
+    "unchanged full aggregate"
+  ],
+  "original_timeout_cause": "unestablished; neither later pass proves cause",
+  "parent_evidence_index_canonical_sha256": "4ee6952da61dff72ad6dcbfe589f1d7481898546a6bbf39e6513be1b3895253f",
+  "parent_executions_not_reviewer_runs": true,
+  "parent_index_files_verified": 87,
+  "raw_line_excerpts_verified": 48,
+  "raw_root_log_sha256": "68de38f0204d46ebd5079682b2f2030d56f2806a0b1023a7d0c42ac8c5f4b679",
+  "rust_totals_independently_parsed": {
+    "installer_gtk": {
+      "failed": 0,
+      "filtered": 0,
+      "ignored": 0,
+      "measured": 0,
+      "passed": 9
+    },
+    "installer_native": {
+      "failed": 0,
+      "filtered": 0,
+      "ignored": 2,
+      "measured": 0,
+      "passed": 283
+    },
+    "service": {
+      "failed": 0,
+      "filtered": 0,
+      "ignored": 3,
+      "measured": 0,
+      "passed": 295
+    }
+  }
+}

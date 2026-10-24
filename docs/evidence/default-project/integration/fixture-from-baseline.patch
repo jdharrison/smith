@@ -1,0 +1,304 @@
+--- baseline/client/test/rust_projects_integration_test.dart
++++ current/client/test/rust_projects_integration_test.dart
+@@ -70,11 +70,41 @@
+       ? 'Run make client/test for the mandatory compiled Projects fixture.'
+       : false;
+ 
+-  Future<(_ProjectExchange, NativeAppApi, ProjectsController)> setup() async {
++  File diskFile(_ProjectExchange exchange) =>
++      File('${exchange.fixture.root.path}/data/smith-next/app-state.json');
++
++  Future<(_ProjectExchange, NativeAppApi, ProjectsController)> setup({
++    bool existingEmpty = true,
++  }) async {
+     expect(executable, isNotNull);
+     final fixture = await RustCloudFixture.start(executable!, savedOnly: true);
+     addTearDown(fixture.close);
+     final exchange = _ProjectExchange(fixture);
++    if (existingEmpty) {
++      // These purpose-specific fixtures exercise an EXISTING empty registry,
++      // not fresh-profile initialization. Saved-only bootstrap has no pending
++      // work; preserve every other current-schema durable field verbatim.
++      final file = diskFile(exchange);
++      final disk =
++          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
++      expect(disk['schema_version'], 7);
++      expect(
++        (disk['jobs'] as List).any(
++          (job) =>
++              const ['queued', 'running'].contains(job['operation']['status']),
++        ),
++        false,
++      );
++      disk['projects'] = {
++        'revision': 0,
++        'projects': [],
++        'receipts': [],
++        'expired_ids': [],
++      };
++      await file.writeAsString(jsonEncode(disk), flush: true);
++      await fixture.control('restart');
++      expect(jsonDecode(await file.readAsString()), disk);
++    }
+     final api = NativeAppApi(executor: exchange);
+     addTearDown(api.dispose);
+     // The compiled fixture also requires observation of its cached full catalog.
+@@ -98,9 +128,6 @@
+       isNot(contains(anyOf('models', 'submit_routed', 'provider_probe'))),
+     );
+   }
+-
+-  File diskFile(_ProjectExchange exchange) =>
+-      File('${exchange.fixture.root.path}/data/smith-next/app-state.json');
+ 
+   // Bypass client operation validation only to exercise the actual Rust guards.
+   Future<AppReply> rawCall(
+@@ -116,6 +143,146 @@
+     );
+     return AppReply.parse(text, callId, schemaVersion: 3);
+   }
++
++  test(
++    'compiled fresh profile persists an ordinary Smith starter without resurrection or extra effects',
++    () async {
++      // No existing-state preparation: Rust opens an absent app-state path.
++      final (exchange, api, projects) = await setup(existingEmpty: false);
++      expect(projects.revision, 1);
++      final starter = projects.projects.single;
++      final id = starter.projectId;
++      expect(projectWireId(id), true);
++      expect(starter.name, 'Smith');
++      expect(starter.agent, 'opencode');
++      final repository = <String, dynamic>{
++        'name': null,
++        'url': 'https://github.com/jdharrison/smith',
++        'branch': {
++          'base': 'main',
++          'work': 'main',
++          'types': {
++            'feature': null,
++            'fix': null,
++            'release': null,
++            'hotfix': null,
++          },
++        },
++      };
++      expect(starter.repositories.single.toJson(), repository);
++      final record = {
++        'project_id': id,
++        'name': 'Smith',
++        'repositories': [repository],
++        'agent': 'opencode',
++      };
++      expect((await api.call('projects_list_v2', {})).result, {
++        'revision': 1,
++        'projects': [record],
++      });
++      final initial = jsonDecode(
++        await diskFile(exchange).readAsString(),
++      ) as Map<String, dynamic>;
++      expect(initial['schema_version'], 7);
++      final registry = initial['projects'] as Map<String, dynamic>;
++      expect(registry['revision'], 1);
++      expect(registry['projects'], [record]);
++      expect(registry['receipts'], hasLength(1));
++      expect(registry['expired_ids'], isEmpty);
++      final originalInstance = projects.instanceId;
++      await exchange.fixture.control('restart');
++      await projects.refresh();
++      expect(projects.error, isNull);
++      expect(projects.instanceId, isNot(originalInstance));
++      expect(projects.revision, 1);
++      expect(projects.projects.single.projectId, id);
++      expect(projects.projects.single.repositories.single.toJson(), repository);
++      expect(jsonDecode(await diskFile(exchange).readAsString()), initial);
++
++      final changed = _repository(
++        name: 'contribution',
++        url: 'git@example.invalid:operator/smith.git',
++        base: 'stable',
++        work: 'team/next',
++      );
++      final repositories = [
++        changed,
++        ProjectRepository(url: 'https://example.invalid/another/repository'),
++      ];
++      await projects.update(
++        id,
++        'Operator renamed Smith',
++        repositories,
++        expectedInstanceId: projects.instanceId!,
++        expectedRevision: 1,
++      );
++      expect(projects.error, isNull);
++      expect(projects.revision, 2);
++      await exchange.fixture.control('restart');
++      await projects.refresh();
++      expect(projects.error, isNull);
++      expect(projects.projects.single.projectId, id);
++      expect(projects.projects.single.name, 'Operator renamed Smith');
++      expect(projects.projects.single.repositories, repositories);
++      expect(projects.projects.single.agent, 'opencode');
++      expect(projects.revision, 2);
++      // Clearing all repositories is also an ordinary persisted update.
++      await projects.update(
++        id,
++        'Operator renamed Smith',
++        [],
++        expectedInstanceId: projects.instanceId!,
++        expectedRevision: 2,
++      );
++      expect(projects.error, isNull);
++      await exchange.fixture.control('restart');
++      await projects.refresh();
++      expect(projects.error, isNull);
++      expect(projects.projects.single.repositories, isEmpty);
++      expect(projects.revision, 3);
++      await projects.delete(
++        id,
++        expectedInstanceId: projects.instanceId!,
++        expectedRevision: 3,
++      );
++      expect(projects.error, isNull);
++      expect(projects.projects, isEmpty);
++      expect(projects.revision, 4);
++      final deletedBytes = await diskFile(exchange).readAsBytes();
++      for (var restart = 0; restart < 2; restart++) {
++        await exchange.fixture.control('restart');
++        await projects.refresh();
++        expect(projects.error, isNull);
++        expect(projects.projects, isEmpty);
++        expect(projects.revision, 4);
++        expect(await diskFile(exchange).readAsBytes(), deletedBytes);
++      }
++      final deleted =
++          jsonDecode(utf8.decode(deletedBytes)) as Map<String, dynamic>;
++      Map<String, dynamic> unrelated(Map<String, dynamic> disk) =>
++          Map<String, dynamic>.of(disk)
++            ..remove('projects')
++            ..remove('revision');
++      expect(unrelated(deleted), unrelated(initial));
++      expect(
++        exchange.operations.where((op) => op == 'project_update_v2'),
++        hasLength(2),
++      );
++      expect(
++        exchange.operations.where((op) => op == 'project_delete_v2'),
++        hasLength(1),
++      );
++      expect(exchange.operations.toSet(), {
++        'route_catalog',
++        'projects_list_v2',
++        'project_update_v2',
++        'project_delete_v2',
++      });
++      await expectNoProviderEffects(exchange);
++    },
++    skip: skipFixture,
++    timeout: const Timeout(Duration(seconds: 30)),
++  );
+ 
+   test(
+     'compiled Projects CRUD persists structured repositories without changing chat projections',
+@@ -184,7 +351,7 @@
+       final disk = jsonDecode(
+         await diskFile(exchange).readAsString(),
+       ) as Map<String, dynamic>;
+-      expect(disk['schema_version'], 6);
++      expect(disk['schema_version'], 7);
+       final independent = ProjectsController(api);
+       addTearDown(independent.dispose);
+       await independent.refresh();
+@@ -404,7 +571,7 @@
+       final disk = jsonDecode(
+         await diskFile(exchange).readAsString(),
+       ) as Map<String, dynamic>;
+-      expect(disk['schema_version'], 6);
++      expect(disk['schema_version'], 7);
+       final after = (await api.call('state', {})).result;
+       // Inventory is deliberately volatile; restarting clears prior observations.
+       expect(after['inventory_observed'], false);
+@@ -414,7 +581,13 @@
+             ..remove('revision')
+             ..remove('inventory')
+             ..remove('inventory_observed');
+-      expect(durableProjection(after), durableProjection(before));
++      // Current disk7 migration advances configuration revision once; retain
++      // exact comparison of every other chat/configuration projection field.
++      final expectedBefore = Map<String, dynamic>.of(before);
++      final config = Map<String, dynamic>.from(before['config'] as Map);
++      config['revision'] = (config['revision'] as int) + 1;
++      expectedBefore['config'] = config;
++      expect(durableProjection(after), durableProjection(expectedBefore));
+       await expectNoProviderEffects(exchange);
+     },
+     skip: skipFixture,
+--- baseline/service/tests/debug_service.rs
++++ current/service/tests/debug_service.rs
+@@ -1230,7 +1230,7 @@
+         let bytes = fs::read(&path).unwrap();
+         assert!(bytes.len() < 16 * 1024 * 1024);
+         let mut disk: Value = serde_json::from_slice(&bytes).unwrap();
+-        assert_eq!(disk["schema_version"], 6);
++        assert_eq!(disk["schema_version"], 7);
+         assert_eq!(
+             disk["projects"],
+             json!({"revision":0,"projects":[],"receipts":[],"expired_ids":[]})
+@@ -1255,6 +1255,17 @@
+         );
+         let receipt =
+             json!({"request_id":request_id,"project_id":project_id,"revision":1,"deleted":false});
++        // Frozen disk5 has no instruction sidecar. Only downgrade this
++        // synthetic, unused default; never carry disk7-only fields into disk5.
++        let instructions = disk
++            .as_object_mut()
++            .unwrap()
++            .remove("instructions")
++            .unwrap();
++        assert_eq!(instructions["snapshots"], json!({}));
++        assert_eq!(instructions["grants"], json!([]));
++        assert_eq!(instructions["receipts"], json!([]));
++        assert_eq!(instructions["expired_ids"], json!([]));
+         disk["schema_version"] = json!(5);
+         disk["projects"] = json!({"revision":1,"projects":[{"project_id":project_id,
+             "name":"Legacy fixture","repositories":[url],"agent":"opencode"}],
+@@ -1365,8 +1376,13 @@
+         bootstrap(&app, true);
+         let instance = app.instance_id.clone();
+         drop(app);
++        // This migration-control test needs an existing empty registry, not a
++        // fresh-profile starter. Preserve all unrelated current durable state.
++        let path = fixture.roots.data.join("smith-next/app-state.json");
++        let mut existing: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
++        existing["projects"] = json!({"revision":0,"projects":[],"receipts":[],"expired_ids":[]});
++        fs::write(&path, serde_json::to_vec(&existing).unwrap()).unwrap();
+         let metadata = seed_disk5_projects(&fixture.roots, &instance);
+-        let path = fixture.roots.data.join("smith-next/app-state.json");
+         let old: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+         assert_eq!(old["schema_version"], 5);
+         assert_eq!(
+@@ -1423,7 +1439,7 @@
+             assert_eq!(app.call(req).unwrap_err().code, code);
+         }
+         let migrated: Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+-        assert_eq!(migrated["schema_version"], 6);
++        assert_eq!(migrated["schema_version"], 7);
+         assert_eq!(
+             migrated["projects"]["receipts"],
+             old["projects"]["receipts"]
+@@ -1432,9 +1448,14 @@
+             migrated["projects"]["expired_ids"],
+             old["projects"]["expired_ids"]
+         );
+-        for key in ["cloud", "config", "timestamps", "conversations", "jobs"] {
++        for key in ["cloud", "timestamps", "conversations", "jobs"] {
+             assert_eq!(migrated[key], old[key]);
+         }
++        // Disk7 migration deliberately advances configuration revision once.
++        let mut expected_config = old["config"].clone();
++        expected_config["revision"] = json!(old["config"]["revision"].as_u64().unwrap() + 1);
++        assert_eq!(migrated["config"], expected_config);
++        assert_eq!(migrated["instructions"], existing["instructions"]);
+         assert_eq!(
+             (
+                 controls.local_calls.load(Ordering::SeqCst),

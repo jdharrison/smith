@@ -1,0 +1,12 @@
+{
+  "broken_report_links": [],
+  "changed_core_paths": [],
+  "core_still_matches_reviewed_after_manifest": true,
+  "historical_file_count": 127,
+  "historical_files_unchanged_at_close": true,
+  "literal_home_path_leaks": [],
+  "recorded_utc": "2026-10-17T21:29:51.233367+00:00",
+  "release_gate_decision": "no-go",
+  "report_sha256": "fc04047888d033f3d9d1df2b6e4d0de7df2273c73a2ffd1dfaf1b17050285983",
+  "verdict": "fail"
+}

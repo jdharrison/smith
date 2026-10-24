@@ -1,0 +1,395 @@
+{
+  "canonical_entries_sha256": "b4823f54e9a845f40cbb4f46c0ec3e1b541fe33f9fc7e633e2d02e5a6f1b1141",
+  "count": 77,
+  "excludes_self": true,
+  "files": [
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/aggregate-recorder-binding.json",
+      "sha256": "d7a1c518a0b2031cea63ed7a514e97938ea106c206e41e47798d207b7d5769e4",
+      "size": 2607
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/aggregate-results.json",
+      "sha256": "da921feb48965ceff963ec3290b1bc8764e5beb9cb9dc25cba4f6c34a22f18c5",
+      "size": 13767
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/artifact-binding.json",
+      "sha256": "2f383f4df0182e7bc5f7955af58630be5416939a19b7761b992b5acbb966d056",
+      "size": 30923
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/client-dist-after.json",
+      "sha256": "96ce3263ebd068b15c923444aea9526b015a05cd5e90bf97cc55c21279ff2639",
+      "size": 27152
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/compiled-fixture-binding.json",
+      "sha256": "e5ab9f0e93d8c5084644ae2f8d3b615172f5f1a91179536d5fb87953a48c77ce",
+      "size": 915
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/compiled-projects-source-after.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/compiled-projects-source-before.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/compiled-projects.json",
+      "sha256": "268efc83a48f1e8d5b3d5819dcf6362a2659bcd5000d452cb9cec5aa87bde94a",
+      "size": 2345
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/compiled-projects.log",
+      "sha256": "429fc83adc97e594433f184fae4b006dcd9cd5908b4401891a26244e75ea6a88",
+      "size": 723
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/compiled-projects.started.json",
+      "sha256": "3a1d7eea576ace046a4e6f0ab4dc2ae86143b00a654c50f90c0e913d83e0a587",
+      "size": 1843
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/core-manifest-after-focused.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/core-manifest-after.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/core-manifest-before-aggregate.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/core-manifest-before.json",
+      "sha256": "da5193bcd5394645700d087abf04b1d81a77041fde343b45182e86f150bef82a",
+      "size": 382045
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/core-manifest-final.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/dagger-version-source-after.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/dagger-version-source-before.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/dagger-version.json",
+      "sha256": "ebc6a0020ccfcf27b1dcc851d95aae8d96bb3625329bf123d8f3119d158ca421",
+      "size": 1861
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/dagger-version.log",
+      "sha256": "0819b1f6a5d2080e67735b51514107720e0fb59ba70a251bd80bbc056bd8288a",
+      "size": 88
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/dagger-version.started.json",
+      "sha256": "01ae7a6f157640aeebf4bb150e386fdd323985f0725c8a50bba61aedb018dbf6",
+      "size": 1362
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/diff-check-source-after.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/diff-check-source-before.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/diff-check.json",
+      "sha256": "4dac63f93f76b2af2449a203002ff072b6085e156e9979fa15b1df768e7e2975",
+      "size": 1785
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/diff-check.started.json",
+      "sha256": "182c7a2cc4ff5355f3ad7a3c131bdd434e8381c37083dd3e3b3d57df99cc3fd9",
+      "size": 1291
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/engine-readiness-source-after.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/engine-readiness-source-before.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/engine-readiness.json",
+      "sha256": "4bcfe2ebcb913b1cfc15410c283f2a25d08cf04e975cfe22fdca15a77d334fd7",
+      "size": 2020
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/engine-readiness.log",
+      "sha256": "015c6a729be581b654b45d5517a2345e1cf8f9a5dfda8e4d85ff5c665b2053e0",
+      "size": 210
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/engine-readiness.started.json",
+      "sha256": "973c97e9e4daff4f216ac82c2ac9b958981a30f0c7830955f0143c583e4f268d",
+      "size": 1519
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/final-artifact-binding.json",
+      "sha256": "9ad3df28a6182c05f9a1364088b370f19aeaebed751798b0c4f91f3deef23694",
+      "size": 6231
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/final-results.json",
+      "sha256": "8df032114ba88f608959f3ee5aeb7295f67af031c930c82664d112e04da2b156",
+      "size": 10349
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/focused-assets-source-after.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/focused-assets-source-before.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/focused-assets.json",
+      "sha256": "7b3e12f81ece7b95173a316d5bea50f98f2a68d657b3ab57648720a949671c49",
+      "size": 2234
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/focused-assets.log",
+      "sha256": "e48059c91009a9b595e3e4cc1138f43a0166f1db23bf6d7245302a333bdfde56",
+      "size": 458
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/focused-assets.started.json",
+      "sha256": "c293a4bab52df872bbe2cf7f5c1474ab28e7f1869cc262569893445c69c1eb5c",
+      "size": 1736
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/focused-projects-source-after.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/focused-projects-source-before.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/focused-projects.json",
+      "sha256": "f4d048e0f847fb44ae951dd366ebfd3716ae2f3599d371eaf5814facf6ff9c0d",
+      "size": 2440
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/focused-projects.log",
+      "sha256": "d2b63ae96985cece2b108f16e54b7d0ce06d7264eb98e731b18f34727d6ec9fe",
+      "size": 24435
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/focused-projects.started.json",
+      "sha256": "c1e105cb5704a603d186ac88944f5dd15493c082b9a81fe6b78945c81321d70d",
+      "size": 1938
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/focused-results.json",
+      "sha256": "7a0b32db1bb0e422f7b72814ed037b2c762205a0bb9b43b66a23903457f8ee49",
+      "size": 9642
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/focused-toolchain.json",
+      "sha256": "c66e275b580e7d8f3e3b6f08e87d8ba6be65788799b85751138ade45d19a0c7f",
+      "size": 2100
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/initial-binding.json",
+      "sha256": "17cc3d81e663998174cc82191a8197ce26c5a4054bba7f3ed7d0ea96a48972b0",
+      "size": 2967
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/installer-dist-after.json",
+      "sha256": "9df3ced34e8139285807e9f3065f0b3bf090394c67f7799b7349e5edb340fff5",
+      "size": 30951
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/installer-dist-before.json",
+      "sha256": "b0859704d870952da0f766830b478eca5a11477332b9127059991edd1d94f2a3",
+      "size": 30951
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/observed-gates.json",
+      "sha256": "0122589010873782296cd7693c1f0b4eee845baba01e382a9d901043d19aa106",
+      "size": 88636
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/package-verify-source-after.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/package-verify-source-before.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/package-verify.json",
+      "sha256": "5d5ed049451c682e47732760951a0101e9ba2c24dfed71ec61827bd847bd47ac",
+      "size": 1847
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/package-verify.log",
+      "sha256": "dbb15ef4b875625b2df9589ec18961d93c26d400ab83f45478df083083a73904",
+      "size": 78
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/package-verify.started.json",
+      "sha256": "d5a38a6410f1570f53571b1603fa0f95533371a2fe9d5a3bd6b872ec47ab8473",
+      "size": 1348
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/pipeline-helpers-source-after.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/pipeline-helpers-source-before.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/pipeline-helpers.json",
+      "sha256": "7600bb696544063cec9316ccd3fde2933f550a9fb474e908e8b1f25b51714d78",
+      "size": 1930
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/pipeline-helpers.log",
+      "sha256": "33bb4dbf151009faefaddbfaa399a117735198d6f579551e107441380d6611fc",
+      "size": 4842
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/pipeline-helpers.started.json",
+      "sha256": "767785958048ebeb4f9323686473bf084466a2be7f6d12ab63ef00c2c7a4cf6d",
+      "size": 1428
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/preflight-results.json",
+      "sha256": "d9d0ddb7273e51da74dfb6593612f669278eb62e171ed003b0c90b4c8d71eb4a",
+      "size": 7245
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/prior-bundles-after.json",
+      "sha256": "27bdc987af4b16d2f106792e15711fdd6dc02ec47fba449ce250f4fa466f748b",
+      "size": 3030
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/prior-bundles-before.json",
+      "sha256": "27bdc987af4b16d2f106792e15711fdd6dc02ec47fba449ce250f4fa466f748b",
+      "size": 3030
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/prior-evidence-preservation.json",
+      "sha256": "b96d75bc050bdd0c7d0d3a5ca865406fa3127350418fcaf985510a61c9654d7a",
+      "size": 721
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/process-observation-before-aggregate-source-after.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/process-observation-before-aggregate-source-before.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/process-observation-before-aggregate.json",
+      "sha256": "57a57910973e8cd314828d3dd6121d186a84ba96274f67d0267b0a4cabfacb25",
+      "size": 1889
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/process-observation-before-aggregate.log",
+      "sha256": "50d2207db4aeb6420e0248877b2c0fb288ce877f6b409efcaeb80600b15346a1",
+      "size": 323
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/process-observation-before-aggregate.started.json",
+      "sha256": "7a1bfa4a5e61177356c2e49e51229a4069f2172f983ec542098f7814ea6114d2",
+      "size": 1368
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/process-observation-before-focused-source-after.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/process-observation-before-focused-source-before.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/process-observation-before-focused.json",
+      "sha256": "b47d834d58e7614e0a4ef0901d32f63ad9ccced71fa83db40fb7cabcd9677d63",
+      "size": 1885
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/process-observation-before-focused.log",
+      "sha256": "50d2207db4aeb6420e0248877b2c0fb288ce877f6b409efcaeb80600b15346a1",
+      "size": 323
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/process-observation-before-focused.started.json",
+      "sha256": "2fedaf89f5a078bde1df1a1eac73181024de28c4562252a9b259e2c0e06d3cb4",
+      "size": 1366
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/root-gates-source-after.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/root-gates-source-before.json",
+      "sha256": "5826159dd067025488dba77c6ffd49b7064720c2b3cdf36545a572e691539b2f",
+      "size": 311
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/root-gates.json",
+      "sha256": "c38114875499d30daf342ae09965dcdfcfd5b45507172a0074855f52a1f8ab17",
+      "size": 1837
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/root-gates.log",
+      "sha256": "f09c423c6c3625c1de3571f2349efde5e6889f394650e4b2ce4dd7d44443986c",
+      "size": 438795
+    },
+    {
+      "path": "docs/evidence/projects-layout/validation-rebound/root-gates.started.json",
+      "sha256": "d2c512eb36057d014d07b480d32ed6482708e304627179149c9ef8171428a6c4",
+      "size": 1340
+    }
+  ],
+  "json_copy_log_digest_sanitization_checks": "pass",
+  "note": "Owner-writable digests bind observations, not authenticity or approval.",
+  "recorded_at": "2026-10-17T22:18:59.042712+00:00"
+}

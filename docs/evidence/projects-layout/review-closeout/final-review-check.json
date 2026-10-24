@@ -1,0 +1,17 @@
+{
+  "all_prior_files_preserved": true,
+  "broken_report_links": [],
+  "core_still_matches": true,
+  "documentation_attribution_correction_only": true,
+  "historical_closeout_bytes_preserved": true,
+  "new_human_approval_or_risk_waiver": false,
+  "package_still_matches": true,
+  "release_gate_decision": "no-go for external release",
+  "report_sha256": "afae2a497ec9b54eacc01ba3c1b3357c376be55782fb2cb491aa521f9bccc449",
+  "scope": "bounded source/layout assurance; final parent docs binding not performed",
+  "source_validation_recorded_utc": "2026-10-17T22:35:48.643168+00:00",
+  "tests_rerun": false,
+  "timestamp_utc": "2026-10-17T22:43:51.791836+00:00",
+  "verdict": "pass",
+  "verdict_independently_justified_by_requirement_coverage": true
+}

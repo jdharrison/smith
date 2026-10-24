@@ -1,0 +1,28 @@
+{
+  "request_id": "6ddc023b34bb48829cd941243c2bfbbc",
+  "status": "failed",
+  "message": "Repository configuration or Git request is unsupported; no replay",
+  "failed_stage": "cloning",
+  "observed_phases": [
+    "preparing",
+    "failed"
+  ],
+  "reply_available": false,
+  "cleanup_verified": true,
+  "reply_bytes": 0,
+  "reply_sha256": null,
+  "recognized_language_mentions": [],
+  "repositories": [],
+  "container": {
+    "id": "ba71389dd4587d078a7bb94c1dd9ccb5902fcfe604677ac44a8565e81fd67e4c",
+    "status": "exited",
+    "running": false,
+    "exit_code": 0,
+    "started": true,
+    "state_error_present": false,
+    "compression_explicitly_disabled": true
+  },
+  "submission_count": 1,
+  "automatic_retry": false,
+  "image_id": "sha256:9b87e922785dcef603cc537749d1f59b2cdc4abfcabc0f596c01188cbb64763a"
+}

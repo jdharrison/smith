@@ -1,0 +1,1 @@
+{"limit": "Point-in-time best-effort observation, not a host-wide concurrency guarantee. No signaling, engine/config changes, or aggregate parallelism override.", "method": "same-UID /proc command-name/argv classification; raw argv never retained", "observed_competing_heavy_jobs": [], "unreadable_or_exited_processes": 0}

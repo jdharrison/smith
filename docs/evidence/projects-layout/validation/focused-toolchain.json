@@ -1,0 +1,57 @@
+{
+  "cache_limitations": [
+    "Uses existing host SDK, pub cache, and compiled artifacts; not a clean-cache reconstruction.",
+    "No flutter wrapper, pub get, SDK update, or analytics initialization requested.",
+    "SDK and package-config identities are separate from the core source manifest."
+  ],
+  "dart": {
+    "mode": 493,
+    "mode_octal": "0o755",
+    "path": "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+    "sha256": "d2246ffda6151d044b45bd5d8a7cb829d189eb7d1827ddf73789bfb912a463a2",
+    "size": 4792704,
+    "type": "file"
+  },
+  "discovery": "flutter package rootUri from existing client/.dart_tool/package_config.json",
+  "engine_version": "a804b261645ef8c13eb3d5c44a5c2fb0340c5539",
+  "flutter_tools_snapshot": {
+    "mode": 420,
+    "mode_octal": "0o644",
+    "path": "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+    "sha256": "37f00e1841ecccfcae9a2787c2cd7e6edbccd05349288c9f175cceb70b8c4b81",
+    "size": 47674832,
+    "type": "file"
+  },
+  "flutter_version": {
+    "channel": "stable",
+    "dartSdkVersion": "3.13.2",
+    "devToolsVersion": "2.60.0",
+    "engineBuildDate": "2026-08-26 12:23:07.677",
+    "engineCommitDate": "2026-08-26 18:46:13.000Z",
+    "engineContentHash": "1cf1c4773fb941c4c74a7f8bb144a8837596c0f4",
+    "engineRevision": "a804b261645ef8c13eb3d5c44a5c2fb0340c5539",
+    "flutterVersion": "3.47.2",
+    "frameworkCommitDate": "2026-08-26 16:07:51 -0700",
+    "frameworkRevision": "d3b14c876900e553bc736ca19295fc09e3853e8e",
+    "frameworkVersion": "3.47.2",
+    "repositoryUrl": "https://github.com/flutter/flutter.git"
+  },
+  "flutter_version_file": {
+    "mode": 420,
+    "mode_octal": "0o644",
+    "path": "<home>/snap/flutter/common/flutter/bin/cache/flutter.version.json",
+    "sha256": "32f1570d1b51a3e5fc639502fe57e5dd61da4d675883aacf9a23651ec8deb670",
+    "size": 559,
+    "type": "file"
+  },
+  "package_config": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "client/.dart_tool/package_config.json",
+    "sha256": "bcae7677b806085350417c04bafc8235ba866ca5f218f4c132b6616413b3b777",
+    "size": 7608,
+    "type": "file"
+  },
+  "recorded_at": "2026-10-17T21:21:45.426939+00:00",
+  "sdk": "<home>/snap/flutter/common/flutter"
+}

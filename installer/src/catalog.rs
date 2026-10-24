@@ -107,8 +107,13 @@ impl Provider for Native {
             runner::verify_model_leased(&roots, &entry.record(), deadline, &consent::cancelled)?;
         let config = runner::RunnerConfig::production(
             &roots,
-            runner::verify_runtime_bounded(&roots, deadline, &consent::cancelled)
-                .map_err(|e| format!("{}: {}", e.code, e.message))?,
+            runner::verify_runtime_backend_bounded(
+                &roots,
+                smith_service::acceleration::Backend::Cpu,
+                deadline,
+                &consent::cancelled,
+            )
+            .map_err(|e| format!("{}: {}", e.code, e.message))?,
         );
         let mut child = runner::Runner::start_verified(
             &config,

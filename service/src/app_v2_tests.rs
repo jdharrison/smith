@@ -20,6 +20,10 @@ impl Fixture {
                 cloud: v3::Volatile::default(),
             })),
             owner: None,
+            dev_jobs: Arc::new(dev_jobs::Owner::open(
+                dir.join("dev-jobs.json"),
+                Arc::new(crate::dev_runtime::DockerRuntime::new(dir.clone())),
+            )),
             path: dir.join("state.json"),
             instance_id: new_id().unwrap(),
             cloud: Arc::new(crate::cloud::Dependencies::disabled()),
@@ -37,6 +41,7 @@ fn id(n: usize) -> String {
 }
 fn queued(d: &mut Durable, n: usize, time: u64) -> String {
     let target = d.allocate(Some(id(n)), "New chat".into()).unwrap();
+    d.instructions.capture(&id(n));
     d.jobs.push(Job {
         operation: Operation {
             request_id: id(n),
@@ -433,6 +438,7 @@ fn completion_is_fenced_by_running_request_target_and_revision() {
             history: vec![],
             conversation_id: Some(target),
             history_revision: Some(0),
+            instructions: Some(d.instructions.preview()),
         };
         match mismatch {
             "status" => d.jobs[0].operation.status = "interrupted".into(),
@@ -972,6 +978,7 @@ fn assurance_last_sequence_and_late_completion_after_dispose() {
         history: vec![],
         conversation_id: Some(target),
         history_revision: Some(0),
+        instructions: Some(d.instructions.preview()),
     };
     let f = Fixture::new(d);
     f.app.inner.lock().unwrap().owned = false;

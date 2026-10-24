@@ -1,0 +1,59 @@
+{
+  "binding_limit": "Revalidates preserved successful compiled fixture identity plus unchanged whole service inputs and both historical source manifests; not clean-source/toolchain reconstruction.",
+  "binding_verified": true,
+  "build_needed": false,
+  "cargo_depfile": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "service/target/debug/deps/debug_service-0a4be2ddda80d80f.d",
+    "sha256": "e35285de0581e125af7ecce8c816f69fb147cb6ec6946ab8a595910991171297",
+    "size": 411,
+    "type": "file"
+  },
+  "cargo_fingerprint": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "service/target/debug/.fingerprint/smith-service-0a4be2ddda80d80f/test-integration-test-debug_service.json",
+    "sha256": "99cc5ba4de28caa8759b1f337b11c7fea5e9c5c90804a7d1c0836ca6aa5de96d",
+    "size": 1501,
+    "type": "file"
+  },
+  "current_service_projection_sha256": "7edc166ee61f623ddc1adae2769aea6ce3ddea912a557f3003dd9c7a679a5a4a",
+  "fixture": {
+    "mode": 509,
+    "mode_octal": "0o775",
+    "path": "service/target/debug/deps/debug_service-0a4be2ddda80d80f",
+    "sha256": "b3a00963d5cf4733baf85a1a299b653c231c90c4a3323ed83aab5dba212b926f",
+    "size": 25469216,
+    "type": "file"
+  },
+  "historical_compiled_inputs_mismatched": [],
+  "historical_compiled_record": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "target/project-repositories/attempt-2/compiled-projects.json",
+    "sha256": "9353c4f0f0941580ec93c5790bf4c80cb19a7af093918fb50fd832bb35aac2f3",
+    "size": 3589,
+    "type": "file"
+  },
+  "historical_core_after": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "target/project-repositories/attempt-2/core-manifest-after.json",
+    "sha256": "76eece017d883147e895eb051ff80420df7a2b5237eaa80ef4972e013e967586",
+    "size": 283210,
+    "type": "file"
+  },
+  "historical_core_before": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "target/project-repositories/attempt-2/core-manifest-before.json",
+    "sha256": "76eece017d883147e895eb051ff80420df7a2b5237eaa80ef4972e013e967586",
+    "size": 283210,
+    "type": "file"
+  },
+  "historical_fixture_sha256": "b3a00963d5cf4733baf85a1a299b653c231c90c4a3323ed83aab5dba212b926f",
+  "recorded_at": "2026-10-17T21:22:00.128508+00:00",
+  "service_input_count": 54,
+  "service_source_equal_to_both_historical_full_core_manifests": true
+}

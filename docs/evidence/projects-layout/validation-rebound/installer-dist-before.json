@@ -1,0 +1,923 @@
+{
+  "directory_count": 20,
+  "entries": [
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/README.txt",
+      "sha256": "cb51d39e8e244c5db6c542fba46355e426bcbf76a70ae4df3ff6fffcb21f2990",
+      "size": 3236,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/SHA256SUMS",
+      "sha256": "c849eeb10bc2507a69a913c97501414db387fa70b25e3e81c2acd478cc507679",
+      "size": 12327,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/manifest.json",
+      "sha256": "39844736cb75d408c17e05b132211eb3c5e6efa9e445b91a700cb569712dca1d",
+      "size": 17819,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload",
+      "type": "directory"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client",
+      "type": "directory"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/data",
+      "type": "directory"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/data/flutter_assets",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/AssetManifest.bin",
+      "sha256": "25c950ac28a1dd34820d68b0577b58b7df4853a9a23737c6f8ced98de3b098ec",
+      "size": 2061,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/FontManifest.json",
+      "sha256": "19febf4802fb9b9b90037050e004bce4cda6eb59727b89cecec94f83553d3aff",
+      "size": 622,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/NOTICES.Z",
+      "sha256": "112207764f940fb52106a1f90fe509f7d5c08fc14a108ce6608ec6518051af61",
+      "size": 99049,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/NativeAssetsManifest.json",
+      "sha256": "9548a31e4a048135c1d94f919328bfb62ae2c7bb3cab96557c7941daa97776cb",
+      "size": 45,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/README.md",
+      "sha256": "bce8709527e4a9e43147d09ed35bd822e4b42ff827debdffc24b042b09660af0",
+      "size": 8935,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/fonts",
+      "type": "directory"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf",
+      "sha256": "0bede3debdea8488bbb927f8f0650d915073209734a67fe8cd5a3320b572511c",
+      "size": 156996,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf",
+      "sha256": "fe11304a5fe956d5744e9b6a246cc83d90425245e75a62230044966ca96a7f50",
+      "size": 155940,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf",
+      "sha256": "c9417148ce13f8fa7d2d5c9180bbc141f72aa0d814ffeb280f6904dc2b1bbd7a",
+      "size": 157552,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/OFL.txt",
+      "sha256": "91c25c350d3cac39da2736d74f7ba37ef648f5237a4e330a240615bc8d8c4360",
+      "size": 4360,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf",
+      "sha256": "31c92d01a8a08528b718a43addf0ad3df0af2ca4b7b3290a452f70f358e14d3d",
+      "size": 273860,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf",
+      "sha256": "a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f",
+      "size": 273900,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf",
+      "sha256": "1b3bfa1ed5665a4ce3f9feb68d2d4e40e70bf8b4b7d9a3edd418f321b4e166a0",
+      "size": 277092,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/OFL.txt",
+      "sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad",
+      "size": 4399,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/archive.svg",
+      "sha256": "ce0af5c71277130bdad501ed06249213e9805b0dd445e3da97af3bc6d32909ce",
+      "size": 264,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/check.svg",
+      "sha256": "f5914af9d3a5dc1e77ebf278af6488dc17b1935d96f50f1f8dae78e625b1c5b1",
+      "size": 210,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/chevron-down.svg",
+      "sha256": "640e640066191f6b26236c4c24f487ed9ba4493ba0d33b480f930825dffecfbc",
+      "size": 208,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/chevron-right.svg",
+      "sha256": "43b39bf125cee680dd474f2f0ba9c7bfc370df2087280cacfd5d62499a7cbb0b",
+      "size": 209,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/ellipsis-vertical.svg",
+      "sha256": "af99c5d1a45eef4e3f59765b1440fe51f39169bb057473fdaf925666f57e8e5a",
+      "size": 276,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/git-branch.svg",
+      "sha256": "b7dd6ca760a47aec57e93a6f1b9bc0a8ed835490193ca317a7bfbc497fcfaae4",
+      "size": 324,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/info.svg",
+      "sha256": "62505fa5145acd57a45fd93f49df02f1e0dc86d4c43c75a2ca69fabe8fe554b3",
+      "size": 244,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/layers.svg",
+      "sha256": "00adb0125d9692f03e4a64037e07499c3df717fd0aa5f575c0783501f2904a37",
+      "size": 259,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/menu.svg",
+      "sha256": "69a8310d92c0f2a42fd3127e50c2f7bebd87398d32c5def66db31a180e88f277",
+      "size": 219,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/message-square.svg",
+      "sha256": "39ef163029f320935e3becc3e478393ce5ea4e4b917d4d8f222542eb5758f741",
+      "size": 333,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/pencil.svg",
+      "sha256": "6de88a293c49416488fb0c5c79177d7af7c855240391b99a561062498a179ab4",
+      "size": 259,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/plus.svg",
+      "sha256": "6e1a6a826663c1a4fbd4fd8f8bf9d7765fa965744d4e1d6791f163ba378b2b09",
+      "size": 212,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/rotate-ccw.svg",
+      "sha256": "837375539874ab13b51911472d13a947582ff79cb5b926388b279d03914d64bb",
+      "size": 223,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/send.svg",
+      "sha256": "789dbefe721043a8fbb92c7eac0904c59cfab83b2faaa9ee924a53d9f6045933",
+      "size": 227,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/settings.svg",
+      "sha256": "0b22e51750886c65688e044434a578191799ffcf4afea4cbf60fdf2e9ea90327",
+      "size": 708,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/trash-2.svg",
+      "sha256": "958240c9bacb4dca8f2ea66e08a817eab4ace45c9e72086472095edaa7cc3a9f",
+      "size": 246,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/assets/icons/x.svg",
+      "sha256": "046d06a319a47b847e1053e557f1cddf3fad2f53abad2150e563cec9ad404d92",
+      "size": 216,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/data/flutter_assets/fonts",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/fonts/MaterialIcons-Regular.otf",
+      "sha256": "89414111157f37220bae36a91160448f2913b69126d5eb5ee71675b2ec3de2ca",
+      "size": 1884,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/pubspec.yaml",
+      "sha256": "e6747a862cba572dd1dc3888db82654fbdafd04dfbe25a5edfbdc5d1c6fe5f24",
+      "size": 1127,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/data/flutter_assets/shaders",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/shaders/ink_sparkle.frag",
+      "sha256": "1fe8436a743884cb65078fe8c7b38e18f5365f2a2961270916f426fd13c604af",
+      "size": 21856,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/shaders/stretch_effect.frag",
+      "sha256": "bc7599dbbbaab310efe41520574138d21fb18a88c8fe4495ed79315309336f6f",
+      "size": 17616,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/flutter_assets/version.json",
+      "sha256": "0c6c30f9d459e2914d5f2ad5cc7f45910f638ba3a970b470c7758c0f95fca116",
+      "size": 94,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/data/icudtl.dat",
+      "sha256": "325a86063d26334c2eabe1743cea073b612540fbf3d8fc2ef0b5708e3763a8c7",
+      "size": 864880,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/lib",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/lib/libapp.so",
+      "sha256": "969cdffc8017b5c0372fc53ee2e55be9a4f5fc3bd5d4073f321df5a3de9545cc",
+      "size": 6718344,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/lib/libflutter_linux_gtk.so",
+      "sha256": "c6992ba778360217695a8193828286ae73c971e0e1f47bdb1b98c5190497cb24",
+      "size": 17218152,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/share",
+      "type": "directory"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/share/applications",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/share/applications/dev.smith.smith_client.desktop",
+      "sha256": "25f825eaaa693ad4cfa0480b83d2f054fc58919604150915a773b91cf6ed5621",
+      "size": 192,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/share/pixmaps",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/share/pixmaps/dev.smith.smith_client.png",
+      "sha256": "79afede7f466a59eaa01759d246fc0c9d05d63ec7d361c6c27e0a93c37d85e53",
+      "size": 1808730,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend",
+      "type": "directory"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime",
+      "type": "directory"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/LICENSE.GPL-3",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "size": 35149,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/LICENSE.libgomp",
+      "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79",
+      "size": 69004,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/LICENSE.llama.cpp",
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+      "size": 1078,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-base.so.0",
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6",
+      "size": 931232,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-alderlake.so",
+      "sha256": "d95ec54730283295bc7363ec842b5e1512dbae6523bf8106679a37f688ed367d",
+      "size": 1428600,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-cannonlake.so",
+      "sha256": "2bdf5f493bf9472112c4bd5e936cb0cd3f7235b1b4b3c636dea9d1a9489c1558",
+      "size": 1577976,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-cascadelake.so",
+      "sha256": "d8ecf1f83ed1a52f50f911853ac356047988d41cecf9121a8e0f3e94b6989c47",
+      "size": 1589968,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-cooperlake.so",
+      "sha256": "c43f344af8f30204e0cbecc51f4755f45eecaa56c723ee87ba35e4f887a36909",
+      "size": 1585944,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-haswell.so",
+      "sha256": "bd7740021e3cbce4b49270e8c12f6a3bc6eed8cec00e548276d84a298d5911fa",
+      "size": 1428600,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-icelake.so",
+      "sha256": "c6579106a5f0f1cfd76902218c247858ffc5098c4f2f099864df643aa1d03f62",
+      "size": 1589968,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-ivybridge.so",
+      "sha256": "02a7121ebdb06b07cc0b7cc449aa724b6270edf5314113a65f90bd3fb863df45",
+      "size": 1364216,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-piledriver.so",
+      "sha256": "8c7d57b1a5afc23f688cefd70a835ff76e9be5bdd6c73dcfc649433118ec2ec2",
+      "size": 1360120,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-sandybridge.so",
+      "sha256": "3e04318845d9a9d9c8133d79925331a36d185f19fc9153b672c5b35da5c2b614",
+      "size": 1346712,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-sapphirerapids.so",
+      "sha256": "357dea6e5099e87d547e49a1f101f3e7c2e4283e4cf9518a4c220c0dcbe07b5f",
+      "size": 1852272,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-skylakex.so",
+      "sha256": "e10d82e3c08f91397cc265e3a13199e92f994f1e6961cd1777a484175233ea7b",
+      "size": 1577976,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-sse42.so",
+      "sha256": "7012b4dcad03e5649cccda277fdeb1950872dd5bf5957680ad8d1a2d403898d0",
+      "size": 954352,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-x64.so",
+      "sha256": "6f92125d03aa6041931e1fb576d735fe2104120dcd80785559ff7cb7440b60ea",
+      "size": 942240,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml-cpu-zen4.so",
+      "sha256": "16adc0bc91d85382b508430667415d4fc472221c5ac1d9ef6a88eb38db4ba50e",
+      "size": 1585944,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libggml.so.0",
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82",
+      "size": 55184,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libgomp.so.1",
+      "sha256": "135f3c8f006d2fe5e68e51281c7974cb991a03de3bfb3593d68d174dfcf854d1",
+      "size": 352304,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libllama-common.so.0",
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d",
+      "size": 6407088,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libllama-server-impl.so",
+      "sha256": "0cb1fd100e7f018ac9ac0c5a3fc12aeef4cbe7614bb7ca8c686ec7d01c30810f",
+      "size": 7498288,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libllama.so.0",
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba",
+      "size": 4788880,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/libmtmd.so.0",
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea",
+      "size": 1896696,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/cpu/llama-server",
+      "sha256": "5faf410bbbc00a1b94b09ee01623699f255365628dfa73b1ee552d9e52a2231d",
+      "size": 17864,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/LICENSE.GPL-3",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "size": 35149,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/LICENSE.libgomp",
+      "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79",
+      "size": 69004,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "mode_octal": "0o644",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/LICENSE.llama.cpp",
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+      "size": 1078,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-base.so.0",
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6",
+      "size": 931232,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-alderlake.so",
+      "sha256": "d95ec54730283295bc7363ec842b5e1512dbae6523bf8106679a37f688ed367d",
+      "size": 1428600,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-cannonlake.so",
+      "sha256": "2bdf5f493bf9472112c4bd5e936cb0cd3f7235b1b4b3c636dea9d1a9489c1558",
+      "size": 1577976,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-cascadelake.so",
+      "sha256": "d8ecf1f83ed1a52f50f911853ac356047988d41cecf9121a8e0f3e94b6989c47",
+      "size": 1589968,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-cooperlake.so",
+      "sha256": "c43f344af8f30204e0cbecc51f4755f45eecaa56c723ee87ba35e4f887a36909",
+      "size": 1585944,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-haswell.so",
+      "sha256": "bd7740021e3cbce4b49270e8c12f6a3bc6eed8cec00e548276d84a298d5911fa",
+      "size": 1428600,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-icelake.so",
+      "sha256": "c6579106a5f0f1cfd76902218c247858ffc5098c4f2f099864df643aa1d03f62",
+      "size": 1589968,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-ivybridge.so",
+      "sha256": "02a7121ebdb06b07cc0b7cc449aa724b6270edf5314113a65f90bd3fb863df45",
+      "size": 1364216,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-piledriver.so",
+      "sha256": "8c7d57b1a5afc23f688cefd70a835ff76e9be5bdd6c73dcfc649433118ec2ec2",
+      "size": 1360120,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-sandybridge.so",
+      "sha256": "3e04318845d9a9d9c8133d79925331a36d185f19fc9153b672c5b35da5c2b614",
+      "size": 1346712,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-sapphirerapids.so",
+      "sha256": "357dea6e5099e87d547e49a1f101f3e7c2e4283e4cf9518a4c220c0dcbe07b5f",
+      "size": 1852272,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-skylakex.so",
+      "sha256": "e10d82e3c08f91397cc265e3a13199e92f994f1e6961cd1777a484175233ea7b",
+      "size": 1577976,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-sse42.so",
+      "sha256": "7012b4dcad03e5649cccda277fdeb1950872dd5bf5957680ad8d1a2d403898d0",
+      "size": 954352,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-x64.so",
+      "sha256": "6f92125d03aa6041931e1fb576d735fe2104120dcd80785559ff7cb7440b60ea",
+      "size": 942240,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-cpu-zen4.so",
+      "sha256": "16adc0bc91d85382b508430667415d4fc472221c5ac1d9ef6a88eb38db4ba50e",
+      "size": 1585944,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml-vulkan.so",
+      "sha256": "bc151ce7639cf16e3c89006ae697ef3db77b2be5ebf398c8e7db32b4e7b0a4d0",
+      "size": 44315144,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libggml.so.0",
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82",
+      "size": 55184,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libgomp.so.1",
+      "sha256": "135f3c8f006d2fe5e68e51281c7974cb991a03de3bfb3593d68d174dfcf854d1",
+      "size": 352304,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libllama-common.so.0",
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d",
+      "size": 6407088,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libllama-server-impl.so",
+      "sha256": "0cb1fd100e7f018ac9ac0c5a3fc12aeef4cbe7614bb7ca8c686ec7d01c30810f",
+      "size": 7498288,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libllama.so.0",
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba",
+      "size": 4788880,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/libmtmd.so.0",
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea",
+      "size": 1896696,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/runtime/vulkan/llama-server",
+      "sha256": "5faf410bbbc00a1b94b09ee01623699f255365628dfa73b1ee552d9e52a2231d",
+      "size": 17864,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/smith-service",
+      "sha256": "30202135a35e4b188aa2ffd7f332d552c969585f0cf8a050ce23eb806e262d65",
+      "size": 9621032,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_client",
+      "sha256": "b12601aa3bf99ee6bbc66c857282b0d8c111d78929b69f83ea9db1b45dba551c",
+      "size": 1836376,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/service",
+      "type": "directory"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/service/smith-service",
+      "sha256": "30202135a35e4b188aa2ffd7f332d552c969585f0cf8a050ce23eb806e262d65",
+      "size": 9621032,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/smith-installer",
+      "sha256": "fb250cfaba6cdb979320525c2671b5795a41e538ce87f3c0b06f0e2300587739",
+      "size": 6713368,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/smith-installer-ui",
+      "sha256": "d0bbc0044595e067c2f57b85831e937e0281f888f956214680dab1ba53e510f5",
+      "size": 8203464,
+      "type": "file"
+    }
+  ],
+  "exists": true,
+  "file_count": 99,
+  "recorded_at": "2026-10-17T22:12:50.929393+00:00",
+  "root": "installer/dist",
+  "sha256": "94ad66ae1857abe580bdf94704fbf829933c3998858ced909f97bc2f02c21531",
+  "total_file_bytes": 192891431
+}

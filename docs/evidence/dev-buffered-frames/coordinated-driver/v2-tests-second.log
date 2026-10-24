@@ -1,0 +1,28 @@
+   Compiling smith-coordinated-driver v0.1.0 (<PROJECT>/docs/evidence/dev-buffered-frames/coordinated-driver)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.55s
+     Running unittests src/main.rs (<PROJECT>/installer/target/debug/deps/smith_coordinated_driver-6be0be702a98eab6)
+
+running 19 tests
+test tests::changed_result_before_start_refused ... ok
+test tests::drift_is_checked_again_before_stop_hook_and_start ... ok
+test tests::every_effect_must_match ... ok
+test tests::expired_and_drift_refused ... ok
+test tests::hook_only_exact_progress_once ... ok
+test tests::failed_hook_cannot_be_invoked_again ... ok
+test tests::incomplete_native_outcome_is_failure ... ok
+test tests::ordered_once_and_fresh_each_effect ... ok
+test tests::reconciliation_identity_is_exact ... ok
+test tests::start_requires_successful_hook_and_result ... ok
+test tests::unexpected_titles_and_order_refused ... ok
+test tests::consent_cancel_during_hook_inhibits_start ... ok
+test hook::tests::diagnostics_are_bounded_allowlisted_not_raw_paths ... ok
+test hook::tests::normal_success_requires_no_remaining_group ... ok
+test hook::tests::output_flood_is_refused_without_hang ... ok
+test hook::tests::cleanup_never_signals_an_unrelated_owned_fixture_group ... ok
+test hook::tests::leader_success_with_live_grandchild_is_failure_and_joins ... ok
+test hook::tests::cancellation_joins_group_before_return ... ok
+test hook::tests::timeout_kills_and_reaps_actual_term_ignoring_grandchild ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.27s
+
+exit=0

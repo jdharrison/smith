@@ -1,0 +1,133 @@
+{
+  "all_checks_passed": true,
+  "artifact_file_counts": {
+    "client/dist": 91,
+    "installer/dist": 97,
+    "service/dist": 1
+  },
+  "artifact_records_verified": 189,
+  "cached_sdk_sha256": {
+    "dart": "d2246ffda6151d044b45bd5d8a7cb829d189eb7d1827ddf73789bfb912a463a2",
+    "flutter_tools.snapshot": "37f00e1841ecccfcae9a2787c2cd7e6edbccd05349288c9f175cceb70b8c4b81"
+  },
+  "compiled_cases": 4,
+  "controlled_ignore_lines": [
+    "22  : \u2506 [37.9s] | test cloud::http::tests::proxy_environment_child ... ignored, isolated proxy-environment subprocess fixture",
+    "22  : \u2506 [37.9s] | test manager::tests::captured_helper_fixture ... ignored, fixture invoked only by captured-helper subprocess tests",
+    "72  : \u2506 [42.1s] | test launch::tests::launch_parent_fixture ... ignored, finite subprocess fixture, invoked only with private test roots",
+    "72  : \u2506 [42.2s] | test model::tests::progress_output_probe_child ... ignored, controlled signal-probe child only",
+    "22  : \u2506 [49.2s] | test dart_cloud::dart_cloud_fixture ... ignored, launched explicitly by the Dart schema3 fixture gate"
+  ],
+  "core_count": 1242,
+  "core_sha256": "5226a499e634e06d284f14b841c061d71c470cb903eedba95f228c40d9779d23",
+  "counts": {
+    "aggregate": 1395,
+    "controlled_fixture_ignores": 5,
+    "failures": 0,
+    "flutter": 773,
+    "gtk": 9,
+    "installer": 283,
+    "other_skips": 0,
+    "package": 41,
+    "pipeline_helpers": 34,
+    "service": 289
+  },
+  "execution_log_vertices": {
+    "22": "service",
+    "63": "gtk",
+    "72": "installer",
+    "94": "flutter",
+    "124": "package"
+  },
+  "final_repro_cases": 5,
+  "final_repro_environment": {
+    "CI": "true",
+    "DART_SUPPRESS_ANALYTICS": "true",
+    "FLUTTER_ALREADY_LOCKED": "true",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true"
+  },
+  "finished_at": "2026-10-17T06:20:08.096515+00:00",
+  "guide_sha256": "cb51d39e8e244c5db6c542fba46355e426bcbf76a70ae4df3ff6fffcb21f2990",
+  "head": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+  "independent_commands": [
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "--concurrency",
+        "1",
+        "test/assurance_recovery_test.dart",
+        "test/assurance_delete_restart_test.dart"
+      ],
+      "cwd": "target/projects-assurance/client",
+      "exit_code": 0,
+      "finished_at": "2026-10-17T06:20:06.806337+00:00",
+      "log": "reviewer-records/final-repros.log",
+      "log_sha256": "b0f966f6f9881b6ebeaa1bb67312cb9db818f79a9de2f97d022e6fe36db26b8b",
+      "started_at": "2026-10-17T06:20:03.036074+00:00",
+      "timed_out": false
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "dagger/package.py",
+        "--root",
+        "installer/dist",
+        "--verify"
+      ],
+      "cwd": ".",
+      "exit_code": 0,
+      "finished_at": "2026-10-17T06:20:07.169343+00:00",
+      "log": "reviewer-records/package-verify.log",
+      "log_sha256": "4f6e997052bf8ed0fe4e97c0e068bea00d34f1891dc7ee807e21581cdbb6da2e",
+      "started_at": "2026-10-17T06:20:06.806544+00:00",
+      "timed_out": false
+    },
+    {
+      "argv": [
+        "git",
+        "--no-pager",
+        "diff",
+        "--check"
+      ],
+      "cwd": ".",
+      "exit_code": 0,
+      "finished_at": "2026-10-17T06:20:07.191603+00:00",
+      "log": "reviewer-records/diff-check.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "started_at": "2026-10-17T06:20:07.169458+00:00",
+      "timed_out": false
+    }
+  ],
+  "input_records": 1525,
+  "parent_results_sha256": "c3c8c5b9719fb7e83d281429236f94958149fa2bd32124669f14385fec83d2b2",
+  "prior_independent_cases": 82,
+  "raw_records_verified": 59,
+  "runtime_mirror_files_equal": 34,
+  "rust_sums": {
+    "gtk": {
+      "controlled_ignores": 0,
+      "failed": 0,
+      "passed": 9
+    },
+    "installer": {
+      "controlled_ignores": 2,
+      "failed": 0,
+      "passed": 283
+    },
+    "service": {
+      "controlled_ignores": 3,
+      "failed": 0,
+      "passed": 289
+    }
+  },
+  "started_at": "2026-10-17T06:20:03.035953+00:00",
+  "supporting_records_verified": 27,
+  "test_vertices_non_cached": true
+}

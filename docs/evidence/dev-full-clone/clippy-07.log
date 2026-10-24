@@ -1,0 +1,4 @@
+COMMAND: cargo clippy --offline --locked --lib --bins -- -D warnings
+EXIT: 0
+    Checking smith-service v0.1.0 (<repo>/service)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.32s

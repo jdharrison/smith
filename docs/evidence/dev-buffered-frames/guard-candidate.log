@@ -1,0 +1,10 @@
+Native recipient package verified: 97 files; reviewed text-only payload paths
+Precondition: Input must be a bounded owned single-link regular file
+FAIL: preparation stopped; no installation or host action attempted.
+
+Scoped rerun: accept the hash-bound read-only Cargo binary hard link; candidate files remain single-link.
+Native recipient package verified: 97 files; reviewed text-only payload paths
+Native recipient package verified: 97 files; reviewed text-only payload paths
+Native recipient package verified: 97 files; reviewed text-only payload paths
+Native recipient package verified: 97 files; reviewed text-only payload paths
+PASS: paired QA package verified; only copied helper changed; retained and installed inputs unchanged.

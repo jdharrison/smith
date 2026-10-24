@@ -1,0 +1,816 @@
+--- baseline/client/test/rust_projects_integration_test.dart
++++ current/client/test/rust_projects_integration_test.dart
+@@ -70,11 +70,41 @@
+       ? 'Run make client/test for the mandatory compiled Projects fixture.'
+       : false;
+ 
+-  Future<(_ProjectExchange, NativeAppApi, ProjectsController)> setup() async {
++  File diskFile(_ProjectExchange exchange) =>
++      File('${exchange.fixture.root.path}/data/smith-next/app-state.json');
++
++  Future<(_ProjectExchange, NativeAppApi, ProjectsController)> setup({
++    bool existingEmpty = true,
++  }) async {
+     expect(executable, isNotNull);
+     final fixture = await RustCloudFixture.start(executable!, savedOnly: true);
+     addTearDown(fixture.close);
+     final exchange = _ProjectExchange(fixture);
++    if (existingEmpty) {
++      // These purpose-specific fixtures exercise an EXISTING empty registry,
++      // not fresh-profile initialization. Saved-only bootstrap has no pending
++      // work; preserve every other current-schema durable field verbatim.
++      final file = diskFile(exchange);
++      final disk =
++          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
++      expect(disk['schema_version'], 7);
++      expect(
++        (disk['jobs'] as List).any(
++          (job) =>
++              const ['queued', 'running'].contains(job['operation']['status']),
++        ),
++        false,
++      );
++      disk['projects'] = {
++        'revision': 0,
++        'projects': [],
++        'receipts': [],
++        'expired_ids': [],
++      };
++      await file.writeAsString(jsonEncode(disk), flush: true);
++      await fixture.control('restart');
++      expect(jsonDecode(await file.readAsString()), disk);
++    }
+     final api = NativeAppApi(executor: exchange);
+     addTearDown(api.dispose);
+     // The compiled fixture also requires observation of its cached full catalog.
+@@ -98,9 +128,6 @@
+       isNot(contains(anyOf('models', 'submit_routed', 'provider_probe'))),
+     );
+   }
+-
+-  File diskFile(_ProjectExchange exchange) =>
+-      File('${exchange.fixture.root.path}/data/smith-next/app-state.json');
+ 
+   // Bypass client operation validation only to exercise the actual Rust guards.
+   Future<AppReply> rawCall(
+@@ -116,6 +143,146 @@
+     );
+     return AppReply.parse(text, callId, schemaVersion: 3);
+   }
++
++  test(
++    'compiled fresh profile persists an ordinary Smith starter without resurrection or extra effects',
++    () async {
++      // No existing-state preparation: Rust opens an absent app-state path.
++      final (exchange, api, projects) = await setup(existingEmpty: false);
++      expect(projects.revision, 1);
++      final starter = projects.projects.single;
++      final id = starter.projectId;
++      expect(projectWireId(id), true);
++      expect(starter.name, 'Smith');
++      expect(starter.agent, 'opencode');
++      final repository = <String, dynamic>{
++        'name': null,
++        'url': 'https://github.com/jdharrison/smith',
++        'branch': {
++          'base': 'main',
++          'work': 'main',
++          'types': {
++            'feature': null,
++            'fix': null,
++            'release': null,
++            'hotfix': null,
++          },
++        },
++      };
++      expect(starter.repositories.single.toJson(), repository);
++      final record = {
++        'project_id': id,
++        'name': 'Smith',
++        'repositories': [repository],
++        'agent': 'opencode',
++      };
++      expect((await api.call('projects_list_v2', {})).result, {
++        'revision': 1,
++        'projects': [record],
++      });
++      final initial = jsonDecode(
++        await diskFile(exchange).readAsString(),
++      ) as Map<String, dynamic>;
++      expect(initial['schema_version'], 7);
++      final registry = initial['projects'] as Map<String, dynamic>;
++      expect(registry['revision'], 1);
++      expect(registry['projects'], [record]);
++      expect(registry['receipts'], hasLength(1));
++      expect(registry['expired_ids'], isEmpty);
++      final originalInstance = projects.instanceId;
++      await exchange.fixture.control('restart');
++      await projects.refresh();
++      expect(projects.error, isNull);
++      expect(projects.instanceId, isNot(originalInstance));
++      expect(projects.revision, 1);
++      expect(projects.projects.single.projectId, id);
++      expect(projects.projects.single.repositories.single.toJson(), repository);
++      expect(jsonDecode(await diskFile(exchange).readAsString()), initial);
++
++      final changed = _repository(
++        name: 'contribution',
++        url: 'git@example.invalid:operator/smith.git',
++        base: 'stable',
++        work: 'team/next',
++      );
++      final repositories = [
++        changed,
++        ProjectRepository(url: 'https://example.invalid/another/repository'),
++      ];
++      await projects.update(
++        id,
++        'Operator renamed Smith',
++        repositories,
++        expectedInstanceId: projects.instanceId!,
++        expectedRevision: 1,
++      );
++      expect(projects.error, isNull);
++      expect(projects.revision, 2);
++      await exchange.fixture.control('restart');
++      await projects.refresh();
++      expect(projects.error, isNull);
++      expect(projects.projects.single.projectId, id);
++      expect(projects.projects.single.name, 'Operator renamed Smith');
++      expect(projects.projects.single.repositories, repositories);
++      expect(projects.projects.single.agent, 'opencode');
++      expect(projects.revision, 2);
++      // Clearing all repositories is also an ordinary persisted update.
++      await projects.update(
++        id,
++        'Operator renamed Smith',
++        [],
++        expectedInstanceId: projects.instanceId!,
++        expectedRevision: 2,
++      );
++      expect(projects.error, isNull);
++      await exchange.fixture.control('restart');
++      await projects.refresh();
++      expect(projects.error, isNull);
++      expect(projects.projects.single.repositories, isEmpty);
++      expect(projects.revision, 3);
++      await projects.delete(
++        id,
++        expectedInstanceId: projects.instanceId!,
++        expectedRevision: 3,
++      );
++      expect(projects.error, isNull);
++      expect(projects.projects, isEmpty);
++      expect(projects.revision, 4);
++      final deletedBytes = await diskFile(exchange).readAsBytes();
++      for (var restart = 0; restart < 2; restart++) {
++        await exchange.fixture.control('restart');
++        await projects.refresh();
++        expect(projects.error, isNull);
++        expect(projects.projects, isEmpty);
++        expect(projects.revision, 4);
++        expect(await diskFile(exchange).readAsBytes(), deletedBytes);
++      }
++      final deleted =
++          jsonDecode(utf8.decode(deletedBytes)) as Map<String, dynamic>;
++      Map<String, dynamic> unrelated(Map<String, dynamic> disk) =>
++          Map<String, dynamic>.of(disk)
++            ..remove('projects')
++            ..remove('revision');
++      expect(unrelated(deleted), unrelated(initial));
++      expect(
++        exchange.operations.where((op) => op == 'project_update_v2'),
++        hasLength(2),
++      );
++      expect(
++        exchange.operations.where((op) => op == 'project_delete_v2'),
++        hasLength(1),
++      );
++      expect(exchange.operations.toSet(), {
++        'route_catalog',
++        'projects_list_v2',
++        'project_update_v2',
++        'project_delete_v2',
++      });
++      await expectNoProviderEffects(exchange);
++    },
++    skip: skipFixture,
++    timeout: const Timeout(Duration(seconds: 30)),
++  );
+ 
+   test(
+     'compiled Projects CRUD persists structured repositories without changing chat projections',
+@@ -184,7 +351,7 @@
+       final disk = jsonDecode(
+         await diskFile(exchange).readAsString(),
+       ) as Map<String, dynamic>;
+-      expect(disk['schema_version'], 6);
++      expect(disk['schema_version'], 7);
+       final independent = ProjectsController(api);
+       addTearDown(independent.dispose);
+       await independent.refresh();
+@@ -404,7 +571,7 @@
+       final disk = jsonDecode(
+         await diskFile(exchange).readAsString(),
+       ) as Map<String, dynamic>;
+-      expect(disk['schema_version'], 6);
++      expect(disk['schema_version'], 7);
+       final after = (await api.call('state', {})).result;
+       // Inventory is deliberately volatile; restarting clears prior observations.
+       expect(after['inventory_observed'], false);
+@@ -414,7 +581,13 @@
+             ..remove('revision')
+             ..remove('inventory')
+             ..remove('inventory_observed');
+-      expect(durableProjection(after), durableProjection(before));
++      // Current disk7 migration advances configuration revision once; retain
++      // exact comparison of every other chat/configuration projection field.
++      final expectedBefore = Map<String, dynamic>.of(before);
++      final config = Map<String, dynamic>.from(before['config'] as Map);
++      config['revision'] = (config['revision'] as int) + 1;
++      expectedBefore['config'] = config;
++      expect(durableProjection(after), durableProjection(expectedBefore));
+       await expectNoProviderEffects(exchange);
+     },
+     skip: skipFixture,
+--- baseline/docs/ARCHITECTURE.md
++++ current/docs/ARCHITECTURE.md
+@@ -22,7 +22,9 @@
+ 
+ ## Projects metadata registry
+ 
+-**Implemented source:** up to 32 projects with 16 ordered structured repositories each: optional Name, URL, independently nullable Base/Work/type settings; no defaults or Git/workflow effects. Disk1–5 migrates strictly to disk6. Four App3 Projects `*_v2` operations replace legacy list/writes, which fail `UPGRADE_REQUIRED`; receipt lookup is unchanged. Uncertain writes remain query-only. [Exact schema, migration and compatibility](ARCHITECTURE_DETAILS.md#projects-metadata-registry).
++**Implemented source:** up to 32 projects with 16 ordered structured repositories each: optional Name, URL, independently nullable Base/Work/type settings; no inferred optional-field defaults or Git/workflow effects. Disk1–5 migrates strictly to disk6. Four App3 Projects `*_v2` operations replace legacy list/writes, which fail `UPGRADE_REQUIRED`; receipt lookup is unchanged. Uncertain writes remain query-only. [Exact schema, migration and compatibility](ARCHITECTURE_DETAILS.md#projects-metadata-registry).
++
++**Implemented fresh-profile initialization:** a safely absent application-state file receives one ordinary editable/deletable Smith metadata project. An explicit Projects bootstrap—not shared empty defaults—validates full state and publishes0600 without replacement before readiness. It records ordinary generated IDs and initial application/registry revision1 with one internal receipt. Existing state/load/migration paths are unchanged and never backfilled; retained deletion stays deleted. No new schema, public API, filesystem root or execution capability is introduced by this starter. [Exact initialization contract](ARCHITECTURE_DETAILS.md#projects-metadata-registry).
+ 
+ ## Saved message timestamps
+ 
+--- baseline/docs/ARCHITECTURE_DETAILS.md
++++ current/docs/ARCHITECTURE_DETAILS.md
+@@ -98,12 +98,16 @@
+ 
+ **Implemented source:** `service/src/app_projects.rs`, `app_v2.rs` and `app_v3.rs` own an inert registry in atomic application disk6. App3/Core2 remain unchanged. Current App3-only operations are `projects_list_v2`, `project_create_v2`, `project_update_v2`, `project_delete_v2` and unchanged `project_receipt({request_id})`. List still returns `{revision,projects}`; mutations retain their existing request/instance/expected-revision/target/metadata fields and `{request_id,project_id,revision,deleted}` receipts, with structured repository values. Legacy `projects_list`, `project_create`, `project_update`, `project_delete` unconditionally return `UPGRADE_REQUIRED` before legacy replay/admission—even for empty registries, empty-array updates, deletes and historical mutation IDs. New clients never fall back. This prevents old clients erasing unseen settings despite unchanged App3. Existing app1/2/3 chat projections, provider behavior, resource limits and preference schemas are unchanged; Projects does not enter the inference queue, create a worker, associate conversations or inject provider context.
+ 
+-Project records remain exactly `{project_id,name,repositories,agent}`: stable32-lowercase-hex ID, trimmed nonempty control-free≤40-Unicode-scalar project name, ordered0–16 repositories and exactly `agent:"opencode"`; at most32 projects and safe-integer registry revisions. Every repository is exactly `{name,url,branch:{base,work,types:{feature,fix,release,hotfix}}}`. All keys and objects are required; only repository `name`, `base`, `work` and the four type leaves are independently nullable. Null branch/types objects, missing/unknown keys, positional arrays, string-list input and empty stored strings are invalid. Explicitly cleared optional UI fields serialize null; there are no defaults/presets or inferred names/branches. Non-null repository names reuse the project-name predicate. Within each project, non-null names and URLs are independently unique by exact case-sensitive equality, without remote-identity/case normalization; multiple null names are valid. Base/Work and type values may repeat.
++Project records remain exactly `{project_id,name,repositories,agent}`: stable32-lowercase-hex ID, trimmed nonempty control-free≤40-Unicode-scalar project name, ordered0–16 repositories and exactly `agent:"opencode"`; at most32 projects and safe-integer registry revisions. Every repository is exactly `{name,url,branch:{base,work,types:{feature,fix,release,hotfix}}}`. All keys and objects are required; only repository `name`, `base`, `work` and the four type leaves are independently nullable. Null branch/types objects, missing/unknown keys, positional arrays, string-list input and empty stored strings are invalid. Explicitly cleared optional UI fields serialize null; ordinary forms infer no names/branches or field presets. The explicit fresh-profile starter below does not alter nullable-field semantics. Non-null repository names reuse the project-name predicate. Within each project, non-null names and URLs are independently unique by exact case-sensitive equality, without remote-identity/case normalization; multiple null names are valid. Base/Work and type values may repeat.
+ 
+ URLs retain the unchanged credential-free locator grammar and2048-UTF-8-byte bound. Locators support only `https://host[:port]/path`, `ssh://git@host[:port]/path` and `git@host:path`: ASCII DNS-style labels≤63 bytes/253 total, decimal ports1–65535, nonempty slash-separated ASCII alphanumeric/`._~-` path segments excluding `.`/`..`/empty segments. No local paths, arbitrary userinfo/passwords, percent escapes, query/fragment, whitespace/controls or shell syntax; exact case-sensitive duplicate comparison. This is syntax validation only, not existence, authorization or future egress approval.
+ 
+ Base describes the main/stable line; Work describes the shared working line and may equal Base, including both `main`. Non-null branch values are a conservative pure subset:1–255 ASCII bytes, nonempty slash-separated components starting alphanumeric and otherwise only alphanumeric/`._-`; no `..`, dot-ended or case-insensitive `.lock`-ended components; reject exact `HEAD` and `refs/` prefix. This is not every Git-valid ref and invokes no Git subprocess. Type values are exactly `<safe-branch-prefix>/*`,≤255 ASCII bytes total, with the prefix validated by the same rules and only one final `*`. They are stored configuration only: no matching/expansion, branch generation/selection, PR direction, workflow execution or publication authority.
+ 
++**Fresh-profile initialization — implemented source:** `app.rs` invokes `projects::bootstrap` only when the existing safe state read returns `None`. Shared `Registry::default()`/`Durable::default()` remain empty for tests and legacy construction. Bootstrap creates one ordinary `Smith` project, null repository Name, URL `https://github.com/jdharrison/smith`, Base/Work `main`/`main`, all four type leaves null and `agent:"opencode"`. It uses normal generated opaque IDs/project revision suffix, application/registry revision1, one content-free internal receipt with an existing-format `v3:projects:bootstrap` metadata fingerprint, and no expired IDs. This consumes normal fresh ledger capacity; no validator exemption, reserved identity or special deletion behavior exists. Full validation/capacity preflight and encoded-state bounds precede existing `filesystem::publish(..., 0o600, false)` publication. Replacement-capable `persist()` is deliberately not used for initial publication. A destination that appears after the absent read is preserved and startup fails; failures do not authorize adoption/retry or deletion of possibly published state. Return readiness only after publication. Existing startup ownership remains authoritative; no new lock or filesystem machinery is added.
++
++Existing current/legacy/empty/full state follows its existing load/migration/recovery path, with no bootstrap effects. Ordinary edits/rename/repository removal/deletion retain their exact state and receipt semantics across reopen; an empty list never triggers seeding. Bootstrap receipts are evicted/scrubbed by ordinary rules, not used as a permanent marker. Complete state-file removal creates a genuinely absent profile again. Public Project/API/schema shapes, UI selection/order, and New Project form defaults are unchanged; the starter adds no schema/version boundary or migration/backfill. No repository/network/Git/provider/keyring/tool/agent effect or automatic project-context transfer follows. [Approved fresh-only plan](plans/LOCAL-SMITH-DEFAULT-PROJECT.md).
++
+ **Migration/compatibility:** disk6 decoding is strict, with duplicate-key rejection, existing capacity preflight and atomic publication preserving unsupported/corrupt/unpublishable bytes. Frozen disk1–5 shapes retain their strict old validation. Disk1–4 initializes an empty registry directly in disk6 while preserving existing histories/configuration/cloud references/provenance/timing/jobs/results/receipts/IDs. Disk5 is strictly validated under its old string-list registry rules before conversion: every URL is preserved exactly, with null repository name and all six null branch/type leaves. Project/repository order, project IDs, registry revision, retained old fingerprints (including already-null fingerprints), receipts and expired IDs are preserved; migration is not a Projects mutation. Existing application migration revision, ownership, publication and restart-interruption semantics remain. Older binaries reject disk6; installed rollout/restore requires separate approval, compatible paired artifacts and pre-migration state/keyring relationships, not binary-only downgrade.
+ 
+ Mutations bind the observed service instance and independent registry revision, under the existing application ownership/mutex/capacity/publication fence. Chat completions do not stale registry revisions. Project-family replay identities are separate from chat receipts, but old/new Projects operations share one namespace:32 retained content-free receipts plus1024 non-evictable expired-ID tombstones. New fingerprints bind the new operation name and all nested arguments; new calls cannot reuse old IDs. Old receipts remain queryable without replay. Exact retained v2 replay precedes fresh instance/revision admission and changes nothing; conflicting arguments reject. Delete removes only the project and scrubs its old metadata-derived fingerprints, retaining opaque historical receipts/IDs. Scrubbed mutation reuse is expired; receipt lookup can report the historical result, never current project existence. Tombstone/capacity exhaustion refuses atomically.
+--- baseline/docs/DESIGN.md
++++ current/docs/DESIGN.md
+@@ -66,6 +66,8 @@
+ ## Projects summary and settings
+ 
+ **Implemented source:** Projects is a top-level destination between Chat and Settings, not a project conversation or Dev runner. Inside the unchanged shell, wide panes show an independently scrollable **Projects / New Project** list, local **Search projects** input and dense selectable cards beside one scrollable editor. Cards show only the saved Name and derived repository count with local project/branch glyphs; no descriptions or editable IDs are invented. Search matches saved project Name only, case-insensitively after trimming the query, makes no API call and never substitutes selection or discards a filtered-out editor. Loading, empty, unavailable and no-match states remain distinct.
++
++**Implemented fresh-profile starting point:** a brand-new application profile has an ordinary **Smith** card with one repository (`https://github.com/jdharrison/smith`, Base/Work `main`/`main`, optional repository Name/type patterns unset). It is not pinned, automatically selected, protected or marked ready. Normal edit/rename/Cancel/confirmed Delete applies; deleting it stays deleted across refresh/restart. Existing profiles—including empty ones—are not backfilled, and New Project remains blank. This metadata is a starting point for contribution setup, not a cloned checkout or configured test environment. The current layout, selection rules and no-execution notices remain unchanged.
+ 
+ The editor orders its local heading and **Save Changes / Cancel / Delete project** actions before **Basic Information** (existing required Name only), **Agent / OpenCode**, then **Repositories**, with draft-only **Add repository** in that section heading. Repository cards expose **Name (optional)**, **URL (required)**, **Base branch (optional)** and **Work branch (optional)**. Name/URL and Base/Work pair only when their local width/text scale permits; otherwise they stack. An initially collapsed **Branch types** section retains four independent optional Feature/Fix/Release/Hotfix patterns, not a dropdown. OpenCode is fixed metadata, not installed/ready/running status. Empty registry and projects without repositories are valid. Description, prompt, read-only, Duplicate and new schema/API fields remain deferred.
+ 
+--- baseline/docs/HOST_PROFILE.md
++++ current/docs/HOST_PROFILE.md
+@@ -6,7 +6,7 @@
+ 
+ **Supported target:** one trusted non-root operator on prepared Ubuntu 24.04 LTS x86_64. **Implemented source requirements:** compatible native libraries, owner-controlled safe HOME/XDG roots, private runtime storage, usable `systemd --user`, and cgroup2 evidence for maintenance. Flutter/GTK desktop use needs the full paired native bundle and a graphical session. The CLI needs neither GTK nor a display.
+ 
+-Recipients do not need Python, Rust, Flutter SDK, Dagger, Docker, OpenCode or external Ollama. Structured Projects metadata adds no repository connection, Git/SSH or agent/container prerequisite. Disk6 rollout/restore requires separately approved compatible paired artifacts and state; see the [recipient boundary](HOST_PROFILE_DETAILS.md#projects-metadata-recipient-boundary). Builders have separate [toolchain requirements](HOST_PROFILE_DETAILS.md#current-text-only-recipientbuilder-boundary).
++Recipients do not need Python, Rust, Flutter SDK, Dagger, Docker, OpenCode or external Ollama. Structured Projects metadata, including the ordinary Smith starter in new profiles only, adds no repository connection, Git/SSH or agent/container prerequisite. Existing profiles are not backfilled. Disk6 rollout/restore requires separately approved compatible paired artifacts and state; see the [recipient boundary](HOST_PROFILE_DETAILS.md#projects-metadata-recipient-boundary). Builders have separate [toolchain requirements](HOST_PROFILE_DETAILS.md#current-text-only-recipientbuilder-boundary).
+ 
+ ## Private service and deliberate setup
+ 
+--- baseline/docs/HOST_PROFILE_DETAILS.md
++++ current/docs/HOST_PROFILE_DETAILS.md
+@@ -39,7 +39,9 @@
+ 
+ ## Projects metadata recipient boundary
+ 
+-**Implemented source:** structured Projects metadata needs only the existing native service/desktop/private state contracts. Optional repository names, required credential-free URLs and independently nullable Base/Work/type settings add no OpenCode, Docker, Git, SSH, registry/network or toolchain prerequisite. Locators are inert identifiers, not mounted roots or validated connections; pure branch/pattern validation invokes no Git. Base is the stable line; Work is the shared working line and may equal Base. Type patterns are configuration only, not branch/PR/workflow authority. No defaults/presets, repository access, credentials, runtime workers or new egress are added.
++**Implemented source:** structured Projects metadata needs only the existing native service/desktop/private state contracts. Optional repository names, required credential-free URLs and independently nullable Base/Work/type settings add no OpenCode, Docker, Git, SSH, registry/network or toolchain prerequisite. Locators are inert identifiers, not mounted roots or validated connections; pure branch/pattern validation invokes no Git. Base is the stable line; Work is the shared working line and may equal Base. Type patterns are configuration only, not branch/PR/workflow authority. Ordinary forms infer no optional-field presets; the fresh-profile starter below adds no repository access, credentials, runtime workers or new egress.
++
++Only a safely absent application-state file receives an ordinary editable/deletable Smith project with the public repository locator and Base/Work `main`/`main`; optional repository Name/type leaves remain null. Initial validated state is published privately0600 without replacement before readiness. Existing profiles and supported old states are not backfilled, including empty/full registries, and ordinary retained deletion never triggers reseeding. No new installation detection, host root, schema/migration, Git/account setup or contribution runtime follows. Source tests do not create or migrate the operator's installed state; later installation/launch remains separately approved.
+ 
+ App3/Core2 remain; disk6 is current. Strict frozen disk1–4 migration initializes an empty registry; disk5 strings become their exact URLs with null names and all six null branch/type leaves, preserving order, project IDs, registry revision, old fingerprints/receipts and expired IDs. Older binaries reject disk6. Even under App3, legacy Projects list/writes always fail `UPGRADE_REQUIRED`, including empty arrays/deletes; use paired clients with the four `*_v2` operations and unchanged receipt lookup. Existing chat and preference schemas are unchanged: preferences read v1/v2 and write v2 without project data or a new filesystem root.
+ 
+--- baseline/docs/PROCESS.md
++++ current/docs/PROCESS.md
+@@ -78,7 +78,9 @@
+ 
+ ### Projects metadata validation and compatibility
+ 
+-Projects remains metadata-only under the [approved structured-repository plan](plans/LOCAL-SMITH-PROJECT-REPOSITORIES.md). **Implemented source contract, not a validation PASS:** ordered exact `{name,url,branch:{base,work,types:{feature,fix,release,hotfix}}}` repositories; required keys/objects, independently nullable name and six branch/type leaves, no defaults/presets. Require strict missing/unknown/duplicate-key/object-versus-positional-array/string-list/empty-string rejection, trimmed control-free≤40-scalar names, exact case-sensitive non-null-name/URL uniqueness, unchanged credential-free≤2048-byte locator grammar and32-project/16-repository limits. Cover pure1–255-ASCII-byte branch grammar and terminal-prefix `/*` patterns≤255 bytes total, independently populate/clear every nullable leaf, multiple null names and equal Base/Work; no Git invocation, pattern expansion, branch/PR/workflow effects. App reply parsing must reject duplicate decoded member names per object before whole-reply `jsonDecode` can collapse them, including escape-equivalent keys and objects nested in arrays. Require lexical-preflight/parser cases for these inputs and the64-container object/array depth boundary, retaining the existing4MiB app-frame limit and `PROTOCOL` failure behavior before strict domain validation. Focused reproduction/parser/neighbor passes do not substitute for final stable-source gates.
++The [approved fresh-profile starter](plans/LOCAL-SMITH-DEFAULT-PROJECT.md) requires exact initial Smith metadata, normal generated IDs/revision1/internal receipt, full validation/headroom/private no-clobber publication before readiness, and unchanged shared empty defaults. Prove absent-state-only eligibility; stable reopen, ordinary edit/delete/no resurrection, existing current/legacy/empty/full exclusion, corruption/unsafe-path preservation and publication-race refusal without adoption/retry. Run real compiled Rust↔Dart starter and existing-empty fixtures with zero synthetic provider/keyring/inference effects. No new schema/API, backfill, UI special case or contribution execution is supplied. Feature self-checks do not replace stable combined-source component/root/package gates or fresh independent assurance; report unrelated/concurrent gate failures without suppressing them.
++
++Projects remains metadata-only under the [approved structured-repository plan](plans/LOCAL-SMITH-PROJECT-REPOSITORIES.md). **Implemented source contract, not a validation PASS:** ordered exact `{name,url,branch:{base,work,types:{feature,fix,release,hotfix}}}` repositories; required keys/objects, independently nullable name and six branch/type leaves, no inferred field defaults/presets in ordinary forms. Require strict missing/unknown/duplicate-key/object-versus-positional-array/string-list/empty-string rejection, trimmed control-free≤40-scalar names, exact case-sensitive non-null-name/URL uniqueness, unchanged credential-free≤2048-byte locator grammar and32-project/16-repository limits. Cover pure1–255-ASCII-byte branch grammar and terminal-prefix `/*` patterns≤255 bytes total, independently populate/clear every nullable leaf, multiple null names and equal Base/Work; no Git invocation, pattern expansion, branch/PR/workflow effects. App reply parsing must reject duplicate decoded member names per object before whole-reply `jsonDecode` can collapse them, including escape-equivalent keys and objects nested in arrays. Require lexical-preflight/parser cases for these inputs and the64-container object/array depth boundary, retaining the existing4MiB app-frame limit and `PROTOCOL` failure behavior before strict domain validation. Focused reproduction/parser/neighbor passes do not substitute for final stable-source gates.
+ 
+ Require CRUD/restart durability, independent registry revisions, exact replay/conflict/expiry and delete-fingerprint scrubbing,1024-tombstone exhaustion, publication/ownership fencing and state/frame headroom. Strict frozen disk1–5→6 migration must preserve histories/configuration/cloud references/provenance/timing/jobs/results/receipts/IDs and existing migration revision/interruption semantics. Disk1–4 initializes an empty registry directly in disk6. A rich disk5 fixture must convert exact strings to null-name/all-six-null-leaf repositories without changing order, project IDs, registry revision, old fingerprints (including already-null), receipts or expired IDs; conversion is not a Projects mutation. Corrupt/unsupported/unpublishable bytes stay preserved.
+ 
+--- baseline/docs/SCOPE.md
++++ current/docs/SCOPE.md
+@@ -12,7 +12,7 @@
+ - Curated local models through bundled CPU/Vulkan runtimes; optional OpenAI and Anthropic APIs.
+ - Per-chat LOCAL/CLOUD selection, with explicit context-sharing consent for each new provider/credential generation. No automatic cloud fallback.
+ - Up to four desktop panes and separate session-only windows. Drafts and waiting follow-ups are not durable.
+-- Projects metadata: ordered repositories with optional names, URLs and independently optional branch/type settings, plus fixed OpenCode metadata. No defaults, repository access, Git/workflow execution or model context follows. See [detailed contract](SCOPE_DETAILS.md#current-projects-metadata-foundation).
++- Projects metadata: ordered repositories with optional names, URLs and independently optional branch/type settings, plus fixed OpenCode metadata. New profiles start with an ordinary editable/deletable Smith project; existing profiles are not backfilled. No repository access, Git/workflow execution or model context follows. See [detailed contract](SCOPE_DETAILS.md#current-projects-metadata-foundation).
+ 
+ The service owns accepted work independently of desktop lifetime. Closing the desktop detaches; restart interrupts unfinished work without replay.
+ 
+--- baseline/docs/SCOPE_DETAILS.md
++++ current/docs/SCOPE_DETAILS.md
+@@ -61,7 +61,9 @@
+ 
+ ## Current Projects metadata foundation
+ 
+-**Implemented source:** Chat / Projects / Settings provides a service-owned project registry and responsive list/summary-settings editor. Each project remains exactly `{project_id,name,repositories,agent}`, with stable identity, required project name and fixed `agent:"opencode"`. Up to32 projects contain ordered lists of0–16 structured repositories. Each repository is exactly `{name,url,branch:{base,work,types:{feature,fix,release,hotfix}}}`: every key/object is required; only repository name and the six branch/type leaves may independently be null. No defaults or presets are supplied. Non-null names use the trimmed, control-free≤40-Unicode-scalar name rule; non-null repository names and URLs are independently unique within a project by exact case-sensitive equality. Multiple null names are valid. Save/Cancel, stale-write protection and confirmed metadata-only deletion preserve ordinary chats and repository contents.
++**Implemented source:** Chat / Projects / Settings provides a service-owned project registry and responsive list/summary-settings editor. Each project remains exactly `{project_id,name,repositories,agent}`, with stable identity, required project name and fixed `agent:"opencode"`. Up to32 projects contain ordered lists of0–16 structured repositories. Each repository is exactly `{name,url,branch:{base,work,types:{feature,fix,release,hotfix}}}`: every key/object is required; only repository name and the six branch/type leaves may independently be null. Ordinary New Project forms and optional metadata fields infer no defaults or presets; the explicit fresh-profile starter below is the only initialization exception. Non-null names use the trimmed, control-free≤40-Unicode-scalar name rule; non-null repository names and URLs are independently unique within a project by exact case-sensitive equality. Multiple null names are valid. Save/Cancel, stale-write protection and confirmed metadata-only deletion preserve ordinary chats and repository contents.
++
++**Implemented fresh-profile starter:** only a safely absent application-state file creates one ordinary `Smith` project with repository Name null, URL `https://github.com/jdharrison/smith`, Base/Work `main`/`main`, four null type leaves and fixed OpenCode metadata. It is validated and privately published without replacement before readiness. Existing profiles—including empty registries and supported legacy states—receive no starter. Normal edits, renames and confirmed deletion persist; refresh/restart does not restore it. New Project forms, selection/order, limits and public record/API shapes are unchanged. No protected built-in, new schema/migration or contribution executor is added. Removing the entire state file creates the absent-state condition again; ordinary deletion within retained state does not. See the [approved starter plan](plans/LOCAL-SMITH-DEFAULT-PROJECT.md).
+ 
+ Repository URLs retain the locally syntax-checked credential-free HTTPS/Git SSH locator grammar and2048-byte bound, not connections or filesystem bindings. Base describes the main/stable line; Work describes the shared working line and may equal Base (including both `main`). Optional branch names use a conservative pure1–255-ASCII-byte grammar; type patterns are a safe branch prefix plus terminal `/*`,≤255 ASCII bytes total. Patterns are configuration only, not matching/expansion, branch creation/selection, PR direction or workflow execution. No Git subprocess is used for validation. Creating/opening/saving/deleting a project does not inspect or clone repositories, read credentials, call models/providers, install or launch OpenCode/Docker, or start containers. Empty projects are valid. No project conversation, automatic prompt/context injection, Dev/QA execution, backlog or task scheduling is supplied.
+ 
+--- baseline/docs/SMITH_LINUX_ARCHITECTURE_REPORT.md
++++ current/docs/SMITH_LINUX_ARCHITECTURE_REPORT.md
+@@ -32,13 +32,15 @@
+ 
+ ### Projects metadata — bounded source assessment
+ 
+-**Implemented source, not installed acceptance:** `service/src/app_projects.rs`, `app_v2.rs`, `app_v3.rs` and `client/lib/projects.dart` implement disk6 structured repositories in unchanged `{project_id,name,repositories,agent}` projects. Each ordered repository is exactly `{name,url,branch:{base,work,types:{feature,fix,release,hotfix}}}`; all keys/objects are required, repository name and six branch/type leaves independently nullable. Non-null names reuse trimmed control-free≤40-scalar validation; non-null names and URLs are independently unique within a project by exact case-sensitive equality. No defaults/presets. Credential-free≤2048-byte restricted HTTPS/Git SSH URL grammar is unchanged. Pure1–255-ASCII-byte branch validation and≤255-byte terminal-prefix `/*` patterns invoke no Git. Base describes the main/stable line, Work the shared working line and may equal Base; patterns are configuration only, not matching/expansion, branch selection/creation, PR direction or workflow execution. No repository access, credentials, provider/model calls, OpenCode/Docker installation or worker launch is added.
++**Implemented source, not installed acceptance:** `service/src/app_projects.rs`, `app_v2.rs`, `app_v3.rs` and `client/lib/projects.dart` implement disk6 structured repositories in unchanged `{project_id,name,repositories,agent}` projects. Each ordered repository is exactly `{name,url,branch:{base,work,types:{feature,fix,release,hotfix}}}`; all keys/objects are required, repository name and six branch/type leaves independently nullable. Non-null names reuse trimmed control-free≤40-scalar validation; non-null names and URLs are independently unique within a project by exact case-sensitive equality. No inferred optional-field presets in ordinary forms. Credential-free≤2048-byte restricted HTTPS/Git SSH URL grammar is unchanged. Pure1–255-ASCII-byte branch validation and≤255-byte terminal-prefix `/*` patterns invoke no Git. Base describes the main/stable line, Work the shared working line and may equal Base; patterns are configuration only, not matching/expansion, branch selection/creation, PR direction or workflow execution. No repository access, credentials, provider/model calls, OpenCode/Docker installation or worker launch is added.
+ 
+ Strict disk6 decoding and frozen disk1–5 migration retain capacity/publication/ownership/interruption safeguards. Disk5 strings become their exact URLs with null names and all six null branch/type leaves, preserving order, project IDs, registry revision, old fingerprints (including already-null), receipts and expired IDs; conversion is not a Projects mutation. App3/Core2 remain unchanged, but current operations are `projects_list_v2`, `project_create_v2`, `project_update_v2`, `project_delete_v2` plus unchanged `project_receipt`. Legacy list/writes unconditionally fail `UPGRADE_REQUIRED` before replay/admission, including empty arrays/deletes and historical IDs; no client fallback. Old/new Projects operations share bounded replay protection outside chat jobs, with new fingerprints binding the new operation/all arguments and old receipts queryable without replay. Deletion scrubs metadata-derived fingerprints; acknowledgements never establish current membership. Exact chat projections, worker/resource limits and presentation-preference schemas remain unchanged.
+ 
+ Flutter `client/lib/ui/projects_view.dart` provides wide list/editor and compact list-to-editor drilling with Back, local saved-Name search, derived repository counts and independent retained list/editor scroll bookmarks. The layout-only pass orders local actions, Basic Information (existing Name), Agent/OpenCode, then Repositories; existing repository cards pair optional Name/required URL and optional Base/Work only when usable, retaining collapsed Branch types. It changes no model/controller/service/schema or outer shell/theme/navigation behavior; [layout plan](plans/LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT.md) and separate layout evidence in root `VALIDATION.md` bind that slice. Blank optional fields remain Not configured/null, hints are not presets, and Save reveals invalid hidden type fields. Project-level Save/Cancel and draft-only Add/Remove retain full-field dirty detection, immutable capture, all-field current-origin review and newer-input reconciliation, exact-target delete and query-only uncertainty recovery. A shared desktop registry controller preserves per-view edits and mounted chats; dirty editors and open delete confirmations retain captured instance/revision fences across refresh. Unknown/expired receipts keep original pending identity/writes blocked while allowing read-only list observation. Confirmed deletion plus current absence clears even a dirty selection after restart. Presentation preferences write v2/read strict v1/v2, with no project data. **HISTORICAL — URL-only Projects foundation:** parent-executed compiled Rust↔Dart fixtures recorded four CRUD/restart/lost-acknowledgement/historical-receipt/stale-writer scenarios with zero synthetic local/provider/keyring calls in [prior Projects evidence](evidence/projects/README.md). Those results do not validate structured repositories/disk6/versioned operations and are not new passes. The [approved extension plan](plans/LOCAL-SMITH-PROJECT-REPOSITORIES.md) binds current scope. The extension's seven standalone compiled cases and final configured aggregate passed:295 service +283 installer +9 GTK +834 Flutter +41 package =1462 executions, plus34 helpers. The standalone cases repeat aggregate coverage and include actual disk5 seeding/old receipts/legacy refusals/branch-only uncertainty with zero synthetic provider/keyring/inference calls. Fresh assurance's duplicate-member reply finding was remediated by decoded-key uniqueness preflight and a64-container depth bound before Dart JSON decoding; unchanged repros and neighboring tests passed. Source/artifact bindings, earlier test/harness/infrastructure failures and final review are recorded in the [new evidence bundle](evidence/project-repositories/README.md) and root `VALIDATION.md`; this is not installed/native graphical or release acceptance.
+ 
+ The subsequent **existing-field Projects layout-only** candidate passed its own source-bound configured gates and fresh independent assurance, including compact retained-editor return and visible long-list keyboard wrap. It adds only two locally authored glyphs to the exact26-asset contract; no disk/API/service/controller change or outer-UI redesign follows. [Layout evidence](evidence/projects-layout/README.md) and [independent closeout](evidence/projects-layout/REVIEW-CLOSEOUT.md) retain remediated findings, failed attempts and fresh-versus-cached accounting separately from the structured-repository results above. Native/installed acceptance and publication remain unestablished.
++
++**Implemented fresh-profile Smith starter, not installed acceptance:** an explicit Projects bootstrap is called only for a safely absent application-state file. It validates and no-clobber publishes one normal editable/deletable Smith project (public URL, Base/Work main/main, null optional repository Name/types) before readiness, using ordinary generated IDs and initial application/registry revision1/internal receipt. Shared empty defaults, existing state/migrations, public schema/API and UI are unchanged; retained deletion is never reseeded. This adds no contribution execution, repository access or project-context export. [Approved plan](plans/LOCAL-SMITH-DEFAULT-PROJECT.md) and [separate evidence](evidence/default-project/README.md) distinguish scoped feature checks from the concurrently changing Global Context candidate and required full gates.
+ 
+ ## 4. Local model and GPU boundary
+ 
+--- baseline/service/src/app.rs
++++ current/service/src/app.rs
+@@ -564,7 +564,7 @@
+         filesystem::check_directory(&roots.data.join("smith-next"), true)?;
+         let (mut durable, migrated) = match filesystem::read_file(&path, 0o600, STATE_LIMIT)? {
+             Some(bytes) => Durable::load(&bytes)?,
+-            None => (Durable::default(), false),
++            None => (projects::bootstrap(&path)?, false),
+         };
+         durable.validate()?;
+         let mut changed = migrated;
+--- baseline/service/src/app_projects.rs
++++ current/service/src/app_projects.rs
+@@ -447,6 +447,53 @@
+     instance_id: String,
+     expected_revision: u64,
+     project_id: String,
++}
++
++// Only the safe absent-state startup path may call this factory. Shared defaults
++// remain empty for existing profiles and frozen legacy migrations.
++pub(super) fn bootstrap(path: &std::path::Path) -> Result<Durable> {
++    let request_id = new_id()?;
++    let seed = new_id()?;
++    let project_id = format!("{}{:016x}", &seed[..16], 1);
++    let mut repository = Repository::unknown("https://github.com/jdharrison/smith".into());
++    repository.branch.base = Some("main".into());
++    repository.branch.work = Some("main".into());
++    let project = Project {
++        project_id: project_id.clone(),
++        name: "Smith".into(),
++        repositories: vec![repository],
++        agent: "opencode".into(),
++    };
++    let fp = fingerprint("v3:projects:bootstrap", &json!(project))
++        .map_err(|_| "Cannot fingerprint initial project")?;
++    let mut durable = Durable::default();
++    durable.revision = 1;
++    durable.projects = Registry {
++        revision: 1,
++        projects: vec![project],
++        receipts: vec![RetainedReceipt {
++            receipt: Receipt {
++                request_id,
++                project_id,
++                revision: 1,
++                deleted: false,
++            },
++            fingerprint: Some(fp),
++        }],
++        expired_ids: vec![],
++    };
++    durable.validate()?;
++    durable
++        .preflight()
++        .map_err(|_| "Initial application state exceeds capacity")?;
++    let bytes = serde_json::to_vec(&durable).map_err(|_| "Cannot encode application state")?;
++    if bytes.len() as u64 > STATE_LIMIT {
++        return Err("Application state exceeds durable limit".into());
++    }
++    // Never replace/adopt a destination that appeared after the absent read.
++    // A publication error may be uncertain; leave recovery to the operator.
++    filesystem::publish(path, &bytes, 0o600, false)?;
++    Ok(durable)
+ }
+ 
+ impl Application {
+--- baseline/service/src/app_projects_tests.rs
++++ current/service/src/app_projects_tests.rs
+@@ -133,6 +133,318 @@
+         assert_eq!(self.provider.calls.load(Ordering::SeqCst), 0);
+         fs::remove_dir_all(&self.base).unwrap();
+     }
++}
++
++fn fresh_fixture() -> Fixture {
++    let mut f = Fixture::new(Durable::default());
++    fs::remove_file(&f.app.path).unwrap();
++    f.app = f.reopen().unwrap();
++    f
++}
++
++#[test]
++fn projects_bootstrap_fresh_exact_private_published_state_and_stable_reopen() {
++    assert_eq!(
++        json!(Registry::default()),
++        json!({"revision":0,"projects":[],"receipts":[],"expired_ids":[]})
++    );
++    let defaults = Durable::default();
++    assert_eq!(json!(defaults.projects), json!(Registry::default()));
++    let f = fresh_fixture();
++    // Inspect disk immediately after open: readiness requires prior publication.
++    let bytes = f.bytes();
++    assert_eq!(
++        fs::metadata(&f.app.path).unwrap().permissions().mode() & 0o7777,
++        0o600
++    );
++    let disk = f.disk();
++    let registry = &disk["projects"];
++    let project = &registry["projects"][0];
++    let project_id = project["project_id"].as_str().unwrap();
++    assert!(valid_id(project_id));
++    assert!(project_id.ends_with("0000000000000001"));
++    assert_eq!(
++        project,
++        &json!({"project_id":project_id,"name":"Smith",
++        "repositories":[{"name":null,"url":"https://github.com/jdharrison/smith",
++        "branch":{"base":"main","work":"main","types":{"feature":null,"fix":null,"release":null,"hotfix":null}}}],"agent":"opencode"})
++    );
++    assert_eq!(registry["projects"].as_array().unwrap().len(), 1);
++    assert_eq!(registry["revision"], 1);
++    assert_eq!(registry["expired_ids"], json!([]));
++    let retained = &registry["receipts"][0];
++    assert_eq!(registry["receipts"].as_array().unwrap().len(), 1);
++    let request_id = retained["receipt"]["request_id"].as_str().unwrap();
++    assert!(valid_id(request_id));
++    assert_ne!(request_id, project_id);
++    assert_eq!(
++        retained["receipt"],
++        json!({"request_id":request_id,"project_id":project_id,"revision":1,"deleted":false})
++    );
++    assert_eq!(
++        retained["fingerprint"],
++        fingerprint("v3:projects:bootstrap", project).unwrap()
++    );
++    assert_eq!(
++        call(&f.app, "project_receipt", json!({"request_id":request_id})).unwrap(),
++        retained["receipt"]
++    );
++    let (loaded, migrated) = Durable::load(&bytes).unwrap();
++    assert!(!migrated);
++    loaded.validate().unwrap();
++    loaded.preflight().unwrap();
++    let mut expected = json!(defaults);
++    expected["projects"] = registry.clone();
++    expected["revision"] = json!(1);
++    assert_eq!(disk, expected);
++    assert_eq!(json!(f.app.inner.lock().unwrap().durable), disk);
++    for _ in 0..3 {
++        let app = f.reopen().unwrap();
++        assert_eq!(list(&app), list(&f.app));
++        assert_eq!(f.bytes(), bytes);
++    }
++    let other = fresh_fixture();
++    assert_ne!(
++        other.disk()["projects"]["projects"][0]["project_id"],
++        project["project_id"]
++    );
++    assert_ne!(
++        other.disk()["projects"]["receipts"][0]["receipt"]["request_id"],
++        request_id
++    );
++}
++
++#[test]
++fn projects_bootstrap_ordinary_all_fields_clear_delete_and_history_never_resurrect() {
++    let mut f = fresh_fixture();
++    let initial = f.disk()["projects"]["receipts"][0]["receipt"].clone();
++    let target = initial["project_id"].clone();
++    let mut a = update(&f.app, 1, 1, &target);
++    a["name"] = json!("Renamed starter");
++    a["repositories"] = json!([repository()]);
++    a["repositories"][0]["branch"]["base"] = json!("stable");
++    a["repositories"][0]["branch"]["work"] = json!("develop");
++    call(&f.app, "project_update_v2", a).unwrap();
++    f.app = f.reopen().unwrap();
++    let saved = list(&f.app);
++    assert_eq!(saved["projects"][0]["name"], "Renamed starter");
++    assert_eq!(saved["projects"][0]["project_id"], target);
++    let mut expected_repo = repository();
++    expected_repo["branch"]["base"] = json!("stable");
++    expected_repo["branch"]["work"] = json!("develop");
++    assert_eq!(saved["projects"][0]["repositories"], json!([expected_repo]));
++    let mut a = update(&f.app, 2, 2, &target);
++    let cleared = json!(Repository::unknown(
++        "https://example.invalid/cleared".into()
++    ));
++    a["repositories"] = json!([cleared]);
++    call(&f.app, "project_update_v2", a).unwrap();
++    f.app = f.reopen().unwrap();
++    assert_eq!(
++        list(&f.app)["projects"][0]["repositories"],
++        json!([cleared])
++    );
++    call(&f.app, "project_update_v2", update(&f.app, 3, 3, &target)).unwrap();
++    f.app = f.reopen().unwrap();
++    assert_eq!(list(&f.app)["projects"][0]["repositories"], json!([]));
++    let deleted = call(&f.app, "project_delete_v2", delete(&f.app, 4, 4, &target)).unwrap();
++    let bytes = f.bytes();
++    let disk = f.disk();
++    for retained in &disk["projects"]["receipts"].as_array().unwrap()[..4] {
++        assert!(retained["fingerprint"].is_null());
++    }
++    assert!(disk["projects"]["receipts"][4]["fingerprint"].is_string());
++    for _ in 0..3 {
++        f.app = f.reopen().unwrap();
++        assert_eq!(list(&f.app), json!({"revision":5,"projects":[]}));
++        assert_eq!(f.bytes(), bytes);
++        assert_eq!(
++            call(
++                &f.app,
++                "project_receipt",
++                json!({"request_id":initial["request_id"]})
++            )
++            .unwrap(),
++            initial
++        );
++        assert_eq!(receipt(&f.app, 4).unwrap(), deleted);
++        for n in 1..=3 {
++            assert_eq!(receipt(&f.app, n).unwrap()["project_id"], target);
++            assert_eq!(
++                call(&f.app, "project_update_v2", update(&f.app, n, 5, &target))
++                    .unwrap_err()
++                    .code,
++                "REQUEST_EXPIRED"
++            );
++        }
++    }
++}
++
++#[test]
++fn projects_bootstrap_existing_current_empty_populated_full_and_exhausted_are_untouched() {
++    let mut populated = Durable::default();
++    populated.projects = maximal_registry();
++    let mut one = populated.clone();
++    one.projects.projects.truncate(1);
++    one.projects.receipts.truncate(1);
++    one.projects.revision = 1;
++    let mut exhausted = populated.clone();
++    exhausted.projects.expired_ids = (2000..2000 + MAX_TOMBSTONES).map(id).collect();
++    for durable in [Durable::default(), one, populated, exhausted] {
++        let f = Fixture::new(durable);
++        let before = f.bytes();
++        let expected = list(&f.app);
++        for _ in 0..2 {
++            let app = f.reopen().unwrap();
++            assert_eq!(list(&app), expected);
++            assert_eq!(f.bytes(), before);
++        }
++    }
++}
++
++#[test]
++fn projects_bootstrap_supported_legacy_never_inserts_or_consumes_registry_capacity() {
++    for version in 1..=6 {
++        let f = Fixture::new(Durable::default());
++        let mut old = if version == 1 {
++            serde_json::from_slice(include_bytes!("../tests/fixtures/voice-v1.json")).unwrap()
++        } else if version == 5 {
++            frozen_disk5().0
++        } else {
++            json!(Durable::default())
++        };
++        old["schema_version"] = json!(version);
++        // This cohort test needs migration headroom; rich frozen fixtures also
++        // exercise exhausted revisions in their existing dedicated regressions.
++        if version == 5 {
++            old["config"]["revision"] = json!(10);
++        }
++        old.as_object_mut().unwrap().remove("instructions");
++        if version < 5 {
++            old.as_object_mut().unwrap().remove("projects");
++        }
++        if version < 4 {
++            old.as_object_mut().unwrap().remove("timestamps");
++        }
++        if version < 3 {
++            old.as_object_mut().unwrap().remove("cloud");
++        }
++        let bytes = f.write(&old);
++        let (converted, migrated) = Durable::load(&bytes).unwrap();
++        assert!(migrated);
++        let expected = json!(converted.projects);
++        let app = f.reopen().unwrap();
++        assert_eq!(f.disk()["projects"], expected, "disk{version}");
++        assert_eq!(list(&app)["projects"], expected["projects"]);
++        drop(app);
++        let published = f.bytes();
++        let app = f.reopen().unwrap();
++        assert_eq!(f.bytes(), published);
++        assert_eq!(list(&app)["revision"], expected["revision"]);
++    }
++}
++
++#[test]
++fn projects_bootstrap_corrupt_empty_unsupported_and_unsafe_destinations_are_preserved() {
++    for bytes in [
++        vec![],
++        b"not json".to_vec(),
++        b"{}".to_vec(),
++        b"{\"schema_version\":999}".to_vec(),
++    ] {
++        let f = Fixture::new(Durable::default());
++        fs::write(&f.app.path, &bytes).unwrap();
++        assert!(f.reopen().is_err());
++        assert_eq!(f.bytes(), bytes);
++    }
++    let f = Fixture::new(Durable::default());
++    let bytes = f.bytes();
++    fs::set_permissions(&f.app.path, fs::Permissions::from_mode(0o644)).unwrap();
++    assert!(f.reopen().is_err());
++    assert_eq!(f.bytes(), bytes);
++    assert_eq!(
++        fs::metadata(&f.app.path).unwrap().permissions().mode() & 0o7777,
++        0o644
++    );
++    let preserved = f.app.path.with_extension("preserved");
++    fs::rename(&f.app.path, &preserved).unwrap();
++    std::os::unix::fs::symlink(&preserved, &f.app.path).unwrap();
++    assert!(f.reopen().is_err());
++    assert_eq!(fs::read_link(&f.app.path).unwrap(), preserved);
++    assert_eq!(fs::read(&preserved).unwrap(), bytes);
++    fs::remove_file(&f.app.path).unwrap();
++    fs::hard_link(&preserved, &f.app.path).unwrap();
++    assert!(f.reopen().is_err());
++    assert_eq!(f.bytes(), bytes);
++    fs::remove_file(&f.app.path).unwrap();
++    fs::create_dir(&f.app.path).unwrap();
++    assert!(f.reopen().is_err());
++    assert!(f.app.path.is_dir());
++    assert_eq!(fs::read(&preserved).unwrap(), bytes);
++}
++
++#[test]
++fn projects_bootstrap_staging_obstruction_and_appeared_destination_fail_without_clobber() {
++    let f = Fixture::new(Durable::default());
++    fs::remove_file(&f.app.path).unwrap();
++    let staging = f.app.path.parent().unwrap().join(format!(
++        ".smith-next-app-state.json-{}-tmp",
++        std::process::id()
++    ));
++    fs::write(&staging, b"staging obstruction").unwrap();
++    assert_eq!(f.reopen().err().unwrap(), "Cannot create staging file");
++    assert!(!f.app.path.exists());
++    assert_eq!(fs::read(&staging).unwrap(), b"staging obstruction");
++    fs::remove_file(staging).unwrap();
++    // Model a destination appearing after the caller's successful absent read.
++    assert!(filesystem::read_file(&f.app.path, 0o600, STATE_LIMIT)
++        .unwrap()
++        .is_none());
++    let existing = b"preserve even invalid newly appeared state";
++    fs::write(&f.app.path, existing).unwrap();
++    fs::set_permissions(&f.app.path, fs::Permissions::from_mode(0o600)).unwrap();
++    assert_eq!(
++        bootstrap(&f.app.path).err().unwrap(),
++        "Destination exists or cannot publish"
++    );
++    assert_eq!(f.bytes(), existing);
++    assert!(f.reopen().is_err());
++    assert_eq!(f.bytes(), existing);
++}
++
++#[test]
++fn projects_bootstrap_consumes_ordinary_capacity_and_honors_revoked_ownership() {
++    let f = fresh_fixture();
++    for revision in 1..MAX_PROJECTS {
++        call(
++            &f.app,
++            "project_create_v2",
++            create(&f.app, revision, revision as u64),
++        )
++        .unwrap();
++    }
++    assert_eq!(
++        list(&f.app)["projects"].as_array().unwrap().len(),
++        MAX_PROJECTS
++    );
++    f.assert_rejected(
++        "project_create_v2",
++        create(&f.app, 100, MAX_PROJECTS as u64),
++        "CAPACITY",
++    );
++    let app = f.reopen().unwrap();
++    assert_eq!(list(&app), list(&f.app));
++    f.app.inner.lock().unwrap().owned = false;
++    let target = list(&app)["projects"][0]["project_id"].clone();
++    f.assert_rejected(
++        "project_delete_v2",
++        delete(&f.app, 101, MAX_PROJECTS as u64, &target),
++        "STATE_UNAVAILABLE",
++    );
++    assert_eq!(
++        list(&app)["projects"].as_array().unwrap().len(),
++        MAX_PROJECTS
++    );
+ }
+ 
+ #[test]
+--- baseline/service/tests/debug_service.rs
++++ current/service/tests/debug_service.rs
+@@ -1230,7 +1230,7 @@
+         let bytes = fs::read(&path).unwrap();
+         assert!(bytes.len() < 16 * 1024 * 1024);
+         let mut disk: Value = serde_json::from_slice(&bytes).unwrap();
+-        assert_eq!(disk["schema_version"], 6);
++        assert_eq!(disk["schema_version"], 7);
+         assert_eq!(
+             disk["projects"],
+             json!({"revision":0,"projects":[],"receipts":[],"expired_ids":[]})
+@@ -1255,6 +1255,17 @@
+         );
+         let receipt =
+             json!({"request_id":request_id,"project_id":project_id,"revision":1,"deleted":false});
++        // Frozen disk5 has no instruction sidecar. Only downgrade this
++        // synthetic, unused default; never carry disk7-only fields into disk5.
++        let instructions = disk
++            .as_object_mut()
++            .unwrap()
++            .remove("instructions")
++            .unwrap();
++        assert_eq!(instructions["snapshots"], json!({}));
++        assert_eq!(instructions["grants"], json!([]));
++        assert_eq!(instructions["receipts"], json!([]));
++        assert_eq!(instructions["expired_ids"], json!([]));
+         disk["schema_version"] = json!(5);
+         disk["projects"] = json!({"revision":1,"projects":[{"project_id":project_id,
+             "name":"Legacy fixture","repositories":[url],"agent":"opencode"}],
+@@ -1365,8 +1376,13 @@
+         bootstrap(&app, true);
+         let instance = app.instance_id.clone();
+         drop(app);
++        // This migration-control test needs an existing empty registry, not a
++        // fresh-profile starter. Preserve all unrelated current durable state.
++        let path = fixture.roots.data.join("smith-next/app-state.json");
++        let mut existing: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
++        existing["projects"] = json!({"revision":0,"projects":[],"receipts":[],"expired_ids":[]});
++        fs::write(&path, serde_json::to_vec(&existing).unwrap()).unwrap();
+         let metadata = seed_disk5_projects(&fixture.roots, &instance);
+-        let path = fixture.roots.data.join("smith-next/app-state.json");
+         let old: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+         assert_eq!(old["schema_version"], 5);
+         assert_eq!(
+@@ -1423,7 +1439,7 @@
+             assert_eq!(app.call(req).unwrap_err().code, code);
+         }
+         let migrated: Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+-        assert_eq!(migrated["schema_version"], 6);
++        assert_eq!(migrated["schema_version"], 7);
+         assert_eq!(
+             migrated["projects"]["receipts"],
+             old["projects"]["receipts"]
+@@ -1432,9 +1448,14 @@
+             migrated["projects"]["expired_ids"],
+             old["projects"]["expired_ids"]
+         );
+-        for key in ["cloud", "config", "timestamps", "conversations", "jobs"] {
++        for key in ["cloud", "timestamps", "conversations", "jobs"] {
+             assert_eq!(migrated[key], old[key]);
+         }
++        // Disk7 migration deliberately advances configuration revision once.
++        let mut expected_config = old["config"].clone();
++        expected_config["revision"] = json!(old["config"]["revision"].as_u64().unwrap() + 1);
++        assert_eq!(migrated["config"], expected_config);
++        assert_eq!(migrated["instructions"], existing["instructions"]);
+         assert_eq!(
+             (
+                 controls.local_calls.load(Ordering::SeqCst),

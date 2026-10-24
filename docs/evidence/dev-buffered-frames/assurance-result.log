@@ -1,0 +1,74 @@
+{
+  "work": "LOCAL-SMITH-DEV-BUFFERED-FRAMES",
+  "review": "fresh independent read-only architecture/adversarial assurance; source unmodified; only test/build artifacts and evidence logs written",
+  "utc": "2026-10-19T19:35:55.142266+00:00",
+  "head": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+  "branch": "feature/autonomy",
+  "source_inputs_verified": 49,
+  "source_drift": [],
+  "source_identity_manifest_sha256": "ed2b1abcc7b609b36e8e4ee126a20a6d83b9e6d2aead082beb9cf6257bf1f6ba",
+  "original_evidence_manifest_sha256": "3c46d5bb24c3c6be3c4d4f4ef12232fc09dcf8632fcd1e0988ffa5936cc2cd29",
+  "source_scope_sha256": {
+    "service/src/dev_local.rs": "bf5b49144207c95c06e5659b106a7ffe39a7ae37208c3490cab000e5e64c1543",
+    "service/src/dev_runtime_local.rs": "7f30d9aed5477d9941ee34b285b4e93279ee8455103f7cef161703dae2a8f8d2",
+    "service/src/dev_worker_local.rs": "4f5e1e2558ed1ccbbce64044b2c78d52f91d28566311a8f7de83c2dfd42dc33b"
+  },
+  "selected_tests": {
+    "passed": 71,
+    "failed": 0
+  },
+  "broader_dev_tests": {
+    "passed": 114,
+    "failed": 0
+  },
+  "broader_local_tests": {
+    "passed": 50,
+    "failed": 1
+  },
+  "isolated_timestamp_reproduction": {
+    "passed": 0,
+    "failed": 1,
+    "exit": 101,
+    "failure": "app_timestamps_tests.rs:107 persist unwrap: Invalid instructions state; preserved; pending submit fixture has no instructions snapshot"
+  },
+  "build_clippy_format": "PASS",
+  "framing_findings": "No concrete buffering correctness defect identified in current source",
+  "verdict": "fail",
+  "release_gate_decision": "no-go: broader selected local gate fails; no live acceptance or approval",
+  "limitations": [
+    "three files untracked: no authenticated pre-fix diff",
+    "no end-to-end live timing, Docker, installed service, public network, OpenCode or model checks",
+    "full workspace, installer, package and UI gates not run",
+    "evidence locally owner-writable, not external attestation"
+  ],
+  "evidence_sha256": {
+    "docs/evidence/dev-buffered-frames/assurance-build.log": "ebd90a23f8390b990462f35e9fae7a56060590c31eb49923b70cf3e7d4ac8044",
+    "docs/evidence/dev-buffered-frames/assurance-clippy.log": "69e33e6babdfae2103d1e62f307ce97f3e9bf236dd5296a0c4ce7bc8744c5bac",
+    "docs/evidence/dev-buffered-frames/assurance-dev-broad.log": "1d37d4602d95c3af3f01d7e994b9fb7f84ae30cc1e8c0dbb6e7aadcf5397034d",
+    "docs/evidence/dev-buffered-frames/assurance-fmt.log": "17198abfad738896429d45465fd6ee0b8337e5fa6dc8ec1522d56b0c9e98f400",
+    "docs/evidence/dev-buffered-frames/assurance-local-broad.log": "38abb854e2a62b879267f590a09b165d0f0f27e4c65164969f532aaf0cb1da0f",
+    "docs/evidence/dev-buffered-frames/assurance-test-1.log": "dae7925366b565863f29b766639428a49483adad5a30280bb483696768cc3e20",
+    "docs/evidence/dev-buffered-frames/assurance-test-2.log": "2992070479928317a7bab136a863c335ecb692ce0522d50c3fd4d8df3315ddc2",
+    "docs/evidence/dev-buffered-frames/assurance-test-3.log": "7c717b8c907155d38a7bb5e76a8d3476ae10fc98dd9892fd6f2c20f0657e15cc",
+    "docs/evidence/dev-buffered-frames/assurance-test-4.log": "3dfc2c982c543c26456dc353c09bf6c43701090ac721ac25c63539b4dd87c553",
+    "docs/evidence/dev-buffered-frames/assurance-test-5.log": "78f03fffe34ba507b23a673a3390882c64843576fade81a95d734245d008256b",
+    "docs/evidence/dev-buffered-frames/assurance-test-6.log": "811f8ec8523483fdc7d683f903bf75892505a19ce69bd082ca931e6bb0c2e5a0",
+    "docs/evidence/dev-buffered-frames/assurance-test-7.log": "db893a63c93faf5e069082e6ee1fc7f32861be07746192b9af63d3c64dc0d2c8",
+    "docs/evidence/dev-buffered-frames/assurance-timestamp-isolated.log": "d524bc5ae6a2f307b3b2f68830e8fbb3853927a33b95af7e1eed9de7c449c7be"
+  },
+  "log_bytes": {
+    "docs/evidence/dev-buffered-frames/assurance-build.log": 154,
+    "docs/evidence/dev-buffered-frames/assurance-clippy.log": 183,
+    "docs/evidence/dev-buffered-frames/assurance-dev-broad.log": 11549,
+    "docs/evidence/dev-buffered-frames/assurance-fmt.log": 79,
+    "docs/evidence/dev-buffered-frames/assurance-local-broad.log": 6226,
+    "docs/evidence/dev-buffered-frames/assurance-test-1.log": 1250,
+    "docs/evidence/dev-buffered-frames/assurance-test-2.log": 1384,
+    "docs/evidence/dev-buffered-frames/assurance-test-3.log": 785,
+    "docs/evidence/dev-buffered-frames/assurance-test-4.log": 3063,
+    "docs/evidence/dev-buffered-frames/assurance-test-5.log": 1019,
+    "docs/evidence/dev-buffered-frames/assurance-test-6.log": 1120,
+    "docs/evidence/dev-buffered-frames/assurance-test-7.log": 1004,
+    "docs/evidence/dev-buffered-frames/assurance-timestamp-isolated.log": 1146
+  }
+}

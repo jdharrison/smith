@@ -1,0 +1,7 @@
+{
+  "archive_sha256": "33eea0b08d6be444bada18e64b2216459100d6070abcb4b5345cee40c9fff982",
+  "cli_sha256": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+  "version_exit": 0,
+  "version_output": "dagger v0.21.9 (image://registry.dagger.io/engine:v0.21.9) linux/amd64",
+  "installed_cli_changed": false
+}

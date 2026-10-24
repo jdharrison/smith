@@ -1,0 +1,920 @@
+--- baseline/client/lib/main.dart
++++ client/lib/main.dart
+@@ -118,7 +118,13 @@
+   }
+ 
+   void setPage(int index, String page) {
+-    if (!const {'chat', 'projects', 'agents', 'settings'}.contains(page)) {
++    if (!const {
++      'chat',
++      'dev',
++      'projects',
++      'agents',
++      'settings',
++    }.contains(page)) {
+       throw ArgumentError.value(page, 'page', 'Unknown workspace destination');
+     }
+     if (pages[index] == page) return;
+--- baseline/client/lib/ui/smith_workspace.dart
++++ client/lib/ui/smith_workspace.dart
+@@ -88,9 +88,75 @@
+   bool _projectsOpened = false;
+   bool get _agents => _page == 'agents';
+   bool _agentsOpened = false;
++  bool get _dev => _page == 'dev';
+   bool _devExpanded = false;
++  bool _devChooserOpen = false;
++  int _devChooserEpoch = 0;
++  final _devDisclosureFocus = FocusNode(debugLabel: 'Dev disclosure');
++  final _projectsFocus = FocusNode(debugLabel: 'Projects navigation');
++  final _agentsFocus = FocusNode(debugLabel: 'Agents navigation');
++
++  @override
++  void didChangeDependencies() {
++    super.didChangeDependencies();
++    if (!TickerMode.valuesOf(context).enabled) _devChooserEpoch++;
++  }
++
++  Future<void> _discloseDev(bool compact) async {
++    if (!compact) {
++      if (_devExpanded && (_projectsFocus.hasFocus || _agentsFocus.hasFocus)) {
++        _devDisclosureFocus.requestFocus();
++      }
++      setState(() => _devExpanded = !_devExpanded);
++      return;
++    }
++    if (_devChooserOpen) return;
++    final originPage = _page;
++    final epoch = ++_devChooserEpoch;
++    setState(() => _devChooserOpen = true);
++    final page = await showDialog<String>(
++      context: context,
++      builder: (context) => ValueListenableBuilder<SmithWorkspace>(
++        valueListenable: _presentation,
++        builder: (_, data, _) => SimpleDialog(
++          key: const ValueKey('dev-chooser'),
++          title: const Text('Dev'),
++          children: [
++            for (final entry in const {
++              'projects': 'Projects',
++              'agents': 'Agents',
++            }.entries)
++              Semantics(
++                selected: (data.page ?? _localPage) == entry.key,
++                child: SimpleDialogOption(
++                  padding: const EdgeInsets.all(16),
++                  onPressed: () => Navigator.pop(context, entry.key),
++                  child: ConstrainedBox(
++                    constraints: const BoxConstraints(minHeight: 48),
++                    child: Align(
++                      alignment: Alignment.centerLeft,
++                      child: Text(entry.value),
++                    ),
++                  ),
++                ),
++              ),
++          ],
++        ),
++      ),
++    );
++    if (!mounted) return;
++    setState(() => _devChooserOpen = false);
++    // A modal result cannot revive a route or pane hidden while it was open.
++    if (epoch == _devChooserEpoch &&
++        _page == originPage &&
++        TickerMode.valuesOf(context).enabled &&
++        page != null) {
++      _setPage(page);
++    }
++  }
+ 
+   void _setPage(String page) {
++    if (page != _page) _devChooserEpoch++;
+     if (widget.page == null) {
+       setState(() => _localPage = page);
+     }
+@@ -109,6 +175,7 @@
+   @override
+   void didUpdateWidget(covariant SmithWorkspace oldWidget) {
+     super.didUpdateWidget(oldWidget);
++    if (oldWidget.page != widget.page) _devChooserEpoch++;
+     // Modal routes are siblings, not descendants of this build scope.
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+       if (mounted) _presentation.value = widget;
+@@ -118,6 +185,9 @@
+   @override
+   void dispose() {
+     _presentation.dispose();
++    _devDisclosureFocus.dispose();
++    _projectsFocus.dispose();
++    _agentsFocus.dispose();
+     super.dispose();
+   }
+ 
+@@ -295,6 +365,8 @@
+     required bool selected,
+     required VoidCallback onPressed,
+     bool? expanded,
++    FocusNode? focusNode,
++    Widget? glyph,
+   }) => Padding(
+     padding: const EdgeInsets.only(bottom: 4),
+     child: MergeSemantics(
+@@ -308,6 +380,7 @@
+           excludeFromSemantics: true,
+           child: IconButton(
+             isSelected: selected,
++            focusNode: focusNode,
+             onPressed: onPressed,
+             constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+             style: ButtonStyle(
+@@ -328,10 +401,14 @@
+                 ),
+               ),
+             ),
+-            icon: SmithIcon(
+-              icon,
+-              color: selected ? SmithColors.accent : SmithColors.textSecondary,
+-            ),
++            icon:
++                glyph ??
++                SmithIcon(
++                  icon,
++                  color: selected
++                      ? SmithColors.accent
++                      : SmithColors.textSecondary,
++                ),
+           ),
+         ),
+       ),
+@@ -405,37 +482,24 @@
+                                 semanticLabel: 'Dev',
+                                 label: 'Dev',
+                                 icon: 'archive',
+-                                selected: _projects || _agents,
+-                                expanded: _devExpanded,
+-                                onPressed: () async {
+-                                  if (!compact) {
+-                                    setState(
+-                                      () => _devExpanded = !_devExpanded,
+-                                    );
+-                                    return;
+-                                  }
+-                                  final page = await showDialog<String>(
+-                                    context: context,
+-                                    builder: (context) => SimpleDialog(
+-                                      title: const Text('Dev'),
+-                                      children: [
+-                                        for (final entry in const {
+-                                          'projects': 'Projects',
+-                                          'agents': 'Agents',
+-                                        }.entries)
+-                                          SimpleDialogOption(
+-                                            padding: const EdgeInsets.all(16),
+-                                            onPressed: () => Navigator.pop(
+-                                              context,
+-                                              entry.key,
+-                                            ),
+-                                            child: Text(entry.value),
+-                                          ),
+-                                      ],
+-                                    ),
+-                                  );
+-                                  if (mounted && page != null) _setPage(page);
+-                                },
++                                selected: _dev,
++                                onPressed: () => _setPage('dev'),
++                              ),
++                              _railButton(
++                                semanticLabel: 'Dev navigation',
++                                label: 'Dev navigation',
++                                icon: 'archive',
++                                glyph: Icon(
++                                  (!compact && _devExpanded) || _devChooserOpen
++                                      ? Icons.expand_less
++                                      : Icons.expand_more,
++                                ),
++                                focusNode: _devDisclosureFocus,
++                                selected: false,
++                                expanded: compact
++                                    ? _devChooserOpen
++                                    : _devExpanded || _devChooserOpen,
++                                onPressed: () => _discloseDev(compact),
+                               ),
+                               if (!compact && _devExpanded) ...[
+                                 _railButton(
+@@ -443,19 +507,17 @@
+                                   label: 'Projects',
+                                   icon: 'archive',
+                                   selected: _projects,
++                                  focusNode: _projectsFocus,
+                                   onPressed: () => _setPage('projects'),
+                                 ),
+-                                Tooltip(
+-                                  message: 'Agents',
+-                                  child: IconButton(
+-                                    constraints: const BoxConstraints(
+-                                      minWidth: 48,
+-                                      minHeight: 48,
+-                                    ),
+-                                    isSelected: _agents,
+-                                    onPressed: () => _setPage('agents'),
+-                                    icon: const Icon(Icons.code),
+-                                  ),
++                                _railButton(
++                                  semanticLabel: 'Agents',
++                                  label: 'Agents',
++                                  icon: 'archive',
++                                  glyph: const Icon(Icons.code),
++                                  selected: _agents,
++                                  focusNode: _agentsFocus,
++                                  onPressed: () => _setPage('agents'),
+                                 ),
+                               ],
+                               _railButton(
+@@ -565,6 +627,8 @@
+                                                   ? 'Settings'
+                                                   : _agents
+                                                   ? 'Agents'
++                                                  : _dev
++                                                  ? 'Dev'
+                                                   : 'Projects'
+                                             : 'Chat / ${displayChatTitle(widget.title)}',
+                                         child: Text.rich(
+@@ -576,6 +640,8 @@
+                                                           ? 'Settings'
+                                                           : _agents
+                                                           ? 'Agents'
++                                                          : _dev
++                                                          ? 'Dev'
+                                                           : 'Projects',
+                                                     ),
+                                                   ]
+@@ -602,13 +668,16 @@
+                                                     ? 'Settings'
+                                                     : _agents
+                                                     ? 'Agents'
++                                                    : _dev
++                                                    ? 'Dev'
+                                                     : 'Projects'
+                                               : 'Chat / ${displayChatTitle(widget.title)}',
+                                         ),
+                                       ),
+                               ),
+                             ),
+-                            if (!_projects &&
++                            if (!_dev &&
++                                !_projects &&
+                                 !_agents &&
+                                 (widget.error != null ||
+                                     widget.recoveryGuidance != null))
+@@ -653,6 +722,7 @@
+                                 fit: StackFit.expand,
+                                 children: [
+                                   Offstage(
++                                    key: const ValueKey('destination-chat'),
+                                     offstage: !_chat,
+                                     child: TickerMode(
+                                       enabled: _chat,
+@@ -664,6 +734,9 @@
+                                   ),
+                                   if (_projectsOpened)
+                                     Offstage(
++                                      key: const ValueKey(
++                                        'destination-projects',
++                                      ),
+                                       offstage: !_projects,
+                                       child: TickerMode(
+                                         enabled: _projects,
+@@ -681,6 +754,7 @@
+                                     ),
+                                   if (_agentsOpened)
+                                     Offstage(
++                                      key: const ValueKey('destination-agents'),
+                                       offstage: !_agents,
+                                       child: TickerMode(
+                                         enabled: _agents,
+@@ -696,8 +770,19 @@
+                                         ),
+                                       ),
+                                     ),
++                                  if (_dev)
++                                    const SingleChildScrollView(
++                                      key: ValueKey('destination-dev'),
++                                      padding: EdgeInsets.all(16),
++                                      child: Text(
++                                        'Development workspace placeholder. Use Projects or Agents from Dev navigation.',
++                                      ),
++                                    ),
+                                   if (_settings)
+                                     WorkspaceReveal(
++                                      key: const ValueKey(
++                                        'destination-settings',
++                                      ),
+                                       region: WorkspaceRegion.settings,
+                                       child: SettingsView(
+                                         connectionStatus:
+--- baseline/client/lib/workspace_preferences.dart
++++ client/lib/workspace_preferences.dart
+@@ -4,7 +4,13 @@
+     if ((conversationId != null &&
+             (conversationId!.length != 32 ||
+                 !RegExp(r'^[0-9a-f]{32}$').hasMatch(conversationId!))) ||
+-        !const {'chat', 'projects', 'agents', 'settings'}.contains(page)) {
++        !const {
++          'chat',
++          'dev',
++          'projects',
++          'agents',
++          'settings',
++        }.contains(page)) {
+       throw const FormatException('Invalid workspace slot.');
+     }
+   }
+@@ -59,7 +65,7 @@
+   final List<WorkspaceSlotPreferences> slots;
+ 
+   Map<String, Object?> toJson() => {
+-    'version': 3,
++    'version': 4,
+     'layout': layout,
+     'activeTile': activeTile,
+     'slots': slots.map((slot) => slot.toJson()).toList(),
+@@ -68,7 +74,7 @@
+   factory WorkspacePreferences.fromJson(Object? json) {
+     if (!_keys(json, const {'version', 'layout', 'activeTile', 'slots'}) ||
+         (json as Map)['version'] is! int ||
+-        !const {1, 2, 3}.contains(json['version']) ||
++        !const {1, 2, 3, 4}.contains(json['version']) ||
+         json['layout'] is! String ||
+         json['activeTile'] is! int ||
+         json['slots'] is! List ||
+@@ -84,6 +90,7 @@
+       1 => const {'chat', 'settings'},
+       2 => const {'chat', 'projects', 'settings'},
+       3 => const {'chat', 'projects', 'agents', 'settings'},
++      4 => const {'chat', 'dev', 'projects', 'agents', 'settings'},
+       _ => const <String>{},
+     };
+     if (slots.any((slot) => !destinations.contains(slot.page))) {
+--- baseline/client/test/agents_navigation_test.dart
++++ client/test/agents_navigation_test.dart
+@@ -6,7 +6,6 @@
+ import 'package:smith_client/main.dart';
+ import 'package:smith_client/ui/agents_view.dart';
+ 
+-import 'package:smith_client/ui/smith_icon.dart';
+ import 'package:smith_client/workspace_controller.dart';
+ import 'package:smith_client/workspace_preferences.dart';
+ import 'package:smith_client/window_launcher.dart';
+@@ -54,14 +53,14 @@
+       final api = AgentsUiApi();
+       await mountAgentShell(tester, api, size: const Size(400, 400));
+       expect(api.agentCalls, isEmpty);
+-      final dev = inside(0, find.byTooltip('Dev'));
++      final dev = inside(0, find.byTooltip('Dev navigation'));
+       final button = find.descendant(
+         of: dev,
+         matching: find.byType(IconButton),
+       );
+       Focus.of(
+         tester.element(
+-          find.descendant(of: button, matching: find.byType(SmithIcon)).first,
++          find.descendant(of: button, matching: find.byType(Icon)).first,
+         ),
+       ).requestFocus();
+       await tester.pump();
+@@ -139,6 +138,18 @@
+       await tester.pumpAndSettle();
+       pages.setPage(0, 'agents');
+       await layout(tester, 2, 2);
++      final callsBeforeDev = List.of(api.calls);
++      for (var i = 0; i < 4; i++) {
++        await agentPaneTap(tester, i, find.byTooltip('Dev navigation'));
++        await agentPaneTap(tester, i, find.byTooltip('Dev navigation'));
++        pages.setPage(i, 'dev');
++      }
++      await tester.pumpAndSettle();
++      expect(api.calls, callsBeforeDev);
++      for (var i = 0; i < 4; i++) {
++        pages.setPage(i, 'agents');
++      }
++      await tester.pumpAndSettle();
+       for (var i = 0; i < 4; i++) {
+         expect(
+           identical(
+@@ -188,7 +199,7 @@
+       presentation(tester).setPage(0, 'settings');
+       await tester.pumpAndSettle();
+       final saved = jsonEncode(store.value!.toJson());
+-      expect(store.value!.toJson()['version'], 3);
++      expect(store.value!.toJson()['version'], 4);
+       for (final forbidden in ['Private', 'prompt', 'developer', 'selection']) {
+         expect(saved, isNot(contains(forbidden)));
+       }
+--- baseline/client/test/projects_navigation_test.dart
++++ client/test/projects_navigation_test.dart
+@@ -52,7 +52,7 @@
+ Future<void> projectPage(WidgetTester tester, int tile, String tooltip) async {
+   if (tooltip == 'Projects' &&
+       inside(tile, find.byTooltip(tooltip)).evaluate().isEmpty) {
+-    await tester.tap(inside(tile, find.byTooltip('Dev')).first);
++    await tester.tap(inside(tile, find.byTooltip('Dev navigation')).first);
+     await tester.pumpAndSettle();
+     if (find.byType(SimpleDialog).evaluate().isNotEmpty) {
+       await tester.tap(find.widgetWithText(SimpleDialogOption, 'Projects'));
+@@ -150,7 +150,7 @@
+     (tester) async {
+       final api = ProjectsUiApi();
+       await mountProjectWorkspace(tester, api);
+-      await tester.tap(inside(0, find.byTooltip('Dev')));
++      await tester.tap(inside(0, find.byTooltip('Dev navigation')));
+       await tester.pumpAndSettle();
+       final icon = inside(
+         0,
+@@ -212,6 +212,15 @@
+       final reading = history.offset;
+       expect(api.projectCalls, isEmpty);
+       expect(find.byType(ProjectsView, skipOffstage: false), findsNothing);
++      final callsBeforeDev = List.of(api.calls);
++      await projectPage(tester, 0, 'Dev navigation');
++      await projectPage(tester, 0, 'Dev navigation');
++      await projectPage(tester, 0, 'Dev');
++      expect(api.calls, callsBeforeDev);
++      expect(
++        editor.selection,
++        const TextSelection(baseOffset: 2, extentOffset: 8),
++      );
+       await projectPage(tester, 0, 'Settings');
+       expect(api.projectCalls, isEmpty);
+       await projectPage(tester, 0, 'Projects');
+@@ -249,6 +258,8 @@
+       expect(find.byType(ProjectsView, skipOffstage: false), findsOneWidget);
+       expect(paneKey(0, 'project-name'), findsNothing);
+       expect(find.byKey(const ValueKey('global-instructions')), findsOneWidget);
++      await projectPage(tester, 0, 'Dev');
++      await projectPage(tester, 0, 'Dev navigation');
+       await projectPage(tester, 0, 'Projects');
+       expect(tester.state(find.byType(ProjectsView)), same(projectsState));
+       expect(
+@@ -433,7 +444,7 @@
+       await projectPage(tester, 0, 'Settings');
+       await projectPage(tester, 0, 'Projects');
+       final encoded = jsonEncode(store.value!.toJson());
+-      expect(store.value!.toJson()['version'], 3);
++      expect(store.value!.toJson()['version'], 4);
+       expect(store.value!.slots[0].page, 'projects');
+       for (final value in [
+         alphaProject,
+--- baseline/client/test/workspace_preferences_test.dart
++++ client/test/workspace_preferences_test.dart
+@@ -45,7 +45,11 @@
+ 
+     test('rejects unknown fields, versions, types and bounds', () {
+       for (final change in <Map<String, Object?>>[
+-        {'version': 4},
++        {'version': 5},
++        {'version': 0},
++        {'version': '4'},
++        {'version': 4.0},
++        {'version': true},
+         {'version': 2.0},
+         {'version': 1.0},
+         {'layout': '3x3'},
+@@ -96,7 +100,7 @@
+     final old = {...preferences().toJson(), 'version': 1};
+     final migrated = WorkspacePreferences.fromJson(old);
+     expect(migrated, preferences());
+-    expect(migrated.toJson()['version'], 3);
++    expect(migrated.toJson()['version'], 4);
+     final slots = List.of(migrated.slots);
+     slots[2] = WorkspaceSlotPreferences(conversationId: null, page: 'projects');
+     final current = WorkspacePreferences(
+@@ -125,9 +129,9 @@
+     expect(jsonEncode(current.toJson()), isNot(contains('projectId')));
+   });
+ 
+-  test('v3 alone adds Agents, never agent input or selection', () {
+-    for (final version in [1, 2, 3]) {
+-      for (final page in ['chat', 'settings', 'projects', 'agents']) {
++  for (final version in [1, 2, 3, 4]) {
++    for (final page in ['chat', 'settings', 'projects', 'agents', 'dev']) {
++      test('v$version strictly validates $page in all four slots', () {
+         final value = WorkspacePreferences(
+           layout: '1x1',
+           activeTile: 0,
+@@ -137,29 +141,97 @@
+           ),
+         );
+         final json = {...value.toJson(), 'version': version};
+-        final allowed =
+-            page != 'agents' && (page != 'projects' || version >= 2) ||
+-            version == 3;
+-        if (allowed) {
+-          expect(WorkspacePreferences.fromJson(json), value);
+-        } else {
+-          expect(
+-            () => WorkspacePreferences.fromJson(json),
+-            throwsFormatException,
+-          );
++        final introduced = const {
++          'chat': 1,
++          'settings': 1,
++          'projects': 2,
++          'agents': 3,
++          'dev': 4,
++        };
++        final allowed = version >= introduced[page]!;
++        final cases = [json];
++        for (var index = 0; index < 4; index++) {
++          final single = {
++            ...preferences(layout: '1x1', active: 0).toJson(),
++            'version': version,
++          };
++          (single['slots'] as List)[index] = value.slots[index].toJson();
++          cases.add(single);
+         }
++        for (final sample in cases) {
++          if (allowed) {
++            expect(WorkspacePreferences.fromJson(sample).toJson(), {
++              ...sample,
++              'version': 4,
++            });
++          } else {
++            expect(
++              () => WorkspacePreferences.fromJson(sample),
++              throwsFormatException,
++            );
++          }
++        }
++      });
++    }
++  }
++
++  test('exact shape excludes disclosure, records, editor and prompt state', () {
++    final value = preferences().toJson();
++    expect(
++      value.keys,
++      unorderedEquals(['version', 'layout', 'activeTile', 'slots']),
++    );
++    expect(value['version'], 4);
++    for (final slot in value['slots'] as List) {
++      expect((slot as Map).keys, unorderedEquals(['conversationId', 'page']));
++    }
++    for (final key in value.keys) {
++      final missing = Map.of(value)..remove(key);
++      expect(
++        () => WorkspacePreferences.fromJson(missing),
++        throwsFormatException,
++      );
++    }
++    for (var index = 0; index < 4; index++) {
++      for (final key in ['conversationId', 'page']) {
++        final missing = jsonDecode(jsonEncode(value)) as Map<String, dynamic>;
++        (missing['slots'] as List)[index].remove(key);
++        expect(
++          () => WorkspacePreferences.fromJson(missing),
++          throwsFormatException,
++        );
+       }
+     }
+     for (final field in [
++      'devExpanded',
++      'disclosure',
++      'childSelection',
++      'editor',
++      'projectId',
+       'agentId',
+       'prompt',
+       'description',
+       'draft',
+       'selection',
+     ]) {
+-      final json = preferences().toJson();
+-      (json['slots'] as List).first[field] = 'never persisted';
+-      expect(() => WorkspacePreferences.fromJson(json), throwsFormatException);
++      for (final version in [1, 2, 3, 4]) {
++        final json = {...preferences().toJson(), 'version': version};
++        expect(
++          () => WorkspacePreferences.fromJson({
++            ...json,
++            field: 'never persisted',
++          }),
++          throwsFormatException,
++        );
++        for (var index = 0; index < 4; index++) {
++          final nested = jsonDecode(jsonEncode(json)) as Map<String, dynamic>;
++          (nested['slots'] as List)[index][field] = 'never persisted';
++          expect(
++            () => WorkspacePreferences.fromJson(nested),
++            throwsFormatException,
++          );
++        }
++      }
+     }
+   });
+ 
+@@ -218,17 +290,73 @@
+       expect(await store.load(), latest);
+     });
+ 
+-    test('v1 bytes remain untouched until an explicit v3 save', () async {
+-      final bytes = utf8.encode(
+-        jsonEncode({...preferences().toJson(), 'version': 1}),
+-      );
+-      await seed(bytes);
+-      final value = await store.load();
+-      expect(value, preferences());
+-      expect(await File(path).readAsBytes(), bytes);
+-      await store.save(value!);
+-      expect(jsonDecode(await File(path).readAsString())['version'], 3);
+-    });
++    for (final version in [1, 2, 3]) {
++      test(
++        'v$version bytes remain untouched until an explicit v4 save',
++        () async {
++          final bytes = utf8.encode(
++            jsonEncode({...preferences().toJson(), 'version': version}),
++          );
++          await seed(bytes);
++          final value = await store.load();
++          expect(value, preferences());
++          expect(await File(path).readAsBytes(), bytes);
++          await store.save(value!);
++          expect(jsonDecode(await File(path).readAsString())['version'], 4);
++        },
++      );
++    }
++
++    test(
++      'mixed v3 legacy bytes and IDs survive load and explicit v4 save',
++      () async {
++        final legacy = {
++          'version': 3,
++          'layout': '1x1',
++          'activeTile': 0,
++          'slots': [
++            {
++              'conversationId': '0123456789abcdef0123456789abcdef',
++              'page': 'chat',
++            },
++            {'conversationId': null, 'page': 'projects'},
++            {
++              'conversationId': 'fedcba9876543210fedcba9876543210',
++              'page': 'agents',
++            },
++            {'conversationId': null, 'page': 'settings'},
++          ],
++        };
++        final bytes = utf8.encode('  ${jsonEncode(legacy)}\n');
++        await seed(bytes);
++        final loaded = await store.load();
++        expect(loaded, WorkspacePreferences.fromJson(legacy));
++        expect(await File(path).readAsBytes(), bytes);
++        await store.close();
++        store = LinuxWorkspacePreferencesStore(root: fixture.path);
++        expect(await store.load(), loaded);
++        expect(await File(path).readAsBytes(), bytes);
++        final slots = List.of(loaded!.slots);
++        slots[0] = WorkspaceSlotPreferences(
++          conversationId: slots[0].conversationId,
++          page: 'dev',
++        );
++        final changed = WorkspacePreferences(
++          layout: loaded.layout,
++          activeTile: loaded.activeTile,
++          slots: slots,
++        );
++        await store.save(changed);
++        final saved =
++            jsonDecode(await File(path).readAsString()) as Map<String, dynamic>;
++        expect(saved['version'], 4);
++        expect(WorkspacePreferences.fromJson(saved), changed);
++        expect(saved['slots'], [
++          {'conversationId': '0123456789abcdef0123456789abcdef', 'page': 'dev'},
++          ...((legacy['slots'] as List).skip(1)),
++        ]);
++      },
++    );
+ 
+     test(
+       'same-process competing open descriptions cannot take lifetime lock',
+@@ -299,21 +427,43 @@
+ 
+     for (final sample in <String, List<int>>{
+       'corrupt': utf8.encode('{'),
++      for (final version in [1, 2, 3])
++        'v$version Dev destination': utf8.encode(
++          jsonEncode({
++            ...preferences().toJson(),
++            'version': version,
++            'slots': [
++              for (var index = 0; index < 4; index++)
++                WorkspaceSlotPreferences(
++                  conversationId: null,
++                  page: index == 3 ? 'dev' : 'chat',
++                ).toJson(),
++            ],
++          }),
++        ),
+       'future': utf8.encode(
+-        jsonEncode({...preferences().toJson(), 'version': 4}),
++        jsonEncode({...preferences().toJson(), 'version': 5}),
+       ),
+       'unknown member': utf8.encode(
+         jsonEncode({...preferences().toJson(), 'draft': 'private'}),
+       ),
+       'oversize': List.filled(4097, 32),
+       'invalid utf8': [0xff],
++      'legacy duplicate member': utf8.encode(
++        jsonEncode({...preferences().toJson(), 'version': 3})
++            .replaceFirst('"version":3', '"version":1,"version":3'),
++      ),
++      'legacy escaped duplicate': utf8.encode(
++        jsonEncode({...preferences().toJson(), 'version': 3})
++            .replaceFirst('"version":3', r'"\u0076ersion":1,"version":3'),
++      ),
+       'duplicate member': utf8.encode(
+         jsonEncode(preferences().toJson())
+-            .replaceFirst('"version":3', '"version":1,"version":3'),
++            .replaceFirst('"version":4', '"version":1,"version":4'),
+       ),
+       'escaped duplicate': utf8.encode(
+         jsonEncode(preferences().toJson())
+-            .replaceFirst('"version":3', r'"\u0076ersion":1,"version":3'),
++            .replaceFirst('"version":4', r'"\u0076ersion":1,"version":4'),
+       ),
+     }.entries) {
+       test(
+--- baseline/client/test/workspace_restore_test.dart
++++ client/test/workspace_restore_test.dart
+@@ -90,7 +90,7 @@
+     .widget<ConversationScreen>(find.byType(ConversationScreen))
+     .presentation!;
+ 
+-void noMutations(FakeAppApi api) {
++void noMutations(FakeAppApi api, {List<String> registryReads = const []}) {
+   // Boot's existing explicit inventory observation is not restoration work.
+   expect(api.calls.where((op) => op == 'models'), hasLength(1));
+   expect(
+@@ -101,6 +101,7 @@
+         'poll',
+         'models',
+         'instructions_get',
++        ...registryReads,
+       ].contains(op),
+     ),
+     isEmpty,
+@@ -108,6 +109,152 @@
+ }
+ 
+ void main() {
++  for (final version in [1, 2, 3]) {
++    testWidgets('v$version hydration normalizes without a presentation save', (
++      tester,
++    ) async {
++      final legacy = {
++        ...preferences(preset: '1x1').toJson(),
++        'version': version,
++      };
++      final store = MemoryStore(WorkspacePreferences.fromJson(legacy));
++      final api = FakeAppApi();
++      await mountApp(tester, store, api);
++      expect(store.loads, 1);
++      expect(store.writes, isEmpty);
++      final p = presentation(tester);
++      p.setPage(0, 'chat');
++      owner(tester).selected.edit('session-only legacy draft');
++      await tester.pumpAndSettle();
++      expect(store.writes, isEmpty);
++      p.setPage(0, 'dev');
++      await tester.pumpAndSettle();
++      expect(p.pages[0], 'dev');
++      expect(store.writes, hasLength(1));
++      expect(store.value!.toJson()['version'], 4);
++      expect(store.value!.slots[0].page, 'dev');
++      expect(store.value!.slots[0].conversationId, isNull);
++      for (var i = 1; i < 4; i++) {
++        expect(
++          store.value!.slots[i],
++          WorkspacePreferences.fromJson(legacy).slots[i],
++        );
++      }
++      expect(
++        jsonEncode(store.value!.toJson()),
++        isNot(contains('legacy draft')),
++      );
++      noMutations(api);
++      await tester.pumpWidget(const SizedBox());
++      await tester.pumpAndSettle();
++      expect(store.closes, 1);
++      expect(store.writes, hasLength(1));
++    });
++  }
++
++  testWidgets(
++    'v4 mixed four-pane restore retains hidden Dev without eager registry loads',
++    (tester) async {
++      tester.view.physicalSize = const Size(1800, 1200);
++      tester.view.devicePixelRatio = 1;
++      addTearDown(tester.view.resetPhysicalSize);
++      addTearDown(tester.view.resetDevicePixelRatio);
++      final saved = WorkspacePreferences(
++        layout: '1x1',
++        activeTile: 0,
++        slots: [
++          WorkspaceSlotPreferences(conversationId: null, page: 'dev'),
++          WorkspaceSlotPreferences(
++            conversationId: testConversation,
++            page: 'chat',
++          ),
++          WorkspaceSlotPreferences(
++            conversationId: testConversation,
++            page: 'settings',
++          ),
++          WorkspaceSlotPreferences(conversationId: null, page: 'dev'),
++        ],
++      );
++      for (var restart = 0; restart < 2; restart++) {
++        final store = MemoryStore(saved);
++        final api = FakeAppApi();
++        await mountApp(tester, store, api);
++        expect(presentation(tester).pages, ['dev', 'chat', 'settings', 'dev']);
++        expect(
++          owner(tester).panes[1].selected,
++          same(owner(tester).panes[2].selected),
++        );
++        expect(store.writes, isEmpty);
++        expect(api.calls.where((op) => op == 'conversation_get'), hasLength(1));
++        await layout(tester, 2, 2);
++        for (var i = 0; i < 4; i++) {
++          expect(
++            tester
++                .widget<SmithWorkspace>(inside(i, find.byType(SmithWorkspace)))
++                .page,
++            saved.slots[i].page,
++          );
++        }
++        expect(api.calls.where((op) => op == 'conversation_get'), hasLength(1));
++        expect(
++          api.calls.where(
++            (op) => op.startsWith('projects_') || op.startsWith('agents_'),
++          ),
++          isEmpty,
++        );
++        noMutations(api);
++        expect(tester.takeException(), isNull);
++        await tester.pumpWidget(const SizedBox());
++        await tester.pumpAndSettle();
++        expect(store.closes, 1);
++      }
++    },
++  );
++
++  for (final hiddenChildren in [false, true]) {
++    testWidgets(
++      'Dev restore has ${hiddenChildren ? 'only existing hidden child reads, no duplicate' : 'no eager registry reads'}',
++      (tester) async {
++        final pages = hiddenChildren
++            ? ['dev', 'projects', 'agents', 'settings']
++            : List.filled(4, 'dev');
++        final registryReads = hiddenChildren
++            ? ['projects_list_v2', 'agents_list_v1']
++            : <String>[];
++        final saved = WorkspacePreferences(
++          layout: '1x1',
++          activeTile: 0,
++          slots: [
++            for (final page in pages)
++              WorkspaceSlotPreferences(conversationId: null, page: page),
++          ],
++        );
++        final store = MemoryStore(saved);
++        final api = FakeAppApi();
++        await mountApp(tester, store, api);
++        expect(presentation(tester).pages, pages);
++        final initialCalls = List.of(api.calls);
++        expect(store.value, saved);
++        expect(store.writes, isEmpty);
++        presentation(tester).setPage(0, 'dev');
++        await tester.pumpAndSettle();
++        expect(store.writes, isEmpty);
++        expect(
++          api.calls.where(
++            (op) => op.startsWith('projects_') || op.startsWith('agents_'),
++          ),
++          unorderedEquals(registryReads),
++        );
++        expect(api.calls, initialCalls);
++        noMutations(api, registryReads: registryReads);
++        await tester.pumpWidget(const SizedBox());
++        await tester.pumpAndSettle();
++        expect(store.writes, isEmpty);
++        expect(store.closes, 1);
++      },
++    );
++  }
++
+   testWidgets(
+     'explicit first send persists promoted ID; restart never resubmits',
+     (tester) async {

@@ -1,0 +1,76 @@
+00:00 +0: loading <repo>/client/test/projects_layout_test.dart
+00:00 +0: wide interior composition uses only real fields and derived cards
+00:00 +1: repository pairs fit independently at local width 880.0
+00:00 +2: repository pairs fit independently at local width 1000.0
+00:00 +3: repository pairs fit independently at local width 1536.0
+00:00 +4: repository pairs fit independently at local width 400.0
+00:00 +5: focused type editor keeps its state and text selection across paired and stacked reflow
+00:01 +6: search is Name-only, local, and never replaces the selected draft
+00:01 +7: list distinguishes loading from a local search miss
+00:01 +8: list distinguishes empty from a local search miss
+00:01 +9: list distinguishes unavailable from a local search miss
+00:01 +10: compact Back/return/resize retains both scrolls, selection, disclosure and focus exclusion at 1.0x
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <629.0>
+  Actual: <677.0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<repo>/client/test/projects_layout_test.dart:441:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<repo>/client/test/projects_layout_test.dart line 441
+The test description was:
+  compact Back/return/resize retains both scrolls, selection, disclosure and focus exclusion at 1.0x
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +10 -1: compact Back/return/resize retains both scrolls, selection, disclosure and focus exclusion at 1.0x [E]
+  Test failed. See exception logs above.
+  The test description was: compact Back/return/resize retains both scrolls, selection, disclosure and focus exclusion at 1.0x
+  
+00:02 +10 -1: compact Back/return/resize retains both scrolls, selection, disclosure and focus exclusion at 2.0x
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <802.0>
+  Actual: <922.0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<repo>/client/test/projects_layout_test.dart:441:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<repo>/client/test/projects_layout_test.dart line 441
+The test description was:
+  compact Back/return/resize retains both scrolls, selection, disclosure and focus exclusion at 2.0x
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:03 +10 -2: compact Back/return/resize retains both scrolls, selection, disclosure and focus exclusion at 2.0x [E]
+  Test failed. See exception logs above.
+  The test description was: compact Back/return/resize retains both scrolls, selection, disclosure and focus exclusion at 2.0x
+  
+00:03 +10 -2: compact other-project and New retain the discard guard; current callback does not reload
+00:04 +11 -2: compact return reaches the retained new editor without rebinding at 1.0x
+00:04 +12 -2: compact return reaches the retained missing editor without rebinding at 1.0x
+00:04 +13 -2: compact return reaches the retained uncertain editor without rebinding at 1.0x
+00:04 +14 -2: compact return reaches the retained filtered editor without rebinding at 1.0x
+00:04 +15 -2: compact return reaches the retained new editor without rebinding at 2.0x
+00:05 +16 -2: compact return reaches the retained missing editor without rebinding at 2.0x
+00:05 +17 -2: compact return reaches the retained uncertain editor without rebinding at 2.0x
+00:05 +18 -2: compact return reaches the retained filtered editor without rebinding at 2.0x
+00:05 +19 -2: compact list keeps Refresh and receipt-only recovery reachable without rebinding the draft
+00:05 +20 -2: Some tests failed.
+
+Failing tests:
+  <repo>/client/test/projects_layout_test.dart: compact Back/return/resize retains both scrolls, selection, disclosure and focus exclusion at 1.0x
+  <repo>/client/test/projects_layout_test.dart: compact Back/return/resize retains both scrolls, selection, disclosure and focus exclusion at 2.0x

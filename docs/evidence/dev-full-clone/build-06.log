@@ -1,0 +1,4 @@
+COMMAND: cargo build --offline --locked
+EXIT: 0
+   Compiling smith-service v0.1.0 (<repo>/service)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.81s

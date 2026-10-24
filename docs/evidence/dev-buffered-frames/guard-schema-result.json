@@ -1,0 +1,14 @@
+{
+  "source_sha256": {
+    "service/dev-worker/guard.mjs": "b8c512c1b80382783bec41a76204815a9ddf3c234cee6c8ad6e721295e2489f0",
+    "service/dev-worker/guard.test.mjs": "3bfd5d54b2d9adf3cf7aea977a5a162adbe33fa7a891ef5edd662647c6005e5c",
+    "service/target/debug/smith-service": "8cd17bc3e5e17a0df5df5f4ce9b5860a113355fd9a9bb4611404a58f5ce9a457"
+  },
+  "node_tests": "7 passed; independently repeated",
+  "rust_dev_tests": "114 passed",
+  "locked_build": "pass",
+  "production_clippy": "pass",
+  "deployment_performed": false,
+  "unknown_reconciled": false,
+  "live_runtime_acceptance": false
+}

@@ -1,0 +1,13 @@
+{
+  "inventory_request_id": "5d33fc90c0974e548276a0c0829df3a2",
+  "inventory_status": "succeeded",
+  "local_model": {
+    "config_revision": "1",
+    "name": "smollm2-1.7b-instruct:q4_k_m",
+    "ready": true,
+    "sha256": "decd2598bc2c8ed08c19adc3c8fdd461ee19ed5708679d1c54ef54a5a30d4f33"
+  },
+  "dev_used_records": 4,
+  "dev_job_submitted": false,
+  "inference_run": false
+}

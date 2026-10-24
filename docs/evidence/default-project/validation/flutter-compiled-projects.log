@@ -1,0 +1,10 @@
+00:00 +0: loading <repo>/target/default-project/validation/candidate/client/test/rust_projects_integration_test.dart
+00:00 +0: compiled fresh profile persists an ordinary Smith starter without resurrection or extra effects
+00:00 +1: compiled Projects CRUD persists structured repositories without changing chat projections
+00:00 +2: compiled lost Projects acknowledgement resolves across restart without replay
+00:00 +3: compiled historical create receipt cannot recreate a deleted project
+00:00 +4: compiled concurrent project edits and stale service instances fail closed
+00:00 +5: compiled disk5 URLs migrate without invented repository names or branches
+00:01 +6: compiled legacy Projects calls cannot erase settings or bypass replay identities
+00:01 +7: compiled branch-only uncertain update resolves original nested payload without replay
+00:01 +8: All tests passed!

@@ -1,0 +1,512 @@
+--- before/client/lib/workspace_preferences.dart
++++ after/client/lib/workspace_preferences.dart
+@@ -4,7 +4,13 @@
+     if ((conversationId != null &&
+             (conversationId!.length != 32 ||
+                 !RegExp(r'^[0-9a-f]{32}$').hasMatch(conversationId!))) ||
+-        !const {'chat', 'projects', 'agents', 'settings'}.contains(page)) {
++        !const {
++          'chat',
++          'dev',
++          'projects',
++          'agents',
++          'settings',
++        }.contains(page)) {
+       throw const FormatException('Invalid workspace slot.');
+     }
+   }
+@@ -59,7 +65,7 @@
+   final List<WorkspaceSlotPreferences> slots;
+ 
+   Map<String, Object?> toJson() => {
+-    'version': 3,
++    'version': 4,
+     'layout': layout,
+     'activeTile': activeTile,
+     'slots': slots.map((slot) => slot.toJson()).toList(),
+@@ -68,7 +74,7 @@
+   factory WorkspacePreferences.fromJson(Object? json) {
+     if (!_keys(json, const {'version', 'layout', 'activeTile', 'slots'}) ||
+         (json as Map)['version'] is! int ||
+-        !const {1, 2, 3}.contains(json['version']) ||
++        !const {1, 2, 3, 4}.contains(json['version']) ||
+         json['layout'] is! String ||
+         json['activeTile'] is! int ||
+         json['slots'] is! List ||
+@@ -84,6 +90,7 @@
+       1 => const {'chat', 'settings'},
+       2 => const {'chat', 'projects', 'settings'},
+       3 => const {'chat', 'projects', 'agents', 'settings'},
++      4 => const {'chat', 'dev', 'projects', 'agents', 'settings'},
+       _ => const <String>{},
+     };
+     if (slots.any((slot) => !destinations.contains(slot.page))) {
+--- before/client/lib/main.dart
++++ after/client/lib/main.dart
+@@ -118,7 +118,13 @@
+   }
+ 
+   void setPage(int index, String page) {
+-    if (!const {'chat', 'projects', 'agents', 'settings'}.contains(page)) {
++    if (!const {
++      'chat',
++      'dev',
++      'projects',
++      'agents',
++      'settings',
++    }.contains(page)) {
+       throw ArgumentError.value(page, 'page', 'Unknown workspace destination');
+     }
+     if (pages[index] == page) return;
+--- before/client/test/workspace_preferences_test.dart
++++ after/client/test/workspace_preferences_test.dart
+@@ -45,7 +45,11 @@
+ 
+     test('rejects unknown fields, versions, types and bounds', () {
+       for (final change in <Map<String, Object?>>[
+-        {'version': 4},
++        {'version': 5},
++        {'version': 0},
++        {'version': '4'},
++        {'version': 4.0},
++        {'version': true},
+         {'version': 2.0},
+         {'version': 1.0},
+         {'layout': '3x3'},
+@@ -96,7 +100,7 @@
+     final old = {...preferences().toJson(), 'version': 1};
+     final migrated = WorkspacePreferences.fromJson(old);
+     expect(migrated, preferences());
+-    expect(migrated.toJson()['version'], 3);
++    expect(migrated.toJson()['version'], 4);
+     final slots = List.of(migrated.slots);
+     slots[2] = WorkspaceSlotPreferences(conversationId: null, page: 'projects');
+     final current = WorkspacePreferences(
+@@ -125,9 +129,9 @@
+     expect(jsonEncode(current.toJson()), isNot(contains('projectId')));
+   });
+ 
+-  test('v3 alone adds Agents, never agent input or selection', () {
+-    for (final version in [1, 2, 3]) {
+-      for (final page in ['chat', 'settings', 'projects', 'agents']) {
++  for (final version in [1, 2, 3, 4]) {
++    for (final page in ['chat', 'settings', 'projects', 'agents', 'dev']) {
++      test('v$version strictly validates $page in all four slots', () {
+         final value = WorkspacePreferences(
+           layout: '1x1',
+           activeTile: 0,
+@@ -137,29 +141,97 @@
+           ),
+         );
+         final json = {...value.toJson(), 'version': version};
+-        final allowed =
+-            page != 'agents' && (page != 'projects' || version >= 2) ||
+-            version == 3;
+-        if (allowed) {
+-          expect(WorkspacePreferences.fromJson(json), value);
+-        } else {
+-          expect(
+-            () => WorkspacePreferences.fromJson(json),
+-            throwsFormatException,
+-          );
++        final introduced = const {
++          'chat': 1,
++          'settings': 1,
++          'projects': 2,
++          'agents': 3,
++          'dev': 4,
++        };
++        final allowed = version >= introduced[page]!;
++        final cases = [json];
++        for (var index = 0; index < 4; index++) {
++          final single = {
++            ...preferences(layout: '1x1', active: 0).toJson(),
++            'version': version,
++          };
++          (single['slots'] as List)[index] = value.slots[index].toJson();
++          cases.add(single);
+         }
++        for (final sample in cases) {
++          if (allowed) {
++            expect(WorkspacePreferences.fromJson(sample).toJson(), {
++              ...sample,
++              'version': 4,
++            });
++          } else {
++            expect(
++              () => WorkspacePreferences.fromJson(sample),
++              throwsFormatException,
++            );
++          }
++        }
++      });
++    }
++  }
++
++  test('exact shape excludes disclosure, records, editor and prompt state', () {
++    final value = preferences().toJson();
++    expect(
++      value.keys,
++      unorderedEquals(['version', 'layout', 'activeTile', 'slots']),
++    );
++    expect(value['version'], 4);
++    for (final slot in value['slots'] as List) {
++      expect((slot as Map).keys, unorderedEquals(['conversationId', 'page']));
++    }
++    for (final key in value.keys) {
++      final missing = Map.of(value)..remove(key);
++      expect(
++        () => WorkspacePreferences.fromJson(missing),
++        throwsFormatException,
++      );
++    }
++    for (var index = 0; index < 4; index++) {
++      for (final key in ['conversationId', 'page']) {
++        final missing = jsonDecode(jsonEncode(value)) as Map<String, dynamic>;
++        (missing['slots'] as List)[index].remove(key);
++        expect(
++          () => WorkspacePreferences.fromJson(missing),
++          throwsFormatException,
++        );
+       }
+     }
+     for (final field in [
++      'devExpanded',
++      'disclosure',
++      'childSelection',
++      'editor',
++      'projectId',
+       'agentId',
+       'prompt',
+       'description',
+       'draft',
+       'selection',
+     ]) {
+-      final json = preferences().toJson();
+-      (json['slots'] as List).first[field] = 'never persisted';
+-      expect(() => WorkspacePreferences.fromJson(json), throwsFormatException);
++      for (final version in [1, 2, 3, 4]) {
++        final json = {...preferences().toJson(), 'version': version};
++        expect(
++          () => WorkspacePreferences.fromJson({
++            ...json,
++            field: 'never persisted',
++          }),
++          throwsFormatException,
++        );
++        for (var index = 0; index < 4; index++) {
++          final nested = jsonDecode(jsonEncode(json)) as Map<String, dynamic>;
++          (nested['slots'] as List)[index][field] = 'never persisted';
++          expect(
++            () => WorkspacePreferences.fromJson(nested),
++            throwsFormatException,
++          );
++        }
++      }
+     }
+   });
+ 
+@@ -218,17 +290,73 @@
+       expect(await store.load(), latest);
+     });
+ 
+-    test('v1 bytes remain untouched until an explicit v3 save', () async {
+-      final bytes = utf8.encode(
+-        jsonEncode({...preferences().toJson(), 'version': 1}),
+-      );
+-      await seed(bytes);
+-      final value = await store.load();
+-      expect(value, preferences());
+-      expect(await File(path).readAsBytes(), bytes);
+-      await store.save(value!);
+-      expect(jsonDecode(await File(path).readAsString())['version'], 3);
+-    });
++    for (final version in [1, 2, 3]) {
++      test(
++        'v$version bytes remain untouched until an explicit v4 save',
++        () async {
++          final bytes = utf8.encode(
++            jsonEncode({...preferences().toJson(), 'version': version}),
++          );
++          await seed(bytes);
++          final value = await store.load();
++          expect(value, preferences());
++          expect(await File(path).readAsBytes(), bytes);
++          await store.save(value!);
++          expect(jsonDecode(await File(path).readAsString())['version'], 4);
++        },
++      );
++    }
++
++    test(
++      'mixed v3 legacy bytes and IDs survive load and explicit v4 save',
++      () async {
++        final legacy = {
++          'version': 3,
++          'layout': '1x1',
++          'activeTile': 0,
++          'slots': [
++            {
++              'conversationId': '0123456789abcdef0123456789abcdef',
++              'page': 'chat',
++            },
++            {'conversationId': null, 'page': 'projects'},
++            {
++              'conversationId': 'fedcba9876543210fedcba9876543210',
++              'page': 'agents',
++            },
++            {'conversationId': null, 'page': 'settings'},
++          ],
++        };
++        final bytes = utf8.encode('  ${jsonEncode(legacy)}\n');
++        await seed(bytes);
++        final loaded = await store.load();
++        expect(loaded, WorkspacePreferences.fromJson(legacy));
++        expect(await File(path).readAsBytes(), bytes);
++        await store.close();
++        store = LinuxWorkspacePreferencesStore(root: fixture.path);
++        expect(await store.load(), loaded);
++        expect(await File(path).readAsBytes(), bytes);
++        final slots = List.of(loaded!.slots);
++        slots[0] = WorkspaceSlotPreferences(
++          conversationId: slots[0].conversationId,
++          page: 'dev',
++        );
++        final changed = WorkspacePreferences(
++          layout: loaded.layout,
++          activeTile: loaded.activeTile,
++          slots: slots,
++        );
++        await store.save(changed);
++        final saved =
++            jsonDecode(await File(path).readAsString()) as Map<String, dynamic>;
++        expect(saved['version'], 4);
++        expect(WorkspacePreferences.fromJson(saved), changed);
++        expect(saved['slots'], [
++          {'conversationId': '0123456789abcdef0123456789abcdef', 'page': 'dev'},
++          ...((legacy['slots'] as List).skip(1)),
++        ]);
++      },
++    );
+ 
+     test(
+       'same-process competing open descriptions cannot take lifetime lock',
+@@ -299,21 +427,43 @@
+ 
+     for (final sample in <String, List<int>>{
+       'corrupt': utf8.encode('{'),
++      for (final version in [1, 2, 3])
++        'v$version Dev destination': utf8.encode(
++          jsonEncode({
++            ...preferences().toJson(),
++            'version': version,
++            'slots': [
++              for (var index = 0; index < 4; index++)
++                WorkspaceSlotPreferences(
++                  conversationId: null,
++                  page: index == 3 ? 'dev' : 'chat',
++                ).toJson(),
++            ],
++          }),
++        ),
+       'future': utf8.encode(
+-        jsonEncode({...preferences().toJson(), 'version': 4}),
++        jsonEncode({...preferences().toJson(), 'version': 5}),
+       ),
+       'unknown member': utf8.encode(
+         jsonEncode({...preferences().toJson(), 'draft': 'private'}),
+       ),
+       'oversize': List.filled(4097, 32),
+       'invalid utf8': [0xff],
++      'legacy duplicate member': utf8.encode(
++        jsonEncode({...preferences().toJson(), 'version': 3})
++            .replaceFirst('"version":3', '"version":1,"version":3'),
++      ),
++      'legacy escaped duplicate': utf8.encode(
++        jsonEncode({...preferences().toJson(), 'version': 3})
++            .replaceFirst('"version":3', r'"\u0076ersion":1,"version":3'),
++      ),
+       'duplicate member': utf8.encode(
+         jsonEncode(preferences().toJson())
+-            .replaceFirst('"version":3', '"version":1,"version":3'),
++            .replaceFirst('"version":4', '"version":1,"version":4'),
+       ),
+       'escaped duplicate': utf8.encode(
+         jsonEncode(preferences().toJson())
+-            .replaceFirst('"version":3', r'"\u0076ersion":1,"version":3'),
++            .replaceFirst('"version":4', r'"\u0076ersion":1,"version":4'),
+       ),
+     }.entries) {
+       test(
+--- before/client/test/workspace_restore_test.dart
++++ after/client/test/workspace_restore_test.dart
+@@ -90,7 +90,7 @@
+     .widget<ConversationScreen>(find.byType(ConversationScreen))
+     .presentation!;
+ 
+-void noMutations(FakeAppApi api) {
++void noMutations(FakeAppApi api, {List<String> registryReads = const []}) {
+   // Boot's existing explicit inventory observation is not restoration work.
+   expect(api.calls.where((op) => op == 'models'), hasLength(1));
+   expect(
+@@ -101,6 +101,7 @@
+         'poll',
+         'models',
+         'instructions_get',
++        ...registryReads,
+       ].contains(op),
+     ),
+     isEmpty,
+@@ -108,6 +109,152 @@
+ }
+ 
+ void main() {
++  for (final version in [1, 2, 3]) {
++    testWidgets('v$version hydration normalizes without a presentation save', (
++      tester,
++    ) async {
++      final legacy = {
++        ...preferences(preset: '1x1').toJson(),
++        'version': version,
++      };
++      final store = MemoryStore(WorkspacePreferences.fromJson(legacy));
++      final api = FakeAppApi();
++      await mountApp(tester, store, api);
++      expect(store.loads, 1);
++      expect(store.writes, isEmpty);
++      final p = presentation(tester);
++      p.setPage(0, 'chat');
++      owner(tester).selected.edit('session-only legacy draft');
++      await tester.pumpAndSettle();
++      expect(store.writes, isEmpty);
++      p.setPage(0, 'dev');
++      await tester.pumpAndSettle();
++      expect(p.pages[0], 'dev');
++      expect(store.writes, hasLength(1));
++      expect(store.value!.toJson()['version'], 4);
++      expect(store.value!.slots[0].page, 'dev');
++      expect(store.value!.slots[0].conversationId, isNull);
++      for (var i = 1; i < 4; i++) {
++        expect(
++          store.value!.slots[i],
++          WorkspacePreferences.fromJson(legacy).slots[i],
++        );
++      }
++      expect(
++        jsonEncode(store.value!.toJson()),
++        isNot(contains('legacy draft')),
++      );
++      noMutations(api);
++      await tester.pumpWidget(const SizedBox());
++      await tester.pumpAndSettle();
++      expect(store.closes, 1);
++      expect(store.writes, hasLength(1));
++    });
++  }
++
++  testWidgets(
++    'v4 mixed four-pane restore retains hidden Dev without eager registry loads',
++    (tester) async {
++      tester.view.physicalSize = const Size(1800, 1200);
++      tester.view.devicePixelRatio = 1;
++      addTearDown(tester.view.resetPhysicalSize);
++      addTearDown(tester.view.resetDevicePixelRatio);
++      final saved = WorkspacePreferences(
++        layout: '1x1',
++        activeTile: 0,
++        slots: [
++          WorkspaceSlotPreferences(conversationId: null, page: 'dev'),
++          WorkspaceSlotPreferences(
++            conversationId: testConversation,
++            page: 'chat',
++          ),
++          WorkspaceSlotPreferences(
++            conversationId: testConversation,
++            page: 'settings',
++          ),
++          WorkspaceSlotPreferences(conversationId: null, page: 'dev'),
++        ],
++      );
++      for (var restart = 0; restart < 2; restart++) {
++        final store = MemoryStore(saved);
++        final api = FakeAppApi();
++        await mountApp(tester, store, api);
++        expect(presentation(tester).pages, ['dev', 'chat', 'settings', 'dev']);
++        expect(
++          owner(tester).panes[1].selected,
++          same(owner(tester).panes[2].selected),
++        );
++        expect(store.writes, isEmpty);
++        expect(api.calls.where((op) => op == 'conversation_get'), hasLength(1));
++        await layout(tester, 2, 2);
++        for (var i = 0; i < 4; i++) {
++          expect(
++            tester
++                .widget<SmithWorkspace>(inside(i, find.byType(SmithWorkspace)))
++                .page,
++            saved.slots[i].page,
++          );
++        }
++        expect(api.calls.where((op) => op == 'conversation_get'), hasLength(1));
++        expect(
++          api.calls.where(
++            (op) => op.startsWith('projects_') || op.startsWith('agents_'),
++          ),
++          isEmpty,
++        );
++        noMutations(api);
++        expect(tester.takeException(), isNull);
++        await tester.pumpWidget(const SizedBox());
++        await tester.pumpAndSettle();
++        expect(store.closes, 1);
++      }
++    },
++  );
++
++  for (final hiddenChildren in [false, true]) {
++    testWidgets(
++      'Dev restore has ${hiddenChildren ? 'only existing hidden child reads, no duplicate' : 'no eager registry reads'}',
++      (tester) async {
++        final pages = hiddenChildren
++            ? ['dev', 'projects', 'agents', 'settings']
++            : List.filled(4, 'dev');
++        final registryReads = hiddenChildren
++            ? ['projects_list_v2', 'agents_list_v1']
++            : <String>[];
++        final saved = WorkspacePreferences(
++          layout: '1x1',
++          activeTile: 0,
++          slots: [
++            for (final page in pages)
++              WorkspaceSlotPreferences(conversationId: null, page: page),
++          ],
++        );
++        final store = MemoryStore(saved);
++        final api = FakeAppApi();
++        await mountApp(tester, store, api);
++        expect(presentation(tester).pages, pages);
++        final initialCalls = List.of(api.calls);
++        expect(store.value, saved);
++        expect(store.writes, isEmpty);
++        presentation(tester).setPage(0, 'dev');
++        await tester.pumpAndSettle();
++        expect(store.writes, isEmpty);
++        expect(
++          api.calls.where(
++            (op) => op.startsWith('projects_') || op.startsWith('agents_'),
++          ),
++          unorderedEquals(registryReads),
++        );
++        expect(api.calls, initialCalls);
++        noMutations(api, registryReads: registryReads);
++        await tester.pumpWidget(const SizedBox());
++        await tester.pumpAndSettle();
++        expect(store.writes, isEmpty);
++        expect(store.closes, 1);
++      },
++    );
++  }
++
+   testWidgets(
+     'explicit first send persists promoted ID; restart never resubmits',
+     (tester) async {

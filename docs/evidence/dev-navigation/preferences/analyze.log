@@ -1,0 +1,9 @@
+{
+  "command": "<cached-flutter-sdk>/bin/cache/dart-sdk/bin/dart analyze lib/workspace_preferences.dart lib/main.dart test/workspace_preferences_test.dart test/workspace_restore_test.dart",
+  "cwd": "client",
+  "started_utc": "2026-10-18T00:58:17.642854+00:00",
+  "exit": 0,
+  "timeout_seconds": 180
+}
+Analyzing workspace_preferences.dart, main.dart, workspace_preferences_test.dart, workspace_restore_test.dart...
+No issues found!

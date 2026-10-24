@@ -4,11 +4,14 @@ import hashlib
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import package
@@ -20,6 +23,7 @@ def synthetic_elf():
     header[16:18] = (3).to_bytes(2, "little")
     header[18:20] = (62).to_bytes(2, "little")
     return bytes(header)
+
 
 
 class PackageTests(unittest.TestCase):
@@ -100,6 +104,239 @@ class PackageTests(unittest.TestCase):
         if os.geteuid() == 0:
             self.skipTest("Native installer package execution requires the non-root builder")
 
+    def location_snapshot(self):
+        return {str(path.relative_to(self.base)):
+                (path.lstat().st_mode, path.lstat().st_uid,
+                 path.read_bytes() if path.is_file() and not path.is_symlink() else None)
+                for path in self.base.rglob("*")}
+
+    def test_location_unsafe_ancestor_preserves_modes_contents_and_absence(self):
+        installer = self.base / "installer"
+        installer.mkdir(mode=0o700)
+        dist = installer / "dist"
+        dist.mkdir(mode=0o700)
+        (dist / "keep").write_bytes(b"unchanged")
+        installer.chmod(0o775)
+        before = self.location_snapshot()
+        for root in (dist, installer / "absent"):
+            for create in (False, True):
+                with self.subTest(root=root.name, create=create):
+                    with self.assertRaisesRegex(ValueError, "Build location blocked") as raised:
+                        package.check_location(root, create=create)
+                    message = str(raised.exception)
+                    self.assertIn(str(installer), message)
+                    self.assertIn("0775", message)
+                    self.assertIn(str(os.geteuid()), message)
+                    self.assertIn(f"chmod go-w -- {installer}", message)
+                    self.assertNotIn("chmod -R", message)
+                    self.assertEqual(self.location_snapshot(), before)
+
+    def test_location_preserves_safe_existing_modes(self):
+        for mode in (0o700, 0o755):
+            self.root.chmod(mode)
+            before = self.location_snapshot()
+            for create in (False, True):
+                with self.subTest(mode=oct(mode), create=create):
+                    self.assertEqual(package.check_location(self.root, create=create), self.root)
+                    self.assertEqual(self.location_snapshot(), before)
+
+    def test_location_relative_result_is_absolute(self):
+        with mock.patch.object(package.os, "getcwd", return_value=str(self.base)):
+            result = package.check_location(Path("recipient"))
+        self.assertIsInstance(result, Path)
+        self.assertEqual(result, self.root)
+        self.assertTrue(result.is_absolute())
+        # Exercise the same relative spelling through the real CLI in a private cwd.
+        result = subprocess.run(
+            [sys.executable, "-B", str(Path(package.__file__).resolve()),
+             "--root", "recipient", "--check-location"],
+            cwd=self.base, capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(str(self.root), result.stdout)
+
+    def test_location_rejects_links_files_and_missing_intermediate(self):
+        link = self.base / "alias"
+        link.symlink_to(self.root, target_is_directory=True)
+        leaf = self.base / "ordinary-file"
+        leaf.write_bytes(b"keep")
+        for root in (link, link / "child", leaf, leaf / "child",
+                     self.base / "missing" / "dist"):
+            for create in (False, True):
+                with self.subTest(root=root, create=create):
+                    before = self.location_snapshot()
+                    with self.assertRaises(ValueError):
+                        package.check_location(root, create=create)
+                    self.assertEqual(self.location_snapshot(), before)
+
+    def test_location_rejects_restricted_spelling_and_parent_components(self):
+        for name in ("has space", "nonascii-é", "has:colon", "line\nbreak", "../escape"):
+            with self.subTest(name=name):
+                with self.assertRaises(ValueError):
+                    package.check_location(self.base / name, create=True)
+        self.assertFalse((self.base / "escape").exists())
+
+    def test_location_rejects_raw_noncanonical_spelling_before_normalization(self):
+        spellings = (f"{self.base}/./recipient", f"{self.base}//recipient",
+                     f"{self.root}/", "./recipient", "recipient//", "recipient/./missing")
+        command = [sys.executable, "-B", str(Path(package.__file__).resolve())]
+        before = self.location_snapshot()
+        for spelling in spellings:
+            for create in (False, True):
+                with self.subTest(spelling=spelling, create=create):
+                    with mock.patch.object(package.os, "open", side_effect=AssertionError("path open")):
+                        with self.assertRaisesRegex(ValueError, "normalized spelling"):
+                            package.check_location(spelling, create=create)
+                    action = "--prepare-location" if create else "--check-location"
+                    result = subprocess.run(command + ["--root", spelling, action],
+                                            cwd=self.base, capture_output=True,
+                                            text=True, timeout=10)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn("normalized spelling", result.stderr)
+                    self.assertNotIn("Traceback", result.stderr)
+                    self.assertEqual(self.location_snapshot(), before)
+
+    def test_location_creates_only_private_final_leaf_without_chmod_or_umask_change(self):
+        leaf = self.base / "generated"
+        previous = os.umask(0o002)
+        try:
+            with mock.patch.object(package.os, "chmod", side_effect=AssertionError("no repair")):
+                self.assertEqual(package.check_location(leaf, create=True), leaf)
+            self.assertEqual(stat.S_IMODE(leaf.stat().st_mode), 0o700)
+            self.assertEqual(os.umask(0o002), 0o002)
+        finally:
+            os.umask(previous)
+        before = self.location_snapshot()
+        with self.assertRaises(ValueError):
+            package.check_location(self.base / "read-only-absent")
+        self.assertEqual(self.location_snapshot(), before)
+
+    def test_location_concurrent_creator_is_reopened_and_validated(self):
+        mkdir = os.mkdir
+        for kind in ("safe", "writable", "symlink", "file"):
+            leaf = self.base / ("race-" + kind)
+
+            def competing_creator(path, mode=0o777, *, dir_fd=None):
+                if kind in ("safe", "writable"):
+                    mkdir(path, mode=0o700, dir_fd=dir_fd)
+                    leaf.chmod(0o755 if kind == "safe" else 0o777)
+                elif kind == "symlink":
+                    leaf.symlink_to(self.root, target_is_directory=True)
+                else:
+                    leaf.write_bytes(b"competitor")
+                raise FileExistsError("competing creator won")
+
+            with self.subTest(kind=kind), mock.patch.object(
+                    package.os, "mkdir", side_effect=competing_creator) as create:
+                if kind == "safe":
+                    self.assertEqual(package.check_location(leaf, create=True), leaf)
+                    self.assertEqual(stat.S_IMODE(leaf.stat().st_mode), 0o755)
+                else:
+                    with self.assertRaises(ValueError):
+                        package.check_location(leaf, create=True)
+                create.assert_called_once()
+            self.assertEqual(leaf.is_symlink(), kind == "symlink")
+            if kind == "writable":
+                self.assertEqual(stat.S_IMODE(leaf.stat().st_mode), 0o777)
+            if kind == "file":
+                self.assertEqual(leaf.read_bytes(), b"competitor")
+
+    def test_location_ownership_and_sticky_exception_are_component_scoped(self):
+        fstat = os.fstat
+        ancestor_inode = self.base.stat().st_ino
+        leaf_inode = self.root.stat().st_ino
+        uid = 12345
+        for component, owner, mode, accepted in (
+                (ancestor_inode, uid, 0o755, True),
+                (ancestor_inode, 0, 0o755, True),
+                (ancestor_inode, 0, 0o1777, True),
+                (ancestor_inode, uid, 0o1777, False),
+                (ancestor_inode, 54321, 0o755, False),
+                (ancestor_inode, 0, 0o777, False),
+                (leaf_inode, 0, 0o755, False),
+                (leaf_inode, 54321, 0o700, False),
+                (leaf_inode, uid, 0o1777, False)):
+            def metadata(fd):
+                info = fstat(fd)
+                return SimpleNamespace(
+                    st_uid=owner if info.st_ino == component else
+                    (uid if info.st_uid == os.getuid() and info.st_uid != 0 else info.st_uid),
+                    st_mode=stat.S_IFDIR | mode if info.st_ino == component else info.st_mode)
+
+            # Make the leaf current-owned even when this fixture is run as root.
+            def fixture_metadata(fd):
+                info = metadata(fd)
+                if fstat(fd).st_ino == leaf_inode and component != leaf_inode:
+                    info.st_uid = uid
+                return info
+
+            with self.subTest(component=component, owner=owner, mode=oct(mode)), \
+                    mock.patch.object(package.os, "geteuid", return_value=uid), \
+                    mock.patch.object(package.os, "fstat", side_effect=fixture_metadata):
+                if accepted:
+                    self.assertEqual(package.check_location(self.root), self.root)
+                else:
+                    with self.assertRaises(ValueError) as raised:
+                        package.check_location(self.root)
+                    if owner != uid:
+                        self.assertNotIn("chmod", str(raised.exception))
+
+    def test_location_traversal_uses_relative_no_follow_directory_fds(self):
+        real_open = os.open
+        with mock.patch.object(package.os, "open", wraps=real_open) as opened:
+            package.check_location(self.root)
+        calls = opened.call_args_list
+        self.assertEqual(calls[0].args[0], "/")
+        for call in calls:
+            self.assertEqual(call.args[1] & (os.O_DIRECTORY | os.O_NOFOLLOW),
+                             os.O_DIRECTORY | os.O_NOFOLLOW)
+        for call in calls[1:]:
+            self.assertNotIn("/", call.args[0])
+            self.assertIsInstance(call.kwargs["dir_fd"], int)
+
+    def test_location_build_refuses_before_readme_read_or_write(self):
+        self.base.chmod(0o775)
+        before = self.location_snapshot()
+        with mock.patch.object(Path, "read_text", side_effect=AssertionError("README read")), \
+                mock.patch.object(package, "write_new", side_effect=AssertionError("metadata write")):
+            with self.assertRaisesRegex(ValueError, "Build location blocked"):
+                self.assemble()
+        self.assertEqual(self.location_snapshot(), before)
+
+    def test_location_verify_refuses_before_manifest_read(self):
+        self.base.chmod(0o775)
+        before = self.location_snapshot()
+        with mock.patch.object(package, "file_bytes", side_effect=AssertionError("manifest read")):
+            with self.assertRaisesRegex(ValueError, "Build location blocked"):
+                package.verify(self.root)
+        self.assertEqual(self.location_snapshot(), before)
+
+    def test_location_cli_read_only_no_bytecode_and_exclusive_actions(self):
+        tooling = self.base / "tooling"
+        tooling.mkdir(mode=0o700)
+        for name in ("package.py", "runtime.py"):
+            shutil.copyfile(Path(package.__file__).parent / name, tooling / name)
+        command = [sys.executable, "-B", str(tooling / "package.py"), "--root", str(self.root)]
+        before = self.location_snapshot()
+        result = subprocess.run(command + ["--check-location"], capture_output=True,
+                                text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.location_snapshot(), before)
+        self.assertFalse(list(tooling.rglob("*.pyc")))
+        self.assertFalse((tooling / "__pycache__").exists())
+        for first, second in (("--prepare-location", "--check-location"),
+                              ("--prepare-location", "--verify"),
+                              ("--check-location", "--verify")):
+            result = subprocess.run(command + [first, second], capture_output=True,
+                                    text=True, timeout=10)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertNotIn("Traceback", result.stderr)
+        self.base.chmod(0o775)
+        result = subprocess.run(command + ["--check-location"], capture_output=True,
+                                text=True, timeout=10)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Build location blocked", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
     def test_pinned_dual_runtime_contract(self):
         self.assertEqual(package.runtime.PREFIX, "llama-b11429/")
         self.assertEqual(package.runtime.BACKENDS["cpu"]["size"], 17693462)
@@ -144,9 +381,9 @@ class PackageTests(unittest.TestCase):
                 expected.add(prefix + "fonts/" + directory + "/" + family + "-" + weight + ".ttf")
         for icon in ("chevron-right", "message-square", "settings", "archive", "plus",
                      "ellipsis-vertical", "pencil", "trash-2", "send", "x", "menu",
-                     "rotate-ccw", "info", "check", "chevron-down"):
+                     "rotate-ccw", "info", "check", "chevron-down", "layers", "git-branch"):
             expected.add(prefix + "icons/" + icon + ".svg")
-        self.assertEqual(len(expected), 24)
+        self.assertEqual(len(expected), 26)
         self.assertEqual(package.UI_ASSET_FILES, expected)
         self.assertEqual({name for name in package.CLIENT_FILES if name.startswith(prefix)}, expected)
         self.assemble()

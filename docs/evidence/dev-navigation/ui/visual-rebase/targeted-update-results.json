@@ -1,0 +1,254 @@
+{
+  "updated_count": 19,
+  "updated": [
+    {
+      "path": "client/test/goldens/workspace-entrance/compact-text2-360ms.png",
+      "old_sha256": "40ae8f88dc7c88437ab0c4604ac4951ed8123a06760808e9ab9f3bd3e34692ef",
+      "new_sha256": "c941744996be6485e1cf485e735ebe889dc39232b957233f4fc9d60f3c437140",
+      "changed_pixels": 5285,
+      "changed_bbox_half_open": [
+        12,
+        136,
+        65,
+        400
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/workspace-entrance/desktop-160ms.png",
+      "old_sha256": "b1ece5505127fbfdfa952beb981e2b5c5106a31dd8c011d354ea22b0469f903d",
+      "new_sha256": "8f58e8b799f7cdd2df48777a6bf131e74e73e744870d97bad94fce7ab8e89cb0",
+      "changed_pixels": 7175,
+      "changed_bbox_half_open": [
+        11,
+        66,
+        65,
+        991
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/workspace-entrance/mixed-grid-360ms.png",
+      "old_sha256": "ab052c87d7dc7f5f724ec077dd0fc9633c73573f8ead2c6091c7519ee0943796",
+      "new_sha256": "7f61ef42dfdab3c5b752327cc79312e1308693439ec7db2eb98548d4c3060605",
+      "changed_pixels": 24630,
+      "changed_bbox_half_open": [
+        12,
+        66,
+        1165,
+        1391
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-archive-1440x900.png",
+      "old_sha256": "3a90868ed7767683eccb66f6b1dffbc80b6784da8044bb6d238f78f9fedd9ffe",
+      "new_sha256": "c6d49c844e0e7d5cb43e71a5f7f0ba66f0fcd91898b353e2dbdf2adf232b5a02",
+      "changed_pixels": 6256,
+      "changed_bbox_half_open": [
+        11,
+        64,
+        64,
+        892
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-archive-400x400-text2.png",
+      "old_sha256": "e85e8c7f99da29b8d0b09daf0e6699e7ddc3311b1e72f1dda707c02b92415a1e",
+      "new_sha256": "add90bd89dc1c0a2166144a17e38489d2a842d646776939074b498028e1b1b37",
+      "changed_pixels": 60,
+      "changed_bbox_half_open": [
+        11,
+        133,
+        12,
+        201
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-chat-1280x720.png",
+      "old_sha256": "dff84442d11e08ba32d45d9371c1fabbff552b19e266e96f2e124ec83b25202f",
+      "new_sha256": "d9ab95c920072b1d4e924d7d39eac098a1e4d93c8172f84e84ec1262f59efb89",
+      "changed_pixels": 6076,
+      "changed_bbox_half_open": [
+        11,
+        64,
+        64,
+        712
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-chat-1440x900-ibm.png",
+      "old_sha256": "84df00e5bd8d041e1a2bb37f058fd79082077f11bc08951ee189dcbc1396a643",
+      "new_sha256": "7c8521221ba84ad0a3eaf3bbc9321aea990f7120eaf858102d87ffdcee49b9e9",
+      "changed_pixels": 6256,
+      "changed_bbox_half_open": [
+        11,
+        64,
+        64,
+        892
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-chat-1440x900.png",
+      "old_sha256": "e396ce94ac2b919905c1321bcec213012ec3f41f8ea9434cb81cb6c003873d7a",
+      "new_sha256": "61d4b91cd2ca322f313b9a12a32ff4c4112e95c885af835be09f492d797ca349",
+      "changed_pixels": 6256,
+      "changed_bbox_half_open": [
+        11,
+        64,
+        64,
+        892
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-chat-400x400-text2.png",
+      "old_sha256": "c9ba1b5f07c2925f27ad16926ba829bea00f43b579db7f4e378c13c3f32d7e6f",
+      "new_sha256": "401406c1a57ae7b0ddc370c34fbb8795d1a2ea21af89e299f1f538adfd40fbc4",
+      "changed_pixels": 3986,
+      "changed_bbox_half_open": [
+        11,
+        129,
+        64,
+        392
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-chat-400x400.png",
+      "old_sha256": "e7001f9953249dba7b7c254eb0ae16dc8aa3fd450e36d5195a13374f2564b5b9",
+      "new_sha256": "61fa553284e6eb9a7f6560589c2010276acd57733d1291566719976fbb6333ea",
+      "changed_pixels": 5439,
+      "changed_bbox_half_open": [
+        11,
+        64,
+        64,
+        392
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-chat-4200x2400.png",
+      "old_sha256": "41ba8b984a4c3d78559dfa2ae76ca2e6a1ee5379d3b4a32488cd521e8d9816fc",
+      "new_sha256": "b1151d8c32c2636641137f70dc680afc58c1caec2f40d0c92b88269850942655",
+      "changed_pixels": 7756,
+      "changed_bbox_half_open": [
+        11,
+        64,
+        64,
+        2392
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-history-400x400-text2.png",
+      "old_sha256": "e51ef4b00568411f9fa0d98be8f9e96fe510b8693601b31bf01f6f1503aadaa9",
+      "new_sha256": "f2368bd8f5e7066c0349f191606b10453cfb0fe907a50b82c14c841444dfa9c0",
+      "changed_pixels": 3682,
+      "changed_bbox_half_open": [
+        11,
+        129,
+        56,
+        347
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-overflow-1440x900.png",
+      "old_sha256": "216c5185950f358be81df6184a8a5f2cae4cacae698a62710c38b9b40c9e6b93",
+      "new_sha256": "fc26d8f508162fd848b2ca1142640012d933489e6c0b745078dd94b8ee47d5b5",
+      "changed_pixels": 6256,
+      "changed_bbox_half_open": [
+        11,
+        64,
+        64,
+        892
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-overflow-400x400-text2.png",
+      "old_sha256": "5ae78fa8154c94c588721bcd1dfab1b9aa3f56a203fa271aa402476e24c5cee2",
+      "new_sha256": "59b8e5bb25cfeeb0634262141634e1d2bd3c6f39e6caf784e7a51313dcff79a2",
+      "changed_pixels": 3682,
+      "changed_bbox_half_open": [
+        11,
+        129,
+        56,
+        347
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-production-shell-1280x720.png",
+      "old_sha256": "1ec95f463850e7da4c7b650ed973896c0757cfa405cb3a559d6c057a4d766bd2",
+      "new_sha256": "f8fbc2ff756a76900a40502295ed1f7db7f61a5f6a0d0e8c906411025b6d2fc2",
+      "changed_pixels": 6076,
+      "changed_bbox_half_open": [
+        11,
+        64,
+        64,
+        712
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-recovery-400x400-text2.png",
+      "old_sha256": "7117a44d860d049948796c68c0d13736ce18bf3447a7f7970c3b2bc1dcd84665",
+      "new_sha256": "43753e5003b8d6e62cab5525e8fcf43979ee5665533065582305d50fae089e7b",
+      "changed_pixels": 3986,
+      "changed_bbox_half_open": [
+        11,
+        129,
+        64,
+        392
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-recovery-details-400x400-text2.png",
+      "old_sha256": "15138af141152b92812a0889561b9f45b124ea16b320d50f7bdeb8822a559f2f",
+      "new_sha256": "6b2f0ba419e4589de71197c3abc6968da5f0df0ab8586d71b450cbd480ca0a1f",
+      "changed_pixels": 2490,
+      "changed_bbox_half_open": [
+        11,
+        129,
+        64,
+        392
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-settings-1440x900.png",
+      "old_sha256": "4e94ad1b23cb11268b3af8e7ce8fc26b80f73614f9cf3e438e832d4241e86a66",
+      "new_sha256": "66983de05501e84a798453c39833b40ad1deef01237954c0c1f841b867c9c420",
+      "changed_pixels": 6090,
+      "changed_bbox_half_open": [
+        11,
+        64,
+        64,
+        892
+      ],
+      "outside_rail_changed_pixels": 0
+    },
+    {
+      "path": "client/test/goldens/ui-redesign/fixture-settings-400x400-text2.png",
+      "old_sha256": "2d54f54a8b46ff269b31f952f4851d8b088e5c18adc14df60ad0dd2cd860be40",
+      "new_sha256": "47879c382a3c9e66a998e0f7411c3ce85b4fc0bea4808271b3d7cafda7d8ad18",
+      "changed_pixels": 5537,
+      "changed_bbox_half_open": [
+        11,
+        129,
+        64,
+        392
+      ],
+      "outside_rail_changed_pixels": 0
+    }
+  ],
+  "method": "Verified every old/actual hash and zero-outside-rail proof first, then copied whole actual PNG bytes only for those19 files. No test/production source changes.",
+  "tool_note": "Editor copy_path could not resolve generated ignored captures (all19 requests failed without effects); used this guarded local copy workflow instead."
+}

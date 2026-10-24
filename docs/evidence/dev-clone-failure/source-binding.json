@@ -1,0 +1,10 @@
+{
+  "source": "service/src/dev_fetch.rs",
+  "source_sha256": "417d583e5ec847a512e3c959d061e70283b29a974fc404aa8b3bd8b0809175d6",
+  "copied_lines": [
+    "130-186",
+    "373-624"
+  ],
+  "instrumentation": "Stage markers and bounded TLS error taxonomy only; same production control flow/error mapping. DNS loop copied from request. No cfg(test).",
+  "fixed_effect": "One credential-free GET https://github.com/jdharrison/smith/info/refs?service=git-upload-pack; no redirects/auth/POST/clone/job/model/service/Docker."
+}

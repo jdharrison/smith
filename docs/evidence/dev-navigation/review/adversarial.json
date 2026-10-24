@@ -1,0 +1,34 @@
+{
+  "command": [
+    "<cached-flutter-sdk>/bin/cache/dart-sdk/bin/dart",
+    "<cached-flutter-sdk>/bin/cache/flutter_tools.snapshot",
+    "--suppress-analytics",
+    "--no-version-check",
+    "test",
+    "--no-pub",
+    "--reporter",
+    "expanded",
+    "test/assurance_adversarial_test.dart"
+  ],
+  "cwd": "target/dev-navigation/assurance/fixture/client",
+  "environment": {
+    "HOME": "<repo>/target/dev-navigation/assurance/home",
+    "TMPDIR": "<repo>/target/dev-navigation/assurance/tmp",
+    "PATH": "/usr/bin:/bin",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "CI": "true",
+    "FLUTTER_ROOT": "<cached-flutter-sdk>",
+    "FLUTTER_ALREADY_LOCKED": "true",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true",
+    "DART_SUPPRESS_ANALYTICS": "true",
+    "DO_NOT_TRACK": "1",
+    "DNT": "1",
+    "GIT_OPTIONAL_LOCKS": "0"
+  },
+  "started_utc": "2026-10-18T01:35:29.633054+00:00",
+  "budget_seconds": 180,
+  "duration_seconds": 13.11,
+  "exit": 1,
+  "log_sha256": "0d36c95073ee369bdf3db64cf6cdcd83dbf679b62089f9737f9efd32cdb858a9"
+}

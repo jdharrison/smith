@@ -1,0 +1,192 @@
+OFFLINE ONLY; no effect mode, Docker, CLI request or network.
+2026-10-21T01:24:47.784309+00:00
+COMMAND: python3 -B docs/evidence/artifact-pipeline/test_live_transport_continue.py
+EXIT: 0
+
+test_ambiguous_start_still_stops (__main__.ContinuationTests.test_ambiguous_start_still_stops) ... ok
+test_cancel_stops (__main__.ContinuationTests.test_cancel_stops) ... ok
+test_created_pid_and_started_guards (__main__.ContinuationTests.test_created_pid_and_started_guards) ... ok
+test_drift_after_start_still_stops (__main__.ContinuationTests.test_drift_after_start_still_stops) ... ok
+test_expired_after_construction_has_no_commands (__main__.ContinuationTests.test_expired_after_construction_has_no_commands) ... ok
+test_expired_and_future_budget (__main__.ContinuationTests.test_expired_and_future_budget) ... ok
+test_expired_approval_refuses (__main__.ContinuationTests.test_expired_approval_refuses) ... ok
+test_failure_always_stops_after_join (__main__.ContinuationTests.test_failure_always_stops_after_join) ... ok
+test_foreign_after_start_never_stopped (__main__.ContinuationTests.test_foreign_after_start_never_stopped) ... ok
+test_foreign_identity_never_stopped (__main__.ContinuationTests.test_foreign_identity_never_stopped) ... ok
+test_foreign_volume_refused (__main__.ContinuationTests.test_foreign_volume_refused) ... ok
+test_fresh_receipt_must_be_independent_pass (__main__.ContinuationTests.test_fresh_receipt_must_be_independent_pass) ... ok
+test_normal_one_request_and_no_replay (__main__.ContinuationTests.test_normal_one_request_and_no_replay) ... ok
+test_only_explicit_bridge_accepted (__main__.ContinuationTests.test_only_explicit_bridge_accepted) ... ok
+test_prior_markers_refuse (__main__.ContinuationTests.test_prior_markers_refuse) ... ok
+test_private_new_capture_directory_and_original_runner (__main__.ContinuationTests.test_private_new_capture_directory_and_original_runner) ... ok
+test_receipt_failure_refuses_before_commands (__main__.ContinuationTests.test_receipt_failure_refuses_before_commands) ... ok
+test_source_drift_after_start_blocks_dispatch_not_stop (__main__.ContinuationTests.test_source_drift_after_start_blocks_dispatch_not_stop) ... ok
+test_source_drift_refuses_before_commands (__main__.ContinuationTests.test_source_drift_refuses_before_commands) ... ok
+test_started_engine_refuses_start_and_request (__main__.ContinuationTests.test_started_engine_refuses_start_and_request) ... ok
+test_check_binding_readonly_no_docker (__main__.LocalBindingTests.test_check_binding_readonly_no_docker) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.293s
+
+OK
+
+COMMAND: python3 -B docs/evidence/artifact-pipeline/live-transport-continue.py check
+EXIT: 0
+{
+  "anchor_ns": 1792545470863107632,
+  "captures": {
+    "capture-008.out": "99f2deaee1303381e2d3084a35135a3525b53bef5dc3c5bd89476f6b82829dc8",
+    "capture-009.out": "99f2deaee1303381e2d3084a35135a3525b53bef5dc3c5bd89476f6b82829dc8",
+    "capture-011.out": "99f2deaee1303381e2d3084a35135a3525b53bef5dc3c5bd89476f6b82829dc8"
+  },
+  "original": {
+    "cli": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+    "destination": "e2ccb8dd1243321f6e72402e0804b542a8bd0f4cb28aebb3d52caefedeca6c37",
+    "docker_config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "engine_config": "e85a7d6a103649c0d0f7b40901d6511f1ac10ca3a30a9321a6a8a6fee4ad6821",
+    "installed_cli": "ac2b5d28bf9c1881f0e14685a4e19610f78a256fb4038932dcd1252d292f5236",
+    "module": "fd065edd5f6741e6ec05d6e8ce1a39999ebac2d7007dec98864130182ff10a93",
+    "preflight": "2bf297f9e2c615e8c6c5f74e63f14a7316f06cf375100cf3be4943eaf43605a6",
+    "request": "0b5b9300a8f7a706b98dcb677982bcf32693f7af84d655ab793ab7cb97f20e30",
+    "scope": {
+      "attempts": 1,
+      "cgroupns": "private",
+      "cleanup_seconds": 60,
+      "cpus": 4,
+      "endpoint": "unix:///run/docker.sock",
+      "engine": "smith-artifact-qa-20261020-01",
+      "image": "registry.dagger.io/engine:v0.21.9",
+      "memory": 4294967296,
+      "no_setup_model_provider_auth_installed_or_remote_mutation": true,
+      "operation": "execute-policy-denied-only",
+      "pids": 1024,
+      "privileged": true,
+      "seconds": 900,
+      "volume": "smith-artifact-qa-20261020-01-data"
+    },
+    "script": "3f6f16e7aef5a0264d7d3a0d2695e4c212eb2a37214ccd1e88904970edbec6bc",
+    "source": "fd065edd5f6741e6ec05d6e8ce1a39999ebac2d7007dec98864130182ff10a93",
+    "tests": "c603d8bf647e7daa4aef6987ca92b75ae0c6e0bc0cc75200784a27a474891aec"
+  },
+  "original_files": {
+    "approval.json": "efbd53fedf2ddc7b637a94ee76b8f2a0006669827103bb3d35748097f8e10440",
+    "consumed.json": "ea50b2c7a2b630c3038a4c4a5a9b8ca4f38d0901a7861aa01de68485f786bac4",
+    "owned.json": "ae8739a239bb46b64706c610103edc7745997c277cb69c46d16411289684628e",
+    "pending.json": "2c0c9451aef45b8e1bda7818afb116aec2cb7afa304156e58e0f652325e4e578",
+    "result.json": "3a2884f6185420060ed31048d7acf6b7cc1851448d14e096e2a0dda189f14a19",
+    "review.json": "f77b98a990efe17c3aa748c5344a37eab53e12a4ddf9e158db68009fd236fdd8"
+  },
+  "safety_seconds": 5,
+  "script": "e197fd2cb6ded4819fb14643b5a1c975e79274538810f8fb5642c59977877bdd",
+  "tests": "eed93849fb08dc41856da6ed0e3df505a2235d9dc101a194dd556a726f15b1d6"
+}
+
+Original run files bytes + mtimes preserved: True
+{
+  "live-transport-continue.py": "e197fd2cb6ded4819fb14643b5a1c975e79274538810f8fb5642c59977877bdd",
+  "live-transport-qa.py": "3f6f16e7aef5a0264d7d3a0d2695e4c212eb2a37214ccd1e88904970edbec6bc",
+  "test_live_transport_continue.py": "eed93849fb08dc41856da6ed0e3df505a2235d9dc101a194dd556a726f15b1d6",
+  "test_live_transport_qa.py": "c603d8bf647e7daa4aef6987ca92b75ae0c6e0bc0cc75200784a27a474891aec"
+}
+Continuation source lines: 273
+
+FINAL SNAPSHOT VALIDATION (supersedes initial source/test hashes above)
+2026-10-21T01:25:41.825317+00:00
+COMMAND: python3 -B docs/evidence/artifact-pipeline/test_live_transport_continue.py
+EXIT: 0
+
+test_ambiguous_start_still_stops (__main__.ContinuationTests.test_ambiguous_start_still_stops) ... ok
+test_anchor_mtime_reset_refused (__main__.ContinuationTests.test_anchor_mtime_reset_refused) ... ok
+test_cancel_stops (__main__.ContinuationTests.test_cancel_stops) ... ok
+test_created_pid_and_started_guards (__main__.ContinuationTests.test_created_pid_and_started_guards) ... ok
+test_deadline_after_start_blocks_request_but_stops (__main__.ContinuationTests.test_deadline_after_start_blocks_request_but_stops) ... ok
+test_drift_after_start_still_stops (__main__.ContinuationTests.test_drift_after_start_still_stops) ... ok
+test_expired_after_construction_has_no_commands (__main__.ContinuationTests.test_expired_after_construction_has_no_commands) ... ok
+test_expired_and_future_budget (__main__.ContinuationTests.test_expired_and_future_budget) ... ok
+test_expired_approval_refuses (__main__.ContinuationTests.test_expired_approval_refuses) ... ok
+test_failure_always_stops_after_join (__main__.ContinuationTests.test_failure_always_stops_after_join) ... ok
+test_foreign_after_start_never_stopped (__main__.ContinuationTests.test_foreign_after_start_never_stopped) ... ok
+test_foreign_identity_never_stopped (__main__.ContinuationTests.test_foreign_identity_never_stopped) ... ok
+test_foreign_volume_refused (__main__.ContinuationTests.test_foreign_volume_refused) ... ok
+test_fresh_receipt_must_be_independent_pass (__main__.ContinuationTests.test_fresh_receipt_must_be_independent_pass) ... ok
+test_nonempty_cgroup_blocks_cleanup_proof (__main__.ContinuationTests.test_nonempty_cgroup_blocks_cleanup_proof) ... ok
+test_nonzero_cli_not_policy_denied_success (__main__.ContinuationTests.test_nonzero_cli_not_policy_denied_success) ... ok
+test_normal_one_request_and_no_replay (__main__.ContinuationTests.test_normal_one_request_and_no_replay) ... ok
+test_only_explicit_bridge_accepted (__main__.ContinuationTests.test_only_explicit_bridge_accepted) ... ok
+test_original_marker_appearing_after_start_blocks_request (__main__.ContinuationTests.test_original_marker_appearing_after_start_blocks_request) ... ok
+test_prior_markers_refuse (__main__.ContinuationTests.test_prior_markers_refuse) ... ok
+test_private_new_capture_directory_and_original_runner (__main__.ContinuationTests.test_private_new_capture_directory_and_original_runner) ... ok
+test_receipt_failure_refuses_before_commands (__main__.ContinuationTests.test_receipt_failure_refuses_before_commands) ... ok
+test_source_drift_after_start_blocks_dispatch_not_stop (__main__.ContinuationTests.test_source_drift_after_start_blocks_dispatch_not_stop) ... ok
+test_source_drift_refuses_before_commands (__main__.ContinuationTests.test_source_drift_refuses_before_commands) ... ok
+test_started_engine_refuses_start_and_request (__main__.ContinuationTests.test_started_engine_refuses_start_and_request) ... ok
+test_unknown_after_start_still_attempts_stop (__main__.ContinuationTests.test_unknown_after_start_still_attempts_stop) ... ok
+test_unknown_child_group_still_stops_but_cannot_pass (__main__.ContinuationTests.test_unknown_child_group_still_stops_but_cannot_pass) ... ok
+test_check_binding_readonly_no_docker (__main__.LocalBindingTests.test_check_binding_readonly_no_docker) ... ok
+
+----------------------------------------------------------------------
+Ran 28 tests in 0.373s
+
+OK
+
+COMMAND: python3 -B docs/evidence/artifact-pipeline/live-transport-continue.py check
+EXIT: 0
+{
+  "anchor_ns": 1792545470863107632,
+  "captures": {
+    "capture-008.out": "99f2deaee1303381e2d3084a35135a3525b53bef5dc3c5bd89476f6b82829dc8",
+    "capture-009.out": "99f2deaee1303381e2d3084a35135a3525b53bef5dc3c5bd89476f6b82829dc8",
+    "capture-011.out": "99f2deaee1303381e2d3084a35135a3525b53bef5dc3c5bd89476f6b82829dc8"
+  },
+  "original": {
+    "cli": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+    "destination": "e2ccb8dd1243321f6e72402e0804b542a8bd0f4cb28aebb3d52caefedeca6c37",
+    "docker_config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "engine_config": "e85a7d6a103649c0d0f7b40901d6511f1ac10ca3a30a9321a6a8a6fee4ad6821",
+    "installed_cli": "ac2b5d28bf9c1881f0e14685a4e19610f78a256fb4038932dcd1252d292f5236",
+    "module": "fd065edd5f6741e6ec05d6e8ce1a39999ebac2d7007dec98864130182ff10a93",
+    "preflight": "2bf297f9e2c615e8c6c5f74e63f14a7316f06cf375100cf3be4943eaf43605a6",
+    "request": "0b5b9300a8f7a706b98dcb677982bcf32693f7af84d655ab793ab7cb97f20e30",
+    "scope": {
+      "attempts": 1,
+      "cgroupns": "private",
+      "cleanup_seconds": 60,
+      "cpus": 4,
+      "endpoint": "unix:///run/docker.sock",
+      "engine": "smith-artifact-qa-20261020-01",
+      "image": "registry.dagger.io/engine:v0.21.9",
+      "memory": 4294967296,
+      "no_setup_model_provider_auth_installed_or_remote_mutation": true,
+      "operation": "execute-policy-denied-only",
+      "pids": 1024,
+      "privileged": true,
+      "seconds": 900,
+      "volume": "smith-artifact-qa-20261020-01-data"
+    },
+    "script": "3f6f16e7aef5a0264d7d3a0d2695e4c212eb2a37214ccd1e88904970edbec6bc",
+    "source": "fd065edd5f6741e6ec05d6e8ce1a39999ebac2d7007dec98864130182ff10a93",
+    "tests": "c603d8bf647e7daa4aef6987ca92b75ae0c6e0bc0cc75200784a27a474891aec"
+  },
+  "original_files": {
+    "approval.json": "efbd53fedf2ddc7b637a94ee76b8f2a0006669827103bb3d35748097f8e10440",
+    "consumed.json": "ea50b2c7a2b630c3038a4c4a5a9b8ca4f38d0901a7861aa01de68485f786bac4",
+    "owned.json": "ae8739a239bb46b64706c610103edc7745997c277cb69c46d16411289684628e",
+    "pending.json": "2c0c9451aef45b8e1bda7818afb116aec2cb7afa304156e58e0f652325e4e578",
+    "result.json": "3a2884f6185420060ed31048d7acf6b7cc1851448d14e096e2a0dda189f14a19",
+    "review.json": "f77b98a990efe17c3aa748c5344a37eab53e12a4ddf9e158db68009fd236fdd8"
+  },
+  "safety_seconds": 5,
+  "script": "4306dd47b486c26761eaddc7b6d9312ed132716f84ceb799e13bd7dba1912f47",
+  "tests": "0fea9b3f1ce4544fcfbab3e627d0a033dd98a18e50c37bade5d87e19edd2e15c"
+}
+
+Original run files bytes + mtimes preserved: True
+{
+  "live-transport-continue.py": "4306dd47b486c26761eaddc7b6d9312ed132716f84ceb799e13bd7dba1912f47",
+  "live-transport-qa.py": "3f6f16e7aef5a0264d7d3a0d2695e4c212eb2a37214ccd1e88904970edbec6bc",
+  "test_live_transport_continue.py": "0fea9b3f1ce4544fcfbab3e627d0a033dd98a18e50c37bade5d87e19edd2e15c",
+  "test_live_transport_qa.py": "c603d8bf647e7daa4aef6987ca92b75ae0c6e0bc0cc75200784a27a474891aec"
+}
+Continuation source lines: 277
+No effect mode, real Docker/CLI or network run. Independent final review remains parent-owned and pending; no receipt generated.
+Canonical check-binding SHA256: 2c4ab277226f960f643a8d535e88265026515b0323f55bb973decde3a2b8a683

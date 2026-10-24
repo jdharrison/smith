@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-10-19T19:32:59.382370+00:00",
+  "source_drift": [],
+  "source_snapshot_stable": true,
+  "artifacts_sha256": {
+    "service/target/debug/smith-service": "af6f560867cbfa17b9d374a47dde95bb1f415d6c9f65de669b27e85aafd993c7",
+    "service/target/debug/libsmith_service.rlib": "7b353c8ad25330167fdf9d7faf78dcf8c4e2041f10447265aa4b0cd27ce9c249"
+  },
+  "selected_tests_passed": 71,
+  "selected_tests_failed": 0,
+  "source_format_build_production_clippy": "PASS",
+  "independent_assurance": "NOT PERFORMED: requires fresh independent context",
+  "live_validation": "NOT PERFORMED; outside approval",
+  "retained_initial_failure": "02-framing-tests.log: compile E0599 at post-reply EOF raw descriptor call; fixed before final validation"
+}

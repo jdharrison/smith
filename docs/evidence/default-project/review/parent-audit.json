@@ -1,0 +1,237 @@
+{
+  "artifacts": {
+    "target/default-project/validation/candidate-core.tar.gz": "6290a3abceb7a4bba342a00818a5bc0886524b52622de48396d1c20bf536ce51",
+    "target/default-project/validation/debug_service-fixture": "79b38c181580772aec9c8d97ea20008f211787cbc68d85023b573b8eae6e7737"
+  },
+  "candidate_equals_valid_control_failure_bodies": true,
+  "checksum_mismatches": [],
+  "checksummed_files": 167,
+  "commands": [
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "cargo-toolchain-version",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "dagger-version",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "diff-check",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "engine-final-observation",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "engine-observation",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "fixture-control-bootstrap_modes_keep_fake_keys_and_restart_resets_only_volatile_facts",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "fixture-control-disk5_projects_control_seeds_real_legacy_bytes_and_reopens_without_effects",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "fixture-rebuild",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "flutter-assets",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "flutter-compiled-projects",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 1,
+      "log_matches": true,
+      "name": "flutter-focused-projects",
+      "status": "fail"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "flutter-format",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "flutter-full-analyze",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "flutter-scoped-analyze",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 101,
+      "log_matches": true,
+      "name": "negative-control-all-target-clippy",
+      "status": "fail"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 101,
+      "log_matches": true,
+      "name": "negative-control-isolated-all-target-clippy",
+      "status": "fail"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 101,
+      "log_matches": true,
+      "name": "negative-control-isolated-projects",
+      "status": "fail"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 101,
+      "log_matches": true,
+      "name": "negative-control-projects",
+      "status": "fail"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": null,
+      "log_matches": true,
+      "name": "package-verify",
+      "status": "not_run"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": null,
+      "log_matches": true,
+      "name": "pipeline-helpers",
+      "status": "not_run"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 2,
+      "log_matches": true,
+      "name": "root-gates",
+      "status": "fail"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 101,
+      "log_matches": true,
+      "name": "rust-all-target-clippy",
+      "status": "fail"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "rust-bootstrap",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "rust-format",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "rust-production-clippy",
+      "status": "pass"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 101,
+      "log_matches": true,
+      "name": "rust-projects",
+      "status": "fail"
+    },
+    {
+      "core_after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "exit": 0,
+      "log_matches": true,
+      "name": "rust-toolchain-version",
+      "status": "pass"
+    }
+  ],
+  "current_control_overlay_mismatches": [],
+  "independent_equals_parent_failure_bodies": true,
+  "independent_failure_names": [
+    "app::projects::tests::projects_actual_disk5_migration_preserves_opaque_state_and_legacy_requests_never_replay",
+    "app::projects::tests::projects_crud_receipts_and_empty_registry_survive_restart_without_provider_calls",
+    "app::projects::tests::projects_disk1_through_frozen_disk4_migrate_empty_preserving_all_existing_data",
+    "app::projects::tests::projects_disk6_and_frozen_legacy_schemas_reject_corruption_without_rewriting_bytes",
+    "app::projects::tests::projects_global_revision_is_independent_of_chat_mutations_and_pending_work"
+  ],
+  "retained_checksum_index_sha256": "e4684a71e7c8feb9ffa88f2e4dfa18d10946f6fa38034c7222b480f2ce75052a"
+}

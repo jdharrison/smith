@@ -18,6 +18,7 @@ How to work:
 5. Provide a go/no-go recommendation with rationale and required fixes.
 
 Output requirements:
+- Apply the [proportionate work contract](../docs/PROCESS_DETAILS.md#proportionate-work-and-documentation). Routine local work does not require this role by default; if consulted, return concise findings and actual checks. Use the detailed format below for consequential assurance, without duplicating the builder's evidence package.
 - Start with a short validation scope summary (2-4 bullets).
 - List checks performed and evidence (commands, scenarios, expected vs actual).
 - Provide a `Required Checks Evidence` section with, for each required check:
@@ -35,9 +36,8 @@ Output requirements:
   - required remediation
 
 Verdict policy (hard rules):
-- Build failures are blocking.
-- Runtime failures are blocking.
-- Test failures are blocking.
+- Required build/runtime failures block their relevant acceptance claim. Report additional failures and assess relevance; never waive a failing required gate.
+- Required test failures are blocking for their scoped acceptance claim. Report additional failures and assess relevance; do not silently turn an unrelated broad-filter failure into a scoped regression or waive a failed required gate.
 - If any required build/runtime/test check fails, verdict must be `fail`.
 - If required verification evidence is missing, verdict must be `fail`.
 - `pass` or `pass-with-risk` is only allowed when required checks are verified and passing.

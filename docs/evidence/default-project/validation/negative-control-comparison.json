@@ -1,0 +1,180 @@
+{
+  "candidate": {
+    "app::projects::tests::projects_actual_disk5_migration_preserves_opaque_state_and_legacy_requests_never_replay": "called `Result::unwrap()` on an `Err` value: \"Corrupt v5 state; preserved\"",
+    "app::projects::tests::projects_crud_receipts_and_empty_registry_survive_restart_without_provider_calls": "assertion `left == right` failed\n  left: Number(7)\n right: 6",
+    "app::projects::tests::projects_disk1_through_frozen_disk4_migrate_empty_preserving_all_existing_data": "assertion `left == right` failed\n  left: Object {\"config\": Object {\"model\": String(\"local:exact\"), \"revision\": Number(8), \"voice\": String(\"observed_voice\")}, \"expired_ids\": Array [String(\"00000000000000000000000000000063\")], \"history\": Array [Object {\"content\": String(\"old input\"), \"role\": String(\"user\")}, Object {\"content\": String(\"old answer\"), \"role\": String(\"assistant\")}], \"jobs\": Array [Object {\"fingerprint\": String(\"bfbb44826af23bf7688d0291d9664cf141a88ff4acea9ff8a010225624a07904\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"models\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000001\"), \"result\": Object {\"models\": Array [Object {\"digest\": String(\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"), \"name\": String(\"local:exact\")}], \"providers\": Object {\"llm\": Object {\"error\": Null, \"ready\": Bool(true)}, \"stt\": Object {\"error\": Null, \"model\": String(\"local-whisper\"), \"ready\": Bool(true)}, \"tts\": Object {\"error\": Null, \"ready\": Bool(true)}}, \"voices\": Array [String(\"observed_voice\")]}, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"3554f17f06cbe299db13c20e0547e2228f3ef894c38a2d963fa0a73193f5eefd\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"submit\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000002\"), \"result\": Object {\"assistant_text\": String(\"old answer\"), \"audio\": Null, \"speech_error\": Object {\"code\": String(\"AUDIO_EXPIRED\"), \"message\": String(\"Audio was transient; deliberate replay is required\")}}, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"65e77d4247a7e0b2261ebd50ef65429fc20465c410f992f7425e022b26295488\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Object {\"code\": String(\"AUDIO_EXPIRED\"), \"message\": String(\"Audio was transient; deliberate replay is required\")}, \"kind\": String(\"speak\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000003\"), \"result\": Null, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"620edb1970eac0e75500e8716496e4d4e39ef1e13d9fd5563fadadb02a099dca\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"transcribe\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000004\"), \"result\": Object {\"duration_ms\": Number(10), \"language\": String(\"en\"), \"text\": String(\"old transcript\")}, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"7edf60c4441e317e535309d9f481fe87dd98775fa70d4938cea67935b1167d70\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Object {\"code\": String(\"TTS_UNAVAILABLE\"), \"message\": String(\"old synthesis failure\")}, \"kind\": String(\"speak\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000005\"), \"result\": Null, \"status\": String(\"failed\")}}, Object {\"fingerprint\": String(\"b9c2e6d8f026239be460e7771b52ec75712a98a58713421d91bdf9137654494a\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Object {\"code\": String(\"INTERRUPTED\"), \"message\": String(\"Operation interrupted; it was not replayed\")}, \"kind\": String(\"submit\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000006\"), \"result\": Null, \"status\": String(\"interrupted\")}}], \"schema_version\": Number(1)}\n right: Object {\"config\": Object {\"model\": String(\"local:exact\"), \"revision\": Number(7), \"voice\": String(\"observed_voice\")}, \"expired_ids\": Array [String(\"00000000000000000000000000000063\")], \"history\": Array [Object {\"content\": String(\"old input\"), \"role\": String(\"user\")}, Object {\"content\": String(\"old answer\"), \"role\": String(\"assistant\")}], \"jobs\": Array [Object {\"fingerprint\": String(\"bfbb44826af23bf7688d0291d9664cf141a88ff4acea9ff8a010225624a07904\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"models\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000001\"), \"result\": Object {\"models\": Array [Object {\"digest\": String(\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"), \"name\": String(\"local:exact\")}], \"providers\": Object {\"llm\": Object {\"error\": Null, \"ready\": Bool(true)}, \"stt\": Object {\"error\": Null, \"model\": String(\"local-whisper\"), \"ready\": Bool(true)}, \"tts\": Object {\"error\": Null, \"ready\": Bool(true)}}, \"voices\": Array [String(\"observed_voice\")]}, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"3554f17f06cbe299db13c20e0547e2228f3ef894c38a2d963fa0a73193f5eefd\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"submit\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000002\"), \"result\": Object {\"assistant_text\": String(\"old answer\"), \"audio\": Null, \"speech_error\": Object {\"code\": String(\"AUDIO_EXPIRED\"), \"message\": String(\"Audio was transient; deliberate replay is required\")}}, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"65e77d4247a7e0b2261ebd50ef65429fc20465c410f992f7425e022b26295488\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Object {\"code\": String(\"AUDIO_EXPIRED\"), \"message\": String(\"Audio was transient; deliberate replay is required\")}, \"kind\": String(\"speak\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000003\"), \"result\": Null, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"620edb1970eac0e75500e8716496e4d4e39ef1e13d9fd5563fadadb02a099dca\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"transcribe\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000004\"), \"result\": Object {\"duration_ms\": Number(10), \"language\": String(\"en\"), \"text\": String(\"old transcript\")}, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"7edf60c4441e317e535309d9f481fe87dd98775fa70d4938cea67935b1167d70\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Object {\"code\": String(\"TTS_UNAVAILABLE\"), \"message\": String(\"old synthesis failure\")}, \"kind\": String(\"speak\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000005\"), \"result\": Null, \"status\": String(\"failed\")}}, Object {\"fingerprint\": String(\"b9c2e6d8f026239be460e7771b52ec75712a98a58713421d91bdf9137654494a\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"submit\"), \"phase\": String(\"synthesis\"), \"request_id\": String(\"00000000000000000000000000000006\"), \"result\": Null, \"status\": String(\"running\")}}], \"schema_version\": Number(1)}",
+    "app::projects::tests::projects_disk6_and_frozen_legacy_schemas_reject_corruption_without_rewriting_bytes": "corrupt fixture accepted",
+    "app::projects::tests::projects_global_revision_is_independent_of_chat_mutations_and_pending_work": "called `Result::unwrap()` on an `Err` value: \"Invalid instructions state; preserved\""
+  },
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--locked",
+        "--offline",
+        "--lib",
+        "projects_"
+      ],
+      "changed_core_paths": [],
+      "core_after_sha256": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before_sha256": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "cwd": "<repo>/target/default-project/validation/negative-control/service",
+      "duration_seconds": 17.929,
+      "environment": {
+        "CARGO_TARGET_DIR": "<repo>/target/default-project/validation/negative-control-cargo-target",
+        "CI": "true",
+        "DAGGER_CLOUD_TOKEN": "",
+        "DAGGER_NO_NAG": "1",
+        "DAGGER_PROGRESS": "plain",
+        "DNT": "1",
+        "DO_NOT_TRACK": "1",
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_PAGER": "cat",
+        "GIT_TERMINAL_PROMPT": "0",
+        "HOME": "<home>",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LOGNAME": "jdharrison",
+        "PATH": "<home>/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "TERM": "dumb",
+        "TZ": "UTC",
+        "USER": "jdharrison",
+        "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+      },
+      "environment_policy": "explicit complete allowlist; no inherited provider credentials, session bus, display, analytics/cloud tokens",
+      "executable": {
+        "mode": 493,
+        "mode_octal": "0o755",
+        "path": "<home>/.cargo/bin/rustup",
+        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "size": 20838840,
+        "type": "file"
+      },
+      "exit_code": 101,
+      "finished_at": "2026-10-17T23:24:39.609333+00:00",
+      "log": "docs/evidence/default-project/validation/negative-control-isolated-projects.log",
+      "log_sha256": "8f493955f027aa0ff45726479b5030b93f2f6939752cc167fed7cba08615b5e7",
+      "name": "negative-control-isolated-projects",
+      "recorder_error": null,
+      "skip_reason": null,
+      "stable_inputs": true,
+      "started_at": "2026-10-17T23:24:21.680118+00:00",
+      "status": "fail",
+      "timed_out": false,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "--manifest-path",
+        "Cargo.toml",
+        "--locked",
+        "--offline",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "changed_core_paths": [],
+      "core_after_sha256": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "core_before_sha256": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+      "cwd": "<repo>/target/default-project/validation/negative-control/service",
+      "duration_seconds": 8.958,
+      "environment": {
+        "CARGO_TARGET_DIR": "<repo>/target/default-project/validation/negative-control-cargo-target",
+        "CI": "true",
+        "DAGGER_CLOUD_TOKEN": "",
+        "DAGGER_NO_NAG": "1",
+        "DAGGER_PROGRESS": "plain",
+        "DNT": "1",
+        "DO_NOT_TRACK": "1",
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_PAGER": "cat",
+        "GIT_TERMINAL_PROMPT": "0",
+        "HOME": "<home>",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LOGNAME": "jdharrison",
+        "PATH": "<home>/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "TERM": "dumb",
+        "TZ": "UTC",
+        "USER": "jdharrison",
+        "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+      },
+      "environment_policy": "explicit complete allowlist; no inherited provider credentials, session bus, display, analytics/cloud tokens",
+      "executable": {
+        "mode": 493,
+        "mode_octal": "0o755",
+        "path": "<home>/.cargo/bin/rustup",
+        "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+        "size": 20838840,
+        "type": "file"
+      },
+      "exit_code": 101,
+      "finished_at": "2026-10-17T23:24:48.569203+00:00",
+      "log": "docs/evidence/default-project/validation/negative-control-isolated-all-target-clippy.log",
+      "log_sha256": "315fea57857eb90c78c4c305c345b0e23c0715edf66febeb24d8615ffdd6ec2a",
+      "name": "negative-control-isolated-all-target-clippy",
+      "recorder_error": null,
+      "skip_reason": null,
+      "stable_inputs": true,
+      "started_at": "2026-10-17T23:24:39.610876+00:00",
+      "status": "fail",
+      "timed_out": false,
+      "timeout_seconds": 300
+    }
+  ],
+  "control": {
+    "app::projects::tests::projects_actual_disk5_migration_preserves_opaque_state_and_legacy_requests_never_replay": "called `Result::unwrap()` on an `Err` value: \"Corrupt v5 state; preserved\"",
+    "app::projects::tests::projects_crud_receipts_and_empty_registry_survive_restart_without_provider_calls": "assertion `left == right` failed\n  left: Number(7)\n right: 6",
+    "app::projects::tests::projects_disk1_through_frozen_disk4_migrate_empty_preserving_all_existing_data": "assertion `left == right` failed\n  left: Object {\"config\": Object {\"model\": String(\"local:exact\"), \"revision\": Number(8), \"voice\": String(\"observed_voice\")}, \"expired_ids\": Array [String(\"00000000000000000000000000000063\")], \"history\": Array [Object {\"content\": String(\"old input\"), \"role\": String(\"user\")}, Object {\"content\": String(\"old answer\"), \"role\": String(\"assistant\")}], \"jobs\": Array [Object {\"fingerprint\": String(\"bfbb44826af23bf7688d0291d9664cf141a88ff4acea9ff8a010225624a07904\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"models\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000001\"), \"result\": Object {\"models\": Array [Object {\"digest\": String(\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"), \"name\": String(\"local:exact\")}], \"providers\": Object {\"llm\": Object {\"error\": Null, \"ready\": Bool(true)}, \"stt\": Object {\"error\": Null, \"model\": String(\"local-whisper\"), \"ready\": Bool(true)}, \"tts\": Object {\"error\": Null, \"ready\": Bool(true)}}, \"voices\": Array [String(\"observed_voice\")]}, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"3554f17f06cbe299db13c20e0547e2228f3ef894c38a2d963fa0a73193f5eefd\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"submit\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000002\"), \"result\": Object {\"assistant_text\": String(\"old answer\"), \"audio\": Null, \"speech_error\": Object {\"code\": String(\"AUDIO_EXPIRED\"), \"message\": String(\"Audio was transient; deliberate replay is required\")}}, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"65e77d4247a7e0b2261ebd50ef65429fc20465c410f992f7425e022b26295488\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Object {\"code\": String(\"AUDIO_EXPIRED\"), \"message\": String(\"Audio was transient; deliberate replay is required\")}, \"kind\": String(\"speak\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000003\"), \"result\": Null, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"620edb1970eac0e75500e8716496e4d4e39ef1e13d9fd5563fadadb02a099dca\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"transcribe\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000004\"), \"result\": Object {\"duration_ms\": Number(10), \"language\": String(\"en\"), \"text\": String(\"old transcript\")}, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"7edf60c4441e317e535309d9f481fe87dd98775fa70d4938cea67935b1167d70\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Object {\"code\": String(\"TTS_UNAVAILABLE\"), \"message\": String(\"old synthesis failure\")}, \"kind\": String(\"speak\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000005\"), \"result\": Null, \"status\": String(\"failed\")}}, Object {\"fingerprint\": String(\"b9c2e6d8f026239be460e7771b52ec75712a98a58713421d91bdf9137654494a\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Object {\"code\": String(\"INTERRUPTED\"), \"message\": String(\"Operation interrupted; it was not replayed\")}, \"kind\": String(\"submit\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000006\"), \"result\": Null, \"status\": String(\"interrupted\")}}], \"schema_version\": Number(1)}\n right: Object {\"config\": Object {\"model\": String(\"local:exact\"), \"revision\": Number(7), \"voice\": String(\"observed_voice\")}, \"expired_ids\": Array [String(\"00000000000000000000000000000063\")], \"history\": Array [Object {\"content\": String(\"old input\"), \"role\": String(\"user\")}, Object {\"content\": String(\"old answer\"), \"role\": String(\"assistant\")}], \"jobs\": Array [Object {\"fingerprint\": String(\"bfbb44826af23bf7688d0291d9664cf141a88ff4acea9ff8a010225624a07904\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"models\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000001\"), \"result\": Object {\"models\": Array [Object {\"digest\": String(\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"), \"name\": String(\"local:exact\")}], \"providers\": Object {\"llm\": Object {\"error\": Null, \"ready\": Bool(true)}, \"stt\": Object {\"error\": Null, \"model\": String(\"local-whisper\"), \"ready\": Bool(true)}, \"tts\": Object {\"error\": Null, \"ready\": Bool(true)}}, \"voices\": Array [String(\"observed_voice\")]}, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"3554f17f06cbe299db13c20e0547e2228f3ef894c38a2d963fa0a73193f5eefd\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"submit\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000002\"), \"result\": Object {\"assistant_text\": String(\"old answer\"), \"audio\": Null, \"speech_error\": Object {\"code\": String(\"AUDIO_EXPIRED\"), \"message\": String(\"Audio was transient; deliberate replay is required\")}}, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"65e77d4247a7e0b2261ebd50ef65429fc20465c410f992f7425e022b26295488\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Object {\"code\": String(\"AUDIO_EXPIRED\"), \"message\": String(\"Audio was transient; deliberate replay is required\")}, \"kind\": String(\"speak\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000003\"), \"result\": Null, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"620edb1970eac0e75500e8716496e4d4e39ef1e13d9fd5563fadadb02a099dca\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"transcribe\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000004\"), \"result\": Object {\"duration_ms\": Number(10), \"language\": String(\"en\"), \"text\": String(\"old transcript\")}, \"status\": String(\"succeeded\")}}, Object {\"fingerprint\": String(\"7edf60c4441e317e535309d9f481fe87dd98775fa70d4938cea67935b1167d70\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Object {\"code\": String(\"TTS_UNAVAILABLE\"), \"message\": String(\"old synthesis failure\")}, \"kind\": String(\"speak\"), \"phase\": String(\"complete\"), \"request_id\": String(\"00000000000000000000000000000005\"), \"result\": Null, \"status\": String(\"failed\")}}, Object {\"fingerprint\": String(\"b9c2e6d8f026239be460e7771b52ec75712a98a58713421d91bdf9137654494a\"), \"operation\": Object {\"config_revision\": Number(7), \"error\": Null, \"kind\": String(\"submit\"), \"phase\": String(\"synthesis\"), \"request_id\": String(\"00000000000000000000000000000006\"), \"result\": Null, \"status\": String(\"running\")}}], \"schema_version\": Number(1)}",
+    "app::projects::tests::projects_disk6_and_frozen_legacy_schemas_reject_corruption_without_rewriting_bytes": "corrupt fixture accepted",
+    "app::projects::tests::projects_global_revision_is_independent_of_chat_mutations_and_pending_work": "called `Result::unwrap()` on an `Err` value: \"Invalid instructions state; preserved\""
+  },
+  "exact_normalized_failure_bodies_equal": true,
+  "initial_shared_target_attempt_valid": false,
+  "normalization": "Remove thread/pid/source line locations and RUST_BACKTRACE note only; retain assertion/error/projection bytes.",
+  "same_failure_names": true,
+  "summaries": {
+    "negative-control-isolated-all-target-clippy": {
+      "counting_note": "Raw terminal matches; aggregate component totals must be grouped/deduplicated by Dagger vertex, not summed across failure replay.",
+      "failure_lines": [],
+      "flutter_terminal_results": [],
+      "python_suites": [],
+      "rust_suites": [],
+      "skip_or_ignore_lines": []
+    },
+    "negative-control-isolated-projects": {
+      "counting_note": "Raw terminal matches; aggregate component totals must be grouped/deduplicated by Dagger vertex, not summed across failure replay.",
+      "failure_lines": [
+        "test app::projects::tests::projects_global_revision_is_independent_of_chat_mutations_and_pending_work ... FAILED",
+        "test app::projects::tests::projects_disk1_through_frozen_disk4_migrate_empty_preserving_all_existing_data ... FAILED",
+        "test app::projects::tests::projects_actual_disk5_migration_preserves_opaque_state_and_legacy_requests_never_replay ... FAILED",
+        "test app::projects::tests::projects_disk6_and_frozen_legacy_schemas_reject_corruption_without_rewriting_bytes ... FAILED",
+        "test app::projects::tests::projects_crud_receipts_and_empty_registry_survive_restart_without_provider_calls ... FAILED",
+        "test result: FAILED. 17 passed; 5 failed; 0 ignored; 0 measured; 126 filtered out; finished in 5.63s"
+      ],
+      "flutter_terminal_results": [],
+      "python_suites": [],
+      "rust_suites": [
+        {
+          "failed": 5,
+          "filtered": 126,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 17,
+          "status": "FAILED"
+        }
+      ],
+      "skip_or_ignore_lines": [
+        "test result: FAILED. 17 passed; 5 failed; 0 ignored; 0 measured; 126 filtered out; finished in 5.63s"
+      ]
+    }
+  }
+}

@@ -1,0 +1,265 @@
+{
+  "work_id": "LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT/section-0/ui-owner",
+  "recorded_at_utc": "2026-10-17T21:15:00.343267+00:00",
+  "kind": "implemented local self-check; not independent assurance or installed acceptance",
+  "toolchain": {
+    "flutter": "3.47.2 stable",
+    "framework_revision": "d3b14c8769",
+    "dart": "3.13.2",
+    "origin": "existing cached SDK resolved from client/.dart_tool/package_config.json",
+    "command_note": "Executable basenames normalized to avoid retaining sensitive local paths; exact flags and project-relative arguments retained."
+  },
+  "baseline": {
+    "head": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+    "branch": "feature/autonomy",
+    "source_file_count": 1459,
+    "canonical_files_sha256": "740cc41d9ba4bc8265d5ea69a34fe5bf5ac8e11596ef4223357232a6756a44c3",
+    "expected_canonical_sha256": "740cc41d9ba4bc8265d5ea69a34fe5bf5ac8e11596ef4223357232a6756a44c3",
+    "archive": "target/projects-layout/baseline-source.tar.gz",
+    "archive_sha256": "80f9672a2707d25e27eb91c682eba4aa5064501fbbd95f7131ae9da68831ec6a",
+    "archive_file_digest_mismatches": []
+  },
+  "source_binding": {
+    "selectors": [
+      "client/lib/**/*.dart",
+      "client/test/**/*.dart",
+      "client/assets/**/* (files)",
+      "client/test/goldens/projects-layout/**/*.png",
+      "client/pubspec.*",
+      "client/analysis_options.yaml"
+    ],
+    "canonicalization": "SHA256 of sorted path/size/sha256 records encoded as sort_keys compact JSON",
+    "before_file_count": 129,
+    "after_file_count": 129,
+    "before_sha256": "eb2e8f20bdce0e2eaeefd42b7bf90ddaf73492725a9d7d76481346257d3a7d51",
+    "after_sha256": "eb2e8f20bdce0e2eaeefd42b7bf90ddaf73492725a9d7d76481346257d3a7d51",
+    "stable_during_final_checks": true
+  },
+  "ui_owner_written_files": [
+    {
+      "path": "client/lib/ui/projects_view.dart",
+      "sha256": "130cf5bf70ac1f6f52186ae220ea1f7053015b46e0aefd39ddb5cee1c8804396"
+    },
+    {
+      "path": "client/test/projects_view_test.dart",
+      "sha256": "4661762371bf7509d0d15cad649c73f02f27ae55702e5ea0cf2975aa7d163b1a"
+    },
+    {
+      "path": "client/test/projects_navigation_test.dart",
+      "sha256": "ba0b4c5388f06145d2c962fdbe93be16f0bf0f9bc273bd874283359f3bb0a351"
+    },
+    {
+      "path": "client/test/projects_layout_test.dart",
+      "sha256": "99e1e5d63b477034ae43e6cb814351d5f117e372a21b7afad4c5ec2fcfb519e2"
+    },
+    {
+      "path": "client/test/projects_layout_golden_test.dart",
+      "sha256": "15be6fd482209cc12d6c8b9ceeed79832005706971e1102b6e087df7ae11d3b5"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/compact-editor-400x400-text2.png",
+      "sha256": "801b3df51633611de483d00a9a1b1a506add59a2161175ac74ef98e874ff8d5d"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/compact-editor-400x400.png",
+      "sha256": "023ecbdb240a8e44fd60d198cc822bb6d090e75851379c78986ab6ca30906293"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/compact-list-400x400-text2.png",
+      "sha256": "442b02b3ad06bb66a395f88a63e2babc50d80a84b69f8d19dac5852d9e6974ce"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/compact-list-400x400.png",
+      "sha256": "945a8fa620558e387f6b232d4cc92b5e8490bf4ecb3e51f923cc130e37f142e2"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/compact-repositories-400x400-text2.png",
+      "sha256": "9df045973461f07401e1d4ea34b2606efe5c0ca70d9fa9980867944c2f5fec4e"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/compact-repositories-400x400.png",
+      "sha256": "ebfe589299842484ec63ae813824bfbee8da4fe7e4e819da9bd6e0ab761c6090"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/ultrawide-4200x2400.png",
+      "sha256": "cc08cec883ac2550e69bcc6b6d6557cc36c00383ba87a55b423aaf3134ba5668"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/wide-1536x1024.png",
+      "sha256": "c951da3cfbf3e032474738363c970baab92559253d0cd692aabc3ee756b6028b"
+    }
+  ],
+  "checks": [
+    {
+      "command": [
+        "dart",
+        "format",
+        "--output=none",
+        "--set-exit-if-changed",
+        "lib/ui/projects_view.dart",
+        "test/projects_view_test.dart",
+        "test/projects_navigation_test.dart",
+        "test/projects_layout_test.dart",
+        "test/projects_layout_golden_test.dart"
+      ],
+      "cwd": "client",
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": [
+        "Formatted 5 files (0 changed) in 0.07 seconds."
+      ]
+    },
+    {
+      "command": [
+        "flutter",
+        "analyze",
+        "--no-pub",
+        "lib/ui/projects_view.dart",
+        "test/projects_view_test.dart",
+        "test/projects_navigation_test.dart",
+        "test/projects_layout_test.dart",
+        "test/projects_layout_golden_test.dart"
+      ],
+      "cwd": "client",
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": [
+        "Analyzing 5 items...                                            ",
+        "No issues found! (ran in 2.0s)"
+      ]
+    },
+    {
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "test/projects_view_test.dart",
+        "test/projects_navigation_test.dart",
+        "test/projects_layout_test.dart",
+        "test/projects_layout_golden_test.dart",
+        "test/projects_controller_test.dart",
+        "test/projects_protocol_test.dart",
+        "--reporter",
+        "expanded"
+      ],
+      "cwd": "client",
+      "exit_code": 0,
+      "status": "PASS",
+      "summary": [
+        "00:09 +154: <workspace>/client/test/projects_view_test.dart: lost create acknowledgement resolves from another view without duplicate creation or losing newer edits",
+        "00:09 +155: <workspace>/client/test/projects_view_test.dart: later registry writes after uncertain creation never select an inferred target or enable duplicate Save",
+        "00:09 +156: <workspace>/client/test/projects_view_test.dart: failed refresh and Save preserve text; uncertainty offers query-only resolution and blocks writes",
+        "00:09 +157: All tests passed!"
+      ],
+      "passed": 157,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "golden_generation": {
+    "command": [
+      "flutter",
+      "test",
+      "--no-pub",
+      "--update-goldens",
+      "test/projects_layout_golden_test.dart",
+      "--reporter",
+      "expanded"
+    ],
+    "cwd": "client",
+    "passed": 8,
+    "failed": 0,
+    "note": "Actually generated; rerun after fixing capture boundary to include Scaffold background. Only these eight new Projects PNGs were generated."
+  },
+  "scope_audit": {
+    "baseline_differences_observed_in_shared_tree": [
+      "client/assets/README.md",
+      "client/lib/ui/projects_view.dart",
+      "client/lib/ui/smith_icon.dart",
+      "client/test/projects_navigation_test.dart",
+      "client/test/projects_view_test.dart",
+      "dagger/package.py",
+      "dagger/tests/test_package.py",
+      "docs/plans/LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT.md"
+    ],
+    "frozen_runtime_file_count": 86,
+    "frozen_runtime_unchanged": true,
+    "existing_golden_file_count": 31,
+    "existing_goldens_unchanged": true,
+    "write_guard_regions_equal_ignoring_formatting": {
+      "_save": true,
+      "_reconcileSubmission": true,
+      "_reviewRevision": true,
+      "_delete": true
+    },
+    "owned_dart_whitespace_failures": [],
+    "ownership_note": "Other baseline differences are shared-tree observations, not edits by this UI owner; icons/assets/packaging/docs belong to parent or asset owner."
+  },
+  "intermediate_failures_and_corrections": [
+    {
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "test/projects_layout_test.dart",
+        "test/projects_navigation_test.dart",
+        "--reporter",
+        "expanded"
+      ],
+      "exit_code": 1,
+      "passed": 7,
+      "failed": 2,
+      "details": [
+        "New layout test failed compilation because validating ProjectRepository/ProjectBranches/ProjectBranchTypes constructors are not const; fixture const uses removed without model edits.",
+        "New four-pane fixture missed a disclosure tap, then found no expanded field; pending caret reveal was not settled before scoped scrolling."
+      ]
+    },
+    {
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "test/projects_layout_test.dart",
+        "test/projects_navigation_test.dart",
+        "--reporter",
+        "expanded"
+      ],
+      "exit_code": 1,
+      "passed": 18,
+      "failed": 3,
+      "details": [
+        "Two bookmark assertions observed 872 and 2449 instead of 700 because pending caret reveal ran after the test jump.",
+        "Four-pane helper still raced caret reveal. Added pumpAndSettle before visibility/scroll operations and before establishing bookmarks; kept all assertions. Subsequent batch passed 21/21."
+      ]
+    },
+    {
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "--update-goldens",
+        "test/projects_layout_golden_test.dart",
+        "--reporter",
+        "expanded"
+      ],
+      "exit_code": 0,
+      "passed": 8,
+      "failed": 0,
+      "superseded": true,
+      "details": [
+        "Image review found capture boundary omitted the Scaffold background, producing transparent background/incorrect blending. Moved boundary around Scaffold and regenerated only the same eight new files; final generation and comparison pass."
+      ]
+    }
+  ],
+  "logs": {
+    "original_logs_retained": false,
+    "note": "Original stdout was observed through terminal tool results but no raw log files were retained. Intermediate failure summaries were reconstructed from those observed results; final concise summaries were captured in memory and sanitized."
+  },
+  "not_run": [
+    "Full client suite and Linux build (focused UI-owner checks only)",
+    "Compiled Rust-Dart integration or live service (no contract changes and no service launch authorized)",
+    "Native GUI/IME/accessibility QA",
+    "Fresh independent assurance and parent-owned package/documentation closeout"
+  ],
+  "effects": "No GUI launch, live keys/providers, live service, repository execution, Git mutation, installation or remote effect."
+}

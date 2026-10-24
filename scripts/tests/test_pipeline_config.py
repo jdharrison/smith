@@ -44,6 +44,26 @@ def steps(job):
     return re.split(r"(?m)^      - ", block(job, "steps", 4))[1:]
 
 
+class WorkerImageRecipeTests(unittest.TestCase):
+    def test_opencode_extracts_as_image_builder_not_archive_owner(self):
+        for name in ("Dockerfile", "Dockerfile.local"):
+            with self.subTest(recipe=name):
+                recipe = (ROOT / "service/dev-worker" / name).read_text()
+                self.assertIn(
+                    "tar --no-same-owner -xzf /tmp/opencode.tar.gz -C /usr/local/bin opencode",
+                    recipe,
+                )
+                self.assertIn("sha256sum --check --strict", recipe)
+                self.assertIn("USER 1000:1000", recipe)
+
+    def test_local_worker_retains_immutable_root_owned_payloads(self):
+        recipe = (ROOT / "service/dev-worker/Dockerfile.local").read_text()
+        self.assertIn("COPY --chown=0:0 dist/smith-service", recipe)
+        self.assertIn("COPY --chown=0:0 dev-worker/guard.mjs", recipe)
+        self.assertIn("chmod 0555 /usr/local/bin/opencode /usr/bin/git", recipe)
+        self.assertIn("chmod -R a-w /etc/smith-opencode /etc/smith-dev-local-worker", recipe)
+
+
 class DaggerSetupTests(unittest.TestCase):
     def test_module_and_installer_have_reviewed_version_and_digest(self):
         module = json.loads((ROOT / "dagger/dagger.json").read_text())
@@ -149,7 +169,9 @@ class MakeConfigTests(unittest.TestCase):
             capture_output=True, text=True, timeout=10,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        calls = [shlex.split(line) for line in result.stdout.splitlines()
+        lines = [line.removeprefix("umask 077; ")
+                 for line in result.stdout.splitlines()]
+        calls = [shlex.split(line) for line in lines
                  if line.startswith(executable + " ")]
         self.assertEqual(len(calls), recipe_count, result.stdout)
         for call in calls:

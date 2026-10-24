@@ -1,0 +1,37 @@
+OFFLINE ONLY: injected commands; no real Docker/CLI/network.
+UTC=2026-10-21T01:27:18.158423+00:00
+script_sha256=4306dd47b486c26761eaddc7b6d9312ed132716f84ceb799e13bd7dba1912f47
+tests_sha256=0fea9b3f1ce4544fcfbab3e627d0a033dd98a18e50c37bade5d87e19edd2e15c
+test_ambiguous_start_still_stops (independent_continuation_tests.ContinuationTests.test_ambiguous_start_still_stops) ... ok
+test_anchor_mtime_reset_refused (independent_continuation_tests.ContinuationTests.test_anchor_mtime_reset_refused) ... ok
+test_cancel_stops (independent_continuation_tests.ContinuationTests.test_cancel_stops) ... ok
+test_created_pid_and_started_guards (independent_continuation_tests.ContinuationTests.test_created_pid_and_started_guards) ... ok
+test_deadline_after_start_blocks_request_but_stops (independent_continuation_tests.ContinuationTests.test_deadline_after_start_blocks_request_but_stops) ... ok
+test_drift_after_start_still_stops (independent_continuation_tests.ContinuationTests.test_drift_after_start_still_stops) ... ok
+test_expired_after_construction_has_no_commands (independent_continuation_tests.ContinuationTests.test_expired_after_construction_has_no_commands) ... ok
+test_expired_and_future_budget (independent_continuation_tests.ContinuationTests.test_expired_and_future_budget) ... ok
+test_expired_approval_refuses (independent_continuation_tests.ContinuationTests.test_expired_approval_refuses) ... ok
+test_failure_always_stops_after_join (independent_continuation_tests.ContinuationTests.test_failure_always_stops_after_join) ... ok
+test_foreign_after_start_never_stopped (independent_continuation_tests.ContinuationTests.test_foreign_after_start_never_stopped) ... ok
+test_foreign_identity_never_stopped (independent_continuation_tests.ContinuationTests.test_foreign_identity_never_stopped) ... ok
+test_foreign_volume_refused (independent_continuation_tests.ContinuationTests.test_foreign_volume_refused) ... ok
+test_fresh_receipt_must_be_independent_pass (independent_continuation_tests.ContinuationTests.test_fresh_receipt_must_be_independent_pass) ... ok
+test_nonempty_cgroup_blocks_cleanup_proof (independent_continuation_tests.ContinuationTests.test_nonempty_cgroup_blocks_cleanup_proof) ... ok
+test_nonzero_cli_not_policy_denied_success (independent_continuation_tests.ContinuationTests.test_nonzero_cli_not_policy_denied_success) ... ok
+test_normal_one_request_and_no_replay (independent_continuation_tests.ContinuationTests.test_normal_one_request_and_no_replay) ... ok
+test_only_explicit_bridge_accepted (independent_continuation_tests.ContinuationTests.test_only_explicit_bridge_accepted) ... ok
+test_original_marker_appearing_after_start_blocks_request (independent_continuation_tests.ContinuationTests.test_original_marker_appearing_after_start_blocks_request) ... ok
+test_prior_markers_refuse (independent_continuation_tests.ContinuationTests.test_prior_markers_refuse) ... ok
+test_private_new_capture_directory_and_original_runner (independent_continuation_tests.ContinuationTests.test_private_new_capture_directory_and_original_runner) ... ok
+test_receipt_failure_refuses_before_commands (independent_continuation_tests.ContinuationTests.test_receipt_failure_refuses_before_commands) ... ok
+test_source_drift_after_start_blocks_dispatch_not_stop (independent_continuation_tests.ContinuationTests.test_source_drift_after_start_blocks_dispatch_not_stop) ... ok
+test_source_drift_refuses_before_commands (independent_continuation_tests.ContinuationTests.test_source_drift_refuses_before_commands) ... ok
+test_started_engine_refuses_start_and_request (independent_continuation_tests.ContinuationTests.test_started_engine_refuses_start_and_request) ... ok
+test_unknown_after_start_still_attempts_stop (independent_continuation_tests.ContinuationTests.test_unknown_after_start_still_attempts_stop) ... ok
+test_unknown_child_group_still_stops_but_cannot_pass (independent_continuation_tests.ContinuationTests.test_unknown_child_group_still_stops_but_cannot_pass) ... ok
+test_check_binding_readonly_no_docker (independent_continuation_tests.LocalBindingTests.test_check_binding_readonly_no_docker) ... ok
+
+----------------------------------------------------------------------
+Ran 28 tests in 0.370s
+
+OK

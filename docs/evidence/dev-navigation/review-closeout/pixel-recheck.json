@@ -1,0 +1,344 @@
+{
+  "changed_images": 23,
+  "changed_pixels": 159815,
+  "frozen_editor_images": 13,
+  "images": [
+    {
+      "changed_pixels": 6256,
+      "masks": [
+        [
+          8,
+          64,
+          64,
+          892
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-archive-1440x900.png"
+    },
+    {
+      "changed_pixels": 60,
+      "masks": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-archive-400x400-text2.png"
+    },
+    {
+      "changed_pixels": 6076,
+      "masks": [
+        [
+          8,
+          64,
+          64,
+          712
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-chat-1280x720.png"
+    },
+    {
+      "changed_pixels": 6256,
+      "masks": [
+        [
+          8,
+          64,
+          64,
+          892
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-chat-1440x900-ibm.png"
+    },
+    {
+      "changed_pixels": 6256,
+      "masks": [
+        [
+          8,
+          64,
+          64,
+          892
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-chat-1440x900.png"
+    },
+    {
+      "changed_pixels": 3986,
+      "masks": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-chat-400x400-text2.png"
+    },
+    {
+      "changed_pixels": 5439,
+      "masks": [
+        [
+          8,
+          64,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-chat-400x400.png"
+    },
+    {
+      "changed_pixels": 7756,
+      "masks": [
+        [
+          8,
+          64,
+          64,
+          2392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-chat-4200x2400.png"
+    },
+    {
+      "changed_pixels": 3682,
+      "masks": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-history-400x400-text2.png"
+    },
+    {
+      "changed_pixels": 6256,
+      "masks": [
+        [
+          8,
+          64,
+          64,
+          892
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-overflow-1440x900.png"
+    },
+    {
+      "changed_pixels": 3682,
+      "masks": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-overflow-400x400-text2.png"
+    },
+    {
+      "changed_pixels": 6076,
+      "masks": [
+        [
+          8,
+          64,
+          64,
+          712
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-production-shell-1280x720.png"
+    },
+    {
+      "changed_pixels": 3986,
+      "masks": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-recovery-400x400-text2.png"
+    },
+    {
+      "changed_pixels": 2490,
+      "masks": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-recovery-details-400x400-text2.png"
+    },
+    {
+      "changed_pixels": 6090,
+      "masks": [
+        [
+          8,
+          64,
+          64,
+          892
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-settings-1440x900.png"
+    },
+    {
+      "changed_pixels": 5537,
+      "masks": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-settings-400x400-text2.png"
+    },
+    {
+      "changed_pixels": 5285,
+      "masks": [
+        [
+          9,
+          136,
+          65,
+          400
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/compact-text2-360ms.png"
+    },
+    {
+      "changed_pixels": 5285,
+      "masks": [
+        [
+          9,
+          136,
+          65,
+          400
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/compact-text2-620ms.png"
+    },
+    {
+      "changed_pixels": 7175,
+      "masks": [
+        [
+          9,
+          66,
+          65,
+          991
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/desktop-160ms.png"
+    },
+    {
+      "changed_pixels": 6463,
+      "masks": [
+        [
+          9,
+          66,
+          65,
+          991
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/desktop-360ms.png"
+    },
+    {
+      "changed_pixels": 6463,
+      "masks": [
+        [
+          9,
+          66,
+          65,
+          991
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/desktop-620ms.png"
+    },
+    {
+      "changed_pixels": 24630,
+      "masks": [
+        [
+          9,
+          66,
+          65,
+          720
+        ],
+        [
+          1109,
+          66,
+          1165,
+          720
+        ],
+        [
+          9,
+          737,
+          65,
+          1391
+        ],
+        [
+          1109,
+          737,
+          1165,
+          1391
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/mixed-grid-360ms.png"
+    },
+    {
+      "changed_pixels": 24630,
+      "masks": [
+        [
+          9,
+          66,
+          65,
+          720
+        ],
+        [
+          1109,
+          66,
+          1165,
+          720
+        ],
+        [
+          9,
+          737,
+          65,
+          1391
+        ],
+        [
+          1109,
+          737,
+          1165,
+          1391
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/mixed-grid-620ms.png"
+    }
+  ],
+  "mask_provenance": "Prior independent geometry rectangles; widths/disjointness checked again against unchanged width56 shell; exact any-channel pixel deltas recomputed here",
+  "outside_pixels": 0
+}

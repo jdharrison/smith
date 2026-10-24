@@ -1,0 +1,35 @@
+[95m1   : [0m[90;2m[0mconnect
+[95m1   : [0m[90;2m[0m[90m[0.0s] [0m[90m|[0m cloud [2murl=[0mhttps://dagger.cloud/traces/setup
+[95m2   : [0m[90;2m┆ [0mstarting engine
+[95m2   : [0m[90;2m┆ [0mstarting engine[32m DONE[0m[90m [0.0s][0m
+[95m3   : [0m[90;2m┆ [0mconnecting to engine
+[95m3   : [0m[90;2m┆ [0m[90m[0.0s] [0m[90m|[0m [2m01:21:44[0m [92mINF[0m connected [2mname=[0md4139a37e7e8 [2mclient-version=[0mv0.21.9 [2mserver-version=[0mv0.21.9
+[95m3   : [0m[90;2m┆ [0mconnecting to engine[32m DONE[0m[90m [0.0s][0m
+[95m4   : [0m[90;2m┆ [0mstarting session
+[95m4   : [0m[90;2m┆ [0mstarting session[32m DONE[0m[90m [0.0s][0m
+[95m1   : [0m[90;2m[0mconnect[32m DONE[0m[90m [0.1s][0m
+
+[95m5   : [0m[90;2m[0mload workspace: .
+[95m6   : [0m[90;2m┆ [0mloading type definitions
+[95m6   : [0m[90;2m┆ [0mloading type definitions[32m DONE[0m[90m [1.6s][0m
+[95m5   : [0m[90;2m[0mload workspace: .[32m DONE[0m[90m [1.6s][0m
+
+
+[1mName[0m                     [1mDescription[0m
+build-client             Return the complete Linux bundle; export explicitly to client/dist/.
+build-installer          Return a native recipient executable plus paired payload; no host installation.
+build-installer-binary   Return the native installer executable independently of desktop packaging.
+build-installer-ui       Return the optional native GTK3 installer executable.
+build-runner             Assemble SHA-pinned CPU and Vulkan runners; never execute the Vulkan binary.
+build-service            Return a release binary; export explicitly to service/dist/.
+test                     Run application/native-installer quality and builder-only package checks.
+test-client              Check and test an explicit client source directory.
+test-installer           Run Rust quality/parity and a no-interpreter Ubuntu execution gate.
+test-installer-ui        Check the optional Rust GTK shell in an isolated Xvfb display.
+test-native-runtime      Execute the release ELF in Ubuntu without Python or builder toolchains.
+test-package             Test builder metadata and compiled native package entrypoints under private roots.
+test-service             Check and test an explicit service source directory.
+
+[33mA new release of dagger is available: [0m[36mv0.21.9[0m → [36mv0.21.10[0m
+To upgrade, see https://docs.dagger.io/install
+[33mhttps://github.com/dagger/dagger/releases/tag/v0.21.10[0m

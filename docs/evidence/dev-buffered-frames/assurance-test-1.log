@@ -1,0 +1,19 @@
+UTC 2026-10-19T19:34:52.760316+00:00
+COMMAND cargo test --offline --locked --lib dev_local::tests -- --nocapture
+EXIT 0
+    Finished `test` profile [unoptimized] target(s) in 0.07s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-7c11b7ac37ef8548)
+
+running 7 tests
+test dev_local::tests::buffered_frames_still_check_cancellation_and_deadline_without_consuming ... ok
+test dev_local::tests::coalesced_frames_preserve_overread_without_waiting_for_kernel_data_or_eof ... ok
+test dev_local::tests::fragmented_frames_retry_transient_errors_but_reject_fatal_io ... ok
+test dev_local::tests::malformed_duplicate_typed_and_eof_frames_remain_protocol_errors ... ok
+32KiB chunk: wire_bytes=117101, buffer=1024, underlying_reads=115
+32KiB chunk: wire_bytes=117101, buffer=8192, underlying_reads=15
+32KiB chunk: wire_bytes=117101, buffer=32768, underlying_reads=4
+test dev_local::tests::realistic_32k_chunk_reads_scale_with_buffer_capacity_not_wire_bytes ... ok
+test dev_local::tests::empty_socket_wait_observes_cancellation_and_original_deadline ... ok
+test dev_local::tests::exact_payload_limit_excludes_newline_and_rejects_before_append ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 319 filtered out; finished in 0.13s

@@ -1,0 +1,19 @@
+timestamp=2026-10-19T19:32:23.341522+00:00
+command=['cargo', 'test', '--offline', '--locked', '--lib', 'dev_broker::tests', '--', '--nocapture']
+cwd=service
+    Finished `test` profile [unoptimized] target(s) in 0.04s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-7c11b7ac37ef8548)
+
+running 7 tests
+test dev_broker::tests::equivalent_argument_json_is_not_a_transcript_substitution ... ok
+test dev_broker::tests::final_response_without_read_evidence_is_rejected_before_publication ... ok
+test dev_broker::tests::original_task_and_system_cannot_be_replaced_or_retried ... ok
+test dev_broker::tests::recorded_read_must_be_consumed_before_final_reply ... ok
+test dev_broker::tests::foreign_call_paths_and_mutated_history_are_refused_before_execution ... ok
+test dev_broker::tests::reserved_or_rejected_reads_do_not_establish_inspection_evidence ... ok
+test dev_broker::tests::read_authorization_evidence_and_transcript_are_single_use ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 319 filtered out; finished in 0.00s
+
+
+exit=0

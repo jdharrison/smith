@@ -1,0 +1,37 @@
+00:00 +0: loading <repo>/target/project-repositories/assurance/duplicate_reply_test.dart
+00:00 +0: strict Projects reply rejects duplicate nested base keys
+00:00 +0 -1: strict Projects reply rejects duplicate nested base keys [E]
+  Expected: throws <Instance of 'AppFailure'>
+    Actual: <Instance of 'Future<AppReply>'>
+     Which: emitted <Instance of 'AppReply'>
+  
+  package:matcher                                                           expectLater
+  package:flutter_test/src/widget_tester.dart 507:8                         expectLater
+  ../target/project-repositories/assurance/duplicate_reply_test.dart 65:15  main.<fn>
+  
+00:00 +0 -1: strict Projects reply rejects duplicate nested feature keys
+00:00 +0 -2: strict Projects reply rejects duplicate nested feature keys [E]
+  Expected: throws <Instance of 'AppFailure'>
+    Actual: <Instance of 'Future<AppReply>'>
+     Which: emitted <Instance of 'AppReply'>
+  
+  package:matcher                                                           expectLater
+  package:flutter_test/src/widget_tester.dart 507:8                         expectLater
+  ../target/project-repositories/assurance/duplicate_reply_test.dart 65:15  main.<fn>
+  
+00:00 +0 -2: strict Projects reply rejects duplicate nested hotfix keys
+00:00 +0 -3: strict Projects reply rejects duplicate nested hotfix keys [E]
+  Expected: throws <Instance of 'AppFailure'>
+    Actual: <Instance of 'Future<AppReply>'>
+     Which: emitted <Instance of 'AppReply'>
+  
+  package:matcher                                                           expectLater
+  package:flutter_test/src/widget_tester.dart 507:8                         expectLater
+  ../target/project-repositories/assurance/duplicate_reply_test.dart 65:15  main.<fn>
+  
+00:00 +0 -3: Some tests failed.
+
+Failing tests:
+  <repo>/target/project-repositories/assurance/duplicate_reply_test.dart: strict Projects reply rejects duplicate nested base keys
+  <repo>/target/project-repositories/assurance/duplicate_reply_test.dart: strict Projects reply rejects duplicate nested feature keys
+  <repo>/target/project-repositories/assurance/duplicate_reply_test.dart: strict Projects reply rejects duplicate nested hotfix keys

@@ -1,0 +1,114 @@
+{
+  "artifact_count": 189,
+  "artifact_mismatches": [],
+  "baseline_archive_entries": 1357,
+  "baseline_archive_mismatches": [],
+  "broken_local_links": [],
+  "checks": {
+    "all_exported_artifacts_enumerated": true,
+    "artifacts_file_hash": true,
+    "baseline_archive_hash": true,
+    "baseline_canonical_identity": true,
+    "baseline_manifest_hash": true,
+    "changes_file_hash": true,
+    "compiled_match_raw": true,
+    "core_digest": true,
+    "core_file_hash": true,
+    "core_matches_gate_after": true,
+    "core_matches_gate_before": true,
+    "guide_matches_source": true,
+    "parent_gates_match_raw": true,
+    "results_expected_hash": true,
+    "supporting_file_hash": true
+  },
+  "command": [
+    "python3",
+    "-B",
+    "docs/evidence/project-repositories/reviewer/verify_bundle.py",
+    "initial"
+  ],
+  "core_canonical_sha256": "ed6dc46ef3938f7753ffb9a7a0c76e6be1a2ea88ed0ff760835610fa7cd53481",
+  "core_count": 1243,
+  "core_mismatches": [],
+  "expected_results_sha256": "97b73a7e54a12ad14ae55aad168496f87863e4a274e1796b8d379f8bd0ed604a",
+  "finished": "2026-10-17T19:46:19.100079+00:00",
+  "historical_projects_count": 28,
+  "historical_projects_mismatches": [],
+  "local_links_checked": 174,
+  "parent_bundle_files": [
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/README.md",
+      "sha256": "73e7b2c56b19f12115b1afdbbe8f0aca0ffb2aa66084448ebbc7eb4575d277e0",
+      "size": 10032
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/artifacts.json",
+      "sha256": "27ebd839cdc70e8dbcfed47b843fdcb05c446badb834132c6328a67aa0d03dd1",
+      "size": 42744
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/changes-from-baseline.json",
+      "sha256": "52f067b4b2366744e6b766fa5e3d6a9dd212bdc3e559603170fae459efba0da6",
+      "size": 14581
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/core-source-manifest.jsonl",
+      "sha256": "21b5cc01ba2da3127af2e6843385e872ec952bf4b1dff94dcf6eaaf8fa6511ad",
+      "size": 239588
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/results.json",
+      "sha256": "97b73a7e54a12ad14ae55aad168496f87863e4a274e1796b8d379f8bd0ed604a",
+      "size": 52427
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/supporting-inputs.jsonl",
+      "sha256": "d59995f94d1d2e1d2541aca5c13d6d71488cd55d6e436c36221ba8a7723ec3d4",
+      "size": 4257
+    }
+  ],
+  "passed": true,
+  "pending_review_links": [
+    {
+      "link": "docs/evidence/project-repositories/REVIEW.md",
+      "source": "VALIDATION.md",
+      "target": "docs/evidence/project-repositories/REVIEW.md"
+    },
+    {
+      "link": "evidence/project-repositories/REVIEW.md",
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "docs/evidence/project-repositories/REVIEW.md"
+    },
+    {
+      "link": "REVIEW.md",
+      "source": "docs/evidence/project-repositories/README.md",
+      "target": "docs/evidence/project-repositories/REVIEW.md"
+    },
+    {
+      "link": "REVIEW.md",
+      "source": "docs/evidence/project-repositories/README.md",
+      "target": "docs/evidence/project-repositories/REVIEW.md"
+    },
+    {
+      "link": "../evidence/project-repositories/REVIEW.md",
+      "source": "docs/plans/LOCAL-SMITH-PROJECT-REPOSITORIES.md",
+      "target": "docs/evidence/project-repositories/REVIEW.md"
+    }
+  ],
+  "raw_mismatches": [],
+  "results_sha256": "97b73a7e54a12ad14ae55aad168496f87863e4a274e1796b8d379f8bd0ed604a",
+  "retained_copy_count": 29,
+  "retained_copy_mismatches": [],
+  "selected_change_count": 32,
+  "selected_change_mismatches": [],
+  "selected_raw_count": 77,
+  "started": "2026-10-17T19:46:18.318461+00:00",
+  "supporting_count": 30,
+  "supporting_mismatches": []
+}

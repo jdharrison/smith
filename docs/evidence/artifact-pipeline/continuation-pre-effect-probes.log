@@ -1,0 +1,118 @@
+{
+  "clock": "Each disposable fixture uses simulated original age108 seconds; actual live metadata budget checked separately, never reset.",
+  "method": "Independent hooks on supplied injected fake commands and disposable fixture inputs; real Popen forbidden; source original run method never invoked; no staged receipt/marker writes. Invalidation after volume inspect blocks start; post-start invalidation/missing proof stops owned CID without dispatch; post-join configuration drift stops with unknown, foreign label refuses stop.",
+  "offline_only": true,
+  "results": [
+    {
+      "cli_dispatches": 0,
+      "original_fixture_bytes_and_mtimes_preserved": true,
+      "pass": true,
+      "result": {
+        "cleanup": "not_started",
+        "status": "failed"
+      },
+      "scenario": "approval_before_start",
+      "starts": 0,
+      "stops": 0
+    },
+    {
+      "cli_dispatches": 0,
+      "original_fixture_bytes_and_mtimes_preserved": true,
+      "pass": true,
+      "result": {
+        "cleanup": "not_started",
+        "status": "failed"
+      },
+      "scenario": "cancel_before_start",
+      "starts": 0,
+      "stops": 0
+    },
+    {
+      "cli_dispatches": 0,
+      "original_fixture_bytes_and_mtimes_preserved": true,
+      "pass": true,
+      "result": {
+        "cleanup": "not_started",
+        "status": "failed"
+      },
+      "scenario": "source_before_start",
+      "starts": 0,
+      "stops": 0
+    },
+    {
+      "cli_dispatches": 0,
+      "original_fixture_bytes_and_mtimes_preserved": true,
+      "pass": true,
+      "result": {
+        "cleanup": "not_started",
+        "status": "failed"
+      },
+      "scenario": "deadline_before_start",
+      "starts": 0,
+      "stops": 0
+    },
+    {
+      "cli_dispatches": 0,
+      "original_fixture_bytes_and_mtimes_preserved": true,
+      "pass": true,
+      "result": {
+        "cleanup": "verified_stopped",
+        "status": "failed"
+      },
+      "scenario": "approval_after_start",
+      "starts": 1,
+      "stops": 1
+    },
+    {
+      "cli_dispatches": 0,
+      "original_fixture_bytes_and_mtimes_preserved": true,
+      "pass": true,
+      "result": {
+        "cleanup": "verified_stopped",
+        "status": "failed"
+      },
+      "scenario": "wall_expiry_after_start",
+      "starts": 1,
+      "stops": 1
+    },
+    {
+      "cli_dispatches": 0,
+      "original_fixture_bytes_and_mtimes_preserved": true,
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "scenario": "missing_cgroup",
+      "starts": 1,
+      "stops": 1
+    },
+    {
+      "cli_dispatches": 1,
+      "original_fixture_bytes_and_mtimes_preserved": true,
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "scenario": "config_after_join",
+      "starts": 1,
+      "stops": 1
+    },
+    {
+      "cli_dispatches": 1,
+      "original_fixture_bytes_and_mtimes_preserved": true,
+      "pass": true,
+      "result": {
+        "cleanup": "unknown",
+        "status": "failed"
+      },
+      "scenario": "foreign_after_join",
+      "starts": 1,
+      "stops": 0
+    }
+  ],
+  "script_sha256": "4306dd47b486c26761eaddc7b6d9312ed132716f84ceb799e13bd7dba1912f47",
+  "tests_sha256": "0fea9b3f1ce4544fcfbab3e627d0a033dd98a18e50c37bade5d87e19edd2e15c",
+  "utc": "2026-10-21T01:27:57.120774+00:00"
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "args": [],
+    "exit": 1,
+    "sanitized": true
+  },
+  {
+    "args": [
+      "--help"
+    ],
+    "exit": 1,
+    "sanitized": true
+  },
+  {
+    "args": [
+      "--apply-approved-update",
+      "extra"
+    ],
+    "exit": 1,
+    "sanitized": true
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "added_core_paths": [
+    "client/lib/instructions.dart",
+    "client/lib/instructions_controller.dart",
+    "client/test/instructions_controller_test.dart",
+    "client/test/instructions_protocol_test.dart",
+    "service/src/app_instructions.rs"
+  ],
+  "changed_paths": [
+    "client/lib/app_api.dart",
+    "client/lib/cloud_routing.dart",
+    "client/lib/workspace_cloud.dart",
+    "client/lib/workspace_controller.dart",
+    "service/src/app.rs",
+    "service/src/app_v2.rs"
+  ],
+  "docs_bytes_verdict": "pass",
+  "existing_layout_evidence_unchanged": true,
+  "final_verdict": "fail for current-checkout unchanged-source closeout",
+  "no_tests_or_source_edits": true,
+  "observed_current_selector_sha256": "23c0e3c7d687631a72b1a69a3186d5f777f42bca3262a70b9ccc6f521214e8d9",
+  "package_unchanged": true,
+  "parent_docs_canonical_sha256": "d7a32b500cbaf874f1f8ea840cd102f71406be7bd6a3f7b653a31c1a7d26c7a8",
+  "reviewed_core_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164"
+}

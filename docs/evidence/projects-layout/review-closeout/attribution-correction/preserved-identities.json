@@ -1,0 +1,39 @@
+{
+  "all_original_indexed_files_verified_before_edit": true,
+  "historical_content_not_current_approval_evidence": true,
+  "pre_correction_evidence_canonical_sha256": "5889bffad2f6432bbf49931e1c28fd2700110546ef82c7cf650b9bf1bc3c216f",
+  "preserved_files": [
+    {
+      "original_path": "docs/evidence/projects-layout/REVIEW-CLOSEOUT.md",
+      "preserved_path": "docs/evidence/projects-layout/review-closeout/attribution-correction/before/REVIEW-CLOSEOUT.md",
+      "sha256": "944b295624dd00098639b37fd549658abcb8d3b44fd874d50a2e7dad6bd3db4d",
+      "size": 19515
+    },
+    {
+      "original_path": "docs/evidence/projects-layout/review-closeout/review-summary.json",
+      "preserved_path": "docs/evidence/projects-layout/review-closeout/attribution-correction/before/review-summary.json",
+      "sha256": "9bff8551629cad8985b49878f8bcafd2ca0fa70936a5df812f8eb148782b361e",
+      "size": 4886
+    },
+    {
+      "original_path": "docs/evidence/projects-layout/review-closeout/m1-action-mapping.json",
+      "preserved_path": "docs/evidence/projects-layout/review-closeout/attribution-correction/before/m1-action-mapping.json",
+      "sha256": "18b6d832523f646d82d3bc0c5e0c7e6525329037226559e4868a34d1462e2c61",
+      "size": 888
+    },
+    {
+      "original_path": "docs/evidence/projects-layout/review-closeout/final-review-check.json",
+      "preserved_path": "docs/evidence/projects-layout/review-closeout/attribution-correction/before/final-review-check.json",
+      "sha256": "3365064be784f56ecdbfb379ab63c1633c7e1b7a7a8733de28db159504dd137d",
+      "size": 398
+    },
+    {
+      "original_path": "docs/evidence/projects-layout/review-closeout/evidence-manifest.json",
+      "preserved_path": "docs/evidence/projects-layout/review-closeout/attribution-correction/before/evidence-manifest.json",
+      "sha256": "86388a5c8182a1370b4a563b40ad9d7d882f49fb0637fd6700730b90326c6507",
+      "size": 7798
+    }
+  ],
+  "reason": "Preserve the pre-correction closeout report/summary and attribution/index metadata before correcting parent/model clarification incorrectly attributed as operator approval.",
+  "recorded_utc": "2026-10-17T22:40:57.737455+00:00"
+}

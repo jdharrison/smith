@@ -1,0 +1,87 @@
+00:00 +0: loading <workspace>/client/test/projects_protocol_test.dart
+00:00 +0: <workspace>/client/test/projects_protocol_test.dart: legacy operations fail locally with zero exchange, even with empty arrays
+00:00 +1: <workspace>/client/test/projects_protocol_test.dart: projects_list_v2 OP incompatibility never falls back
+00:00 +2: <workspace>/client/test/projects_protocol_test.dart: project_create_v2 OP incompatibility never falls back
+00:00 +3: <workspace>/client/test/projects_protocol_test.dart: project_update_v2 OP incompatibility never falls back
+00:00 +4: <workspace>/client/test/projects_protocol_test.dart: project_delete_v2 OP incompatibility never falls back
+00:00 +5: <workspace>/client/test/projects_protocol_test.dart: projects_list_v2 UPGRADE_REQUIRED incompatibility never falls back
+00:00 +6: <workspace>/client/test/projects_protocol_test.dart: project_create_v2 UPGRADE_REQUIRED incompatibility never falls back
+00:00 +7: <workspace>/client/test/projects_protocol_test.dart: project_update_v2 UPGRADE_REQUIRED incompatibility never falls back
+00:00 +8: <workspace>/client/test/projects_protocol_test.dart: project_delete_v2 UPGRADE_REQUIRED incompatibility never falls back
+00:00 +9: <workspace>/client/test/projects_protocol_test.dart: invalid nested shape never reaches the private exchange
+00:00 +10: <workspace>/client/test/projects_protocol_test.dart: queued native requests capture all nested values before caller mutation
+00:00 +11: <workspace>/client/test/projects_protocol_test.dart: all 128 nullable leaf combinations round trip without presets
+00:00 +12: <workspace>/client/test/projects_protocol_test.dart: nested objects have exact required keys and independently typed leaves
+00:00 +13: <workspace>/client/test/projects_controller_test.dart: OP list incompatibility cannot authorize a mutation or legacy fallback
+00:00 +14: <workspace>/client/test/projects_controller_test.dart: OP list incompatibility cannot authorize a mutation or legacy fallback
+00:00 +15: <workspace>/client/test/projects_protocol_test.dart: optional repository names use the raw scalar predicate and exact uniqueness
+00:00 +16: <workspace>/client/test/projects_protocol_test.dart: optional repository names use the raw scalar predicate and exact uniqueness
+00:00 +17: <workspace>/client/test/projects_controller_test.dart: nested-only stale edits retain every value and never rebind origin
+00:00 +18: <workspace>/client/test/projects_controller_test.dart: nested-only stale edits retain every value and never rebind origin
+00:00 +19: <workspace>/client/test/projects_controller_test.dart: nested-only stale edits retain every value and never rebind origin
+00:00 +20: <workspace>/client/test/projects_controller_test.dart: nested-only stale edits retain every value and never rebind origin
+00:00 +21: <workspace>/client/test/projects_protocol_test.dart: safe integer revisions, project bounds and stable unique IDs
+00:00 +22: <workspace>/client/test/projects_controller_test.dart: nested uncertain input is captured once and resolved query-only after restart
+00:00 +23: <workspace>/client/test/projects_protocol_test.dart: names are raw trimmed Unicode scalars, not graphemes or UTF-16 units
+00:00 +24: <workspace>/client/test/projects_protocol_test.dart: names are raw trimmed Unicode scalars, not graphemes or UTF-16 units
+00:00 +25: <workspace>/client/test/projects_controller_test.dart: refresh calls coalesce, including reentrant listener refreshes
+00:00 +26: <workspace>/client/test/projects_protocol_test.dart: locator grammar accepts only the three inert ASCII forms
+00:00 +27: <workspace>/client/test/projects_controller_test.dart: CRUD sends only exact metadata arguments and always reads after acknowledgement
+00:00 +28: <workspace>/client/test/projects_protocol_test.dart: repository and agent limits never normalize or deduplicate silently
+00:00 +29: <workspace>/client/test/projects_controller_test.dart: mutation captures immutable inputs and fences reads and competing writes while busy
+00:00 +30: <workspace>/client/test/projects_protocol_test.dart: projects_list_v2: app3-only exact arguments and result dispatch
+00:00 +31: <workspace>/client/test/projects_controller_test.dart: editor revision is never silently substituted after an intervening refresh
+00:00 +32: <workspace>/client/test/projects_protocol_test.dart: project_create_v2: app3-only exact arguments and result dispatch
+00:00 +33: <workspace>/client/test/projects_controller_test.dart: project_create_v2 never rebinds an old editor origin after a same-revision restart
+00:00 +34: <workspace>/client/test/projects_protocol_test.dart: project_update_v2: app3-only exact arguments and result dispatch
+00:00 +35: <workspace>/client/test/projects_controller_test.dart: project_update_v2 never rebinds an old editor origin after a same-revision restart
+00:00 +36: <workspace>/client/test/projects_protocol_test.dart: project_delete_v2: app3-only exact arguments and result dispatch
+00:00 +37: <workspace>/client/test/projects_controller_test.dart: project_delete_v2 never rebinds an old editor origin after a same-revision restart
+00:00 +38: <workspace>/client/test/projects_protocol_test.dart: project_receipt: app3-only exact arguments and result dispatch
+00:00 +39: <workspace>/client/test/projects_controller_test.dart: invalid or unobserved caller instances never reach dispatch
+00:00 +40: <workspace>/client/test/projects_protocol_test.dart: mutation argument field validation happens before private exchange
+00:00 +41: <workspace>/client/test/projects_protocol_test.dart: mutation argument field validation happens before private exchange
+00:00 +42: <workspace>/client/test/projects_controller_test.dart: invalid input, unsupported targets and full registries do not dispatch
+00:00 +43: <workspace>/client/test/projects_protocol_test.dart: receipt results correlate request, target, deletion and strict fields
+00:00 +44: <workspace>/client/test/projects_protocol_test.dart: receipt results correlate request, target, deletion and strict fields
+00:00 +45: <workspace>/client/test/projects_controller_test.dart: INSTANCE_MISMATCH is a definitive rejection, preserves form and requires fresh observation
+00:00 +46: <workspace>/client/test/projects_protocol_test.dart: native app boundary never dispatches stale editor origins after list rebinding
+00:00 +47: <workspace>/client/test/projects_protocol_test.dart: native app boundary never dispatches stale editor origins after list rebinding
+00:00 +48: <workspace>/client/test/projects_protocol_test.dart: native app boundary never dispatches stale editor origins after list rebinding
+00:00 +49: <workspace>/client/test/projects_controller_test.dart: INVALID_REQUEST is a definitive rejection, preserves form and requires fresh observation
+00:00 +50: <workspace>/client/test/projects_protocol_test.dart: strict correlated project errors are surfaced without retry or fallback
+00:00 +51: <workspace>/client/test/projects_protocol_test.dart: strict correlated project errors are surfaced without retry or fallback
+00:00 +52: <workspace>/client/test/projects_controller_test.dart: UPGRADE_REQUIRED is a definitive rejection, preserves form and requires fresh observation
+00:00 +53: <workspace>/client/test/projects_controller_test.dart: TRANSPORT: Lost acknowledgement retains original identity and blocks every write without replay
+00:00 +54: <workspace>/client/test/projects_controller_test.dart: TRANSPORT: Unclassified transport retains original identity and blocks every write without replay
+00:00 +55: <workspace>/client/test/projects_controller_test.dart: STATE_UNAVAILABLE: Publication uncertain retains original identity and blocks every write without replay
+00:00 +56: <workspace>/client/test/projects_controller_test.dart: PROTOCOL: Malformed acknowledgement retains original identity and blocks every write without replay
+00:00 +57: <workspace>/client/test/projects_controller_test.dart: FAULT: Unclassified fault retains original identity and blocks every write without replay
+00:00 +58: <workspace>/client/test/projects_controller_test.dart: STALE_REVISION: But outcome unknown retains original identity and blocks every write without replay
+00:00 +59: <workspace>/client/test/projects_controller_test.dart: INVALID_REQUEST: But outcome unknown retains original identity and blocks every write without replay
+00:00 +60: <workspace>/client/test/projects_controller_test.dart: Bad state: Unexpected failure retains original identity and blocks every write without replay
+00:00 +61: <workspace>/client/test/projects_controller_test.dart: unknown and expired receipts remain observation-only despite a healthy list
+00:00 +62: <workspace>/client/test/projects_controller_test.dart: REQUEST_UNKNOWN resolution coalesces a current-list read without releasing the original request
+00:00 +63: <workspace>/client/test/projects_controller_test.dart: REQUEST_UNKNOWN plus list outage preserves the last snapshot and the original uncertainty
+00:00 +64: <workspace>/client/test/projects_controller_test.dart: REQUEST_UNKNOWN fallback list callbacks are fenced after disposal
+00:00 +65: <workspace>/client/test/projects_controller_test.dart: REQUEST_EXPIRED resolution coalesces a current-list read without releasing the original request
+00:00 +66: <workspace>/client/test/projects_controller_test.dart: REQUEST_EXPIRED plus list outage preserves the last snapshot and the original uncertainty
+00:00 +67: <workspace>/client/test/projects_controller_test.dart: REQUEST_EXPIRED fallback list callbacks are fenced after disposal
+00:00 +68: <workspace>/client/test/projects_controller_test.dart: historical retained receipt after deletion and restart cannot resurrect a project
+00:00 +69: <workspace>/client/test/projects_controller_test.dart: uncertain delete resolves its original deleted receipt without replay
+00:00 +70: <workspace>/client/test/projects_controller_test.dart: acknowledgement never substitutes for a fresh list; outage retains receipt
+00:00 +71: <workspace>/client/test/projects_controller_test.dart: INVALID_REQUEST after acknowledgement or in receipt queries cannot clear pending work
+00:00 +72: <workspace>/client/test/projects_controller_test.dart: pre-acknowledgement snapshots are refused even after a valid receipt
+00:00 +73: <workspace>/client/test/projects_controller_test.dart: mismatched receipt {request_id: dddddddddddddddddddddddddddddddd} never clears pending identity
+00:00 +74: <workspace>/client/test/projects_controller_test.dart: mismatched receipt {project_id: dddddddddddddddddddddddddddddddd} never clears pending identity
+00:00 +75: <workspace>/client/test/projects_controller_test.dart: mismatched receipt {deleted: true} never clears pending identity
+00:00 +76: <workspace>/client/test/projects_controller_test.dart: mismatched receipt {revision: 0} never clears pending identity
+00:00 +77: <workspace>/client/test/projects_controller_test.dart: mismatched receipt {revision: 3} never clears pending identity
+00:00 +78: <workspace>/client/test/projects_controller_test.dart: mismatched receipt {extra: not allowed} never clears pending identity
+00:00 +79: <workspace>/client/test/projects_controller_test.dart: resolution is coalesced and waits behind an already-started refresh
+00:00 +80: <workspace>/client/test/projects_controller_test.dart: failed and malformed reads preserve last valid list and expose no raw diagnostics
+00:00 +81: <workspace>/client/test/projects_controller_test.dart: disposal fences late list callbacks and never disposes the shared API
+00:00 +82: <workspace>/client/test/projects_controller_test.dart: disposal fences late mutation callbacks and never disposes the shared API
+00:00 +83: <workspace>/client/test/projects_controller_test.dart: disposal fences late receipt callbacks and never disposes the shared API
+00:00 +84: <workspace>/client/test/projects_controller_test.dart: reentrant disposal before dispatch prevents metadata exchanges
+00:00 +85: All tests passed!

@@ -1,0 +1,24 @@
+{
+  "command": "<cached-flutter-sdk>/bin/cache/dart-sdk/bin/dart <cached-flutter-sdk>/bin/cache/flutter_tools.snapshot test --no-pub --reporter expanded test/new_window_test.dart",
+  "cwd": "client",
+  "started_utc": "2026-10-18T00:58:31.359855+00:00",
+  "exit": 0,
+  "timeout_seconds": 180
+}
+00:00 +0: loading <repo>/client/test/new_window_test.dart
+00:00 +0: exact session-only flag never constructs the preference store
+00:00 +1: normal and near-match startup retain ordinary preference injection
+00:00 +2: launcher uses only resolved executable, fixed flag, detached/no shell
+00:00 +3: executable is one literal path and launch failure is not retried
+00:00 +4: launch does not copy drafts/queues or submit observed service work
+00:00 +5: one adjacent header action in every layout and Settings
+00:02 +6: pending launch is single-flight and leaves parent state untouched
+00:02 +7: failure is sanitized, announced, and allows deliberate retry
+00:02 +8: late success after disposal is safe
+00:02 +9: late failure after disposal is safe
+00:03 +10: fresh child and descendants remain session-only after primary disposal
+00:03 +11: empty service starts blank without saved preferences
+00:04 +12: keyboard reaches Layout then New window and activates once
+00:04 +13: 400px at 2x text keeps both actions and failure reachable
+00:04 +14: embedded constructors have no implicit host launcher
+00:04 +15: All tests passed!

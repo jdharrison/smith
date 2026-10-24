@@ -1,0 +1,37 @@
+Fresh independent assurance / pre-effect review, source and OFFLINE checks only.
+Verdict: FAIL. Scoped effect gate: NO-GO. This report is not a receipt, human approval, risk acceptance, or permission to run.
+
+Scope: live-transport-renewed.py, test_live_transport_renewed.py, owned_cgroup_verifier.py, test_owned_cgroup_verifier.py. Historical supervisors/tests/receipts/markers were read only. No source or permission changes; no operational staging, Docker, engine, network, provider, model, auth, repository, or installed effects. Offline tests used disposable synthetic fixtures and process/network guards. Only new assurance logs were retained.
+Repository identity: branch feature/autonomy; HEAD 14d960975e76f906efb5e447ff3dece0e8e4385b. Reviewed files are untracked; commit identity alone does not bind them.
+
+HIGH / practical blocker: production code_hashes() refuses the current source location. All four reviewed files have mode0664; evidence-directory ancestry includes mode0775 directories. The unchanged M.safe implementation forbids group/world write on the file and every ancestor. Unpatched file-only code_hashes() raised Refuse. Offline fixtures explicitly relax source-directory safety, so 82 passing tests do not establish staging readiness. Stage creates run-02 before snapshot/code_hashes validation, so blindly trying stage can leave an exclusive partial staging directory. Do not run stage to diagnose or bypass safety. Establish a separately authorized safe source location/permissions and repeat production file-only safety/binding checks before staging/effects; do not weaken M.safe or alter immutable historical evidence.
+
+Required checks evidence:
+1. Focused offline suite: python3 -B heredoc used unittest.defaultTestLoader.loadTestsFromModule for both reviewed test files, TextTestRunner verbosity2, subprocess.Popen and socket.socket forbidden. Expected all pass and source unchanged; actual82 passed,0 failures,0 errors,0 skips, exit0; eight source/test hashes unchanged. Evidence: assurance-renewed-independent-offline-20261020-01.log. Exact runner is retained in the conversation.
+2. Unpatched production file-only prerequisites: imported renewed supervisor without invoking main; called code_hashes(), Inputs().history(), check(Inputs()), M.safe on prepared CLI/module/config, plus metadata-only source ancestry inspection. Expected valid source safety and existing binding for readiness; actual code_hashes REFUSED, history PASS70files, CLI/module/old config safe, run-02 absent and check refused FileNotFoundError. Harness exited0 while explicitly recording prerequisite refusal, NOT gate success. Evidence: assurance-renewed-independent-prerequisites-20261020-01.log.
+3. Five independent synthetic adversarial scenarios: malformed Docker config after start; combined source drift and cancellation; boolean schema_version with otherwise exact envelope; ambiguous start plus unavailable cgroup; wall rollback after CLI. Expected failed result, one stop invocation after start, no forbidden retry, Unknown where proof absent. Actual all matched; exit0. These use a fake command transport, not Docker execution. Evidence: assurance-renewed-independent-adversarial-20261020-01.log.
+4. Final identity and historical fence: exact file hashes/pins, local git identity, history rehash, run-02 absence. Expected source and retained history stable; actual PASS, history manifest digest c5f660c334c8b59cb6076a5fb1ec8355050361f513299c4233b6062cc72ed584 over70files, original and continuation dispatch absent; exit0. Evidence: assurance-renewed-independent-final-snapshot-20261020-01.log.
+
+Implemented-source observations:
+- Pinned immutable helper imports and complete source/module/CLI/request/history binding are checked before work effects. Historical Unknown is required and retained, not retroactively resolved. New run ID differs from original; exclusive consumed marker fences replay and concurrent re-entry.
+- Window starts at consumption,900seconds wall plus monotonic,840seconds work and60seconds cleanup reserve. Gate rechecks around approval/source checks. Cleanup observation gets a fresh short budget capped by the original run ceiling, not a renewed run deadline.
+- Exact captured CID/image/name/nonce plus stopped Status=exited/Running=false/Pid=0, volume ownership and baseline Config/HostConfig/Mounts/Path/Args are required. No create/pull/Setup/model operation is exposed by the supervisor.
+- Dispatch is the staged CLI directly with explicit --mod and request-File argv, cleared environment and exact captured container runner address. rc0 plus exact correlated policy_denied envelope is mandatory; nonzero is not interpreted as auth failure. The retained module Execute branch returns before constructing a setup/image/inference graph.
+- Stop is owed before ambiguous start and invoked from cleanup finally without work authorization/source/config gates; failure/unknown process group/cgroup or record publication cannot produce overall success. Command process-group teardown/join contract is inherited from the hash-pinned original helper; actual subprocess/Docker behavior was not executed here.
+- Verifier binds full CID, PID start/membership, root device/inode and supported host-systemd cgroup2 mapping. Aggregate controls must be at the owned root; inherited intermediate/leaf controls are allowed. Cleanup walks the whole held owned root including siblings, rechecks identity/mount mapping and rejects unsafe, changed, missing, malformed, populated or bounded-out observations.
+- Mountinfo has a separate128KiB cap. Focused tests accept >4KiB and exactly128KiB, reject128KiB+1. Missing owned root is typed Unknown, never PASS.
+
+Evidence gaps / limits:
+- No staged run-02 binding or fresh authenticated review/operator receipts exist in this review. They must bind the final safe source, exact effects and renewed window outside this assurance process; old expired receipts supply no authority.
+- No live engine status, actual mountinfo compatibility, actual cgroup capture/stop persistence, Dagger cache/SDK readiness or zero-download behavior was tested. Fixtures are not live compatibility evidence. Any missing dependencies requiring forbidden pull/create/preparation must block rather than expand scope.
+- A normal Docker stop may remove its systemd scope. The correct implemented result is Unknown if the held root disappears; fixtures do not establish that this host will retain an observable root after stop.
+- Privileged-engine containment is observation, not a hostile-root guarantee. The unresolved limitation is not waived by this review, the test passes, or claimed renewed transport scope. No general policy/installed/product acceptance follows.
+
+Reviewed SHA256:
+live-transport-renewed.py fd343fa1e7380f91a613ddc08f9875052dc3dd80eb515682fedaaaa4775e621e
+test_live_transport_renewed.py fc9d0c3f9c3135a74707c673aa3a76e7490b5bdfaf36a6b99ed0d3756e221aa3
+owned_cgroup_verifier.py af1e8e5197a295e127490904cc4fc8358bd1e12d8425089d9a884fcdcfa6d460
+test_owned_cgroup_verifier.py a4b1b2035bf429e875e00326b99af82f4e145c148ab74eb88902b8ab3bdc9bac
+
+Required remediation: resolve source-location safety without altering historical evidence or relaxing policy; recheck before any exclusive stage operation; obtain a final exact staging binding, fresh independent assurance and authentic scoped human signoff. No live run in this review.
+Release Gate Decision (narrow renewed transport effects only): NO-GO.

@@ -1,0 +1,4 @@
+00:00 +0: loading <repo>/target/projects-assurance/client/test/assurance_delete_restart_test.dart
+00:00 +0: confirmed delete after restart clears the clean original selection without replay
+00:00 +1: confirmed delete after restart clears the dirty original selection without replay
+00:00 +2: All tests passed!

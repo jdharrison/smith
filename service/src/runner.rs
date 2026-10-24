@@ -557,6 +557,35 @@ pub fn verify_runtime_bounded(
     cancelled: &dyn Fn() -> bool,
 ) -> AppResult<PathBuf> {
     verify_runtime_backend_bounded(roots, Backend::Cpu, deadline, cancelled)
+        .map(|verified| verified.executable)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RuntimeProfile {
+    Unknown,
+    B11429,
+}
+
+/// Created only after the selected package's complete backend inventory verifies.
+/// Self-reported native version text cannot grant a compatibility exception.
+#[derive(Clone, Debug)]
+pub struct VerifiedRuntime {
+    executable: PathBuf,
+    backend: Backend,
+    profile: RuntimeProfile,
+}
+
+fn runtime_profile(expected: &BTreeMap<String, (u32, String)>, backend: Backend) -> RuntimeProfile {
+    // Canonical backend inventories from the pinned b11429/d81235049 packages,
+    // including every library, mode and license, not just the loader executable.
+    let digest = filesystem::digest(&serde_json::to_vec(expected).expect("runtime inventory"));
+    match (backend, digest.as_str()) {
+        (Backend::Cpu, "ec0a954c3344c2d53e6106e567c49bdd2e784f57a55cf12aa20ec420fb4dd150")
+        | (Backend::Vulkan, "f385cc73f0376f781a2c4c672fe918279fddc85e981a819a0f766cafdb671675") => {
+            RuntimeProfile::B11429
+        }
+        _ => RuntimeProfile::Unknown,
+    }
 }
 
 pub fn verify_runtime_backend_bounded(
@@ -564,7 +593,7 @@ pub fn verify_runtime_backend_bounded(
     backend: Backend,
     deadline: Instant,
     cancelled: &dyn Fn() -> bool,
-) -> AppResult<PathBuf> {
+) -> AppResult<VerifiedRuntime> {
     verification_budget(deadline, cancelled).map_err(|e| verification_error(&e))?;
     let base = roots.data.join("smith-next");
     let client = base.join("client");
@@ -723,7 +752,11 @@ pub fn verify_runtime_backend_bounded(
             ));
         }
     }
-    Ok(selected.join("llama-server"))
+    Ok(VerifiedRuntime {
+        executable: selected.join("llama-server"),
+        backend,
+        profile: runtime_profile(&expected, backend),
+    })
 }
 
 /// Frozen string-error form of [`verify_runtime`]; errors are `CODE: message`.
@@ -744,17 +777,28 @@ pub struct RunnerConfig {
     pub context: u32,
     pub threads: u32,
     pub backend: Backend,
+    pub verified_runtime: Option<VerifiedRuntime>,
 }
 impl RunnerConfig {
-    pub fn production(roots: &Roots, executable: PathBuf) -> Self {
+    pub fn production(roots: &Roots, verified: VerifiedRuntime) -> Self {
         Self {
-            executable,
+            executable: verified.executable.clone(),
             runtime_parent: runner_parent(roots),
             lock: lock_path(roots),
             context: CONTEXT,
             threads: default_threads(),
-            backend: Backend::Cpu,
+            backend: verified.backend,
+            verified_runtime: Some(verified),
         }
+    }
+
+    fn verified_profile(&self) -> RuntimeProfile {
+        self.verified_runtime
+            .as_ref()
+            .filter(|verified| {
+                verified.executable == self.executable && verified.backend == self.backend
+            })
+            .map_or(RuntimeProfile::Unknown, |verified| verified.profile)
     }
 }
 
@@ -1208,6 +1252,15 @@ fn chat_result(alias: &str, v: &Value) -> AppResult<String> {
 }
 
 fn check_messages(messages: &[Message]) -> AppResult<()> {
+    let all = messages;
+    let messages = if messages.first().is_some_and(|m| m.role == "system") {
+        if messages[0].content.is_empty() || messages[0].content.len() > 2048 {
+            return Err(error("CONTEXT_LIMIT", "Invalid service instructions"));
+        }
+        &messages[1..]
+    } else {
+        messages
+    };
     let alternating = messages
         .iter()
         .enumerate()
@@ -1216,9 +1269,310 @@ fn check_messages(messages: &[Message]) -> AppResult<()> {
         || messages.len() > MAX_MESSAGES
         || messages.len() % 2 == 0
         || !alternating
-        || messages.iter().map(|m| m.content.len()).sum::<usize>() > MAX_CONTEXT
+        || all.iter().map(|m| m.content.len()).sum::<usize>() > MAX_CONTEXT
     {
         return Err(error("CONTEXT_LIMIT", "Chat context exceeds bounds"));
+    }
+    Ok(())
+}
+
+fn unsupported_template() -> AppError {
+    error(
+        "UNSUPPORTED",
+        "Selected model template does not support verified read-tool conversations",
+    )
+}
+
+fn parse_inspection_json(status: u16, bytes: &[u8]) -> AppResult<Value> {
+    if status != 200 {
+        return Err(unsupported_template());
+    }
+    crate::cloud::unique_json(bytes)
+        .ok()
+        .filter(Value::is_object)
+        .ok_or_else(|| protocol("Invalid template compatibility response"))
+}
+
+fn missing_response_capability(props: &Value, profile: RuntimeProfile) -> AppResult<bool> {
+    let caps = props
+        .get("chat_template_caps")
+        .and_then(Value::as_object)
+        .ok_or_else(unsupported_template)?;
+    if ["supports_tools", "supports_tool_calls"]
+        .iter()
+        .any(|key| caps.get(*key) != Some(&Value::Bool(true)))
+    {
+        return Err(unsupported_template());
+    }
+    match caps.get("supports_tool_responses") {
+        Some(Value::Bool(true)) => Ok(false),
+        None if profile == RuntimeProfile::B11429 => Ok(true),
+        _ => Err(unsupported_template()),
+    }
+}
+
+enum ProbeEvidence {
+    Definition(Value),
+    Call(Value),
+    Text(String),
+    ToolResult(String),
+}
+struct InspectionProbe {
+    request: Value,
+    evidence: Vec<ProbeEvidence>,
+}
+impl InspectionProbe {
+    fn new() -> AppResult<Self> {
+        let nonce = new_id().map_err(|_| protocol("Cannot create template probe identity"))?;
+        let function = json!({"name":"read","description":format!("SMITH_READ_DEFINITION_{nonce}"),
+            "parameters":{"type":"object","properties":{"filePath":{"type":"string"},
+                "offset":{"type":"integer","minimum":1,"maximum":20000},
+                "limit":{"type":"integer","minimum":1,"maximum":32}},
+                "required":["filePath"],"additionalProperties":false}});
+        // Literal multiline content distinguishes a rendered transcript from a
+        // JSON echo. Unique argument/result identities replace call-ID matching:
+        // the pinned Qwen template legitimately omits those IDs when rendering.
+        let user = format!("SMITH_USER_BEGIN_{nonce}\nSMITH_USER_END_{nonce}");
+        let mut messages = vec![
+            json!({"role":"system","content":crate::dev_local::SYSTEM_PROMPT}),
+            json!({"role":"user","content":user}),
+        ];
+        let mut evidence = vec![
+            ProbeEvidence::Definition(function.clone()),
+            ProbeEvidence::Text(user),
+        ];
+        // Seven completed tool rounds are the longest broker-valid history
+        // before the eighth model request; sixteen calls exhaust the read bound.
+        for (round, count) in [1, 2, 3, 4, 1, 1, 4].into_iter().enumerate() {
+            let round = round + 1;
+            let content = match round {
+                1 => Value::Null,
+                2 => json!(""),
+                _ => json!(format!(
+                    "SMITH_ASSISTANT_BEGIN_{nonce}_{round}\nSMITH_ASSISTANT_END_{nonce}_{round}"
+                )),
+            };
+            if let Some(text) = content.as_str().filter(|s| !s.is_empty()) {
+                evidence.push(ProbeEvidence::Text(text.into()));
+            }
+            let mut calls = Vec::new();
+            let mut outputs = Vec::new();
+            for index in 0..count {
+                let id = format!("schema_{nonce}_{round}_{index}");
+                let mut arguments = json!({"filePath":format!("/workspace/repos/r0/SMITH_ARGS_{nonce}_{round}_{index}.txt")});
+                if index % 2 == 0 {
+                    arguments["offset"] = json!(7);
+                }
+                if index % 3 == 0 {
+                    arguments["limit"] = json!(2);
+                }
+                crate::dev_completion::read_arguments(&arguments)?;
+                let call = json!({"name":"read","arguments":arguments});
+                evidence.push(ProbeEvidence::Call(call.clone()));
+                calls.push(json!({"id":id,"type":"function","function":{"name":"read",
+                    "arguments":serde_json::to_string(&arguments).map_err(|_| unsupported_template())?}}));
+                let text = format!(
+                    "SMITH_RESULT_{nonce}_{round}_{index}\nSMITH_END_{nonce}_{round}_{index}"
+                );
+                outputs.push(json!({"role":"tool","tool_call_id":id,"content":text}));
+            }
+            messages.push(json!({"role":"assistant","content":content,"tool_calls":calls}));
+            // Broker-valid tool results may arrive in a different order from
+            // calls. Demand preservation of their actual transcript order.
+            outputs.reverse();
+            for output in outputs {
+                evidence.push(ProbeEvidence::ToolResult(
+                    output["content"].as_str().unwrap().into(),
+                ));
+                messages.push(output);
+            }
+        }
+        let request =
+            crate::dev_completion::validate_request(&json!({"model":"selected","stream":true,
+            "messages":messages,"tools":[{"type":"function","function":function}],
+            "tool_choice":"auto","parallel_tool_calls":false}))?;
+        Ok(Self {
+            request: inspection_template(&request),
+            evidence,
+        })
+    }
+
+    fn verify(&self, rendered: &Value) -> AppResult<()> {
+        let prompt = rendered
+            .get("prompt")
+            .and_then(Value::as_str)
+            .filter(|s| s.len() <= 64 * 1024)
+            .ok_or_else(unsupported_template)?;
+        let starts: Vec<_> = prompt.match_indices('{').map(|(index, _)| index).collect();
+        if starts.len() > 128 {
+            return Err(unsupported_template());
+        }
+        let mut objects = Vec::new();
+        for start in starts {
+            let mut stream =
+                serde_json::Deserializer::from_str(&prompt[start..]).into_iter::<Value>();
+            if let Some(Ok(_)) = stream.next() {
+                let end = start + stream.byte_offset();
+                if let Ok(value) = crate::cloud::unique_json(&prompt.as_bytes()[start..end]) {
+                    objects.push((start, end, value));
+                }
+            }
+        }
+        let system = crate::dev_local::SYSTEM_PROMPT;
+        if prompt.matches(system).count() != 1 {
+            return Err(unsupported_template());
+        }
+        let mut previous = 0;
+        for item in &self.evidence {
+            let matches: Vec<_> = match item {
+                ProbeEvidence::Text(text) | ProbeEvidence::ToolResult(text) => prompt
+                    .match_indices(text.as_str())
+                    .map(|(start, _)| (start, start + text.len()))
+                    .collect(),
+                ProbeEvidence::Definition(expected) => objects
+                    .iter()
+                    .filter(|(_, _, value)| value == expected)
+                    .map(|(start, end, _)| (*start, *end))
+                    .collect(),
+                ProbeEvidence::Call(expected) => objects
+                    .iter()
+                    .filter(|(_, _, value)| {
+                        let Some(object) = value.as_object() else {
+                            return false;
+                        };
+                        if object.len() != 2 || value["name"] != "read" {
+                            return false;
+                        }
+                        let arguments = match value.get("arguments") {
+                            Some(Value::String(raw)) => {
+                                crate::cloud::unique_json(raw.as_bytes()).ok()
+                            }
+                            value => value.cloned(),
+                        };
+                        arguments.as_ref() == Some(&expected["arguments"])
+                    })
+                    .map(|(start, end, _)| (*start, *end))
+                    .collect(),
+            };
+            if matches.len() != 1 || matches[0].0 < previous {
+                return Err(unsupported_template());
+            }
+
+            let (start, end) = matches[0];
+            let framed = match item {
+                ProbeEvidence::Definition(_) => {
+                    probe_section(prompt, start, end, "<tools>", "</tools>", false)
+                }
+                ProbeEvidence::Call(_) => {
+                    probe_section(prompt, start, end, "<tool_call>", "</tool_call>", true)
+                }
+                ProbeEvidence::ToolResult(_) => probe_section(
+                    prompt,
+                    start,
+                    end,
+                    "<tool_response>",
+                    "</tool_response>",
+                    true,
+                ),
+                ProbeEvidence::Text(_) => true,
+            };
+            if !framed {
+                return Err(unsupported_template());
+            }
+            previous = end;
+        }
+        // The fixed system instruction must precede the user transcript too;
+        // tool-definition placement within the system prefix may vary.
+        let ProbeEvidence::Text(user) = &self.evidence[1] else {
+            unreachable!()
+        };
+        if prompt.find(system) >= prompt.find(user.as_str()) {
+            return Err(unsupported_template());
+        }
+        Ok(())
+    }
+}
+
+// Recognize the pinned JSON/tool-response framing, not mere marker inclusion or
+// a dump of input JSON. Other template formats remain unsupported, not guessed.
+fn probe_section(
+    prompt: &str,
+    start: usize,
+    end: usize,
+    open: &str,
+    close: &str,
+    exact: bool,
+) -> bool {
+    let Some(before) = prompt[..start].rfind(open).map(|p| p + open.len()) else {
+        return false;
+    };
+    let Some(after) = prompt[end..].find(close).map(|p| p + end) else {
+        return false;
+    };
+    let prefix = &prompt[before..start];
+    let suffix = &prompt[end..after];
+    !prefix.contains(close)
+        && !suffix.contains(open)
+        && (!exact || (prefix.trim().is_empty() && suffix.trim().is_empty()))
+}
+
+fn inspection_support(
+    profile: RuntimeProfile,
+    verified: &mut bool,
+    mut exchange: impl FnMut(&str, &str, Option<&Value>) -> AppResult<Value>,
+) -> AppResult<()> {
+    let result = (|| {
+        use crate::inspection_diagnostics::{app as observe, Phase};
+        let missing = observe(Phase::Props, || {
+            let props = exchange("GET", "/props", None)?;
+            missing_response_capability(&props, profile)
+        })?;
+        if missing && !*verified {
+            let probe = observe(Phase::SemanticProbeRender, InspectionProbe::new)?;
+            let rendered = observe(Phase::SemanticProbeRender, || {
+                exchange("POST", "/apply-template", Some(&probe.request))
+            })?;
+            observe(Phase::SemanticProbeVerify, || probe.verify(&rendered))?;
+            *verified = true;
+        }
+        Ok(())
+    })();
+    if result.is_err() {
+        *verified = false;
+    }
+    result
+}
+
+/// The same messages/tools and template-affecting choices used by inference.
+fn inspection_template(request: &Value) -> Value {
+    let mut template = json!({
+        "messages": request["messages"],
+        "tools": request["tools"],
+        "add_generation_prompt": true,
+    });
+    for key in ["tool_choice", "parallel_tool_calls"] {
+        if let Some(value) = request.get(key) {
+            template[key] = value.clone();
+        }
+    }
+    template
+}
+fn check_inspection_tokens(tokens: &Value, context: u32) -> AppResult<()> {
+    let count = tokens
+        .get("tokens")
+        .and_then(Value::as_array)
+        .filter(|t| t.iter().all(|v| v.as_u64().is_some()))
+        .ok_or_else(|| protocol("Invalid tool-aware token count"))?
+        .len();
+    let budget = context
+        .min(CONTEXT)
+        .saturating_sub(MAX_TOKENS)
+        .saturating_sub(TOKEN_MARGIN);
+    if count > budget as usize {
+        return Err(error(
+            "CONTEXT_LIMIT",
+            "Full inspection transcript and tools exceed local context; no trimming",
+        ));
     }
     Ok(())
 }
@@ -1318,6 +1672,8 @@ pub struct Runner {
     stderr: Arc<Mutex<Vec<u8>>>,
     evidence_stderr: Arc<Mutex<StartupEvidence>>,
     cancelled: Cancellation,
+    runtime_profile: RuntimeProfile,
+    inspection_template_verified: bool,
 }
 
 impl Runner {
@@ -1331,7 +1687,14 @@ impl Runner {
         model_file: &Path,
         deadline: Instant,
     ) -> AppResult<Runner> {
-        Self::launch_with_cancel(config, model_file, deadline, Arc::new(|| false), None)
+        Self::launch_with_cancel(
+            config,
+            model_file,
+            deadline,
+            Arc::new(|| false),
+            None,
+            false,
+        )
     }
     pub fn start_cancelled(
         config: &RunnerConfig,
@@ -1339,8 +1702,15 @@ impl Runner {
         deadline: Instant,
         cancelled: fn() -> bool,
     ) -> Result<Runner> {
-        Self::launch_with_cancel(config, model_file, deadline, Arc::new(cancelled), None)
-            .map_err(coded)
+        Self::launch_with_cancel(
+            config,
+            model_file,
+            deadline,
+            Arc::new(cancelled),
+            None,
+            false,
+        )
+        .map_err(coded)
     }
     pub fn launch_verified(
         config: &RunnerConfig,
@@ -1348,7 +1718,17 @@ impl Runner {
         deadline: Instant,
         cancelled: Cancellation,
     ) -> AppResult<Runner> {
-        Self::launch_with_cancel(config, &model.path, deadline, cancelled, Some(model))
+        Self::launch_with_cancel(config, &model.path, deadline, cancelled, Some(model), false)
+    }
+
+    /// Dev alone opts into the native tool-aware Jinja template/parser mode.
+    pub(crate) fn launch_verified_inspection(
+        config: &RunnerConfig,
+        model: &VerifiedModel,
+        deadline: Instant,
+        cancelled: Cancellation,
+    ) -> AppResult<Runner> {
+        Self::launch_with_cancel(config, &model.path, deadline, cancelled, Some(model), true)
     }
 
     pub fn start_verified(
@@ -1366,6 +1746,7 @@ impl Runner {
         deadline: Instant,
         cancelled: Cancellation,
         verified: Option<&VerifiedModel>,
+        inspection: bool,
     ) -> AppResult<Runner> {
         if cancelled() {
             return Err(Http::Cancelled.app());
@@ -1443,6 +1824,8 @@ impl Runner {
             stderr: Arc::new(Mutex::new(Vec::new())),
             evidence_stderr: Arc::new(Mutex::new(StartupEvidence::default())),
             cancelled,
+            runtime_profile: config.verified_profile(),
+            inspection_template_verified: false,
         };
         if runner.socket.as_os_str().len() > SOCKET_PATH_LIMIT {
             return Err(unavailable(
@@ -1481,6 +1864,9 @@ impl Runner {
             .stdout(Stdio::null())
             .stderr(Stdio::piped())
             .process_group(0);
+        if inspection {
+            command.arg("--jinja");
+        }
         // SAFETY: getpid has no arguments; captured in the parent before fork.
         let expected_parent = unsafe { libc::getpid() };
         // SAFETY: the closure invokes only libc syscalls/errno construction
@@ -1767,19 +2153,19 @@ impl Runner {
             .context
             .saturating_sub(max_tokens)
             .saturating_sub(TOKEN_MARGIN);
-        let mut start = 0;
+        let prefix = usize::from(messages.first().is_some_and(|m| m.role == "system"));
+        let mut window = messages.to_vec();
         loop {
-            let window = &messages[start..];
-            if self.count(window, deadline)? <= budget {
-                return Ok(window.to_vec());
+            if self.count(&window, deadline)? <= budget {
+                return Ok(window);
             }
-            if window.len() <= 1 {
+            if window.len() <= prefix + 1 {
                 return Err(error(
                     "CONTEXT_LIMIT",
                     "Message does not fit the local model context",
                 ));
             }
-            start += 2;
+            window.drain(prefix..prefix + 2);
         }
     }
 
@@ -1824,8 +2210,95 @@ impl Runner {
         result
     }
 
+    /// Tool-aware completion has no byte estimate or history-trimming fallback.
+    pub(crate) fn inspection_completion(
+        &mut self,
+        request: &Value,
+        deadline: Instant,
+    ) -> AppResult<Value> {
+        // Providers owns mode selection and verified stop-before-switch.
+        let result = (|| {
+            use crate::inspection_diagnostics::{app as observe, Phase};
+            let mut request = observe(Phase::RunnerValidateRequest, || {
+                remaining(deadline)?;
+                let request = crate::dev_completion::validate_request(request)?;
+                if !self.is_running() {
+                    return Err(unavailable("Local inspection runner exited"));
+                }
+                Ok(request)
+            })?;
+            request["model"] = self.alias.clone().into();
+            request["stream"] = false.into();
+            request["max_tokens"] = MAX_TOKENS.into();
+            // No competing output limit or stream-only option reaches native inference.
+            if let Some(object) = request.as_object_mut() {
+                object.remove("max_completion_tokens");
+                object.remove("stream_options");
+            }
+            let mut verified = self.inspection_template_verified;
+            inspection_support(self.runtime_profile, &mut verified, |method, path, body| {
+                let bytes = body
+                    .map(serde_json::to_vec)
+                    .transpose()
+                    .map_err(|_| protocol("Cannot encode template compatibility probe"))?;
+                let (status, bytes) = self
+                    .exchange(method, path, bytes.as_deref(), deadline)
+                    .map_err(|e| e.app())?;
+                parse_inspection_json(status, &bytes)
+            })?;
+            if (self.cancelled)() {
+                return Err(Http::Cancelled.app());
+            }
+            remaining(deadline)?;
+            self.inspection_template_verified = verified;
+            let template = inspection_template(&request);
+            let prompt = observe(Phase::ActualTemplate, || {
+                let rendered = self
+                    .post("/apply-template", &template, deadline)?
+                    .ok_or_else(|| {
+                        error("UNSUPPORTED", "Tool-aware template counting is unavailable")
+                    })?;
+                rendered
+                    .get("prompt")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned)
+                    .ok_or_else(|| protocol("Invalid tool-aware rendered prompt"))
+            })?;
+            let tokens = observe(Phase::Tokenize, || {
+                self.post(
+                    "/tokenize",
+                    &json!({"content":prompt,"add_special":true}),
+                    deadline,
+                )?
+                .ok_or_else(|| {
+                    error(
+                        "UNSUPPORTED",
+                        "Exact tool-aware token counting is unavailable",
+                    )
+                })
+            })?;
+            observe(Phase::Context, || {
+                check_inspection_tokens(&tokens, self.context)
+            })?;
+            let response = observe(Phase::NativeCompletion, || {
+                remaining(deadline)?;
+                self.post("/v1/chat/completions", &request, deadline)?
+                    .ok_or_else(|| error("UNSUPPORTED", "Tool-aware completion is unavailable"))
+            })?;
+            observe(Phase::ValidateResponse, || {
+                crate::dev_completion::validate_response(&self.alias, &response)
+            })
+        })();
+        // A Dev failure is terminal to this attempt, never a backend replay.
+        if result.is_err() || !self.is_running() {
+            self.fail();
+        }
+        result
+    }
+
     /// Never reuse a runner after a mid-request failure or expired deadline.
     fn fail(&mut self) {
+        self.inspection_template_verified = false;
         let _ = self.shutdown();
     }
 
@@ -1834,6 +2307,7 @@ impl Runner {
     }
 
     fn shutdown(&mut self) -> Result<()> {
+        self.inspection_template_verified = false;
         let mut result = Ok(());
         if let Some(mut child) = self.child.take() {
             let pid = self.pid;
@@ -1889,7 +2363,46 @@ impl Drop for Runner {
 mod lease_tests;
 
 #[cfg(test)]
+#[path = "runner_tool_tests.rs"]
+mod tool_tests;
+
+#[cfg(test)]
 mod tests {
+    #[test]
+    fn inspection_read_calls_do_not_weaken_chat_parser() {
+        let response = serde_json::json!({"model":"digest","choices":[{"index":0,"finish_reason":"tool_calls","message":{"role":"assistant","content":null,"tool_calls":[{"id":"read_1","type":"function","function":{"name":"read","arguments":"{\"filePath\":\"/workspace/repos/r0/README.md\"}"}}]}}]});
+        assert!(super::chat_result("digest", &response).is_err());
+        assert!(crate::dev_completion::validate_response("digest", &response).is_ok());
+    }
+    #[test]
+    fn inspection_counts_exact_tools_and_messages_without_trimming() {
+        let request = serde_json::json!({"messages":[{"role":"tool","content":"evidence"}],"tools":[{"type":"function","function":{"name":"read"}}],"tool_choice":"auto","parallel_tool_calls":false});
+        let template = super::inspection_template(&request);
+        assert_eq!(template["messages"], request["messages"]);
+        assert_eq!(template["tools"], request["tools"]);
+        assert_eq!(template["tool_choice"], request["tool_choice"]);
+        let budget = (super::CONTEXT - super::MAX_TOKENS - super::TOKEN_MARGIN) as usize;
+        assert!(super::check_inspection_tokens(
+            &serde_json::json!({"tokens":vec![1;budget]}),
+            super::CONTEXT
+        )
+        .is_ok());
+        assert_eq!(
+            super::check_inspection_tokens(
+                &serde_json::json!({"tokens":vec![1;budget+1]}),
+                super::CONTEXT
+            )
+            .unwrap_err()
+            .code,
+            "CONTEXT_LIMIT"
+        );
+        assert!(super::check_inspection_tokens(
+            &serde_json::json!({"tokens":[null]}),
+            super::CONTEXT
+        )
+        .is_err());
+        assert!(super::check_inspection_tokens(&serde_json::json!({}), super::CONTEXT).is_err());
+    }
     use super::*;
     use std::os::unix::net::UnixListener;
 

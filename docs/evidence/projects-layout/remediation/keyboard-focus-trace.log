@@ -1,0 +1,96 @@
+00:00 +0: loading <repo>/client/test/projects_layout_test.dart
+00:00 +0: bundled-font compact keyboard wrap (setUpAll)
+00:00 +0: bundled-font compact keyboard wrap reveals every focused control through forward wrap at 1.0x
+PROJECTS_FOCUS before 16.0 Rect.fromLTRB(224.0, 165.0, 384.0, 213.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 16.0 Rect.fromLTRB(224.0, 165.0, 384.0, 213.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 16.0 Rect.fromLTRB(224.0, 165.0, 384.0, 213.0)
+PROJECTS_FOCUS before 16.0 Rect.fromLTRB(16.0, 213.0, 384.0, 261.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 16.0 Rect.fromLTRB(16.0, 213.0, 384.0, 261.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 16.0 Rect.fromLTRB(16.0, 213.0, 384.0, 261.0)
+PROJECTS_FOCUS before 16.0 Rect.fromLTRB(16.0, 269.0, 384.0, 317.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 16.0 Rect.fromLTRB(16.0, 269.0, 384.0, 317.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 16.0 Rect.fromLTRB(16.0, 269.0, 384.0, 317.0)
+PROJECTS_FOCUS before 16.0 Rect.fromLTRB(16.0, 325.0, 384.0, 373.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 16.0 Rect.fromLTRB(16.0, 325.0, 384.0, 373.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 16.0 Rect.fromLTRB(16.0, 325.0, 384.0, 373.0)
+PROJECTS_FOCUS before 16.0 Rect.fromLTRB(16.0, 381.0, 384.0, 429.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 45.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 45.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 45.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 101.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 101.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 101.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 157.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 157.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 157.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 213.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 213.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 213.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 269.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 269.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 269.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 325.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 325.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 325.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 381.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 381.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 381.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 437.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 437.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 437.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 493.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 493.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 493.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 549.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 549.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 549.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 605.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 605.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 605.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 661.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 661.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 661.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 717.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 717.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 717.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 773.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 773.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 773.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 829.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 829.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 829.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 885.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 885.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS before 885.0 Rect.fromLTRB(16.0, 408.0, 384.0, 456.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtEnd 941.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+PROJECTS_FOCUS after ScrollPositionAlignmentPolicy.keepVisibleAtStart 941.0 Rect.fromLTRB(16.0, 352.0, 384.0, 400.0)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: a value greater than or equal to <0>
+  Actual: <-925.0>
+   Which: is not a value greater than or equal to <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file://<repo>/client/test/projects_layout_test.dart:681:15)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<repo>/client/test/projects_layout_test.dart line 681
+The test description was:
+  reveals every focused control through forward wrap at 1.0x
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -1: bundled-font compact keyboard wrap reveals every focused control through forward wrap at 1.0x [E]
+  Test failed. See exception logs above.
+  The test description was: reveals every focused control through forward wrap at 1.0x
+  
+00:01 +0 -1: bundled-font compact keyboard wrap (tearDownAll)
+00:01 +0 -1: Some tests failed.
+
+Failing tests:
+  <repo>/client/test/projects_layout_test.dart: bundled-font compact keyboard wrap reveals every focused control through forward wrap at 1.0x

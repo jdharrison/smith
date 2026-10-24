@@ -1,0 +1,465 @@
+{
+  "assets_verified": true,
+  "changed_core_paths": [],
+  "commands": [
+    {
+      "argv": [
+        "make",
+        "DAGGER=target/installer-pipeline/smith-dagger-0.21.9/dagger",
+        "test",
+        "build"
+      ],
+      "changed_core_paths": [],
+      "core_after_sha256": "5912fc37293fefaa02b4e6857ef1cd782223247a5902052c73f2cdfb348e0862",
+      "core_before_sha256": "5912fc37293fefaa02b4e6857ef1cd782223247a5902052c73f2cdfb348e0862",
+      "cwd": "<repo>",
+      "duration_seconds": 77.729,
+      "environment": {
+        "CI": "true",
+        "DAGGER_CLOUD_TOKEN": "",
+        "DAGGER_NO_NAG": "1",
+        "DAGGER_PROGRESS": "plain",
+        "DNT": "1",
+        "DO_NOT_TRACK": "1",
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_PAGER": "cat",
+        "GIT_TERMINAL_PROMPT": "0",
+        "HOME": "<home>",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LOGNAME": "jdharrison",
+        "PATH": "<home>/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "TERM": "dumb",
+        "TZ": "UTC",
+        "USER": "jdharrison",
+        "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+      },
+      "environment_policy": "explicit complete allowlist; no inherited provider credentials, session bus, display, analytics/cloud tokens",
+      "executable": {
+        "mode": 493,
+        "mode_octal": "0o755",
+        "path": "/usr/bin/make",
+        "sha256": "d78b8f1d099fbcfb6f2f49ab87223b9b68fb3956642f92d6ec6de812e8afa965",
+        "size": 259808,
+        "type": "file"
+      },
+      "exit_code": 2,
+      "finished_at": "2026-10-17T22:07:20.698989+00:00",
+      "log": "docs/evidence/projects-layout/validation-closeout/root-gates.log",
+      "log_sha256": "b6ef95af4b6951b5ce9887bd83897045395fde388a2c5d6c8499f049a7b18cac",
+      "name": "root-gates",
+      "recorder_error": null,
+      "skip_reason": null,
+      "stable_inputs": true,
+      "started_at": "2026-10-17T22:06:02.970464+00:00",
+      "status": "fail",
+      "timed_out": false,
+      "timeout_seconds": 900
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "dagger/package.py",
+        "--root",
+        "installer/dist",
+        "--verify"
+      ],
+      "changed_core_paths": [],
+      "core_after_sha256": "5912fc37293fefaa02b4e6857ef1cd782223247a5902052c73f2cdfb348e0862",
+      "core_before_sha256": "5912fc37293fefaa02b4e6857ef1cd782223247a5902052c73f2cdfb348e0862",
+      "cwd": "<repo>",
+      "duration_seconds": 0.722,
+      "environment": {
+        "CI": "true",
+        "DAGGER_CLOUD_TOKEN": "",
+        "DAGGER_NO_NAG": "1",
+        "DAGGER_PROGRESS": "plain",
+        "DNT": "1",
+        "DO_NOT_TRACK": "1",
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_PAGER": "cat",
+        "GIT_TERMINAL_PROMPT": "0",
+        "HOME": "<home>",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LOGNAME": "jdharrison",
+        "PATH": "<home>/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "TERM": "dumb",
+        "TZ": "UTC",
+        "USER": "jdharrison",
+        "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+      },
+      "environment_policy": "explicit complete allowlist; no inherited provider credentials, session bus, display, analytics/cloud tokens",
+      "executable": {
+        "mode": 493,
+        "mode_octal": "0o755",
+        "path": "/usr/bin/python3.12",
+        "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+        "size": 8020928,
+        "type": "file"
+      },
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:07:21.423987+00:00",
+      "log": "docs/evidence/projects-layout/validation-closeout/package-verify.log",
+      "log_sha256": "dbb15ef4b875625b2df9589ec18961d93c26d400ab83f45478df083083a73904",
+      "name": "package-verify",
+      "recorder_error": null,
+      "skip_reason": null,
+      "stable_inputs": true,
+      "started_at": "2026-10-17T22:07:20.702195+00:00",
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 60
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts/tests",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "changed_core_paths": [],
+      "core_after_sha256": "5912fc37293fefaa02b4e6857ef1cd782223247a5902052c73f2cdfb348e0862",
+      "core_before_sha256": "5912fc37293fefaa02b4e6857ef1cd782223247a5902052c73f2cdfb348e0862",
+      "cwd": "<repo>",
+      "duration_seconds": 25.435,
+      "environment": {
+        "CI": "true",
+        "DAGGER_CLOUD_TOKEN": "",
+        "DAGGER_NO_NAG": "1",
+        "DAGGER_PROGRESS": "plain",
+        "DNT": "1",
+        "DO_NOT_TRACK": "1",
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_PAGER": "cat",
+        "GIT_TERMINAL_PROMPT": "0",
+        "HOME": "<home>",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LOGNAME": "jdharrison",
+        "PATH": "<home>/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "SMITH_TEST_PACKAGE": "installer/dist",
+        "TERM": "dumb",
+        "TZ": "UTC",
+        "USER": "jdharrison",
+        "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+      },
+      "environment_policy": "explicit complete allowlist; no inherited provider credentials, session bus, display, analytics/cloud tokens",
+      "executable": {
+        "mode": 493,
+        "mode_octal": "0o755",
+        "path": "/usr/bin/python3.12",
+        "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+        "size": 8020928,
+        "type": "file"
+      },
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:07:46.861030+00:00",
+      "log": "docs/evidence/projects-layout/validation-closeout/pipeline-helpers.log",
+      "log_sha256": "7f1664963a7dca7225f7657a8a54148b4c6e98e051f68dd439cfe16d6fb74715",
+      "name": "pipeline-helpers",
+      "recorder_error": null,
+      "skip_reason": null,
+      "stable_inputs": true,
+      "started_at": "2026-10-17T22:07:21.426113+00:00",
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 120
+    },
+    {
+      "argv": [
+        "git",
+        "--no-pager",
+        "diff",
+        "--check"
+      ],
+      "changed_core_paths": [],
+      "core_after_sha256": "5912fc37293fefaa02b4e6857ef1cd782223247a5902052c73f2cdfb348e0862",
+      "core_before_sha256": "5912fc37293fefaa02b4e6857ef1cd782223247a5902052c73f2cdfb348e0862",
+      "cwd": "<repo>",
+      "duration_seconds": 0.381,
+      "environment": {
+        "CI": "true",
+        "DAGGER_CLOUD_TOKEN": "",
+        "DAGGER_NO_NAG": "1",
+        "DAGGER_PROGRESS": "plain",
+        "DNT": "1",
+        "DO_NOT_TRACK": "1",
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_PAGER": "cat",
+        "GIT_TERMINAL_PROMPT": "0",
+        "HOME": "<home>",
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "LOGNAME": "jdharrison",
+        "PATH": "<home>/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "TERM": "dumb",
+        "TZ": "UTC",
+        "USER": "jdharrison",
+        "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+      },
+      "environment_policy": "explicit complete allowlist; no inherited provider credentials, session bus, display, analytics/cloud tokens",
+      "executable": {
+        "mode": 493,
+        "mode_octal": "0o755",
+        "path": "/usr/bin/git",
+        "sha256": "2a8c18fbf43da9f692d75474c72bea9dfd796c260b0f3dfe456376abc3bbd668",
+        "size": 4066232,
+        "type": "file"
+      },
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:07:47.243602+00:00",
+      "log": "docs/evidence/projects-layout/validation-closeout/diff-check.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "diff-check",
+      "recorder_error": null,
+      "skip_reason": null,
+      "stable_inputs": true,
+      "started_at": "2026-10-17T22:07:46.862813+00:00",
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 15
+    }
+  ],
+  "core_after_sha256": "5912fc37293fefaa02b4e6857ef1cd782223247a5902052c73f2cdfb348e0862",
+  "core_before_sha256": "5912fc37293fefaa02b4e6857ef1cd782223247a5902052c73f2cdfb348e0862",
+  "core_input_count": 1265,
+  "core_untracked_count": 23,
+  "counting_note": "Raw matches retain failure replays if present. Final observed-gates.json groups output by invocation and vertex for authoritative counts.",
+  "finished_at": "2026-10-17T22:07:47.908417+00:00",
+  "paired_helpers_verified": true,
+  "passed": false,
+  "rebuilt_export": false,
+  "stable_inputs": true,
+  "started_at": "2026-10-17T22:06:01.552477+00:00",
+  "test_summaries": {
+    "diff-check": {
+      "counting_note": "Raw terminal matches; aggregate component totals must be grouped/deduplicated by Dagger vertex, not summed across failure replay.",
+      "failure_lines": [],
+      "flutter_terminal_results": [],
+      "python_suites": [],
+      "rust_suites": [],
+      "skip_or_ignore_lines": []
+    },
+    "package-verify": {
+      "counting_note": "Raw terminal matches; aggregate component totals must be grouped/deduplicated by Dagger vertex, not summed across failure replay.",
+      "failure_lines": [],
+      "flutter_terminal_results": [],
+      "python_suites": [],
+      "rust_suites": [],
+      "skip_or_ignore_lines": []
+    },
+    "pipeline-helpers": {
+      "counting_note": "Raw terminal matches; aggregate component totals must be grouped/deduplicated by Dagger vertex, not summed across failure replay.",
+      "failure_lines": [],
+      "flutter_terminal_results": [],
+      "python_suites": [
+        {
+          "ran": 34,
+          "seconds": 24.956
+        }
+      ],
+      "rust_suites": [],
+      "skip_or_ignore_lines": []
+    },
+    "root-gates": {
+      "counting_note": "Raw terminal matches; aggregate component totals must be grouped/deduplicated by Dagger vertex, not summed across failure replay.",
+      "failure_lines": [
+        "make: *** [Makefile:37: test] Error 1"
+      ],
+      "flutter_terminal_results": [],
+      "python_suites": [],
+      "rust_suites": [
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 2,
+          "measured": 0,
+          "passed": 137,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 1,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 35,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 34,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 12,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 2,
+          "measured": 0,
+          "passed": 105,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 0,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 36,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 8,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 17,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 20,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 4,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 11,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 2,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 20,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 35,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 25,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 1,
+          "measured": 0,
+          "passed": 24,
+          "status": "ok"
+        },
+        {
+          "failed": 0,
+          "filtered": 0,
+          "ignored": 0,
+          "measured": 0,
+          "passed": 11,
+          "status": "ok"
+        }
+      ],
+      "skip_or_ignore_lines": [
+        "24  : \u2506 [35.7s] | test cloud::http::tests::proxy_environment_child ... ignored, isolated proxy-environment subprocess fixture",
+        "24  : \u2506 [35.7s] | test manager::tests::captured_helper_fixture ... ignored, fixture invoked only by captured-helper subprocess tests",
+        "24  : \u2506 [41.7s] | test result: ok. 137 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 6.11s",
+        "24  : \u2506 [41.8s] | test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "24  : \u2506 [43.8s] | test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.04s",
+        "61  : \u2506 [44.2s] | test launch::tests::launch_parent_fixture ... ignored, finite subprocess fixture, invoked only with private test roots",
+        "61  : \u2506 [44.5s] | test model::tests::progress_output_probe_child ... ignored, controlled signal-probe child only",
+        "24  : \u2506 [45.2s] | test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.37s",
+        "24  : \u2506 [45.3s] | test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s",
+        "24  : \u2506 [45.3s] | test dart_cloud::dart_cloud_fixture ... ignored, launched explicitly by the Dart schema3 fixture gate",
+        "61  : \u2506 [48.7s] | test result: ok. 105 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 7.02s",
+        "61  : \u2506 [48.7s] | test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "61  : \u2506 [49.7s] | test result: ok. 36 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.00s",
+        "61  : \u2506 [49.8s] | test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
+        "61  : \u2506 [50.2s] | test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.41s",
+        "61  : \u2506 [51.4s] | test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.22s",
+        "61  : \u2506 [51.4s] | test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "61  : \u2506 [51.4s] | test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+        "61  : \u2506 [52.0s] | test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.53s",
+        "61  : \u2506 [52.7s] | test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.75s",
+        "61  : \u2506 [54.2s] | test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.43s",
+        "61  : \u2506 [54.3s] | test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s",
+        "24  : \u2506 [1m8s] | test result: ok. 24 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 22.35s",
+        "24  : \u2506 [1m8s] | test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s"
+      ]
+    }
+  }
+}

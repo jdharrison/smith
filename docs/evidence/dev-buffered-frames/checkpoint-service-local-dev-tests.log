@@ -1,0 +1,70 @@
+cwd: service
+command: cargo test --locked --offline --lib local_dev::tests::
+timeout_seconds: 120
+exit: 0
+timed_out: False
+elapsed_seconds: 2.31
+
+    Finished `test` profile [unoptimized] target(s) in 0.04s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-3585bc1c5f190260)
+
+running 56 tests
+test app::local_dev::tests::completion_errors_preserve_typed_classification_with_fixed_codes_and_messages ... ok
+test app::local_dev::tests::repository_validation_is_all_or_nothing_and_readonly_metadata_grants_nothing ... ok
+test app::local_dev::tests::inventory_must_already_be_observed_matching_and_ready_without_probing ... ok
+test app::local_dev::tests::poisoned_local_state_keeps_provider_reservation_fail_closed ... ok
+test app::local_dev::tests::corrupt_legacy_fails_admission_closed_without_touching_either_ledger ... ok
+test app::local_dev::tests::corrupt_local_ledger_blocks_dev_but_not_chat_reservation ... ok
+test app::local_dev::tests::drift_and_unknown_observe_only_with_strict_arguments ... ok
+test app::local_dev::tests::checkout_publication_uses_the_same_normalized_ref_as_acquisition ... ok
+test app::local_dev::tests::queued_and_running_app_jobs_allow_queue_admission ... ok
+test app::local_dev::tests::phase_order_and_single_dispatch_are_fail_closed ... ok
+test app::local_dev::tests::rootful_diagnostic_preserves_dispatch_and_cleanup_uncertainty ... ok
+test app::local_dev::tests::scheduler_tests::frozen_model_and_config_mutations_are_guarded_while_queued ... ok
+test app::local_dev::tests::combined_count_is_not_admission_and_cross_version_ids_preserve_legacy_bytes ... ok
+test app::local_dev::tests::publication_failure_prevents_provider_dispatch_and_fences ... ok
+test app::local_dev::tests::revocation_during_completion_prevents_reply_and_final_publication ... ok
+test app::local_dev::tests::scheduler_tests::inspection_fault_during_execute_fences_acknowledgement ... ok
+test app::local_dev::tests::reply_is_on_disk_before_cleanup_publication_can_fail ... ok
+test app::local_dev::tests::exact_projection_frozen_context_same_worker_and_no_replay ... ok
+test app::local_dev::tests::ambiguous_terminal_publication_retains_chat_reservation ... ok
+test app::local_dev::tests::completed_requires_receipt_correlation_even_after_verified_stop ... ok
+test app::local_dev::tests::reply_survives_cleanup_unknown_and_restart_without_rewrite ... ok
+test app::local_dev::tests::scheduler_tests::cleanup_uncertainty_occupies_only_its_slot_and_reservation_is_per_unfinished_job ... ok
+test app::local_dev::tests::scheduler_tests::dequeued_routed_work_rechecks_dev_integrity_before_and_between_effects ... ok
+test app::local_dev::tests::scheduler_tests::queued_model_drift_fails_before_container_or_provider_dispatch ... ok
+test app::local_dev::tests::deletion_and_query_route_through_validated_app3_envelopes ... ok
+test app::local_dev::tests::scheduler_tests::queued_restart_expiry_and_legacy_operations_never_dispatch ... ok
+test app::local_dev::tests::scheduler_tests::queued_spawn_failure_reopens_without_replay_or_cleanup_reservation ... ok
+test app::local_dev::tests::unfinished_restart_blocks_and_never_takes_pending ... ok
+test app::local_dev::tests::safe_predispatch_failure_releases_but_raw_provider_failure_does_not_leak ... ok
+test app::local_dev::tests::deletion_validates_instance_arguments_ownership_and_publication_faults ... ok
+test app::local_dev::tests::deletion_schema_is_canonical_versioned_and_count_unbounded_only_in_three ... ok
+test app::local_dev::tests::scheduler_tests::real_worker_fails_accepted_app_work_after_dev_publication_fault_without_provider_effects ... ok
+test app::local_dev::tests::scheduler_tests::queue_timeout_tracks_earliest_expiry_and_disarms_when_integrity_blocked ... ok
+test app::local_dev::tests::old_status_invariants_remain_identical_in_both_schemas ... ok
+test app::local_dev::tests::scheduler_tests::retained_environments_consume_the_existing_inspection_slots ... ok
+test app::local_dev::tests::scheduler_tests::terminal_unknown_verified_releases_slot_but_not_identity_or_deletion ... ok
+test app::local_dev::tests::scheduler_tests::inspection_fault_between_create_and_initial_prompt_fences_pending_dispatch ... ok
+test app::local_dev::tests::local_count_above_32_never_evicts_retained_replies ... ok
+test app::local_dev::tests::reconciled_reopen_queries_and_original_identity_never_rewrite_or_dispatch ... ok
+test app::local_dev::tests::strict_schema_corruption_and_external_drift_are_preserved ... ok
+test app::local_dev::tests::scheduler_tests::healthy_full_occupancy_still_allows_retained_followup_and_cleanup ... ok
+test app::local_dev::tests::reconciled_rejects_missing_malformed_and_inconsistent_evidence ... ok
+test app::local_dev::tests::deletion_preserves_legacy_unknown_and_live_other_pending_ownership ... ok
+test app::local_dev::tests::reconciled_does_not_override_other_admission_or_publication_fences ... ok
+test app::local_dev::tests::deletion_refuses_unsafe_targets_but_preserves_other_unknown_fences ... ok
+test app::local_dev::tests::reconciled_schema_versions_are_explicit_and_default_remains_one ... ok
+test app::local_dev::tests::rootful_and_historical_prerequisite_messages_reopen_without_runtime_effects ... ok
+test app::local_dev::tests::scheduler_tests::four_jobs_use_three_slots_and_fourth_dispatches_fifo_without_resend ... ok
+test app::local_dev::tests::reply_headroom_refuses_admission_before_the_byte_limit_without_eviction ... ok
+test app::local_dev::tests::reconciled_retains_busy_byte_capacity_and_application_fault_gates ... ok
+test app::local_dev::tests::scheduler_tests::real_worker_expires_blocked_queue_with_unloaded_provider_without_external_wake ... ok
+test app::local_dev::tests::successful_start_promotes_loaded_version_and_preserves_old_outcomes ... ok
+test app::local_dev::tests::deletion_preserves_exact_evidence_and_idempotent_reopen_query_and_replay ... ok
+test app::local_dev::tests::retained_mixed_history_above_32_and_worst_shape_results_fit_actual_envelope ... ok
+test app::local_dev::tests::deletion_byte_exhaustion_is_atomic_and_keeps_result_reservation ... ok
+test app::local_dev::tests::scheduler_tests::five_unfinished_jobs_consume_reserved_results_without_double_charging ... ok
+
+test result: ok. 56 passed; 0 failed; 0 ignored; 0 measured; 441 filtered out; finished in 2.23s
+

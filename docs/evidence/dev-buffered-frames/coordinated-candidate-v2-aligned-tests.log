@@ -1,0 +1,167 @@
+COMMAND: /snap/bin/flutter --no-version-check test --no-pub --reporter expanded test/agents_navigation_test.dart test/dev_jobs_test.dart test/dev_jobs_controller_list_test.dart test/dev_jobs_list_view_test.dart
+00:00 +0: loading smith/client/test/agents_navigation_test.dart
+00:00 +0: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +1: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +2: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +3: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +4: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +5: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +6: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +7: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +8: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +9: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +10: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +11: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +12: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +13: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +14: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +15: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +16: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +17: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +18: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +19: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +20: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +21: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +22: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +23: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +24: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +25: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +26: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +27: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +28: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +29: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +30: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +31: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +32: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +33: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +34: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +35: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +36: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +37: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +38: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +39: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +40: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +41: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +42: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +43: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +44: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +45: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +46: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +47: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +48: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +49: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +50: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +51: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +52: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +53: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +54: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +55: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +56: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +57: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +58: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +59: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +60: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +61: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +62: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +63: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +64: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +65: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +66: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +67: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +68: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +69: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +70: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +71: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +72: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +73: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +74: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +75: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +76: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +77: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +78: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +79: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +80: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +81: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +82: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +83: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +84: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +85: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +86: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +87: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +88: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +89: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +90: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +91: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +92: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +93: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +94: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +95: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +96: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +97: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +98: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +99: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +100: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +101: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +102: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +103: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +104: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +105: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +106: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +107: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +108: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +109: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +110: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +111: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +112: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +113: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +114: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +115: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +116: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +117: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +118: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +119: smith/client/test/dev_jobs_test.dart: hiding retained form invalidates open confirmation without dispatch
+00:01 +120: smith/client/test/dev_jobs_list_view_test.dart: delete binds exact target and consumes duplicate callbacks; detail becomes deleted
+00:01 +121: smith/client/test/dev_jobs_list_view_test.dart: delete binds exact target and consumes duplicate callbacks; detail becomes deleted
+00:01 +122: smith/client/test/agents_navigation_test.dart: compact sidebar keeps separate inline disclosure and hides Agents
+00:01 +123: smith/client/test/agents_navigation_test.dart: compact sidebar keeps separate inline disclosure and hides Agents
+00:01 +124: smith/client/test/agents_navigation_test.dart: compact sidebar keeps separate inline disclosure and hides Agents
+00:01 +125: smith/client/test/dev_jobs_list_view_test.dart: late delete never pops replacement New job or loses draft
+00:01 +126: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +127: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +128: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +129: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +130: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +131: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +132: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +133: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +134: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +135: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +136: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +137: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +138: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +139: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +140: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +141: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +142: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +143: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +144: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +145: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +146: smith/client/test/dev_jobs_list_view_test.dart: running detail explains no stop, separate cleanup certainty and blocked admission
+00:03 +147: smith/client/test/agents_navigation_test.dart: v3 restoration observes Agents only and saves no editor data; session-only creates no store
+00:03 +148: smith/client/test/agents_navigation_test.dart: v3 restoration observes Agents only and saves no editor data; session-only creates no store
+00:03 +149: smith/client/test/dev_jobs_list_view_test.dart: cleanup_unknown detail explains no stop, separate cleanup certainty and blocked admission
+00:03 +150: smith/client/test/dev_jobs_list_view_test.dart: active observation updates the open keyed detail and stops without modal polling
+00:03 +151: smith/client/test/dev_jobs_list_view_test.dart: IME/draft changes invalidate review; an obsolete Start cannot consume a replacement review
+00:03 +152: smith/client/test/dev_jobs_list_view_test.dart: one named modal Edit -> Review -> Start; duplicate callback submits exactly once
+00:04 +153: smith/client/test/dev_jobs_list_view_test.dart: closed/reopened pending modal retains full newer editing value after late ack
+00:04 +154: smith/client/test/dev_jobs_list_view_test.dart: known refusal and unknown admission keep exact drafts; no automatic resubmission
+00:04 +155: smith/client/test/dev_jobs_list_view_test.dart: project and model revision drift invalidate review and obsolete callbacks
+00:04 +156: smith/client/test/dev_jobs_list_view_test.dart: hiding origin removes its covered named modal, never the unrelated top route
+00:04 +157: smith/client/test/dev_jobs_list_view_test.dart: hiding a pending source detaches and late acknowledgement retains its draft
+00:04 +158: smith/client/test/dev_jobs_list_view_test.dart: disposing a pending origin cannot close another route on late acknowledgement
+00:04 +159: smith/client/test/dev_jobs_list_view_test.dart: two views retain independent modal projects and exact drafts
+00:04 +160: smith/client/test/dev_jobs_list_view_test.dart: 360x400 text2 rows and short modals scroll with 48px actions
+00:04 +161: smith/client/test/dev_jobs_list_view_test.dart: 400x400 text2 rows and short modals scroll with 48px actions
+00:04 +162: All tests passed!
+
+EXIT_CODE: 0

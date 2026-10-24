@@ -1,0 +1,37 @@
+{
+  "probes": [
+    {
+      "probe": "source_drift_after_start",
+      "result": "PASS",
+      "actual": {
+        "status": "failed",
+        "cleanup": "verified_stopped",
+        "stage": "capture",
+        "reason": "request_drift"
+      },
+      "starts": 1,
+      "stops": 1,
+      "execute": 0
+    },
+    {
+      "probe": "oom_true_after_start",
+      "result": "PASS",
+      "actual": {
+        "status": "failed",
+        "cleanup": "unknown",
+        "stage": "cleanup",
+        "reason": "oom_contract"
+      },
+      "starts": 1,
+      "stops": 1,
+      "execute": 0
+    }
+  ],
+  "clock": {
+    "now_utc": "2026-10-21T02:29:32.400411+00:00",
+    "wall_remaining_seconds": 364.773,
+    "work_remaining_seconds": 304.773,
+    "monotonic_remaining_seconds": 364.773,
+    "original_wall_end_utc": "2026-10-21T02:35:37.173685+00:00"
+  }
+}

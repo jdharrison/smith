@@ -1,0 +1,284 @@
+{
+  "aggregate_cases_not_all_fresh": 1497,
+  "cache_limits": [
+    "283 native installer cases are a cached pass bound to unchanged installer/service/module inputs.",
+    "Service, GTK, Flutter and native package suites show fresh terminal results.",
+    "Interpreter-free CLI scenario and setup/runtime/build subgraphs may be cached. No cold-cache/hermetic or clean-source reconstruction claim."
+  ],
+  "cached_installer_cases": 283,
+  "cached_native_vertex": 72,
+  "cached_projection_files": 1065,
+  "cached_projection_matches_preserved_successful_source": true,
+  "cached_projection_sha256": "8993531727a8fc09fb197d3f1be83a15f485f7f39e0ad75e954befd349caba8a",
+  "cached_vertices_by_invocation": {
+    "0": 86,
+    "1": 12,
+    "2": 41,
+    "3": 54
+  },
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "<repo>/target/projects-layout/validation-rebound/probe_processes.py"
+      ],
+      "core_after_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "core_before_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "duration_seconds": 0.254,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:12:51.240137+00:00",
+      "log": "docs/evidence/projects-layout/validation-rebound/process-observation-before-focused.log",
+      "log_sha256": "50d2207db4aeb6420e0248877b2c0fb288ce877f6b409efcaeb80600b15346a1",
+      "name": "process-observation-before-focused",
+      "started_at": "2026-10-17T22:12:50.986497+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/projects_view_test.dart",
+        "test/projects_navigation_test.dart",
+        "test/projects_layout_test.dart",
+        "test/projects_layout_golden_test.dart",
+        "test/projects_controller_test.dart",
+        "test/projects_protocol_test.dart"
+      ],
+      "core_after_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "core_before_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "duration_seconds": 11.631,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:13:02.929823+00:00",
+      "log": "docs/evidence/projects-layout/validation-rebound/focused-projects.log",
+      "log_sha256": "d2b63ae96985cece2b108f16e54b7d0ce06d7264eb98e731b18f34727d6ec9fe",
+      "name": "focused-projects",
+      "started_at": "2026-10-17T22:12:51.298930+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/ui_foundation_assets_test.dart"
+      ],
+      "core_after_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "core_before_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "duration_seconds": 2.09,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:13:05.020968+00:00",
+      "log": "docs/evidence/projects-layout/validation-rebound/focused-assets.log",
+      "log_sha256": "e48059c91009a9b595e3e4cc1138f43a0166f1db23bf6d7245302a333bdfde56",
+      "name": "focused-assets",
+      "started_at": "2026-10-17T22:13:02.931390+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/rust_projects_integration_test.dart"
+      ],
+      "core_after_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "core_before_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "duration_seconds": 2.507,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:13:07.529784+00:00",
+      "log": "docs/evidence/projects-layout/validation-rebound/compiled-projects.log",
+      "log_sha256": "429fc83adc97e594433f184fae4b006dcd9cd5908b4401891a26244e75ea6a88",
+      "name": "compiled-projects",
+      "started_at": "2026-10-17T22:13:05.022516+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "<repo>/target/projects-layout/validation-rebound/probe_processes.py"
+      ],
+      "core_after_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "core_before_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "duration_seconds": 0.251,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:13:16.079828+00:00",
+      "log": "docs/evidence/projects-layout/validation-rebound/process-observation-before-aggregate.log",
+      "log_sha256": "50d2207db4aeb6420e0248877b2c0fb288ce877f6b409efcaeb80600b15346a1",
+      "name": "process-observation-before-aggregate",
+      "started_at": "2026-10-17T22:13:15.828792+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "<repo>/target/installer-pipeline/smith-dagger-0.21.9/dagger",
+        "version"
+      ],
+      "core_after_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "core_before_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "duration_seconds": 0.274,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:13:16.355617+00:00",
+      "log": "docs/evidence/projects-layout/validation-rebound/dagger-version.log",
+      "log_sha256": "0819b1f6a5d2080e67735b51514107720e0fb59ba70a251bd80bbc056bd8288a",
+      "name": "dagger-version",
+      "started_at": "2026-10-17T22:13:16.081259+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "docker",
+        "inspect",
+        "--format",
+        "{\"running\":{{json .State.Running}},\"status\":{{json .State.Status}},\"image\":{{json .Config.Image}},\"image_id\":{{json .Image}},\"started_at\":{{json .State.StartedAt}}}",
+        "smith-installer-pipeline-dagger-v0.21.9"
+      ],
+      "core_after_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "core_before_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "duration_seconds": 0.279,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:13:16.636105+00:00",
+      "log": "docs/evidence/projects-layout/validation-rebound/engine-readiness.log",
+      "log_sha256": "015c6a729be581b654b45d5517a2345e1cf8f9a5dfda8e4d85ff5c665b2053e0",
+      "name": "engine-readiness",
+      "started_at": "2026-10-17T22:13:16.357064+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "make",
+        "DAGGER=target/installer-pipeline/smith-dagger-0.21.9/dagger",
+        "test",
+        "build"
+      ],
+      "core_after_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "core_before_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "duration_seconds": 159.509,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:15:56.177883+00:00",
+      "log": "docs/evidence/projects-layout/validation-rebound/root-gates.log",
+      "log_sha256": "f09c423c6c3625c1de3571f2349efde5e6889f394650e4b2ce4dd7d44443986c",
+      "name": "root-gates",
+      "started_at": "2026-10-17T22:13:16.668709+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "dagger/package.py",
+        "--root",
+        "installer/dist",
+        "--verify"
+      ],
+      "core_after_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "core_before_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "duration_seconds": 0.618,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:15:56.797863+00:00",
+      "log": "docs/evidence/projects-layout/validation-rebound/package-verify.log",
+      "log_sha256": "dbb15ef4b875625b2df9589ec18961d93c26d400ab83f45478df083083a73904",
+      "name": "package-verify",
+      "started_at": "2026-10-17T22:15:56.179937+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts/tests",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "core_after_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "core_before_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "duration_seconds": 25.221,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:16:22.020796+00:00",
+      "log": "docs/evidence/projects-layout/validation-rebound/pipeline-helpers.log",
+      "log_sha256": "33bb4dbf151009faefaddbfaa399a117735198d6f579551e107441380d6611fc",
+      "name": "pipeline-helpers",
+      "started_at": "2026-10-17T22:15:56.799371+00:00",
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "git",
+        "--no-pager",
+        "diff",
+        "--check"
+      ],
+      "core_after_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "core_before_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+      "duration_seconds": 0.26,
+      "exit_code": 0,
+      "finished_at": "2026-10-17T22:16:22.282513+00:00",
+      "log": "docs/evidence/projects-layout/validation-rebound/diff-check.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "diff-check",
+      "started_at": "2026-10-17T22:16:22.022417+00:00",
+      "status": "pass"
+    }
+  ],
+  "compiled_fixture_bytes_verified": true,
+  "controlled_ignores_cached": 2,
+  "controlled_ignores_fresh": 3,
+  "core_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+  "earlier_timeout_cause": "unestablished; unchanged fixture not repaired or waived",
+  "evidence_index_canonical_sha256": "b4823f54e9a845f40cbb4f46c0ec3e1b541fe33f9fc7e633e2d02e5a6f1b1141",
+  "fresh_aggregate_cases": 1214,
+  "fresh_flutter_passed": 869,
+  "fresh_package_passed": 41,
+  "fresh_rust_totals": {
+    "installer_gtk": {
+      "failed": 0,
+      "filtered": 0,
+      "ignored": 0,
+      "measured": 0,
+      "passed": 9
+    },
+    "service": {
+      "failed": 0,
+      "filtered": 0,
+      "ignored": 3,
+      "measured": 0,
+      "passed": 295
+    }
+  },
+  "fresh_test_vertices": [
+    21,
+    60,
+    125,
+    103
+  ],
+  "helper_cases": 34,
+  "interpreter_free_cli": "cached, not a fresh scenario",
+  "observed_at_utc": "2026-10-17T22:29:28.786967+00:00",
+  "official_cli_sha256_verified": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+  "ordinary_skips": 0,
+  "parent_index_files_verified": 77,
+  "parent_runs_not_reviewer_executions": true,
+  "raw_line_excerpts_checked": 38,
+  "root_log_sha256": "f09c423c6c3625c1de3571f2349efde5e6889f394650e4b2ce4dd7d44443986c"
+}

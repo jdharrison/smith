@@ -1,0 +1,4 @@
+timestamp=2026-10-19T19:30:40.527735+00:00
+command=['rustfmt', '--edition', '2021', 'service/src/dev_local.rs', 'service/src/dev_worker_local.rs', 'service/src/dev_runtime_local.rs']
+
+exit=0

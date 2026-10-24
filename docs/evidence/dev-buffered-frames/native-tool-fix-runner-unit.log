@@ -1,0 +1,46 @@
+COMMAND: cargo test --offline --locked --lib runner::
+    Finished `test` profile [unoptimized] target(s) in 0.04s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-7c11b7ac37ef8548)
+
+running 36 tests
+test runner::lease_tests::poisoned_populated_final_slot_releases_lease_with_duplicate_alive ... ok
+test runner::lease_tests::poisoned_empty_final_slot_does_not_unlock_raw_active_lease ... ok
+test runner::tests::completion_is_content_only_with_identity_and_no_tools ... ok
+test runner::lease_tests::unknown_cleanup_ownership_state_simulation_keeps_duplicate_excluded_after_raw_close ... ok
+test runner::lease_tests::dropping_model_does_not_unlock_raw_active_runner_lease ... ok
+test runner::lease_tests::model_dropped_then_runner_drop_releases_final_parked_lease_with_duplicate_alive ... ok
+test runner::tests::startup_capture_failure_cannot_accept_an_earlier_valid_record ... ok
+test runner::tests::inspection_read_calls_do_not_weaken_chat_parser ... ok
+test runner::lease_tests::live_model_handback_and_reconsumption_keep_same_lease_until_final_owner_drop ... ok
+test runner::lease_tests::model_dropped_then_stop_releases_final_parked_lease_with_duplicate_alive ... ok
+test runner::tests::inspection_counts_exact_tools_and_messages_without_trimming ... ok
+test runner::tests::messages_must_alternate_and_end_with_user ... ok
+test runner::tests::startup_capture_retries_interruption_but_records_eof ... ok
+test runner::tests::http_reader_accepts_length_chunked_and_eof_bodies ... ok
+test runner::tool_tests::absent_third_requires_packaged_profile_not_native_version_text ... ok
+test runner::tests::startup_capture_keeps_raw_prefix_limit_and_never_rolls_evidence ... ok
+test runner::tool_tests::cached_success_does_not_grant_unknown_profiles_or_null_third ... ok
+test runner::tool_tests::explicit_false_null_and_nonboolean_third_never_take_exception ... ok
+test runner::tool_tests::loader_hash_or_self_reported_version_alone_cannot_identify_profile ... ok
+test runner::tool_tests::required_props_are_objects_and_exact_booleans ... ok
+test runner::tool_tests::runner_failure_and_shutdown_clear_instance_success_even_without_a_child ... ok
+test runner::tool_tests::status_malformed_duplicate_and_nonobject_capabilities_are_rejected ... ok
+test runner::tool_tests::verified_profile_cannot_be_reused_for_a_different_executable_path ... ok
+test runner::tool_tests::actual_request_template_and_context_guards_remain_exact ... ok
+test runner::tool_tests::probe_is_broker_valid_and_covers_call_counts_content_and_argument_shapes ... ok
+test runner::tool_tests::json_echo_missing_prompt_malformed_or_oversized_rendering_is_not_semantic_proof ... ok
+test runner::tool_tests::semantic_probe_accepts_object_or_string_arguments_without_call_ids ... ok
+test runner::tests::http_reader_rejects_ambiguous_truncated_and_oversized_responses ... ok
+test runner::tool_tests::success_cache_is_per_instance_and_still_rechecks_props ... ok
+test runner::tool_tests::failed_or_cancelled_expired_or_malformed_probe_never_caches_or_generates ... ok
+test runner::tool_tests::controlled_history_passes_actual_broker_without_any_io_or_generation ... ok
+test runner::tool_tests::definition_arguments_system_and_call_structure_must_survive ... ok
+test runner::tool_tests::profile_requires_complete_pinned_inventory_including_modes_and_libraries ... ok
+test runner::tool_tests::semantic_evidence_supports_every_four_call_result_permutation ... ok
+test runner::tool_tests::dropped_altered_duplicate_or_reordered_text_evidence_is_rejected ... ok
+test runner::tests::http_reader_deadline_is_absolute ... ok
+
+test result: ok. 36 passed; 0 failed; 0 ignored; 0 measured; 324 filtered out; finished in 0.16s
+
+
+EXIT: 0

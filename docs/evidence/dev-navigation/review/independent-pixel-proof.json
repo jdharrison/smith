@@ -1,0 +1,700 @@
+{
+  "changed_count": 23,
+  "changed_pixels": 159815,
+  "frozen_editors": [
+    {
+      "path": "client/test/goldens/agents/compact-editor-text2.png",
+      "sha256": "57f15d01cc1f598d9d4353f10d1f321bc0a723fde96c727c08a0937609c05d83"
+    },
+    {
+      "path": "client/test/goldens/agents/compact-editor.png",
+      "sha256": "3818520559b97cabb08d8259ff83f1d8ac455a00f46d943d416f90b22d2e1c13"
+    },
+    {
+      "path": "client/test/goldens/agents/compact-list-text2.png",
+      "sha256": "b9b7e07134617972677849e9d312fe847a5ee7bb7f3bb48fab66f7c48c46a6cf"
+    },
+    {
+      "path": "client/test/goldens/agents/compact-list.png",
+      "sha256": "050014417befcf9df47cb0149d947e2cf7b7f18155a4821ba64c3ffa4850e3d2"
+    },
+    {
+      "path": "client/test/goldens/agents/wide.png",
+      "sha256": "07eb936f391bb32e16c7ed062be4feb8dbea2f7f4046ad3fe32387951f761459"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/compact-editor-400x400-text2.png",
+      "sha256": "801b3df51633611de483d00a9a1b1a506add59a2161175ac74ef98e874ff8d5d"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/compact-editor-400x400.png",
+      "sha256": "023ecbdb240a8e44fd60d198cc822bb6d090e75851379c78986ab6ca30906293"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/compact-list-400x400-text2.png",
+      "sha256": "442b02b3ad06bb66a395f88a63e2babc50d80a84b69f8d19dac5852d9e6974ce"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/compact-list-400x400.png",
+      "sha256": "945a8fa620558e387f6b232d4cc92b5e8490bf4ecb3e51f923cc130e37f142e2"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/compact-repositories-400x400-text2.png",
+      "sha256": "9df045973461f07401e1d4ea34b2606efe5c0ca70d9fa9980867944c2f5fec4e"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/compact-repositories-400x400.png",
+      "sha256": "ebfe589299842484ec63ae813824bfbee8da4fe7e4e819da9bd6e0ab761c6090"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/ultrawide-4200x2400.png",
+      "sha256": "cc08cec883ac2550e69bcc6b6d6557cc36c00383ba87a55b423aaf3134ba5668"
+    },
+    {
+      "path": "client/test/goldens/projects-layout/wide-1536x1024.png",
+      "sha256": "c951da3cfbf3e032474738363c970baab92559253d0cd692aabc3ee756b6028b"
+    }
+  ],
+  "images": [
+    {
+      "baseline_sha256": "3a90868ed7767683eccb66f6b1dffbc80b6784da8044bb6d238f78f9fedd9ffe",
+      "bbox_half_open": [
+        11,
+        64,
+        64,
+        892
+      ],
+      "changed_pixels": 6256,
+      "current_sha256": "c6d49c844e0e7d5cb43e71a5f7f0ba66f0fcd91898b353e2dbdf2adf232b5a02",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "masks_half_open": [
+        [
+          8,
+          64,
+          64,
+          892
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-archive-1440x900.png"
+    },
+    {
+      "baseline_sha256": "e85e8c7f99da29b8d0b09daf0e6699e7ddc3311b1e72f1dda707c02b92415a1e",
+      "bbox_half_open": [
+        11,
+        133,
+        12,
+        201
+      ],
+      "changed_pixels": 60,
+      "current_sha256": "add90bd89dc1c0a2166144a17e38489d2a842d646776939074b498028e1b1b37",
+      "dimensions": [
+        400,
+        400
+      ],
+      "masks_half_open": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-archive-400x400-text2.png"
+    },
+    {
+      "baseline_sha256": "dff84442d11e08ba32d45d9371c1fabbff552b19e266e96f2e124ec83b25202f",
+      "bbox_half_open": [
+        11,
+        64,
+        64,
+        712
+      ],
+      "changed_pixels": 6076,
+      "current_sha256": "d9ab95c920072b1d4e924d7d39eac098a1e4d93c8172f84e84ec1262f59efb89",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "masks_half_open": [
+        [
+          8,
+          64,
+          64,
+          712
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-chat-1280x720.png"
+    },
+    {
+      "baseline_sha256": "84df00e5bd8d041e1a2bb37f058fd79082077f11bc08951ee189dcbc1396a643",
+      "bbox_half_open": [
+        11,
+        64,
+        64,
+        892
+      ],
+      "changed_pixels": 6256,
+      "current_sha256": "7c8521221ba84ad0a3eaf3bbc9321aea990f7120eaf858102d87ffdcee49b9e9",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "masks_half_open": [
+        [
+          8,
+          64,
+          64,
+          892
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-chat-1440x900-ibm.png"
+    },
+    {
+      "baseline_sha256": "e396ce94ac2b919905c1321bcec213012ec3f41f8ea9434cb81cb6c003873d7a",
+      "bbox_half_open": [
+        11,
+        64,
+        64,
+        892
+      ],
+      "changed_pixels": 6256,
+      "current_sha256": "61d4b91cd2ca322f313b9a12a32ff4c4112e95c885af835be09f492d797ca349",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "masks_half_open": [
+        [
+          8,
+          64,
+          64,
+          892
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-chat-1440x900.png"
+    },
+    {
+      "baseline_sha256": "c9ba1b5f07c2925f27ad16926ba829bea00f43b579db7f4e378c13c3f32d7e6f",
+      "bbox_half_open": [
+        11,
+        129,
+        64,
+        392
+      ],
+      "changed_pixels": 3986,
+      "current_sha256": "401406c1a57ae7b0ddc370c34fbb8795d1a2ea21af89e299f1f538adfd40fbc4",
+      "dimensions": [
+        400,
+        400
+      ],
+      "masks_half_open": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-chat-400x400-text2.png"
+    },
+    {
+      "baseline_sha256": "e7001f9953249dba7b7c254eb0ae16dc8aa3fd450e36d5195a13374f2564b5b9",
+      "bbox_half_open": [
+        11,
+        64,
+        64,
+        392
+      ],
+      "changed_pixels": 5439,
+      "current_sha256": "61fa553284e6eb9a7f6560589c2010276acd57733d1291566719976fbb6333ea",
+      "dimensions": [
+        400,
+        400
+      ],
+      "masks_half_open": [
+        [
+          8,
+          64,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-chat-400x400.png"
+    },
+    {
+      "baseline_sha256": "41ba8b984a4c3d78559dfa2ae76ca2e6a1ee5379d3b4a32488cd521e8d9816fc",
+      "bbox_half_open": [
+        11,
+        64,
+        64,
+        2392
+      ],
+      "changed_pixels": 7756,
+      "current_sha256": "b1151d8c32c2636641137f70dc680afc58c1caec2f40d0c92b88269850942655",
+      "dimensions": [
+        4200,
+        2400
+      ],
+      "masks_half_open": [
+        [
+          8,
+          64,
+          64,
+          2392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-chat-4200x2400.png"
+    },
+    {
+      "baseline_sha256": "e51ef4b00568411f9fa0d98be8f9e96fe510b8693601b31bf01f6f1503aadaa9",
+      "bbox_half_open": [
+        11,
+        129,
+        56,
+        347
+      ],
+      "changed_pixels": 3682,
+      "current_sha256": "f2368bd8f5e7066c0349f191606b10453cfb0fe907a50b82c14c841444dfa9c0",
+      "dimensions": [
+        400,
+        400
+      ],
+      "masks_half_open": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-history-400x400-text2.png"
+    },
+    {
+      "baseline_sha256": "216c5185950f358be81df6184a8a5f2cae4cacae698a62710c38b9b40c9e6b93",
+      "bbox_half_open": [
+        11,
+        64,
+        64,
+        892
+      ],
+      "changed_pixels": 6256,
+      "current_sha256": "fc26d8f508162fd848b2ca1142640012d933489e6c0b745078dd94b8ee47d5b5",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "masks_half_open": [
+        [
+          8,
+          64,
+          64,
+          892
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-overflow-1440x900.png"
+    },
+    {
+      "baseline_sha256": "5ae78fa8154c94c588721bcd1dfab1b9aa3f56a203fa271aa402476e24c5cee2",
+      "bbox_half_open": [
+        11,
+        129,
+        56,
+        347
+      ],
+      "changed_pixels": 3682,
+      "current_sha256": "59b8e5bb25cfeeb0634262141634e1d2bd3c6f39e6caf784e7a51313dcff79a2",
+      "dimensions": [
+        400,
+        400
+      ],
+      "masks_half_open": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-overflow-400x400-text2.png"
+    },
+    {
+      "baseline_sha256": "1ec95f463850e7da4c7b650ed973896c0757cfa405cb3a559d6c057a4d766bd2",
+      "bbox_half_open": [
+        11,
+        64,
+        64,
+        712
+      ],
+      "changed_pixels": 6076,
+      "current_sha256": "f8fbc2ff756a76900a40502295ed1f7db7f61a5f6a0d0e8c906411025b6d2fc2",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "masks_half_open": [
+        [
+          8,
+          64,
+          64,
+          712
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-production-shell-1280x720.png"
+    },
+    {
+      "baseline_sha256": "7117a44d860d049948796c68c0d13736ce18bf3447a7f7970c3b2bc1dcd84665",
+      "bbox_half_open": [
+        11,
+        129,
+        64,
+        392
+      ],
+      "changed_pixels": 3986,
+      "current_sha256": "43753e5003b8d6e62cab5525e8fcf43979ee5665533065582305d50fae089e7b",
+      "dimensions": [
+        400,
+        400
+      ],
+      "masks_half_open": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-recovery-400x400-text2.png"
+    },
+    {
+      "baseline_sha256": "15138af141152b92812a0889561b9f45b124ea16b320d50f7bdeb8822a559f2f",
+      "bbox_half_open": [
+        11,
+        129,
+        64,
+        392
+      ],
+      "changed_pixels": 2490,
+      "current_sha256": "6b2f0ba419e4589de71197c3abc6968da5f0df0ab8586d71b450cbd480ca0a1f",
+      "dimensions": [
+        400,
+        400
+      ],
+      "masks_half_open": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-recovery-details-400x400-text2.png"
+    },
+    {
+      "baseline_sha256": "4e94ad1b23cb11268b3af8e7ce8fc26b80f73614f9cf3e438e832d4241e86a66",
+      "bbox_half_open": [
+        11,
+        64,
+        64,
+        892
+      ],
+      "changed_pixels": 6090,
+      "current_sha256": "66983de05501e84a798453c39833b40ad1deef01237954c0c1f841b867c9c420",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "masks_half_open": [
+        [
+          8,
+          64,
+          64,
+          892
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-settings-1440x900.png"
+    },
+    {
+      "baseline_sha256": "2d54f54a8b46ff269b31f952f4851d8b088e5c18adc14df60ad0dd2cd860be40",
+      "bbox_half_open": [
+        11,
+        129,
+        64,
+        392
+      ],
+      "changed_pixels": 5537,
+      "current_sha256": "47879c382a3c9e66a998e0f7411c3ce85b4fc0bea4808271b3d7cafda7d8ad18",
+      "dimensions": [
+        400,
+        400
+      ],
+      "masks_half_open": [
+        [
+          8,
+          129,
+          64,
+          392
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/ui-redesign/fixture-settings-400x400-text2.png"
+    },
+    {
+      "baseline_sha256": "40ae8f88dc7c88437ab0c4604ac4951ed8123a06760808e9ab9f3bd3e34692ef",
+      "bbox_half_open": [
+        12,
+        136,
+        65,
+        400
+      ],
+      "changed_pixels": 5285,
+      "current_sha256": "c941744996be6485e1cf485e735ebe889dc39232b957233f4fc9d60f3c437140",
+      "dimensions": [
+        400,
+        400
+      ],
+      "masks_half_open": [
+        [
+          9,
+          136,
+          65,
+          400
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/compact-text2-360ms.png"
+    },
+    {
+      "baseline_sha256": "feef203acf196510d695b733bd87b5624433843e714dfdd5ddd396610ed089f9",
+      "bbox_half_open": [
+        12,
+        136,
+        65,
+        400
+      ],
+      "changed_pixels": 5285,
+      "current_sha256": "7949ec0a21aabb0a45ace6a99b214342ec116b7868e43b8516a8016cf2600c22",
+      "dimensions": [
+        400,
+        400
+      ],
+      "masks_half_open": [
+        [
+          9,
+          136,
+          65,
+          400
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/compact-text2-620ms.png"
+    },
+    {
+      "baseline_sha256": "b1ece5505127fbfdfa952beb981e2b5c5106a31dd8c011d354ea22b0469f903d",
+      "bbox_half_open": [
+        11,
+        66,
+        65,
+        991
+      ],
+      "changed_pixels": 7175,
+      "current_sha256": "8f58e8b799f7cdd2df48777a6bf131e74e73e744870d97bad94fce7ab8e89cb0",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "masks_half_open": [
+        [
+          9,
+          66,
+          65,
+          991
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/desktop-160ms.png"
+    },
+    {
+      "baseline_sha256": "22a692f9fad58e475c3a86561b49585c59c8194bd59b56045d1a21f0c3219965",
+      "bbox_half_open": [
+        12,
+        66,
+        65,
+        991
+      ],
+      "changed_pixels": 6463,
+      "current_sha256": "c68c3e84d4aabd5f30725f9a1dbd24b1da89f93ba55c9b415662b254924075e7",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "masks_half_open": [
+        [
+          9,
+          66,
+          65,
+          991
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/desktop-360ms.png"
+    },
+    {
+      "baseline_sha256": "f65d99c4c93cb114e7a126bc91cba67a2f6d225eeaba751d6dd2dce821f974b2",
+      "bbox_half_open": [
+        12,
+        66,
+        65,
+        991
+      ],
+      "changed_pixels": 6463,
+      "current_sha256": "2886896fba53be52ab77f85289d7e6c9acfa3df618e550d1f04bb639cfc5f38e",
+      "dimensions": [
+        1600,
+        1000
+      ],
+      "masks_half_open": [
+        [
+          9,
+          66,
+          65,
+          991
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/desktop-620ms.png"
+    },
+    {
+      "baseline_sha256": "ab052c87d7dc7f5f724ec077dd0fc9633c73573f8ead2c6091c7519ee0943796",
+      "bbox_half_open": [
+        12,
+        66,
+        1165,
+        1391
+      ],
+      "changed_pixels": 24630,
+      "current_sha256": "7f61ef42dfdab3c5b752327cc79312e1308693439ec7db2eb98548d4c3060605",
+      "dimensions": [
+        2200,
+        1400
+      ],
+      "masks_half_open": [
+        [
+          9,
+          66,
+          65,
+          720
+        ],
+        [
+          1109,
+          66,
+          1165,
+          720
+        ],
+        [
+          9,
+          737,
+          65,
+          1391
+        ],
+        [
+          1109,
+          737,
+          1165,
+          1391
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/mixed-grid-360ms.png"
+    },
+    {
+      "baseline_sha256": "c6856dce76dd77f464c53f21a69ad655b3f31f7ba0aa5ec4a20e1f8674eebbd4",
+      "bbox_half_open": [
+        12,
+        66,
+        1165,
+        1391
+      ],
+      "changed_pixels": 24630,
+      "current_sha256": "18aefb64734acb7b0c0e0cbbb4354cb968535e309d80049b395bc5f9a90cc7a5",
+      "dimensions": [
+        2200,
+        1400
+      ],
+      "masks_half_open": [
+        [
+          9,
+          66,
+          65,
+          720
+        ],
+        [
+          1109,
+          66,
+          1165,
+          720
+        ],
+        [
+          9,
+          737,
+          65,
+          1391
+        ],
+        [
+          1109,
+          737,
+          1165,
+          1391
+        ]
+      ],
+      "outside_pixels": 0,
+      "path": "client/test/goldens/workspace-entrance/mixed-grid-620ms.png"
+    }
+  ],
+  "method": "Exact RGBA original baseline TAR bytes vs current production golden bytes. Any-channel nonzero mask; subtract union of concrete clipped floor/ceil 56px rail rectangles (render geometry retained by capture instrumentation, inspected against unchanged Row and Width56 source). Disjoint masks asserted, including all 4 mixed-grid rails. No golden update and no tolerance. Counts recalculated, not copied.",
+  "new_dev_pngs": [
+    "client/test/goldens/dev-navigation/compact-root-text2.png",
+    "client/test/goldens/dev-navigation/compact-chooser-text2.png",
+    "client/test/goldens/dev-navigation/wide-expanded.png"
+  ],
+  "other_frozen": [
+    {
+      "path": "client/test/goldens/boot/hold.png",
+      "sha256": "a2708555fd59ae23c372f1a692fd2b4989674bf475452603abcc86471633e678"
+    },
+    {
+      "path": "client/test/goldens/boot/intro.png",
+      "sha256": "043f14aeec5f144fd4e66ac1f7bf1b4b883692056c84d240b6316f3745dcd443"
+    },
+    {
+      "path": "client/test/goldens/boot/outro.png",
+      "sha256": "91b75becfa5e20a2e7c0d76cef9f1a97b17de4aac49e87603ecee5fbe5300224"
+    },
+    {
+      "path": "client/test/goldens/boot/repair-400x400-text2.png",
+      "sha256": "38ef0836bb567d0beae298c8127278046298425f5b659c829a5306a24c46c421"
+    },
+    {
+      "path": "client/test/goldens/workspace-entrance/desktop-000ms.png",
+      "sha256": "4c770c0d8a9d1df7d90d5373aa3f88bdaf5a889f157500ddaa748bfa688fbd51"
+    }
+  ],
+  "outside_pixels": 0
+}

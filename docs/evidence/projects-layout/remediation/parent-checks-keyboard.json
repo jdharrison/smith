@@ -1,0 +1,51 @@
+[
+  {
+    "argv": [
+      "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+      "format",
+      "lib/ui/projects_view.dart",
+      "test/projects_layout_test.dart"
+    ],
+    "cwd": "client",
+    "exit_code": 0,
+    "finished_at": "2026-10-17T22:00:44.813782+00:00",
+    "inputs_after": {
+      "client/lib/ui/projects_view.dart": "0bd546fb47c62b0bf20b5921c52d0998d4705b26727900e5fb0790aca7a235b2",
+      "client/test/projects_layout_test.dart": "ef1c24d36469ebe6f37fe7adf8253dc752ae325827f09490e1fb7f3dbd66b7a9"
+    },
+    "inputs_before": {
+      "client/lib/ui/projects_view.dart": "0bd546fb47c62b0bf20b5921c52d0998d4705b26727900e5fb0790aca7a235b2",
+      "client/test/projects_layout_test.dart": "ef1c24d36469ebe6f37fe7adf8253dc752ae325827f09490e1fb7f3dbd66b7a9"
+    },
+    "log_sha256": "11a57d97889bc161aad83f19055424c45a757ed0654809f75c0ad99f31bb11b7",
+    "name": "format-keyboard",
+    "started_at": "2026-10-17T22:00:44.745887+00:00"
+  },
+  {
+    "argv": [
+      "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+      "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+      "--suppress-analytics",
+      "--no-version-check",
+      "test",
+      "--no-pub",
+      "--reporter",
+      "expanded",
+      "test/projects_layout_test.dart"
+    ],
+    "cwd": "client",
+    "exit_code": 1,
+    "finished_at": "2026-10-17T22:00:53.053912+00:00",
+    "inputs_after": {
+      "client/lib/ui/projects_view.dart": "0bd546fb47c62b0bf20b5921c52d0998d4705b26727900e5fb0790aca7a235b2",
+      "client/test/projects_layout_test.dart": "ef1c24d36469ebe6f37fe7adf8253dc752ae325827f09490e1fb7f3dbd66b7a9"
+    },
+    "inputs_before": {
+      "client/lib/ui/projects_view.dart": "0bd546fb47c62b0bf20b5921c52d0998d4705b26727900e5fb0790aca7a235b2",
+      "client/test/projects_layout_test.dart": "ef1c24d36469ebe6f37fe7adf8253dc752ae325827f09490e1fb7f3dbd66b7a9"
+    },
+    "log_sha256": "29aa7d497d9cb3e13cf8873af4c952455b5f929ac63b3f12d79b43a1ebf787c1",
+    "name": "regression-keyboard",
+    "started_at": "2026-10-17T22:00:44.813998+00:00"
+  }
+]

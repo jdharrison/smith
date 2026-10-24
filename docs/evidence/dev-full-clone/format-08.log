@@ -1,0 +1,2 @@
+COMMAND: rustfmt --edition 2021 --check service/src/dev_fetch.rs service/src/dev_fetch_tests.rs service/src/dev_worker_local.rs
+EXIT: 0

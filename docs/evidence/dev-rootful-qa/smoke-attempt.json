@@ -1,0 +1,17 @@
+{
+  "request_id": "f8f90d19e68643dea6bce5083659d93d",
+  "task": "What language is this project in? Cite repository-relative files and line numbers from your inspection.",
+  "repository": "https://github.com/jdharrison/smith",
+  "base": "main",
+  "model": "smollm2-1.7b-instruct:q4_k_m",
+  "model_sha256": "decd2598bc2c8ed08c19adc3c8fdd461ee19ed5708679d1c54ef54a5a30d4f33",
+  "service_sha256": "493616d4172236d160e2789697d53b3f72c30eac2bba804a42f5625e47d61288",
+  "inventory_request_id": "621e68902ca646348bf1c41b4384d1f0",
+  "phase": "failed",
+  "submission_count": 1,
+  "automatic_retry": false,
+  "observed_phases": [
+    "preparing",
+    "failed"
+  ]
+}

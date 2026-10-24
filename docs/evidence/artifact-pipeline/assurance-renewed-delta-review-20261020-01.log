@@ -1,0 +1,26 @@
+Independent delta assurance: PASS for FILE-ONLY STAGING readiness from the reviewed private supervisor-02 snapshot, with explicit --root checkout. Not a final binding PASS, operator approval, live-effect authority, release acceptance, or accepted-risk decision.
+
+Scope: revised live-transport-renewed.py and test_live_transport_renewed.py; exact eight-file private copy; unpatched production code_hashes/prerequisites; focused offline docs fixtures. Reused prior policy/assurance context. No source edits, chmod, operational stage invocation, run-02 creation, Docker, live, network, provider, model or installed mutation. Only new assurance logs retained; disposable offline test fixtures are not operational staging.
+
+Delta reviewed:
+- Every CLI mode requires --root. main passes its resolved value explicitly to Inputs; moved helper default ROOT is not used by production CLI.
+- stage validates run ID, private base, full source/input prerequisites, different original request identity, expected request construction/UTF-8 conversion and request bound BEFORE the first work-directory mkdir.
+- Exclusive creation, retained partial failure semantics, post-creation snapshot/check, replay fences and live cleanup/deadline behavior remain intact. Prevalidation is not an atomic guarantee against later drift or I/O failure; such partial failures remain retained, not automatically repaired.
+- Production code_hashes still enforces the unchanged safety guard. Docs ancestry remains0775; the safe private source copy, not weakened docs validation, resolves the prior blocker.
+
+Required Checks Evidence:
+1. python3 -B heredoc: loaded the two focused test modules FROM DOCS using unittest.defaultTestLoader.loadTestsFromModule; TextTestRunner verbosity2 with Popen/socket guards. Expected all pass including pre-mkdir rejection and explicit/missing-root regressions; actual86 passed,0 failures/errors/skips, exit0. Docs/private source hashes unchanged. Evidence: assurance-renewed-delta-offline-20261020-01.log; exact runner in conversation.
+2. python3 -B heredoc: imported PRIVATE renewed source; called M.safe(private,True), code_hashes(), Inputs(root=checkout).history() and prerequisites(). No patches to code_hashes, M.safe, Inputs, source filesystem reads or history; Popen/socket forbidden. Expected real source safety, exact bytes and valid prerequisites without staging; actual PASS, exit0. Exactly8files, directory0700, every file0600/non-symlink, every copy byte-identical to docs. code_hashes returns8entries; manifest SHA256 f3b7f494b57e84c6dcd285e85efd3f932ea1d9d6793aa4e9417e841f389e1292. Evidence: assurance-renewed-delta-private-prerequisites-20261020-01.log.
+3. Operational absence/preservation: lexists(run-02) false before/after private probes; historical70file manifest remains c5f660c334c8b59cb6076a5fb1ec8355050361f513299c4233b6062cc72ed584, same as prior independent review. Evidence: private prerequisites log. Focused tests touch only their synthetic fixture roots.
+
+Findings by severity: no new critical/high/medium/low blocker for the FILE-ONLY STAGING scope. Prior source-location blocker resolved for the exact private snapshot only; running directly from unsafe docs ancestry remains unsupported.
+
+Reviewed SHA256 (identical docs/private bytes):
+live-transport-renewed.py 607a5161ad0715112f9def06775209198677b168546d1f5357e92fe7b8ab241f
+test_live_transport_renewed.py 28912188ca96effa6851794f0387976a454d9c4859eddca4cc4f61d3aa5eb7c1
+owned_cgroup_verifier.py af1e8e5197a295e127490904cc4fc8358bd1e12d8425089d9a884fcdcfa6d460
+test_owned_cgroup_verifier.py a4b1b2035bf429e875e00326b99af82f4e145c148ab74eb88902b8ab3bdc9bac
+
+Evidence Gaps / next gate: parent has not staged run-02, so request/staged.json/final binding review remain pending by design. No live compatibility or ownership observation performed. Old Unknown and privileged-engine containment limitation remain unresolved and unwaived. No review/operator receipt was created or authenticated. Parent should stage only from the exact reviewed safe snapshot with explicit checkout root, then request independent final binding review. Any source change requires rebinding/review.
+Verdict: PASS, limited to source/file-only staging readiness.
+Release Gate Decision: GO for parent FILE-ONLY STAGING only; NO-GO for live effects pending final binding review and independently authenticated exact human authorization. No remediation remaining within this delta scope.

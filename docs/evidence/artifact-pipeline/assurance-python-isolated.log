@@ -1,0 +1,55 @@
+Command: isolated copied unittest discovery plus pure check_source unary-plus regression probe
+Python: 3.12.3
+Source identities:
+pipeline/fixtures/clamp/clamp.py f3d989a5421905e3fe9b8620ba2b69b6272ee4dfde2583533ab7d47475c95b7d
+pipeline/tests/check_clamp.py 6713b8ddf937f5f13f3e73f67a34b6a07fc96e221f4f69c8f7da5d115989276e
+pipeline/tests/run_isolated.py 123086d71725d91d73dd1529110b135ae6dc967566d5329334fba724e7f18d7e
+pipeline/tests/test_clamp.py 87e76f866e8b4acce805c08e60d2757d350ff8a2a849ad4ebc8550773e60b3b4
+test_ancestor_symlink_denied (test_clamp.PathTests.test_ancestor_symlink_denied) ... ok
+test_candidate_supplied_tests_are_never_read (test_clamp.PathTests.test_candidate_supplied_tests_are_never_read) ... ok
+test_command_requires_exactly_one_path (test_clamp.PathTests.test_command_requires_exactly_one_path) ... ok
+test_command_wrapper_actual_evaluation_and_exit_codes (test_clamp.PathTests.test_command_wrapper_actual_evaluation_and_exit_codes) ... ok
+test_directory_denied (test_clamp.PathTests.test_directory_denied) ... ok
+test_fifo_denied_without_blocking (test_clamp.PathTests.test_fifo_denied_without_blocking) ... ok
+test_file_change_denied (test_clamp.PathTests.test_file_change_denied) ... ok
+test_growth_during_read_is_bounded (test_clamp.PathTests.test_growth_during_read_is_bounded) ... ok
+test_invalid_utf8_file_denied (test_clamp.PathTests.test_invalid_utf8_file_denied) ... ok
+test_leaf_symlink_denied (test_clamp.PathTests.test_leaf_symlink_denied) ... ok
+test_missing_path_denied (test_clamp.PathTests.test_missing_path_denied) ... ok
+test_oversized_file_denied (test_clamp.PathTests.test_oversized_file_denied) ... ok
+test_regular_file_matches_pure_check (test_clamp.PathTests.test_regular_file_matches_pure_check) ... ok
+test_traversal_and_wrong_names_denied (test_clamp.PathTests.test_traversal_and_wrong_names_denied) ... ok
+test_allowed_expression_forms (test_clamp.SourceTests.test_allowed_expression_forms) ... ok
+test_ast_node_and_depth_limits (test_clamp.SourceTests.test_ast_node_and_depth_limits) ... ok
+test_baseline_fails_expected_cases (test_clamp.SourceTests.test_baseline_fails_expected_cases) ... ok
+test_bytes_only (test_clamp.SourceTests.test_bytes_only) ... ok
+test_exact_byte_bound_is_accepted (test_clamp.SourceTests.test_exact_byte_bound_is_accepted) ... ok
+test_fixed_candidate_passes_actual_named_cases (test_clamp.SourceTests.test_fixed_candidate_passes_actual_named_cases) ... ok
+test_forbidden_source_never_executes (test_clamp.SourceTests.test_forbidden_source_never_executes) ... ok
+test_hashes_bind_exact_bytes_not_claims (test_clamp.SourceTests.test_hashes_bind_exact_bytes_not_claims) ... ok
+test_invalid_encoding (test_clamp.SourceTests.test_invalid_encoding) ... ok
+test_invalid_returns (test_clamp.SourceTests.test_invalid_returns) ... ok
+test_numeric_complexity (test_clamp.SourceTests.test_numeric_complexity) ... ok
+test_oversized_bytes_denied_before_parse (test_clamp.SourceTests.test_oversized_bytes_denied_before_parse) ... ok
+test_reversed_bounds_must_raise_not_return (test_clamp.SourceTests.test_reversed_bounds_must_raise_not_return) ... ok
+test_signature_is_exact (test_clamp.SourceTests.test_signature_is_exact) ... ok
+test_syntax_errors (test_clamp.SourceTests.test_syntax_errors) ... ok
+test_unconditional_exception_is_not_success (test_clamp.SourceTests.test_unconditional_exception_is_not_success) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 0.007s
+
+OK
+
+Adversarial admitted unary-plus scenario:
+def clamp(value, low, high):
+    if low > high:
+        raise ValueError()
+    if value < low:
+        return +(value != value) if low == 0 else low
+    if value > high:
+        return high
+    return value
+Expected: passed=true (finite values satisfy value != value is False, and +False is 0).
+Actual: passed=False; failing cases=[('below_lower', False, 'invalid_return')]
+Exit: 1

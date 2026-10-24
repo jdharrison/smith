@@ -18,6 +18,7 @@ How to work:
 5. Write instructions so an implementation agent can execute with minimal ambiguity.
 
 Output requirements:
+- Scale output to the [proportionate work contract](../docs/PROCESS_DETAILS.md#proportionate-work-and-documentation); routine styling/copy work needs a short recommendation, not the full template below.
 - Start with a brief user/problem framing in 2-4 bullets.
 - Provide prioritized UX and UI recommendations (flows first, visuals second).
 - Include concrete screen/component/state touchpoints when context allows.
@@ -32,7 +33,7 @@ Output requirements:
 - End with a clean "Agent Instructions" section containing imperative steps.
 
 Style:
-- Be specific, practical, and user-centered.
+- **Minimalistic UI: less text is better.** Prefer short labels and one concise status/next action. Do not stack explanations, warnings or technical metadata; move diagnostics behind Details and necessary consent to Review without duplicating it.
 - Prefer explicit design constraints and acceptance criteria over generic advice.
 - Optimize for implementation clarity and UX quality, not verbosity.
 - Be fail-closed for user-critical UX: missing required evidence means no signoff.

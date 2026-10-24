@@ -1,0 +1,35 @@
+SOURCE ONLY: current source copied without production edits; cached deps; temporary fake executables.
+sha256 service/src/artifact_dagger.rs 3eab3f69a238d1e174ba4c94aaae4df91fff14abb6821cd104f916c656b5d9aa
+sha256 service/src/artifact_pipeline.rs 9757dafdd7fe90637fdc617547c39b71208846fa1adb4501cdc5f8ad4c8126b4
+sha256 service/src/artifact_dagger_process.rs a448008c397d56c45ddde17896a997d01b921dd033286830e898435efba936f2
+COMMAND: rustc --edition=2021 --test <temporary-own-root>/main.rs -o <temporary-own-root>/qa -L dependency=<repo>/service/target/debug/deps -A dead_code --extern serde=<repo>/service/target/debug/deps/libserde-21146dc13472b312.rlib --extern serde_json=<repo>/service/target/debug/deps/libserde_json-7c220a8d8a3840af.rlib --extern sha2=<repo>/service/target/debug/deps/libsha2-c62e56f9385944c8.rlib --extern libc=<repo>/service/target/debug/deps/liblibc-115ff42d1f780a0b.rlib
+exit=1
+error[E0599]: no associated function or constant named `new` found for struct `artifact_pipeline::AttemptId` in the current scope
+    --> <temporary-own-root>/artifact_dagger_process.rs:1506:46
+     |
+1506 | ...Id::new(RunId::new([1;16]).unwrap(), Phase::Setup, 1).unwrap());
+     |        ^^^ associated function or constant not found in `artifact_pipeline::AttemptId`
+     |
+    ::: <temporary-own-root>/artifact_pipeline.rs:84:1
+     |
+  84 | pub struct AttemptId {
+     | -------------------- associated function or constant `new` not found for this struct
+     |
+     = help: items from traits can only be used if the trait is implemented and in scope
+     = note: the following traits define an item `new`, perhaps you need to implement one of them:
+             candidate #1: `Bit`
+             candidate #2: `KeyInit`
+             candidate #3: `KeyIvInit`
+             candidate #4: `Mac`
+             candidate #5: `VariableOutput`
+             candidate #6: `VariableOutputCore`
+             candidate #7: `sha2::Digest`
+help: there is a method `ne` with a similar name, but with different arguments
+    --> <home>/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/cmp.rs:263:5
+     |
+ 263 |     fn ne(&self, other: &Rhs) -> bool {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: aborting due to 1 previous error
+
+For more information about this error, try `rustc --explain E0599`.

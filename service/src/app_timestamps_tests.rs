@@ -115,6 +115,12 @@ impl Fixture {
                 cloud: v3::Volatile::default(),
             })),
             owner: None,
+            dev_jobs: Arc::new(dev_jobs::Owner::open(
+                roots.data.join("smith-next/dev-jobs.json"),
+                Arc::new(crate::dev_runtime::DockerRuntime::new(
+                    roots.runtime.clone(),
+                )),
+            )),
             path,
             instance_id: new_id().unwrap(),
             cloud: Arc::new(Dependencies::disabled().with_clock(clock.clone())),
@@ -291,6 +297,7 @@ fn timestamps_old_disk_versions_migrate_to_unknown_without_rewriting_history_or_
         if version != 1 {
             old["schema_version"] = json!(version);
             old.as_object_mut().unwrap().remove("timestamps");
+            old.as_object_mut().unwrap().remove("projects");
             if version == 2 {
                 old.as_object_mut().unwrap().remove("cloud");
             }
@@ -303,7 +310,7 @@ fn timestamps_old_disk_versions_migrate_to_unknown_without_rewriting_history_or_
         f.write(&old);
         let app = f.reopen().unwrap();
         let saved: Value = serde_json::from_slice(&fs::read(&f.app.path).unwrap()).unwrap();
-        assert_eq!(saved["schema_version"], 4);
+        assert_eq!(saved["schema_version"], 6);
         assert_eq!(saved["timestamps"], json!({}));
         assert_eq!(saved["config"], old["config"]);
         assert_eq!(saved["expired_ids"], old["expired_ids"]);
@@ -326,13 +333,13 @@ fn timestamps_old_disk_versions_migrate_to_unknown_without_rewriting_history_or_
 }
 
 #[test]
-fn timestamps_strict_disk4_and_frozen_disk3_preserve_malformed_bytes() {
+fn timestamps_strict_current_disk_and_frozen_disk3_preserve_malformed_bytes() {
     let (f, _) = Fixture::pending(1, 1000);
     f.run(&Reply::new(Ok("answer".into())));
     let good = json!(f.app.inner.lock().unwrap().durable);
     let target = f.target();
     let mut bad = vec![];
-    for version in [1, 2, 3, 5] {
+    for version in [1, 2, 3, 4, 7] {
         let mut v = good.clone();
         v["schema_version"] = json!(version);
         bad.push(v);

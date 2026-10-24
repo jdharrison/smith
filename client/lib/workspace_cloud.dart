@@ -88,7 +88,17 @@ extension _CloudWorkspace on WorkspaceController {
     }
     final revision = c.routeRevision;
     final draftRevision = c.draftRevision;
-    final r = await api.call('route_prepare', intent.routeArguments);
+    final AppReply r;
+    try {
+      r = await api.call('route_prepare', intent.routeArguments);
+    } on AppFailure catch (e) {
+      if (e.code == 'INSTRUCTIONS_LOCAL_ONLY' && !e.unknown) {
+        c.error = 'Cloud send blocked: global personal instructions are local-only. Enable cloud sharing in Instructions and review transfer consent, or select a local model. Nothing was sent.';
+        if (queued) c._queue.latch(c.error!);
+        return null;
+      }
+      rethrow;
+    }
     if (_closed) return null;
     _correlate(r);
     final preparation = RoutePreparation(r.result)

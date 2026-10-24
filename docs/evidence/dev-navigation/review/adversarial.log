@@ -1,0 +1,57 @@
+00:00 +0: loading <repo>/target/dev-navigation/assurance/fixture/client/test/assurance_adversarial_test.dart
+00:00 +0: independent 600 version/destination/slot cases plus forbidden fields
+00:00 +1: mouse root then keyboard disclosure never selects or loads a child; collapse focus via Space
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+A SemanticsHandle was active at the end of the test.
+All SemanticsHandle instances must be disposed by calling dispose() on the SemanticsHandle.
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester._verifySemanticsHandlesWereDisposed (package:flutter_test/src/widget_tester.dart:1074:7)
+#1      WidgetTester._endOfTestVerifications (package:flutter_test/src/widget_tester.dart:1063:5)
+#2      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1969:22)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  mouse root then keyboard disclosure never selects or loads a child; collapse focus via Space
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +1 -1: mouse root then keyboard disclosure never selects or loads a child; collapse focus via Space [E]
+  Test failed. See exception logs above.
+  The test description was: mouse root then keyboard disclosure never selects or loads a child; collapse focus via Space
+  
+00:01 +1 -1: fresh restored Dev hides all lazy registries, disclosure is not restored or saved
+00:01 +2 -1: actual compact 2x Escape then away/back fences modal and restores focus
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: ['state', 'conversation_get', 'models', 'poll']
+  Actual: ['state', 'conversation_get', 'models', 'poll', 'instructions_get']
+   Which: at location [4] is ['state', 'conversation_get', 'models', 'poll', 'instructions_get']
+which longer than expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<repo>/target/dev-navigation/assurance/fixture/client/test/assurance_adversarial_test.dart:103:31)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<repo>/target/dev-navigation/assurance/fixture/client/test/assurance_adversarial_test.dart line 103
+The test description was:
+  actual compact 2x Escape then away/back fences modal and restores focus
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:04 +2 -2: actual compact 2x Escape then away/back fences modal and restores focus [E]
+  Test failed. See exception logs above.
+  The test description was: actual compact 2x Escape then away/back fences modal and restores focus
+  
+00:04 +2 -2: Agents-first identity remains after first Projects plus Dev/collapse/resize and hidden focus
+00:06 +3 -2: Some tests failed.
+
+Failing tests:
+  <repo>/target/dev-navigation/assurance/fixture/client/test/assurance_adversarial_test.dart: actual compact 2x Escape then away/back fences modal and restores focus
+  <repo>/target/dev-navigation/assurance/fixture/client/test/assurance_adversarial_test.dart: mouse root then keyboard disclosure never selects or loads a child; collapse focus via Space

@@ -1,0 +1,37 @@
+{
+  "all_preexisting_layout_test_bytes_preserved": true,
+  "changed": [
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/lib/ui/projects_view.dart",
+        "sha256": "8cca857c1e956c37fea12e4ad7161ede08ff27088f72235657efc676e7bd6590",
+        "size": 45262
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/lib/ui/projects_view.dart",
+        "sha256": "63174aabca0e5287c3a564bfe5227e91f959ed859395f46e7cffe5a647ada94b",
+        "size": 44069
+      }
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/test/projects_layout_test.dart",
+        "sha256": "e0860d0bddddc91e250cc1d9c1bffeca5ccfa21d6f6fa9b56b15871e049e3dd6",
+        "size": 29742
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/test/projects_layout_test.dart",
+        "sha256": "c14b89ef88664f482bf3a75d18ab4893009da4d6cfc0aba257a647673277784e",
+        "size": 26135
+      }
+    }
+  ],
+  "current_review_core_sha256": "d6545cff27abe5dea2b5009f0d992a28603701265cd15d3d3db243bd11e420e5",
+  "four_keyboard_cases_additive_only": true,
+  "new_group_sha256": "803b04af3a4b2fcc1d3890ccdb8f3ec498259abe42da5007031cc5bc786033e5",
+  "previous_review_core_sha256": "f4d41081455f331ab29e69183aa4213d73f666b50c029e1338eb3319b4403ea0"
+}

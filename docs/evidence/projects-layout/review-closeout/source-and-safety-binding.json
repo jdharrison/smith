@@ -1,0 +1,62 @@
+{
+  "conflicts": [],
+  "critical_sections": [
+    {
+      "section": "registry_changed",
+      "sha256": "7fce11c370157bd10ca4b0ffc595edea8f8681a052564a998f9c7843fe42ac6f",
+      "unchanged": true
+    },
+    {
+      "section": "discard",
+      "sha256": "1d78d993136eb4975581771c9555a0a0e5a794924e6b57b4f87dec7a1069751d",
+      "unchanged": true
+    },
+    {
+      "section": "refresh_and_resolve",
+      "sha256": "f10c22e6e5ddbf18d8e85bfabe2a9760b0c4a7f7c1c01917f8521202016c05df",
+      "unchanged": true
+    },
+    {
+      "section": "save",
+      "sha256": "25766d7422c9313b039bb87811cf16f42289cec0065a62696437896c81f2883a",
+      "unchanged": true
+    },
+    {
+      "section": "reconcile",
+      "sha256": "276afeb89c2a0c1c4b8e365ec0147c5dd108966836410d2ddfb9a58827817c06",
+      "unchanged": true
+    },
+    {
+      "section": "review_revision",
+      "sha256": "8aa02c0505ef342b9bf5f458515578c585b82e9c0ef00c3b4e7250fe44d63706",
+      "unchanged": true
+    },
+    {
+      "section": "delete",
+      "sha256": "88df93b807040566fc33c2a14ca04ccd85cc80dbb626e281894d13196703fcd1",
+      "unchanged": true
+    }
+  ],
+  "current_view_sha256": "8cca857c1e956c37fea12e4ad7161ede08ff27088f72235657efc676e7bd6590",
+  "failed_analyzer_candidate_delta": [
+    "client/test/projects_layout_test.dart"
+  ],
+  "gate_core_files": 1265,
+  "gate_only_paths": [
+    ".gitattributes",
+    "dagger.lock",
+    "dagger.toml",
+    "rust-toolchain.toml"
+  ],
+  "independently_recomputed_gate_core_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+  "m2_view_diff_sha256": "24546dc742f087181abe859997fceab94ab69a80703c6c28abd683677db2e28a",
+  "previous_view_sha256": "63174aabca0e5287c3a564bfe5227e91f959ed859395f46e7cffe5a647ada94b",
+  "production_logging_or_new_traversal_group": false,
+  "reviewer_core_files": 1262,
+  "reviewer_core_sha256": "d6545cff27abe5dea2b5009f0d992a28603701265cd15d3d3db243bd11e420e5",
+  "reviewer_only_paths": [
+    "AGENTS.md"
+  ],
+  "shared_files": 1261,
+  "two_braces_only_test_reconstruction_matches_failed_candidate": true
+}

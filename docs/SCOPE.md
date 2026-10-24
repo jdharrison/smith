@@ -12,6 +12,11 @@ This is the short overview. [Detailed scope and requirements](SCOPE_DETAILS.md) 
 - Curated local models through bundled CPU/Vulkan runtimes; optional OpenAI and Anthropic APIs.
 - Per-chat LOCAL/CLOUD selection, with explicit context-sharing consent for each new provider/credential generation. No automatic cloud fallback.
 - Up to four desktop panes and separate session-only windows. Drafts and waiting follow-ups are not durable.
+- Projects configuration: service-owned human ID/key, optional description and exact context prompt, ordered repositories with read-only classification and retained branch/type settings. The [Projects-only editor is implemented in source](DESIGN_DETAILS.md#projects-summary-and-settings); parent-owned recovery/layout closeout, validation and fresh assurance remain pending, not graphical acceptance. Agents and the shell are outside this slice. Read-only is metadata, not security enforcement; no repository access, context injection or Dev execution follows. Only fresh profiles receive the ordinary editable/deletable Smith starter. See [detailed contract](SCOPE_DETAILS.md#current-projects-metadata-foundation).
+
+- **Agents implemented source, acceptance pending:** 2–32 saved profiles under Dev → Agents, with permanent `developer`/`assurance` IDs and immutable current saved names/descriptions, editable prompts, and custom creation/editing. Profiles remain metadata only, not execution or independent review. [Bounds and exclusions](SCOPE_DETAILS.md#current-agents-definitions); [approved plan](plans/LOCAL-SMITH-AGENTS-CUSTOM.md).
+
+**Historical preview source:** Dev's earlier saved-project/saved-agent/prompt form provided service-owned receipt-only container initialization. It records a prompt in pinned OpenCode; it does not run inference, code, clone repositories or provide a board. Optional rootless Docker and a separately prepared worker image are required only for this slice. [Bounds, evidence and exclusions](SCOPE_DETAILS.md#dev-initialization-review-slice).
 
 The service owns accepted work independently of desktop lifetime. Closing the desktop detaches; restart interrupts unfinished work without replay.
 
@@ -31,7 +36,11 @@ Model output and external text are untrusted data—not permissions or approval.
 
 ## What comes later
 
-**Target/deferred:** autonomous software delivery, tools, coding workers, role orchestration, and scheduling. Projects and agent execution are not part of this revision.
+**Dev local-runner source implemented; functional acceptance pending:** a [one-shot project/task runner](plans/LOCAL-SMITH-LOCAL-OPENCODE-RUNNER.md) uses fixed OpenCode, public HTTPS checkouts, bounded read-only inspection and Smith's selected installed local model; no Agent/cloud dependency. The [approved rootful follow-up](plans/LOCAL-SMITH-DEV-ROOTFUL-DOCKER.md) uses operator-prepared local Docker with explicit root-equivalent host-service authority, not installer provisioning or new Dagger integration. The [current Dev list/modal source](plans/LOCAL-SMITH-DEV-JOBS-LIST.md) shows retained local-runner jobs/statuses, New job and clicked-job details; it adds no Stop/reconciliation; the current service scheduler separately admits three container slots with FIFO queuing while serializing native inference. Exact image/model/tool interoperability and live/installed acceptance remain unverified; source changes grant no live clone/inference authority.
+
+**Retained read/write foundation, source only:** separate session/receipt operations are implemented, but normal service construction and Python creation remain unavailable/policy-blocked. This is not an enabled Dev capability. [Contracts and pending gates](ARCHITECTURE_DETAILS.md#retained-readwrite-job-foundation--source-only).
+
+**Target/deferred:** autonomous software delivery, general tools/coding workers, role orchestration, and general scheduling. Current Projects metadata and Agents definitions do not implement these capabilities.
 
 Voice, model discovery, arbitrary endpoints, credential purge, distributed workers, and pre-login/headless operation are outside current scope.
 

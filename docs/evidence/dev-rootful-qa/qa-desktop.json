@@ -1,0 +1,19 @@
+{
+  "qa_desktop_pid": 1162309,
+  "session_only": true,
+  "desktop_binary_unchanged_from_installed": true,
+  "matching_helper_sha256": "805c16d433ce88a7fb3d84a3186095ae6d61c3d66720d0a362b88762427b58ba",
+  "helper_app_probe_succeeded": true,
+  "original_desktop_pid": 1133116,
+  "original_desktop_preserved": true,
+  "installed_bundle_unchanged": true,
+  "runtime_helper_override_used": false,
+  "model": {
+    "config_revision": "1",
+    "name": "smollm2-1.7b-instruct:q4_k_m",
+    "ready": true,
+    "sha256": "decd2598bc2c8ed08c19adc3c8fdd461ee19ed5708679d1c54ef54a5a30d4f33"
+  },
+  "dev_job_submitted": false,
+  "inference_run": false
+}

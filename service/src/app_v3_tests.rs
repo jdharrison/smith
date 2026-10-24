@@ -29,6 +29,8 @@ fn queued() -> Durable {
         role: "user".into(),
         content: "test input".into(),
     }];
+    let snapshot = d.instructions.capture(&id(1));
+    d.instructions.approve(&c, Vendor::Openai, &id(2));
     let task = RoutedTask {
         route,
         credential: Some(credential),
@@ -38,7 +40,7 @@ fn queued() -> Durable {
         policy: cloud::POLICY.into(),
         config_revision: 0,
         history_revision: 0,
-        context_sha256: digest_messages(&messages).unwrap(),
+        context_sha256: snapshot.digest(&messages).unwrap(),
         messages,
         output_tokens: 8192,
         budget_ms: 180000,

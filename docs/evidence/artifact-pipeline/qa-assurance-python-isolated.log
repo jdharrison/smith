@@ -1,0 +1,92 @@
+Command: PYTHONDONTWRITEBYTECODE=1 python3 -B pipeline/tests/run_module_isolated.py
+Python: 3.12.3
+Source SHA-256 (isolated copies):
+e351ec6686025c7a9b928fc6fa9f450287623110f2a50e26a6bd6016f27c5a18  pipeline/dagger.json
+3248b047b787ba147401fcd5425579e0944896781fe30530ad3ffcbe3c15a260  pipeline/pyproject.toml
+18681950eaccf980815aff435074e7fe8207e061231af3b1e3832ff227101988  pipeline/image/Dockerfile
+ae4c5b19cf9efbf0c9714e2d5b9f7bab82b00246d0a896a25a8a24699429aa6b  pipeline/src/smith_agent/__init__.py
+e8c0eb620027d6c2bd4207e2f34e0d4066ae0bdd9951d18970f2d9f139f3070a  pipeline/src/smith_agent/protocol.py
+0fd22bbb79bad8cac321960b8f68f3d64b512cb181ea34f5d5c5353d529467af  pipeline/src/smith_agent/artifacts.py
+4bb6230de526aa04eda82f3cbd5709e7b7ebdac71b3cf410993018c2448bd813  pipeline/src/smith_agent/graph.py
+148bedee8056bf4c357640117e1b05b5c7438640de55e419d3b54ed4e39dec87  pipeline/src/smith_agent/main.py
+d84a06ddd6027abcdf30dfa267caee19ac7b4c940c9234c51c40133dbc123096  pipeline/fixtures/clamp/TASK.md
+f3d989a5421905e3fe9b8620ba2b69b6272ee4dfde2583533ab7d47475c95b7d  pipeline/fixtures/clamp/clamp.py
+254046f404043317c773b37f6515802f91a396fd1be2a1d24214e77b3c75c062  pipeline/tests/check_clamp.py
+a77f25d4e2f2d7fb93e2d771a070ef683ffdd8e538702ffe97c79cdff9041370  pipeline/tests/test_clamp.py
+158bd4d331aa9755a891a985a76552e32ad81e077dc3f272a9f2fe9d80303d7b  pipeline/tests/test_module_source.py
+3bbd47ae779e0f5f8c4ad2d505dae24bdd3c2c15bfc825762cde5825d86d4b0d  pipeline/tests/run_module_isolated.py
+test_ancestor_symlink_denied (test_clamp.PathTests.test_ancestor_symlink_denied) ... ok
+test_candidate_supplied_tests_are_never_read (test_clamp.PathTests.test_candidate_supplied_tests_are_never_read) ... ok
+test_command_requires_exactly_one_path (test_clamp.PathTests.test_command_requires_exactly_one_path) ... ok
+test_command_wrapper_actual_evaluation_and_exit_codes (test_clamp.PathTests.test_command_wrapper_actual_evaluation_and_exit_codes) ... ok
+test_directory_denied (test_clamp.PathTests.test_directory_denied) ... ok
+test_fifo_denied_without_blocking (test_clamp.PathTests.test_fifo_denied_without_blocking) ... ok
+test_file_change_denied (test_clamp.PathTests.test_file_change_denied) ... ok
+test_growth_during_read_is_bounded (test_clamp.PathTests.test_growth_during_read_is_bounded) ... ok
+test_invalid_utf8_file_denied (test_clamp.PathTests.test_invalid_utf8_file_denied) ... ok
+test_leaf_symlink_denied (test_clamp.PathTests.test_leaf_symlink_denied) ... ok
+test_missing_path_denied (test_clamp.PathTests.test_missing_path_denied) ... ok
+test_oversized_file_denied (test_clamp.PathTests.test_oversized_file_denied) ... ok
+test_regular_file_matches_pure_check (test_clamp.PathTests.test_regular_file_matches_pure_check) ... ok
+test_traversal_and_wrong_names_denied (test_clamp.PathTests.test_traversal_and_wrong_names_denied) ... ok
+test_allowed_expression_forms (test_clamp.SourceTests.test_allowed_expression_forms) ... ok
+test_ast_node_and_depth_limits (test_clamp.SourceTests.test_ast_node_and_depth_limits) ... ok
+test_baseline_fails_expected_cases (test_clamp.SourceTests.test_baseline_fails_expected_cases) ... ok
+test_bytes_only (test_clamp.SourceTests.test_bytes_only) ... ok
+test_exact_byte_bound_is_accepted (test_clamp.SourceTests.test_exact_byte_bound_is_accepted) ... ok
+test_fixed_candidate_passes_actual_named_cases (test_clamp.SourceTests.test_fixed_candidate_passes_actual_named_cases) ... ok
+test_forbidden_source_never_executes (test_clamp.SourceTests.test_forbidden_source_never_executes) ... ok
+test_hashes_bind_exact_bytes_not_claims (test_clamp.SourceTests.test_hashes_bind_exact_bytes_not_claims) ... ok
+test_invalid_encoding (test_clamp.SourceTests.test_invalid_encoding) ... ok
+test_invalid_returns (test_clamp.SourceTests.test_invalid_returns) ... ok
+test_numeric_complexity (test_clamp.SourceTests.test_numeric_complexity) ... ok
+test_oversized_bytes_denied_before_parse (test_clamp.SourceTests.test_oversized_bytes_denied_before_parse) ... ok
+test_reversed_bounds_must_raise_not_return (test_clamp.SourceTests.test_reversed_bounds_must_raise_not_return) ... ok
+test_signature_is_exact (test_clamp.SourceTests.test_signature_is_exact) ... ok
+test_syntax_errors (test_clamp.SourceTests.test_syntax_errors) ... ok
+test_unary_sign_converts_comparison_in_correct_candidate (test_clamp.SourceTests.test_unary_sign_converts_comparison_in_correct_candidate) ... ok
+test_unconditional_exception_is_not_success (test_clamp.SourceTests.test_unconditional_exception_is_not_success) ... ok
+test_unconverted_comparison_is_not_numeric_return (test_clamp.SourceTests.test_unconverted_comparison_is_not_numeric_return) ... ok
+test_checker_claim_cannot_replace_real_check (test_module_source.ArtifactTests.test_checker_claim_cannot_replace_real_check) ... ok
+test_exact_patch_reconstruction (test_module_source.ArtifactTests.test_exact_patch_reconstruction) ... ok
+test_patch_rejects_tampering (test_module_source.ArtifactTests.test_patch_rejects_tampering) ... ok
+test_phase_payloads_are_explicit_and_closed (test_module_source.ArtifactTests.test_phase_payloads_are_explicit_and_closed) ... ok
+test_real_checker_bound_to_exact_bytes (test_module_source.ArtifactTests.test_real_checker_bound_to_exact_bytes) ... ok
+test_snapshot_rejects_paths_hashes_and_limits (test_module_source.ArtifactTests.test_snapshot_rejects_paths_hashes_and_limits) ... ok
+test_submit_prior_identity_must_bind_same_run_and_contract (test_module_source.ArtifactTests.test_submit_prior_identity_must_bind_same_run_and_contract) ... ok
+test_submit_tampering_is_recomputed (test_module_source.ArtifactTests.test_submit_tampering_is_recomputed) ... ok
+test_trusted_checker_compiles_the_exact_hashed_snapshot (test_module_source.ArtifactTests.test_trusted_checker_compiles_the_exact_hashed_snapshot) ... ok
+test_execute_and_submit_never_construct_or_evaluate_any_container (test_module_source.AsyncExportTests.test_execute_and_submit_never_construct_or_evaluate_any_container) ... ok
+test_invalid_request_or_payload_never_launches_setup (test_module_source.AsyncExportTests.test_invalid_request_or_payload_never_launches_setup) ... ok
+test_missing_assets_and_sdk_failures_return_safe_failure_without_fallback (test_module_source.AsyncExportTests.test_missing_assets_and_sdk_failures_return_safe_failure_without_fallback) ... ok
+test_module_asset_size_bounds_precede_contents_and_graph_construction (test_module_source.AsyncExportTests.test_module_asset_size_bounds_precede_contents_and_graph_construction) ... ok
+test_setup_reads_sdk_assets_and_validates_simulated_runtime_observations (test_module_source.AsyncExportTests.test_setup_reads_sdk_assets_and_validates_simulated_runtime_observations) ... ok
+test_setup_rejects_missing_root_wrong_python_and_workspace_observations (test_module_source.AsyncExportTests.test_setup_rejects_missing_root_wrong_python_and_workspace_observations) ... ok
+test_setup_requires_actual_expected_baseline_failures_and_checker_exit1 (test_module_source.AsyncExportTests.test_setup_requires_actual_expected_baseline_failures_and_checker_exit1) ... ok
+test_setup_requires_version_exit_and_exact_observed_version (test_module_source.AsyncExportTests.test_setup_requires_version_exit_and_exact_observed_version) ... ok
+test_execute_unconditionally_policy_denied_without_graph (test_module_source.ExportTests.test_execute_unconditionally_policy_denied_without_graph) ... ok
+test_invalid_requests_return_safe_failure (test_module_source.ExportTests.test_invalid_requests_return_safe_failure) ... ok
+test_sdk_file_scalar_shape_and_read_bound (test_module_source.ExportTests.test_sdk_file_scalar_shape_and_read_bound) ... ok
+test_setup_is_readiness_and_preserves_actual_baseline_failures (test_module_source.ExportTests.test_setup_is_readiness_and_preserves_actual_baseline_failures) ... ok
+test_submit_checks_bindings_but_never_fabricates_review_or_success (test_module_source.ExportTests.test_submit_checks_bindings_but_never_fabricates_review_or_success) ... ok
+test_all_effect_nodes_bind_identity_and_cache_inputs (test_module_source.GraphTests.test_all_effect_nodes_bind_identity_and_cache_inputs) ... ok
+test_clean_default_args_and_no_host_secrets (test_module_source.GraphTests.test_clean_default_args_and_no_host_secrets) ... ok
+test_fixed_image_and_checker_separation (test_module_source.GraphTests.test_fixed_image_and_checker_separation) ... ok
+test_recipe_pin_and_source_configuration (test_module_source.GraphTests.test_recipe_pin_and_source_configuration) ... ok
+test_invalid_json (test_module_source.ProtocolTests.test_invalid_json) ... ok
+test_missing_fields (test_module_source.ProtocolTests.test_missing_fields) ... ok
+test_nested_duplicates_rejected (test_module_source.ProtocolTests.test_nested_duplicates_rejected) ... ok
+test_original_bytes_not_reserialization (test_module_source.ProtocolTests.test_original_bytes_not_reserialization) ... ok
+test_qa_encoded_response_cannot_exceed_host_capture_bound (test_module_source.ProtocolTests.test_qa_encoded_response_cannot_exceed_host_capture_bound) ... ok
+test_response_exclusivity_bounds_and_error_allowlist (test_module_source.ProtocolTests.test_response_exclusivity_bounds_and_error_allowlist) ... ok
+test_strict_envelope (test_module_source.ProtocolTests.test_strict_envelope) ... ok
+test_top_level_duplicate_rejected (test_module_source.ProtocolTests.test_top_level_duplicate_rejected) ... ok
+test_fixed_nonroot_no_model_graph_and_effect_identity (test_module_source.SetupGraphTests.test_fixed_nonroot_no_model_graph_and_effect_identity) ... ok
+
+----------------------------------------------------------------------
+Ran 67 tests in 0.113s
+
+OK
+Exit: 0
+
+Harness: read run_module_isolated.py, replace only evidence log destination with qa-assurance-python-isolated.log in memory, compile/exec with original __file__; no source edits.

@@ -1,0 +1,47 @@
+{
+  "core_sha256_rechecked": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+  "corrected_records": [
+    {
+      "path": "docs/evidence/projects-layout/REVIEW-CLOSEOUT.md",
+      "sha256": "afae2a497ec9b54eacc01ba3c1b3357c376be55782fb2cb491aa521f9bccc449",
+      "size": 21517
+    },
+    {
+      "path": "docs/evidence/projects-layout/review-closeout/review-summary.json",
+      "sha256": "87ab51283caabefc69f42e4e952b948060ee1430ff1262f85a47a785fa49a3d9",
+      "size": 5662
+    },
+    {
+      "path": "docs/evidence/projects-layout/review-closeout/m1-action-mapping.json",
+      "sha256": "2d8bb0ad864038281a284dd7c9276b373088cbeb7ba39be538d114eaa836fea6",
+      "size": 1400
+    },
+    {
+      "path": "docs/evidence/projects-layout/review-closeout/final-review-check.json",
+      "sha256": "4fa4f563c16f4d157ba04a662369697fd820f068c4f7cfb81452ac417ca89d0d",
+      "size": 748
+    }
+  ],
+  "corrected_utc": "2026-10-17T22:43:51.791836+00:00",
+  "earlier_snapshotted_files_rechecked": 458,
+  "independent_coverage_basis": [
+    "One-action-only Return probe retains all original assertions and passes both text-scale cases.",
+    "Twelve retained-return, Keep editing, identity/selection/scroll/focus/origin/write-guard cases pass.",
+    "Original failed New/no-dialog literal cases and all raw execution records remain unchanged; the source PASS does not claim those failed cases passed."
+  ],
+  "legacy_generator_note": "The preserved scratch generator contains the superseded operator-attribution string. It was not rerun or edited for this correction and is not approval evidence; regenerated metadata must retain this correction rather than reinstate that string.",
+  "mapping_origin": "parent-supplied technical interpretation, independently assessed rather than approval",
+  "new_human_approval_or_risk_waiver": false,
+  "package_tree_sha256_rechecked": "d168fdf131402ee099b516ea752fb510c8b86f2eece1c7aca6b4f0e0e048f725",
+  "parent_docs_status": "README read preliminarily; no final documentation binding performed. Await parent-generated closeout-binding.json and subsequent independent verification.",
+  "preserved_identities": "preserved-identities.json",
+  "previous_evidence_canonical_sha256": "5889bffad2f6432bbf49931e1c28fd2700110546ef82c7cf650b9bf1bc3c216f",
+  "raw_execution_records_unchanged": true,
+  "reason": "Correct false attribution of parent/model-supplied technical interpretation as a specific operator instruction or approval.",
+  "requirements_basis": {
+    "R2_AC2": "already-approved state-preserving, reachable search/drill/Back navigation and scroll/focus/draft stability",
+    "R5_AC5_selected_slice": "already-approved explicit draft/actions, zero durable writes until Save, dirty-replacement guards and exact-target deletion; deferred Duplicate remains excluded"
+  },
+  "source_verdict": "pass for unchanged bounded source/layout candidate, based on requirement coverage and retained evidence",
+  "tests_rerun_or_source_changes": false
+}

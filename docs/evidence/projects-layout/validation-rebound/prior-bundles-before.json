@@ -1,0 +1,93 @@
+{
+  "method": "SHA256 of sorted path/type/mode/size/content-hash records. Prior full metadata remains in its original bundle; not recopied.",
+  "reports": [
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/REVIEW.md",
+      "sha256": "fc04047888d033f3d9d1df2b6e4d0de7df2273c73a2ffd1dfaf1b17050285983",
+      "size": 21694,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/REVIEW-FINAL.md",
+      "sha256": "4bc52c86d0871b9a9547879aa226dcdc4d4f43f3ddb3b0d5aec6c20fc55597bd",
+      "size": 20102,
+      "type": "file"
+    }
+  ],
+  "trees": [
+    {
+      "entry_count": 73,
+      "file_count": 72,
+      "label": "first-target",
+      "root": "target/projects-layout/validation-run",
+      "sha256": "5d432d7cb7c750518f7b153c29081290aa383e45d64aed6cb3297112e58e9e93"
+    },
+    {
+      "entry_count": 94,
+      "file_count": 93,
+      "label": "final-target",
+      "root": "target/projects-layout/validation-final",
+      "sha256": "b28201ede90b9e7b49ac3e28ef152cfdcbbb78158e9188476886b14e25ca1c18"
+    },
+    {
+      "entry_count": 37,
+      "file_count": 34,
+      "label": "review-target",
+      "root": "target/projects-layout/assurance",
+      "sha256": "a4a3f7e1aaec13d5f787d7b7d10731c4f3af68e9ac75e85b2fbc0cf086d50caa"
+    },
+    {
+      "entry_count": 68,
+      "file_count": 67,
+      "label": "first-evidence",
+      "root": "docs/evidence/projects-layout/validation",
+      "sha256": "4e966d35d1386eea0ebeab66c2d78f3c5c8fa863d8643fad4232d1bfb39fe6e9"
+    },
+    {
+      "entry_count": 89,
+      "file_count": 88,
+      "label": "final-evidence",
+      "root": "docs/evidence/projects-layout/validation-final",
+      "sha256": "d2a8198d7b9e347e73e223efadc38065a4f2326f6d38be913a13336d1b8e7818"
+    },
+    {
+      "entry_count": 29,
+      "file_count": 28,
+      "label": "first-review",
+      "root": "docs/evidence/projects-layout/review",
+      "sha256": "a9ecfc17902385293b7109c64cdaa805d1b2af68e4576412dce3c7af249ed8ee"
+    },
+    {
+      "entry_count": 48,
+      "file_count": 47,
+      "label": "final-review",
+      "root": "docs/evidence/projects-layout/review-final",
+      "sha256": "67d29a3ce153446f94214c278c2f38653cea073e68819cf7165db6cf71aa4558"
+    },
+    {
+      "entry_count": 21,
+      "file_count": 20,
+      "label": "remediation",
+      "root": "docs/evidence/projects-layout/remediation",
+      "sha256": "03ce456feb72461cae3548f8bb1e553fc4db9bdca78a58d5528ac4e33dcd590d"
+    },
+    {
+      "entry_count": 100,
+      "file_count": 99,
+      "label": "closeout-target",
+      "root": "target/projects-layout/validation-closeout",
+      "sha256": "57dedb05f4e166064901917ab74757b12588da4238a64e80dc8d37ca7af09b0e"
+    },
+    {
+      "entry_count": 95,
+      "file_count": 94,
+      "label": "closeout-evidence",
+      "root": "docs/evidence/projects-layout/validation-closeout",
+      "sha256": "075f3b8ba83fde2ce648dac683764196d399796ce26dff79914882796b4c1aee"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+00:00 +0: loading <repo>/target/projects-assurance/client/test/assurance_instances_test.dart
+00:00 +0: control: unchanged instance and revision retain dirty Save
+00:00 +1: same-revision restart must stale a dirty editor until explicit review
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: <Closure: () => Future<void> from Function '_save@29389138':.>
+Refresh must not silently substitute a new instance for the editor origin.
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<repo>/target/projects-assurance/client/test/assurance_instances_test.dart:54:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<repo>/target/projects-assurance/client/test/assurance_instances_test.dart line 54
+The test description was:
+  same-revision restart must stale a dirty editor until explicit review
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +1 -1: same-revision restart must stale a dirty editor until explicit review [E]
+  Test failed. See exception logs above.
+  The test description was: same-revision restart must stale a dirty editor until explicit review
+  
+00:00 +1 -1: same-revision restart must invalidate an already open delete confirmation
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: <Closure: () => void>
+The confirmation originated from a different service instance.
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<repo>/target/projects-assurance/client/test/assurance_instances_test.dart:75:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<repo>/target/projects-assurance/client/test/assurance_instances_test.dart line 75
+The test description was:
+  same-revision restart must invalidate an already open delete confirmation
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +1 -2: same-revision restart must invalidate an already open delete confirmation [E]
+  Test failed. See exception logs above.
+  The test description was: same-revision restart must invalidate an already open delete confirmation
+  
+00:01 +1 -2: Some tests failed.
+
+Failing tests:
+  <repo>/target/projects-assurance/client/test/assurance_instances_test.dart: same-revision restart must invalidate an already open delete confirmation
+  <repo>/target/projects-assurance/client/test/assurance_instances_test.dart: same-revision restart must stale a dirty editor until explicit review

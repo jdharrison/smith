@@ -1,0 +1,27 @@
+{
+  "all_prior_evidence_preserved": true,
+  "recorded_at": "2026-10-17T21:43:36.189989+00:00",
+  "trees": [
+    {
+      "after_sha256": "c97ba389b8956872a78997710c586a9bb935efe543c68fb8ef61d8a720d36ffd",
+      "before_sha256": "c97ba389b8956872a78997710c586a9bb935efe543c68fb8ef61d8a720d36ffd",
+      "byte_and_mode_identical": true,
+      "file_count": 72,
+      "root": "target/projects-layout/validation-run"
+    },
+    {
+      "after_sha256": "5b32bf30056edbbfd78b68031df33d4a3514eab125669433183c09536ef235d6",
+      "before_sha256": "5b32bf30056edbbfd78b68031df33d4a3514eab125669433183c09536ef235d6",
+      "byte_and_mode_identical": true,
+      "file_count": 67,
+      "root": "docs/evidence/projects-layout/validation"
+    },
+    {
+      "after_sha256": "bb0baf174761259dfa9160c7edbd159d1e513574b81fe4a19f667df7c6660196",
+      "before_sha256": "bb0baf174761259dfa9160c7edbd159d1e513574b81fe4a19f667df7c6660196",
+      "byte_and_mode_identical": true,
+      "file_count": 6,
+      "root": "docs/evidence/projects-layout/remediation"
+    }
+  ]
+}

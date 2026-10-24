@@ -1,0 +1,168 @@
+{
+  "round": "2",
+  "method": "Same exact RGBA/raster rail-mask method as pixel-proof-before-update.json; no tolerance.",
+  "unchanged": [
+    "client/test/goldens/workspace-entrance/compact-text2-360ms.png",
+    "client/test/goldens/workspace-entrance/desktop-000ms.png",
+    "client/test/goldens/workspace-entrance/desktop-160ms.png",
+    "client/test/goldens/workspace-entrance/mixed-grid-360ms.png"
+  ],
+  "images": [
+    {
+      "golden": "client/test/goldens/workspace-entrance/compact-text2-620ms.png",
+      "size": [
+        400,
+        400
+      ],
+      "old_sha256": "feef203acf196510d695b733bd87b5624433843e714dfdd5ddd396610ed089f9",
+      "baseline_old_hash_matches": true,
+      "actual_sha256": "7949ec0a21aabb0a45ace6a99b214342ec116b7868e43b8516a8016cf2600c22",
+      "old_capture": "target/dev-navigation/ui/visual-rebase/captures-entrance-round2/compact-text2-620ms.png.expected.png",
+      "actual_capture": "target/dev-navigation/ui/visual-rebase/captures-entrance-round2/compact-text2-620ms.png.actual.png",
+      "geometry_record": "target/dev-navigation/ui/visual-rebase/captures-entrance-round2/compact-text2-620ms.png.geometry.json",
+      "rail_rects_logical_half_open": [
+        [
+          9.0,
+          136.0,
+          65.0,
+          438.0
+        ]
+      ],
+      "rail_raster_rects_half_open": [
+        [
+          9,
+          136,
+          65,
+          400
+        ]
+      ],
+      "changed_pixels": 5285,
+      "changed_bbox_half_open": [
+        12,
+        136,
+        65,
+        400
+      ],
+      "outside_rail_changed_pixels": 0,
+      "outside_rail_bbox_half_open": null,
+      "initial_failure_actual_vs_current_changed_pixels": 0,
+      "eligible_for_update": true
+    },
+    {
+      "golden": "client/test/goldens/workspace-entrance/desktop-360ms.png",
+      "size": [
+        1600,
+        1000
+      ],
+      "old_sha256": "22a692f9fad58e475c3a86561b49585c59c8194bd59b56045d1a21f0c3219965",
+      "baseline_old_hash_matches": true,
+      "actual_sha256": "c68c3e84d4aabd5f30725f9a1dbd24b1da89f93ba55c9b415662b254924075e7",
+      "old_capture": "target/dev-navigation/ui/visual-rebase/captures-entrance-round2/desktop-360ms.png.expected.png",
+      "actual_capture": "target/dev-navigation/ui/visual-rebase/captures-entrance-round2/desktop-360ms.png.actual.png",
+      "geometry_record": "target/dev-navigation/ui/visual-rebase/captures-entrance-round2/desktop-360ms.png.geometry.json",
+      "rail_rects_logical_half_open": [
+        [
+          9.0,
+          66.0,
+          65.0,
+          991.0
+        ]
+      ],
+      "rail_raster_rects_half_open": [
+        [
+          9,
+          66,
+          65,
+          991
+        ]
+      ],
+      "changed_pixels": 6463,
+      "changed_bbox_half_open": [
+        12,
+        66,
+        65,
+        991
+      ],
+      "outside_rail_changed_pixels": 0,
+      "outside_rail_bbox_half_open": null,
+      "initial_failure_actual_vs_current_changed_pixels": 0,
+      "eligible_for_update": true
+    },
+    {
+      "golden": "client/test/goldens/workspace-entrance/mixed-grid-620ms.png",
+      "size": [
+        2200,
+        1400
+      ],
+      "old_sha256": "c6856dce76dd77f464c53f21a69ad655b3f31f7ba0aa5ec4a20e1f8674eebbd4",
+      "baseline_old_hash_matches": true,
+      "actual_sha256": "18aefb64734acb7b0c0e0cbbb4354cb968535e309d80049b395bc5f9a90cc7a5",
+      "old_capture": "target/dev-navigation/ui/visual-rebase/captures-entrance-round2/mixed-grid-620ms.png.expected.png",
+      "actual_capture": "target/dev-navigation/ui/visual-rebase/captures-entrance-round2/mixed-grid-620ms.png.actual.png",
+      "geometry_record": "target/dev-navigation/ui/visual-rebase/captures-entrance-round2/mixed-grid-620ms.png.geometry.json",
+      "rail_rects_logical_half_open": [
+        [
+          9.0,
+          66.0,
+          65.0,
+          719.5
+        ],
+        [
+          1109.0,
+          66.0,
+          1165.0,
+          719.5
+        ],
+        [
+          9.0,
+          737.5,
+          65.0,
+          1391.0
+        ],
+        [
+          1109.0,
+          737.5,
+          1165.0,
+          1391.0
+        ]
+      ],
+      "rail_raster_rects_half_open": [
+        [
+          9,
+          66,
+          65,
+          720
+        ],
+        [
+          1109,
+          66,
+          1165,
+          720
+        ],
+        [
+          9,
+          737,
+          65,
+          1391
+        ],
+        [
+          1109,
+          737,
+          1165,
+          1391
+        ]
+      ],
+      "changed_pixels": 24630,
+      "changed_bbox_half_open": [
+        12,
+        66,
+        1165,
+        1391
+      ],
+      "outside_rail_changed_pixels": 0,
+      "outside_rail_bbox_half_open": null,
+      "initial_failure_actual_vs_current_changed_pixels": 0,
+      "eligible_for_update": true
+    }
+  ]
+}

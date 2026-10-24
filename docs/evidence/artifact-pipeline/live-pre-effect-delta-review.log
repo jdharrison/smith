@@ -1,0 +1,63 @@
+Independent PRE-EFFECT delta assurance — PASS (exact v2 scope only)
+
+Scope and authority
+- Reuse the already-read AGENTS/process approval boundaries, applicable architecture/design/host policy, assurance role, active LOCAL-SMITH-ARTIFACT-PIPELINE-MVP plan and original independent review. This is a fresh examination of the corrected actual source and tests, not acceptance of the builder's narrative.
+- Review only the two prior blockers and regression preservation for the explicitly scoped single smith-artifact-qa-20261020-01 privileged engine / smith-artifact-qa-20261020-01-data volume at unix:///run/docker.sock, one Execute request expected policy_denied,4CPU/4GiB/1024PIDs/private cgroup namespace, fixed read-only engine config, no Setup/coding-image/model/provider/credentials/installed-Smith effects.
+- Offline only. No live Docker/Dagger CLI/engine/image/network/provider commands; no receipts or effect markers written in the staged live root. Supplied tests use disposable fake receipt/marker fixtures and local Python children only. No source/test changes made by this reviewer.
+- Original live-pre-effect-review.log remains historical NO-GO for the ORIGINAL script/tests binding. This delta PASS closes its two findings only for the v2 identities below. It is independent assurance, not human approval, a receipt, release authorization, or functional acceptance.
+
+Exact reviewed binding
+Repository HEAD: 14d960975e76f906efb5e447ff3dece0e8e4385b
+Branch: feature/autonomy
+Binding: docs/evidence/artifact-pipeline/live-transport-binding-v2.json
+Binding file SHA-256: a50725402d221bb947a257b2c60f38efe95123a75750cc4a77479d7d12940e3e
+Harness SHA-256: 3f6f16e7aef5a0264d7d3a0d2695e4c212eb2a37214ccd1e88904970edbec6bc
+Tests SHA-256: c603d8bf647e7daa4aef6987ca92b75ae0c6e0bc0cc75200784a27a474891aec
+CLI SHA-256: 609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af
+Source/module canonical all-file manifest SHA-256: fd065edd5f6741e6ec05d6e8ce1a39999ebac2d7007dec98864130182ff10a93
+Request SHA-256: 0b5b9300a8f7a706b98dcb677982bcf32693f7af84d655ab793ab7cb97f20e30
+Destination SHA-256: e2ccb8dd1243321f6e72402e0804b542a8bd0f4cb28aebb3d52caefedeca6c37
+Installed beta CLI SHA-256: ac2b5d28bf9c1881f0e14685a4e19610f78a256fb4038932dcd1252d292f5236
+Engine config SHA-256: e85a7d6a103649c0d0f7b40901d6511f1ac10ca3a30a9321a6a8a6fee4ad6821
+Docker config SHA-256: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+Preflight SHA-256: 2bf297f9e2c615e8c6c5f74e63f14a7316f06cf375100cf3be4943eaf43605a6
+Only script/tests keys differ from original binding. Original binding file SHA-256 remains905ee68ea4a4a313eb86a6b60bd811dc090aadd812608597519a0fedcdbede43.
+
+Required Checks Evidence
+1. Actual source review — PASS
+   Inspected live-transport-qa.py, including unchanged input/receipt/capture/cgroup logic and corrected Supervisor implementation; inspected new regression tests rather than relying on counts. Builder's retained live-transport-qa-offline.log contains the seven pre-fix failures and subsequent41-test run; neither log was overwritten.
+   Expected: ownership alone determines authority to attempt stop, operational/proof failures do not prevent owned stop, foreign identity still prevents it, and invalidated work cannot reach the next mutation.
+   Actual: inspect_owned at lines357-363 separately checks exact CID/image/name/nonce. execution_config at365-378 retains all prior config restrictions. Cleanup459-484 catches operational validation errors, marks failed, still attempts stop after command runner return/join, verifies owned stopped identity, and cannot claim verified_stopped with config drift or missing proof. Foreign identity remains refused before stop. revalidate at392-396 checks cancellation/deadline, unchanged inputs and authorization, then cancellation/deadline again; it precedes pull407-408, volume creation412-413, container creation417-418, start428-429 and dispatch437-441. Cleanup does not require renewed work approval.
+2. Exact staged check, before and after tests — PASS, exit0 both times
+   Command: python3 -B docs/evidence/artifact-pipeline/live-transport-qa.py check
+   Expected: full output equals v2 binding; no staged writes or Docker contact.
+   Actual: exact v2 match before/after independent tests/probes. Only script/tests changed versus original binding. All16 pipeline source file identities, retained pinned upstream copies, active plan and staged CLI record match the previous review. Source/module/request/CLI/config/preflight/destination bindings unchanged. target stays0775; private staging root stays0700.
+   Evidence: live-pre-effect-delta-check.log (includes final post-test recheck); original complete pipeline/upstream hashes remain referenced by live-pre-effect-binding.log.
+3. Independent supplied offline suite — PASS,41 tests,0 failures,0 errors, command exit0
+   Scenario: python3 -B importlib wrapper imports test_live_transport_qa.py and invokes unittest.defaultTestLoader.loadTestsFromModule with TextTestRunner. Does not invoke its __main__ log appender or the live run entry point. Captured output is retained only in the distinct delta evidence log.
+   Expected: corrected regressions and prior fake-only/capture tests all pass.
+   Actual:41/41 pass, including after-join PIDs drift, foreign owner refusal, source/approval invalidation after pull/volume inspect, cancellation/deadline after pull, after-create approval failure, after-start source failure, existing names, no retries, missing/nonempty cgroup proof, stream/cancellation/group cleanup and strict response checks.
+   Evidence: live-pre-effect-delta-offline-tests.log; exact script/tests hashes embedded.
+4. Independent adversarial matrix — PASS,35/35 fake-only scenarios, command exit0
+   Scenario: instantiate existing FakeInputs/FakeCommands in disposable temporary roots. Inject approval/source/cancellation/deadline invalidation after each of six commands: pull, image inspect, volume create, volume inspect, container create, start (24 cases). Assert zero subsequent work mutations/CLI dispatch, failure, retained pending marker, and owned stop when CID exists. Separately inject seven operational field failures after joined fake CLI (PIDs,CPU,memory,cgroup namespace,privileged flag,mounts,missing HostConfig), then four foreign-ownership changes (label,image,name,CID).
+   Expected/actual: all24 invalidations block the next mutation/dispatch; created owned containers receive cleanup stop despite invalid work authority. All7 operational drift cases stop once after join, leave no running owned engine, return failed/unknown and retain pending state. All4 foreign ownership cases refuse stop and return unknown rather than acting on foreign resources. No real engine is represented by these fake states.
+   Evidence: live-pre-effect-delta-adversarial.log; per-case results, method and source/tests identities retained.
+5. Final preservation inventory — PASS
+   Expected/actual: run-01 contains only cache,config,docker,engine.json,home,module,request.json. No live receipt,engine.cid,owned/running/dispatch/consumed/pending/result marker or runtime capture was created. check returns before Supervisor/command execution. Existing evidence, including original binding and NO-GO report, preserved.
+   Evidence: final section of live-pre-effect-delta-check.log.
+
+Findings disposition
+Critical: none identified within this scoped delta review.
+High: original owned-stop blocker CLOSED on v2; original post-pull revalidation blocker CLOSED on v2. Independent reproduction results now satisfy the requested failure behavior.
+Medium/low: no new material scoped blocker identified. Check/spawn revalidation is not an atomic guarantee against host loss or trusted same-user concurrent mutation; the documented one-operator/unknown-retention boundary remains, not a hostile-same-UID sandbox or hard-real-time guarantee.
+
+Evidence Gaps / unchanged live boundaries
+- Live File/scalar decoding, real SDK dependency compatibility, engine config consumption, resource/quota enforcement and cgroup quiescence remain UNVERIFIED. They are the separately bounded live test's observations, not pre-effect evidence claimed by this PASS. Strict CLI exit0/exact policy_denied correlation and verified owned cleanup remain necessary for that test's later success. No blind retry/resume follows from failure or ambiguity.
+- No live name-availability query was made; later authorized run must refuse existing names exactly as implemented. No shared/default engine adoption or fallback.
+- Existing retained upstream copies and parent-retained CLI version/archive evidence were not re-fetched or executed; prior scoped source conclusions remain unchanged because their hashes match. Actual installed/staged executable hashes were rechecked by check.
+- No real independent/operator receipts exist in staged state. Parent must authenticate actual reviewer and human operator outside this same-UID script, record the genuine decision bound to this v2 candidate, and supply fresh hash-pinned receipts with distinct actors, correct role/binding/review linkage and valid timestamps. Original script/test receipts are stale for v2. This report does not itself supply authorization or accept residual risk.
+
+Verdict: PASS for exact v2 PRE-EFFECT assurance scope only.
+Scoped readiness gate: GO to parent-owned receipt recording and immediate approval/revision revalidation, not an instruction or authority for this reviewer to run effects.
+Release/deployment gate: NOT ASSESSED / NOT AUTHORIZED. Functional/installed/MVP acceptance: NOT ESTABLISHED.
+No required offline delta check is missing/failing. No code edits, live effects or live receipt authoring performed by this reviewer.

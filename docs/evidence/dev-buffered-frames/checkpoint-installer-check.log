@@ -1,0 +1,10 @@
+cwd: installer
+command: cargo check --locked --offline
+timeout_seconds: 120
+exit: 0
+timed_out: False
+elapsed_seconds: 4.56
+
+    Checking smith-service v0.1.0 (<HOME>/develop/personal/projects/smith/service)
+    Checking smith-installer v0.1.0 (<HOME>/develop/personal/projects/smith/installer)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.52s

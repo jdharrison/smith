@@ -128,6 +128,8 @@ fn cleaned_runner(model: &VerifiedModel) -> Runner {
         stderr: Arc::new(Mutex::new(Vec::new())),
         evidence_stderr: Arc::new(Mutex::new(StartupEvidence::default())),
         cancelled: Arc::new(|| false),
+        runtime_profile: RuntimeProfile::Unknown,
+        inspection_template_verified: false,
     }
 }
 

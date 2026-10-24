@@ -1,0 +1,24 @@
+00:00 +0: loading <REPO>/target/projects-layout/assurance/final/return_paths_test.dart
+00:00 +0: independent return new preserves identities and guards at 1.0x
+RETURN TRACE state=new scale=1.0 primary=FocusNode#5ff51([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) resume=FocusNode#5ff51([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) primaryMatch=true rect=Rect.fromLTRB(16.0, 48.0, 378.4, 96.0) offset=16.0 extent=853.0
+00:01 +1: independent return missing preserves identities and guards at 1.0x
+RETURN TRACE state=missing scale=1.0 primary=FocusNode#13e94([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) resume=FocusNode#13e94([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) primaryMatch=true rect=Rect.fromLTRB(16.0, 48.0, 378.4, 96.0) offset=16.0 extent=881.0
+00:02 +2: independent return uncertain preserves identities and guards at 1.0x
+RETURN TRACE state=uncertain scale=1.0 primary=FocusNode#88118([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) resume=FocusNode#88118([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) primaryMatch=true rect=Rect.fromLTRB(16.0, 0.0, 378.4, 48.0) offset=64.0 extent=424.0
+00:02 +3: independent return filtered preserves identities and guards at 1.0x
+RETURN TRACE state=filtered scale=1.0 primary=FocusNode#45520([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) resume=FocusNode#45520([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) primaryMatch=true rect=Rect.fromLTRB(16.0, 64.0, 378.4, 112.0) offset=0.0 extent=0.0
+00:03 +4: independent return restarted-filtered preserves identities and guards at 1.0x
+RETURN TRACE state=restarted-filtered scale=1.0 primary=FocusNode#19580([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) resume=FocusNode#19580([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) primaryMatch=true rect=Rect.fromLTRB(16.0, 48.0, 378.4, 96.0) offset=16.0 extent=96.0
+00:03 +5: independent return new preserves identities and guards at 2.0x
+RETURN TRACE state=new scale=2.0 primary=FocusNode#7e72e([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) resume=FocusNode#7e72e([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) primaryMatch=true rect=Rect.fromLTRB(16.0, 48.0, 384.0, 168.0) offset=72.0 extent=1178.0
+00:04 +6: independent return missing preserves identities and guards at 2.0x
+RETURN TRACE state=missing scale=2.0 primary=FocusNode#1e2e6([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) resume=FocusNode#1e2e6([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) primaryMatch=true rect=Rect.fromLTRB(16.0, 48.0, 384.0, 168.0) offset=72.0 extent=1534.0
+00:04 +7: independent return uncertain preserves identities and guards at 2.0x
+RETURN TRACE state=uncertain scale=2.0 primary=FocusNode#73f5a([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) resume=FocusNode#73f5a([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) primaryMatch=true rect=Rect.fromLTRB(16.0, 0.0, 384.0, 120.0) offset=120.0 extent=2240.0
+00:05 +8: independent return filtered preserves identities and guards at 2.0x
+RETURN TRACE state=filtered scale=2.0 primary=FocusNode#d1e92([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) resume=FocusNode#d1e92([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) primaryMatch=true rect=Rect.fromLTRB(16.0, 48.0, 384.0, 168.0) offset=72.0 extent=90.0
+00:05 +9: independent return restarted-filtered preserves identities and guards at 2.0x
+RETURN TRACE state=restarted-filtered scale=2.0 primary=FocusNode#404c1([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) resume=FocusNode#404c1([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS) primaryMatch=true rect=Rect.fromLTRB(16.0, 48.0, 384.0, 168.0) offset=72.0 extent=840.0
+00:05 +10: independent New replacement Keep editing actually returns retained form at 1.0x
+00:06 +11: independent New replacement Keep editing actually returns retained form at 2.0x
+00:06 +12: All tests passed!

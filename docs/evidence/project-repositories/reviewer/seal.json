@@ -1,0 +1,621 @@
+{
+  "approval": "None: no accepted-risk, release, installed or external-action authority",
+  "core_canonical_sha256": "ed6dc46ef3938f7753ffb9a7a0c76e6be1a2ea88ed0ff760835610fa7cd53481",
+  "documentation_closeout": "L1/L2 closed; M2 remains unexplained/open. No test/build/helper gates rerun. All gate logs, core and artifact file records unchanged.",
+  "parent_bundle_files": [
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/README.md",
+      "sha256": "f70f407b10477b20b11c3598d90299fed89b9ebeaabf8cbdaca98827bfd13965",
+      "size": 10203
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/artifacts.json",
+      "sha256": "bdf3af219296e18ebd594ebcbe3bde1ddd43a2ebea8425b3d222e8233e713160",
+      "size": 42744
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/changes-from-baseline.json",
+      "sha256": "6d4603454c8f4bc04952fb98e053464d248ba2089d223c553137e75e3f96aef9",
+      "size": 14581
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/core-source-manifest.jsonl",
+      "sha256": "21b5cc01ba2da3127af2e6843385e872ec952bf4b1dff94dcf6eaaf8fa6511ad",
+      "size": 239588
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/results.json",
+      "sha256": "fd4696a4d784f1d379fb44d38bc6fafcd1c35fcdba17f415acad827ca438a420",
+      "size": 52736
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/supporting-inputs.jsonl",
+      "sha256": "0c54964c821fa8b10e4b328de396d2c23a88cf343d8b01c95e790d637100488a",
+      "size": 4257
+    }
+  ],
+  "release_gate_decision": "no-go",
+  "review": {
+    "mode": 436,
+    "path": "docs/evidence/project-repositories/REVIEW.md",
+    "sha256": "8a13911209bcb29afa8747f7817ebed09b8ce390f4c78286191f9bd3a5357536",
+    "size": 20903
+  },
+  "reviewer_artifacts": [
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/bundle-verification-doc-closeout-final.json",
+      "sha256": "a1e4dddbc4f432ea55df366905c5058ec44d7aed2a8d8d6cd4556d567c5ad7f6",
+      "size": 4341
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/bundle-verification-doc-closeout-initial.json",
+      "sha256": "9dcd1fb636e6f658238eacb1dd3cf637a3ff2ce17118a90548b550c6cb91028d",
+      "size": 4081
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/bundle-verification-final.json",
+      "sha256": "9036398f3be44368a849d5c9d1676bc03a7f7ada2034ab1ee463415f45df0de3",
+      "size": 2916
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/bundle-verification-initial.json",
+      "sha256": "ccdd98bf49c7cc75a14ae38110ab7f1d0fd7cf8cd903c928b18d6c84865f1aa7",
+      "size": 3806
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/final-raw-gates-1/audit.json",
+      "sha256": "77ec5a3c256f5bf2597ea5d004c3a7f1f8ca478e0351ff3d9146e8548717304b",
+      "size": 37704
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/final-raw-gates-1/audit.py",
+      "sha256": "bb0a6e8f50404433fa5e5cf5a94284499a5cac82d41924002027bb6201ec9b9e",
+      "size": 7183
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/final-raw-gates-1/helpers.log",
+      "sha256": "486cda5b2b47ce94cd921879d6f1d3a208751c07b98084cfb27558731e91be12",
+      "size": 4842
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/final-raw-gates-1/index.json",
+      "sha256": "b674fc8d092ce45483e7b74543514131139b5a976207b07f0a565b05d385260b",
+      "size": 429
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/final-raw-gates-1/root-selected.log",
+      "sha256": "bdfed67e9e14452594be159eb5947c2fc2f0fb3dcc0f6a1ea096b5fea6909026",
+      "size": 130024
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/final-raw-gates-1/verify.log",
+      "sha256": "4f6e997052bf8ed0fe4e97c0e068bea00d34f1891dc7ee807e21581cdbb6da2e",
+      "size": 78
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/README.md",
+      "sha256": "73e7b2c56b19f12115b1afdbbe8f0aca0ffb2aa66084448ebbc7eb4575d277e0",
+      "size": 10032
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/REVIEW.md",
+      "sha256": "9c837ab84e0ce3e561fb45d311d861c5675c15ae368a71be80442d3cf2943927",
+      "size": 17877
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/architecture-report-before.md",
+      "sha256": "6a6bd2c46c1abf35e2735f794ec24631260284bdf1cf3eaef10d573d06958fa5",
+      "size": 29037
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/artifacts.json",
+      "sha256": "27ebd839cdc70e8dbcfed47b843fdcb05c446badb834132c6328a67aa0d03dd1",
+      "size": 42744
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/changes-from-baseline.json",
+      "sha256": "52f067b4b2366744e6b766fa5e3d6a9dd212bdc3e559603170fae459efba0da6",
+      "size": 14581
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/core-source-manifest.jsonl",
+      "sha256": "21b5cc01ba2da3127af2e6843385e872ec952bf4b1dff94dcf6eaaf8fa6511ad",
+      "size": 239588
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/export-evidence-before.py",
+      "sha256": "a9286ece05c782f7180b47c9224b40c9820fae5c4fffde9aa1cf282f988e1f1b",
+      "size": 12490
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/plan-before.md",
+      "sha256": "4bf72f21b8b162732fc83e949a33956964d7133f4cfaa32d328ab8c27595f6c6",
+      "size": 15418
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/results.json",
+      "sha256": "97b73a7e54a12ad14ae55aad168496f87863e4a274e1796b8d379f8bd0ed604a",
+      "size": 52427
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/bundle-verification-final.json",
+      "sha256": "9036398f3be44368a849d5c9d1676bc03a7f7ada2034ab1ee463415f45df0de3",
+      "size": 2916
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/bundle-verification-initial.json",
+      "sha256": "ccdd98bf49c7cc75a14ae38110ab7f1d0fd7cf8cd903c928b18d6c84865f1aa7",
+      "size": 3806
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/final-raw-gates-1/audit.json",
+      "sha256": "77ec5a3c256f5bf2597ea5d004c3a7f1f8ca478e0351ff3d9146e8548717304b",
+      "size": 37704
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/final-raw-gates-1/audit.py",
+      "sha256": "bb0a6e8f50404433fa5e5cf5a94284499a5cac82d41924002027bb6201ec9b9e",
+      "size": 7183
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/final-raw-gates-1/helpers.log",
+      "sha256": "486cda5b2b47ce94cd921879d6f1d3a208751c07b98084cfb27558731e91be12",
+      "size": 4842
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/final-raw-gates-1/index.json",
+      "sha256": "b674fc8d092ce45483e7b74543514131139b5a976207b07f0a565b05d385260b",
+      "size": 429
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/final-raw-gates-1/root-selected.log",
+      "sha256": "bdfed67e9e14452594be159eb5947c2fc2f0fb3dcc0f6a1ea096b5fea6909026",
+      "size": 130024
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/final-raw-gates-1/verify.log",
+      "sha256": "4f6e997052bf8ed0fe4e97c0e068bea00d34f1891dc7ee807e21581cdbb6da2e",
+      "size": 78
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/parser-followup-1/index.json",
+      "sha256": "d4d959f5523bed6af2ef28c75cc161bd26f91b76ab117f40e3abbc32e8cfc125",
+      "size": 2853
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/parser-followup-1/neighbors.json",
+      "sha256": "d4b98dea0d1cf6232dfab23c8fed87d4f4f548aa7929f3a4290a397666e0800e",
+      "size": 57914
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/parser-followup-1/neighbors.log",
+      "sha256": "4a9ff5523e1a8568a773e8e746fc2e6fd19ff2fbbe5373286f5167add5eea692",
+      "size": 25949
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/parser-followup-1/parser-edge-cases.json",
+      "sha256": "e4769f06573107eb0e2ed9886cc7d6aff4328165bbd0585655ab7b1c5ead0ee9",
+      "size": 57787
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/parser-followup-1/parser-edge-cases.log",
+      "sha256": "cda802adb29ff5bfc638e67c3b2ab42cc4bad6ac9eb9d8dc8009eb8fd997fcc5",
+      "size": 4534
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/parser-followup-1/parser_adversarial_test.dart",
+      "sha256": "5e386f7b4f12631b8e5ce9243631f4747eed4b51f18d7291a574fb4f00b4358a",
+      "size": 5318
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/parser-followup-1/run.py",
+      "sha256": "b5607ce72e201c9ca6661fbd2e16b2f5925bb456f5e8f83da054bbc28ac275c7",
+      "size": 3278
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/parser-followup-1/unchanged-repro.json",
+      "sha256": "fd0b79cb7272cf1cbd31f4ab8d40d5ba296e87f9e050b7ef61510d5e7bb5e1f2",
+      "size": 57729
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/parser-followup-1/unchanged-repro.log",
+      "sha256": "d64b21b72d4c7e654785e789d87c1ebfc1d341408a978b30480c061e6589b042",
+      "size": 323
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/compiled-fresh.json",
+      "sha256": "232d5624732cc01411fea32dfc687f64bf6e4c2bb561b14effe585ae365b9283",
+      "size": 56032
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/compiled-fresh.log",
+      "sha256": "a2cb609a7207964e16677f2b7fc81dd974cc4c8bede053feab927e5ebeeecd85",
+      "size": 723
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/duplicates-original.json",
+      "sha256": "72468be2ec52e4e8e3f9f260b75cbc98a73d5ccca52b8f37aa2788ecad7c93e1",
+      "size": 368120
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/duplicates-original.log",
+      "sha256": "8216082ab70c86c66e3c01b5770aee3da79ccb551c100fc1c0e7d237ec3e17db",
+      "size": 2186
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/native-extra-0.log",
+      "sha256": "d07fa381e7871a4718ff713df62420998c1199cef42fcb653c1351ab2a919b12",
+      "size": 1230
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/native-extra-1.log",
+      "sha256": "005fd71ab6098bb73e317b5d6d9563276fb562a4e5f76367589c089eaa05d33f",
+      "size": 456
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/native-extra.json",
+      "sha256": "06ba7164b156a7ee6ae8d2a2ef4a737fb044bbf4ff344e0677902b4be2dc3374",
+      "size": 1065
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/retained-repros.json",
+      "sha256": "efa568e23ed5db00051451d292442cf55348764d8322d0dbe958c0ccc7eb4017",
+      "size": 383839
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/retained-repros.log",
+      "sha256": "aba2772812370dfd9c63b26e25deeebf60d299cb77c3ddc7a7d8c057d93e22de",
+      "size": 1841
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/reviewer.json",
+      "sha256": "61df139047f591003d2becf26cc77ede537689f0a255367f82793108ffbaff3f",
+      "size": 368113
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/reviewer.log",
+      "sha256": "95f144a85acd892f576812c8491e3d5182b559a0fbb4abd11cf7a4cd6dbc3a35",
+      "size": 770
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/rust.json",
+      "sha256": "46eca63e0ec0de1a06503882cfbff2b0d5b15efde82c58b27d419cfc23eef9a3",
+      "size": 367944
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/records/rust.log",
+      "sha256": "d57b5bda1edb4f9c6f2ace9d1f56b798cc41c31cce480d79f8e5e5d99c6fc9d4",
+      "size": 6435
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/repros/README.md",
+      "sha256": "77fd18d086dcd74bec5ed4acb10918a623af115623ad8277c2f2d368580f728c",
+      "size": 3115
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/repros/duplicate_reply_test.dart",
+      "sha256": "95281814c4378c501721a319df92e1b285efcef45150566e1bf629873d709058",
+      "size": 1778
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/repros/reviewer_native.rs",
+      "sha256": "9e65032bb31600c1d762cf3393bb62a8c09ed0dbfbce34455173ecf5846a80a4",
+      "size": 3644
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/repros/reviewer_test.dart",
+      "sha256": "1584ec00d4261ea3af67250f81ecf58e0f9d36ce65babf793086e9a7ebb7fc3d",
+      "size": 4082
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/run_retained_repros.py",
+      "sha256": "011b9a13c946fddad6d6d45cfd36df39d36ee11a48cae5eef61d3f0dbad6d45c",
+      "size": 2145
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/seal.json",
+      "sha256": "874f71db07529111a454526bf7151583d70d13c3b7d869749aa880a83c961b09",
+      "size": 10552
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/seal_review.py",
+      "sha256": "fbfaf83f264113436e566bdf0ae4a070fa2bc57d63d2c299f78494a05c318348",
+      "size": 2209
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/verify_bundle.py",
+      "sha256": "bc58cfeb40efad0b12ae6fe43d8c3a78fc1cd1df3bd068433b51b9ddfde4afcc",
+      "size": 7273
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/supporting-inputs.jsonl",
+      "sha256": "d59995f94d1d2e1d2541aca5c13d6d71488cd55d6e436c36221ba8a7723ec3d4",
+      "size": 4257
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/parser-followup-1/index.json",
+      "sha256": "d4d959f5523bed6af2ef28c75cc161bd26f91b76ab117f40e3abbc32e8cfc125",
+      "size": 2853
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/parser-followup-1/neighbors.json",
+      "sha256": "d4b98dea0d1cf6232dfab23c8fed87d4f4f548aa7929f3a4290a397666e0800e",
+      "size": 57914
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/parser-followup-1/neighbors.log",
+      "sha256": "4a9ff5523e1a8568a773e8e746fc2e6fd19ff2fbbe5373286f5167add5eea692",
+      "size": 25949
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/parser-followup-1/parser-edge-cases.json",
+      "sha256": "e4769f06573107eb0e2ed9886cc7d6aff4328165bbd0585655ab7b1c5ead0ee9",
+      "size": 57787
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/parser-followup-1/parser-edge-cases.log",
+      "sha256": "cda802adb29ff5bfc638e67c3b2ab42cc4bad6ac9eb9d8dc8009eb8fd997fcc5",
+      "size": 4534
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/parser-followup-1/parser_adversarial_test.dart",
+      "sha256": "5e386f7b4f12631b8e5ce9243631f4747eed4b51f18d7291a574fb4f00b4358a",
+      "size": 5318
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/parser-followup-1/run.py",
+      "sha256": "b5607ce72e201c9ca6661fbd2e16b2f5925bb456f5e8f83da054bbc28ac275c7",
+      "size": 3278
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/parser-followup-1/unchanged-repro.json",
+      "sha256": "fd0b79cb7272cf1cbd31f4ab8d40d5ba296e87f9e050b7ef61510d5e7bb5e1f2",
+      "size": 57729
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/parser-followup-1/unchanged-repro.log",
+      "sha256": "d64b21b72d4c7e654785e789d87c1ebfc1d341408a978b30480c061e6589b042",
+      "size": 323
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/compiled-fresh.json",
+      "sha256": "232d5624732cc01411fea32dfc687f64bf6e4c2bb561b14effe585ae365b9283",
+      "size": 56032
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/compiled-fresh.log",
+      "sha256": "a2cb609a7207964e16677f2b7fc81dd974cc4c8bede053feab927e5ebeeecd85",
+      "size": 723
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/duplicates-original.json",
+      "sha256": "72468be2ec52e4e8e3f9f260b75cbc98a73d5ccca52b8f37aa2788ecad7c93e1",
+      "size": 368120
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/duplicates-original.log",
+      "sha256": "8216082ab70c86c66e3c01b5770aee3da79ccb551c100fc1c0e7d237ec3e17db",
+      "size": 2186
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/native-extra-0.log",
+      "sha256": "d07fa381e7871a4718ff713df62420998c1199cef42fcb653c1351ab2a919b12",
+      "size": 1230
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/native-extra-1.log",
+      "sha256": "005fd71ab6098bb73e317b5d6d9563276fb562a4e5f76367589c089eaa05d33f",
+      "size": 456
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/native-extra.json",
+      "sha256": "06ba7164b156a7ee6ae8d2a2ef4a737fb044bbf4ff344e0677902b4be2dc3374",
+      "size": 1065
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/retained-repros.json",
+      "sha256": "efa568e23ed5db00051451d292442cf55348764d8322d0dbe958c0ccc7eb4017",
+      "size": 383839
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/retained-repros.log",
+      "sha256": "aba2772812370dfd9c63b26e25deeebf60d299cb77c3ddc7a7d8c057d93e22de",
+      "size": 1841
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/reviewer.json",
+      "sha256": "61df139047f591003d2becf26cc77ede537689f0a255367f82793108ffbaff3f",
+      "size": 368113
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/reviewer.log",
+      "sha256": "95f144a85acd892f576812c8491e3d5182b559a0fbb4abd11cf7a4cd6dbc3a35",
+      "size": 770
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/rust.json",
+      "sha256": "46eca63e0ec0de1a06503882cfbff2b0d5b15efde82c58b27d419cfc23eef9a3",
+      "size": 367944
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/records/rust.log",
+      "sha256": "d57b5bda1edb4f9c6f2ace9d1f56b798cc41c31cce480d79f8e5e5d99c6fc9d4",
+      "size": 6435
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/repros/README.md",
+      "sha256": "77fd18d086dcd74bec5ed4acb10918a623af115623ad8277c2f2d368580f728c",
+      "size": 3115
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/repros/duplicate_reply_test.dart",
+      "sha256": "95281814c4378c501721a319df92e1b285efcef45150566e1bf629873d709058",
+      "size": 1778
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/repros/reviewer_native.rs",
+      "sha256": "9e65032bb31600c1d762cf3393bb62a8c09ed0dbfbce34455173ecf5846a80a4",
+      "size": 3644
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/repros/reviewer_test.dart",
+      "sha256": "1584ec00d4261ea3af67250f81ecf58e0f9d36ce65babf793086e9a7ebb7fc3d",
+      "size": 4082
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/run_retained_repros.py",
+      "sha256": "011b9a13c946fddad6d6d45cfd36df39d36ee11a48cae5eef61d3f0dbad6d45c",
+      "size": 2145
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/seal_doc_closeout.py",
+      "sha256": "db96754e12fed0e89e2e01c2ff35fa78f041dccab5280f81e3c453723b19c0e9",
+      "size": 2651
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/seal_review.py",
+      "sha256": "fbfaf83f264113436e566bdf0ae4a070fa2bc57d63d2c299f78494a05c318348",
+      "size": 2209
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/verify_bundle.py",
+      "sha256": "bc58cfeb40efad0b12ae6fe43d8c3a78fc1cd1df3bd068433b51b9ddfde4afcc",
+      "size": 7273
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/verify_doc_closeout.py",
+      "sha256": "75e842d9a9cae21f591ff7c46dc86c8a0369f358bfa6a85e55015e740d7644c5",
+      "size": 11482
+    },
+    {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/verify_doc_closeout_initial.py",
+      "sha256": "a6ad5303bf754c8b245e2e0a4cb6ecc133eed1280fd0a9b5a1886b228adbe460",
+      "size": 10606
+    }
+  ],
+  "sealed_at": "2026-10-17T19:53:51.725486+00:00",
+  "self_reference_note": "This seal excludes its current and versioned aliases; both have identical bytes. The prior seal is retained under lineage. The new digest is returned separately in the final response.",
+  "supersedes": {
+    "results": {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/results.json",
+      "sha256": "97b73a7e54a12ad14ae55aad168496f87863e4a274e1796b8d379f8bd0ed604a",
+      "size": 52427
+    },
+    "review": {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/REVIEW.md",
+      "sha256": "9c837ab84e0ce3e561fb45d311d861c5675c15ae368a71be80442d3cf2943927",
+      "size": 17877
+    },
+    "seal": {
+      "mode": 436,
+      "path": "docs/evidence/project-repositories/reviewer/lineage/pre-doc-closeout/reviewer/seal.json",
+      "sha256": "874f71db07529111a454526bf7151583d70d13c3b7d869749aa880a83c961b09",
+      "size": 10552
+    }
+  },
+  "verdict": "pass-with-risk: bounded configuration-only implementation/configured local source gates",
+  "verification": {
+    "mode": 436,
+    "path": "docs/evidence/project-repositories/reviewer/bundle-verification-doc-closeout-final.json",
+    "sha256": "a1e4dddbc4f432ea55df366905c5058ec44d7aed2a8d8d6cd4556d567c5ad7f6",
+    "size": 4341
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "attribution_correction": {
+    "record": "attribution-correction/correction.json",
+    "preserved_identities": "attribution-correction/preserved-identities.json",
+    "mapping_origin": "parent-supplied technical interpretation within existing approved layout requirements",
+    "independent_verdict_basis": "requirement coverage and retained source/test evidence, not parent/model authority",
+    "specific_human_mapping_direction_claimed": false,
+    "new_approval_or_risk_waiver": false,
+    "tests_rerun_or_source_changed": false
+  },
+  "branch": "feature/autonomy",
+  "cached_installer_projection_sha256": "8993531727a8fc09fb197d3f1be83a15f485f7f39e0ad75e954befd349caba8a",
+  "changed_core_paths": [],
+  "closed_findings": [
+    {
+      "basis": "independently verified coverage of already-approved section0/R2 retained-editor navigation and R5 dirty-replacement guards; the parent supplied the technical New/Return interpretation, not a human mapping instruction or new approval; only the post-Back action changes, every assertion and other byte is retained, and two mapped plus twelve return/guard cases pass",
+      "id": "M1",
+      "original_failed_literal_cases_unchanged": true,
+      "status": "closed",
+      "waiver": false
+    },
+    {
+      "basis": "unchanged original two-case bundled-font repro passes; four additive forward/reverse source keyboard cases and ten independent reveal-policy scenarios pass",
+      "id": "M2",
+      "status": "closed",
+      "waiver": false
+    }
+  ],
+  "exact_assets": 26,
+  "findings": [],
+  "gate_core_files": 1265,
+  "head": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+  "independent_flutter_executions_total": 322,
+  "independent_repository_flutter_executions_passed": 293,
+  "independent_scratch_executions_passed": 29,
+  "independently_checked_gate_core_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+  "independently_checked_package_tree_sha256": "d168fdf131402ee099b516ea752fb510c8b86f2eece1c7aca6b4f0e0e048f725",
+  "interpreter_free_cli_scenario": "cached, not fresh",
+  "no_external_approval_or_risk_waiver": true,
+  "outside_core_final_narrative_binding": "parent narratives/ledgers written; awaiting parent-generated closeout-binding.json and independent verification before final docs anchoring; no current whole-tree claim",
+  "package_files": 99,
+  "parent_cached_installer_cases": 283,
+  "parent_controlled_ignores_cached": 2,
+  "parent_controlled_ignores_fresh": 3,
+  "parent_fresh_aggregate_cases": 1214,
+  "parent_helper_cases": 34,
+  "parent_observed_aggregate": 1497,
+  "parent_other_skips": 0,
+  "parent_runs_not_reviewer_executions": true,
+  "prior_files_changed": [],
+  "prior_files_preserved": 458,
+  "product_source_tests_goldens_edited_by_reviewer": false,
+  "recorded_utc": "2026-10-17T22:35:48.643168+00:00",
+  "release_gate_decision": "no-go for release/deployment/publication",
+  "required_in_slice_remediation": [],
+  "reviewer_before_after_core_sha256": "d6545cff27abe5dea2b5009f0d992a28603701265cd15d3d3db243bd11e420e5",
+  "reviewer_core_files": 1262,
+  "reviewer_runs": [
+    {
+      "exit_code": 0,
+      "log": "original-m2-unchanged.log",
+      "log_sha256": "90ce00c01ac302f271c111b35c8b24f6a908313dcccad237dda9dafe79285e7c",
+      "name": "original-m2-unchanged",
+      "passed": 2,
+      "record": "original-m2-unchanged.json"
+    },
+    {
+      "exit_code": 0,
+      "log": "mapped-m1-one-action.log",
+      "log_sha256": "d45e1d5731e427e257efce637c88d580edb16677aec984b05b6e46b4ae090c81",
+      "name": "mapped-m1-one-action",
+      "passed": 2,
+      "record": "mapped-m1-one-action.json"
+    },
+    {
+      "exit_code": 0,
+      "log": "focused.log",
+      "log_sha256": "24c2200bfd4938a3b25a97709fa5aae705e40c96f8bbda558a970354f364b6a6",
+      "name": "focused",
+      "passed": 161,
+      "record": "focused.json"
+    },
+    {
+      "exit_code": 0,
+      "log": "reveal-policy.log",
+      "log_sha256": "b0607093d63c0fb601aae718c5366ee521a6d30cf095ed217b91b7727e918c1e",
+      "name": "reveal-policy",
+      "passed": 10,
+      "record": "reveal-policy.json"
+    },
+    {
+      "exit_code": 0,
+      "log": "visual.log",
+      "log_sha256": "dc742f343c61218221726a07d21f686ac5faab3d5afd8f11f422eeb4524dcce5",
+      "name": "visual",
+      "passed": 30,
+      "record": "visual.json"
+    },
+    {
+      "exit_code": 0,
+      "log": "retained-return-guards.log",
+      "log_sha256": "8b0be1e24b6d403d2b385433ff01a5528f2604e2e1a35b8d8235fa602105491a",
+      "name": "retained-return-guards",
+      "passed": 12,
+      "record": "retained-return-guards.json"
+    },
+    {
+      "exit_code": 0,
+      "log": "neighboring.log",
+      "log_sha256": "05bcbfbcce5a23521cf48dbd6d42e06d5fdfdcc153412c610ed09e94443658ea",
+      "name": "neighboring",
+      "passed": 102,
+      "record": "neighboring.json"
+    },
+    {
+      "exit_code": 0,
+      "log": "original-nondefect-probes.log",
+      "log_sha256": "bd3b8fd4d328d2e9ac788aa503a223e7c3a019dbe4d154efe2aea33161826185",
+      "name": "original-nondefect-probes",
+      "passed": 3,
+      "record": "original-nondefect-probes.json"
+    }
+  ],
+  "slice": "approved section0 existing-field layout only",
+  "source_review_gate": "go",
+  "unverified_limits": [
+    "native Ubuntu GUI/window/IME/accessibility/fractional display and all-weight font QA",
+    "installed migration/restore and live manager/keyring/provider/model/repository/container behavior",
+    "clean-source/cold-cache/hermetic provenance, SBOM, icon rights and publication authority"
+  ],
+  "verdict": "pass",
+  "verdict_scope": "bounded source/layout assurance only",
+  "work_id": "LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT"
+}

@@ -1,0 +1,359 @@
+{
+  "approved_section": "0",
+  "artifact_binding": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "target/projects-layout/validation-rebound/final-artifact-binding.json",
+    "sha256": "9ad3df28a6182c05f9a1364088b370f19aeaebed751798b0c4f91f3deef23694",
+    "size": 6231,
+    "type": "file"
+  },
+  "cache_bound_counts_reference": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "target/projects-layout/validation-rebound/observed-gates.json",
+    "sha256": "0122589010873782296cd7693c1f0b4eee845baba01e382a9d901043d19aa106",
+    "size": 88636,
+    "type": "file"
+  },
+  "cached_component_passed": 283,
+  "changed_core_paths": [],
+  "commands": [
+    {
+      "duration_seconds": 0.254,
+      "exit_code": 0,
+      "name": "process-observation-before-focused",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/process-observation-before-focused.json",
+        "sha256": "b47d834d58e7614e0a4ef0901d32f63ad9ccced71fa83db40fb7cabcd9677d63",
+        "size": 1885,
+        "type": "file"
+      },
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 15
+    },
+    {
+      "duration_seconds": 11.631,
+      "exit_code": 0,
+      "name": "focused-projects",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/focused-projects.json",
+        "sha256": "f4d048e0f847fb44ae951dd366ebfd3716ae2f3599d371eaf5814facf6ff9c0d",
+        "size": 2440,
+        "type": "file"
+      },
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 180
+    },
+    {
+      "duration_seconds": 2.09,
+      "exit_code": 0,
+      "name": "focused-assets",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/focused-assets.json",
+        "sha256": "7b3e12f81ece7b95173a316d5bea50f98f2a68d657b3ab57648720a949671c49",
+        "size": 2234,
+        "type": "file"
+      },
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 120
+    },
+    {
+      "duration_seconds": 2.507,
+      "exit_code": 0,
+      "name": "compiled-projects",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/compiled-projects.json",
+        "sha256": "268efc83a48f1e8d5b3d5819dcf6362a2659bcd5000d452cb9cec5aa87bde94a",
+        "size": 2345,
+        "type": "file"
+      },
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 120
+    },
+    {
+      "duration_seconds": 0.251,
+      "exit_code": 0,
+      "name": "process-observation-before-aggregate",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/process-observation-before-aggregate.json",
+        "sha256": "57a57910973e8cd314828d3dd6121d186a84ba96274f67d0267b0a4cabfacb25",
+        "size": 1889,
+        "type": "file"
+      },
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 15
+    },
+    {
+      "duration_seconds": 0.274,
+      "exit_code": 0,
+      "name": "dagger-version",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/dagger-version.json",
+        "sha256": "ebc6a0020ccfcf27b1dcc851d95aae8d96bb3625329bf123d8f3119d158ca421",
+        "size": 1861,
+        "type": "file"
+      },
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 15
+    },
+    {
+      "duration_seconds": 0.279,
+      "exit_code": 0,
+      "name": "engine-readiness",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/engine-readiness.json",
+        "sha256": "4bcfe2ebcb913b1cfc15410c283f2a25d08cf04e975cfe22fdca15a77d334fd7",
+        "size": 2020,
+        "type": "file"
+      },
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 15
+    },
+    {
+      "duration_seconds": 159.509,
+      "exit_code": 0,
+      "name": "root-gates",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/root-gates.json",
+        "sha256": "c38114875499d30daf342ae09965dcdfcfd5b45507172a0074855f52a1f8ab17",
+        "size": 1837,
+        "type": "file"
+      },
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 0.618,
+      "exit_code": 0,
+      "name": "package-verify",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/package-verify.json",
+        "sha256": "5d5ed049451c682e47732760951a0101e9ba2c24dfed71ec61827bd847bd47ac",
+        "size": 1847,
+        "type": "file"
+      },
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 60
+    },
+    {
+      "duration_seconds": 25.221,
+      "exit_code": 0,
+      "name": "pipeline-helpers",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/pipeline-helpers.json",
+        "sha256": "7600bb696544063cec9316ccd3fde2933f550a9fb474e908e8b1f25b51714d78",
+        "size": 1930,
+        "type": "file"
+      },
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 120
+    },
+    {
+      "duration_seconds": 0.26,
+      "exit_code": 0,
+      "name": "diff-check",
+      "record": {
+        "mode": 436,
+        "mode_octal": "0o664",
+        "path": "target/projects-layout/validation-rebound/diff-check.json",
+        "sha256": "4dac63f93f76b2af2449a203002ff072b6085e156e9979fa15b1df768e7e2975",
+        "size": 1785,
+        "type": "file"
+      },
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 15
+    }
+  ],
+  "controlled_fixture_ignores_cached": 2,
+  "controlled_fixture_ignores_fresh": 3,
+  "core_input_count": 1265,
+  "core_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+  "core_tracked_count": 1242,
+  "core_untracked_count": 23,
+  "exact_26_assets_verified": true,
+  "fixture_and_helper_unchanged": true,
+  "flutter_fresh_counts": {
+    "failed": 0,
+    "passed": 869,
+    "skipped": 0
+  },
+  "focused_counts": {
+    "compiled-projects": [
+      {
+        "failed": 0,
+        "message": "All tests passed!",
+        "passed": 7,
+        "skipped": 0
+      }
+    ],
+    "focused-assets": [
+      {
+        "failed": 0,
+        "message": "All tests passed!",
+        "passed": 5,
+        "skipped": 0
+      }
+    ],
+    "focused-projects": [
+      {
+        "failed": 0,
+        "message": "All tests passed!",
+        "passed": 169,
+        "skipped": 0
+      }
+    ]
+  },
+  "fresh_component_passed": 1214,
+  "full_client_export_equals_package": true,
+  "git_branch": "feature/autonomy",
+  "git_head": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+  "gtk_fresh_counts": {
+    "failed": 0,
+    "filtered": 0,
+    "ignored": 0,
+    "measured": 0,
+    "passed": 9
+  },
+  "helper_fresh_counts": {
+    "errors": 0,
+    "failed": 0,
+    "passed": 34,
+    "ran": 34,
+    "skipped": 0
+  },
+  "installer_native_cached_counts": {
+    "failed": 0,
+    "filtered": 0,
+    "ignored": 2,
+    "measured": 0,
+    "passed": 283
+  },
+  "native_package_fresh_counts": {
+    "errors": 0,
+    "failed": 0,
+    "passed": 41,
+    "ran": 41,
+    "skipped": 0
+  },
+  "no_gate_reruns": true,
+  "no_source_test_policy_assertion_deadline_or_concurrency_edits": true,
+  "official_cli": {
+    "mode": 493,
+    "mode_octal": "0o755",
+    "path": "target/installer-pipeline/smith-dagger-0.21.9/dagger",
+    "sha256": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+    "size": 64573602,
+    "type": "file"
+  },
+  "official_cli_hash_verified": true,
+  "parent_narrative_ledger_writes_or_accepted_risk": false,
+  "prior_bundles_preserved": true,
+  "quality_gate": {
+    "analyzer": "pass",
+    "format": "pass",
+    "recorder_timeouts": 0,
+    "required_failures_or_missing_gates": [],
+    "warning_denied_clippy": "pass (native installer cached)",
+    "warnings_observed": []
+  },
+  "rebuilt_current_candidate": true,
+  "rebuilt_package_directories": 20,
+  "rebuilt_package_files": 99,
+  "rebuilt_package_tree_sha256": "d168fdf131402ee099b516ea752fb510c8b86f2eece1c7aca6b4f0e0e048f725",
+  "recorded_at": "2026-10-17T22:18:58.967455+00:00",
+  "recorder_sources": [
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/projects-layout/validation-rebound/recorder.py",
+      "sha256": "88e03b440b567ddff4952874156723b8423474d6a1690ac4813b570a54b7c206",
+      "size": 3356,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/projects-layout/validation-rebound/run_focused.py",
+      "sha256": "fa3cc29acf0e0803215fddf9878cfd46a3144596a419b0cb6391a355afb068af",
+      "size": 6537,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/projects-layout/validation-rebound/run_gates.py",
+      "sha256": "2d15797dcd7bd2f85d9826cca3d3cf0efa9e7a5d2772beecac69cce87b2e51c6",
+      "size": 9154,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/projects-layout/validation-rebound/probe_processes.py",
+      "sha256": "eda43620bf9f935b4529c5a99e7c689dae1bd46fa0b22a408b7adbecdece4f1b",
+      "size": 1884,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/projects-layout/validation-rebound/finalize_evidence.py",
+      "sha256": "a9f6dc1966fc2380b4535af5cc47ad461bacb8d832ba6a66228cda691de129b7",
+      "size": 18216,
+      "type": "file"
+    }
+  ],
+  "result": "PASS",
+  "service_fresh_counts": {
+    "failed": 0,
+    "filtered": 0,
+    "ignored": 3,
+    "measured": 0,
+    "passed": 295
+  },
+  "stable_inputs": true,
+  "work_id": "LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT"
+}

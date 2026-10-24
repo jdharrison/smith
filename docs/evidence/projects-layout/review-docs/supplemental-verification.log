@@ -1,0 +1,50 @@
+{
+  "bound_docs": {
+    "canonical_files_sha256": "d7a32b500cbaf874f1f8ea840cd102f71406be7bd6a3f7b653a31c1a7d26c7a8",
+    "count": 27,
+    "raw_binding": {
+      "mode": 436,
+      "path": "docs/evidence/projects-layout/closeout-binding.json",
+      "sha256": "a5bf0e6e5eab220f6eb2b08023449969ce2f3d5682dac232a4c28d50e964c16d",
+      "size": 5553
+    },
+    "result": "PASS"
+  },
+  "final_core": {
+    "changed": [],
+    "files": 1265,
+    "result": "PASS",
+    "sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164"
+  },
+  "previous_evidence_preservation": {
+    "changed": [],
+    "files": 480,
+    "result": "PASS"
+  },
+  "recorded_at": "2026-10-17T22:52:21.818215+00:00",
+  "supplemented_required_checks_pass": true,
+  "whole_current_worktree_audit": {
+    "matches_parent_closed_set": false,
+    "note": "These paths are outside the bound layout files. Observed mtimes are later than the parent binding; mtimes alone do not authenticate task ownership or approval. Do not apply layout source assurance to them.",
+    "unbound_additions": [
+      {
+        "authority_or_approval_inferred": false,
+        "included_in_parent_binding": false,
+        "mode": 436,
+        "mtime_utc": "2026-10-17T22:51:03.427749+00:00",
+        "path": "docs/evidence/global-context/BASELINE.json",
+        "sha256": "752c421609183d024128cba9fa1b700d5c03c7e62562146b2ae95e30d5cce58f",
+        "size": 100518
+      },
+      {
+        "authority_or_approval_inferred": false,
+        "included_in_parent_binding": false,
+        "mode": 436,
+        "mtime_utc": "2026-10-17T22:50:57.359451+00:00",
+        "path": "docs/plans/LOCAL-SMITH-GLOBAL-CONTEXT.md",
+        "sha256": "fc01818323f37cefc86a40716c803d3a7e85fcf83ac4fada0ebc11b184886fcd",
+        "size": 11749
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "changed_initial_records": [],
+  "initial_evidence_canonical_sha256": "0bfac5c7b8242ea15508c005473b260e1b2f28e3dc0ac3be631da729bdad8f26",
+  "initial_records_verified": 28,
+  "initial_report_sha256": "fc04047888d033f3d9d1df2b6e4d0de7df2273c73a2ffd1dfaf1b17050285983",
+  "original_scratch_files": [
+    {
+      "path": "target/projects-layout/assurance/review_check.py",
+      "sha256": "a229b9b7b7b60529363b191e22a2b5392dacad53225d4e12c980561634741ed1"
+    },
+    {
+      "path": "target/projects-layout/assurance/static_checks.py",
+      "sha256": "ed7bbb9b2a317d287c6c7bbbe1979c752949b50c3baacbceb7d29bc5d9600c80"
+    },
+    {
+      "path": "target/projects-layout/assurance/finalize_review.py",
+      "sha256": "c75f6e8123d902fe3278b9d1db36397bca213e55f8edac928f54c6fa2ce3031a"
+    },
+    {
+      "path": "target/projects-layout/assurance/independent_layout_probe_test.dart",
+      "sha256": "5516888bdda8a832ff04d77b53c1366bb5f311abc9099b626bfbd930cf176ddc"
+    },
+    {
+      "path": "target/projects-layout/assurance/defect_confirmation_test.dart",
+      "sha256": "475a3a99112bdd7950624582be1627f45f8846562f26ba34c11fa496c24c4838"
+    }
+  ],
+  "unchanged": true
+}

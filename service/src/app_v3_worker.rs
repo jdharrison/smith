@@ -45,7 +45,10 @@ fn fence(inner: &Inner, work: &Work) -> bool {
 impl Application {
     fn permission(&self, work: &Work) -> AppResult<Instant> {
         let inner = self.inner.lock().map_err(|_| storage())?;
-        if !fence(&inner, work) || self.cloud.cancelled.load(Ordering::SeqCst) {
+        if !fence(&inner, work)
+            || self.dev_integrity_blocked()
+            || self.cloud.cancelled.load(Ordering::SeqCst)
+        {
             return Err(storage());
         }
         let deadline = inner
@@ -66,7 +69,7 @@ impl Application {
         revision: u64,
     ) -> AppResult<()> {
         let inner = self.inner.lock().map_err(|_| storage())?;
-        if !fence(&inner, work) {
+        if !fence(&inner, work) || self.dev_integrity_blocked() {
             return Err(storage());
         }
         let slot = &inner.durable.cloud.providers[identity.provider.index()];
@@ -106,7 +109,7 @@ impl Application {
     fn mark_dispatch(&self, work: &Work) -> AppResult<()> {
         self.permission(work)?;
         let mut inner = self.inner.lock().map_err(|_| storage())?;
-        if !fence(&inner, work) {
+        if !fence(&inner, work) || self.dev_integrity_blocked() {
             return Err(storage());
         }
         let mut next = inner.durable.clone();
@@ -192,8 +195,11 @@ impl Application {
             _ => return,
         };
         let result = (|| -> AppResult<Value> {
+            self.app_effect_permission()?;
             match &work.task {
                 Task::Routed(t) => {
+                    let snapshot = work.instructions.as_ref().ok_or_else(storage)?;
+                    let messages = snapshot.messages(&t.messages);
                     if t.policy != cloud::POLICY {
                         return Err(cloud::error("ROUTE_UNAVAILABLE"));
                     }
@@ -203,12 +209,12 @@ impl Application {
                             &t.route,
                             identity,
                             t.provider_revision.ok_or_else(invalid)?,
-                            &t.messages,
+                            &messages,
                             &mut delivery,
                         )?
                     } else {
                         let inner = self.inner.lock().map_err(|_| storage())?;
-                        if !fence(&inner, &work) {
+                        if !fence(&inner, &work) || self.dev_integrity_blocked() {
                             return Err(storage());
                         }
                         drop(inner);
@@ -221,7 +227,8 @@ impl Application {
                         {
                             return Err(AppError::new("MODEL_UNAVAILABLE","The accepted local model identity is unavailable; no substitution was made"));
                         }
-                        provider.chat(&t.route.model, &t.messages)?
+                        self.app_effect_permission()?;
+                        provider.chat(&t.route.model, &messages)?
                     };
                     if assistant.trim().is_empty() || assistant.len() > MAX_CONTEXT {
                         return Err(cloud::error("MODEL_RESULT_LIMIT"));
@@ -250,7 +257,7 @@ impl Application {
                             let deadline = self.permission(&work)?;
                             let secret = {
                                 let mut inner = self.inner.lock().map_err(|_| storage())?;
-                                if !fence(&inner, &work) {
+                                if !fence(&inner, &work) || self.dev_integrity_blocked() {
                                     return Err(storage());
                                 }
                                 inner
@@ -261,6 +268,7 @@ impl Application {
                                     .ok_or_else(|| cloud::error("CREDENTIAL_OUTCOME_UNKNOWN"))?
                             };
                             let identity = t.credential.as_ref().ok_or_else(invalid)?;
+                            self.app_effect_permission()?;
                             self.cloud
                                 .credentials
                                 .save(

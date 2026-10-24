@@ -1,0 +1,28 @@
+{
+  "command": [
+    "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+    "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+    "--no-version-check",
+    "analyze",
+    "--no-pub",
+    "lib/ui/smith_workspace.dart",
+    "test/dev_navigation_test.dart",
+    "test/dev_navigation_golden_test.dart",
+    "test/agents_navigation_test.dart",
+    "test/projects_navigation_test.dart",
+    "test/compact_workspace_navigation_test.dart"
+  ],
+  "cwd": "client",
+  "exit": 1,
+  "source_sha256": {
+    "client/lib/ui/smith_workspace.dart": "183835706c547e5af9f8bcd283c9609f6f60865c308f713f5db46ea9877ad0a1",
+    "client/lib/main.dart": "0f85137b9995f90f11d33c20a46ee563403045380a53b11c32274395c80678c4",
+    "client/lib/workspace_preferences.dart": "2a31da5d14c38db93d418761bbb577f9d4ebe6566aa4d7be6d1aa833ba7dece4",
+    "client/test/dev_navigation_test.dart": "fb258fbb305afef469f652c7ed83f769bd29034924a880d3339a737aebee3bab",
+    "client/test/dev_navigation_golden_test.dart": "d8329dd001bbf52fa33df5ea641e0fc5b9e7b8b06e9580e970693c7e162c8d86",
+    "client/test/agents_navigation_test.dart": "07797f80d7932e0a9149d68d73c319d1ed48fa32b57c538906efeeb8071a249c",
+    "client/test/compact_workspace_navigation_test.dart": "a591ab6b817a91c4d8fa0309f4458f11d245b0de8f23e4ac4c0fa3917d79dce4",
+    "client/test/projects_navigation_test.dart": "74d82a985cc464b226d457e50f1013f8a7f64196e3f739d8272cddea4e734420"
+  },
+  "changed_during_check": []
+}

@@ -29,6 +29,8 @@ class SmithIcon extends StatelessWidget {
     'info',
     'check',
     'chevron-down',
+    'layers',
+    'git-branch',
   };
 
   final String name;

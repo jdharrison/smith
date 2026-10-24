@@ -1,0 +1,63 @@
+{
+  "all_prior_evidence_preserved": true,
+  "prior_review_reports_identical": true,
+  "recorded_at": "2026-10-17T22:09:27.569207+00:00",
+  "trees": [
+    {
+      "after_sha256": "c97ba389b8956872a78997710c586a9bb935efe543c68fb8ef61d8a720d36ffd",
+      "before_sha256": "c97ba389b8956872a78997710c586a9bb935efe543c68fb8ef61d8a720d36ffd",
+      "byte_and_mode_identical": true,
+      "file_count": 72,
+      "root": "target/projects-layout/validation-run"
+    },
+    {
+      "after_sha256": "87ea13c21005c3af24f3a09babdd6c97bdf22e3913da159359cc71d9f1349757",
+      "before_sha256": "87ea13c21005c3af24f3a09babdd6c97bdf22e3913da159359cc71d9f1349757",
+      "byte_and_mode_identical": true,
+      "file_count": 93,
+      "root": "target/projects-layout/validation-final"
+    },
+    {
+      "after_sha256": "86a8c225b08a08b79927ed7a202c991b4fb1c038d0cb95d09560765d41539bfb",
+      "before_sha256": "86a8c225b08a08b79927ed7a202c991b4fb1c038d0cb95d09560765d41539bfb",
+      "byte_and_mode_identical": true,
+      "file_count": 34,
+      "root": "target/projects-layout/assurance"
+    },
+    {
+      "after_sha256": "5b32bf30056edbbfd78b68031df33d4a3514eab125669433183c09536ef235d6",
+      "before_sha256": "5b32bf30056edbbfd78b68031df33d4a3514eab125669433183c09536ef235d6",
+      "byte_and_mode_identical": true,
+      "file_count": 67,
+      "root": "docs/evidence/projects-layout/validation"
+    },
+    {
+      "after_sha256": "d0a7193da86edd7bcf94066b6a42c8da0b03d74e460ce63ee9d346e69528a94f",
+      "before_sha256": "d0a7193da86edd7bcf94066b6a42c8da0b03d74e460ce63ee9d346e69528a94f",
+      "byte_and_mode_identical": true,
+      "file_count": 88,
+      "root": "docs/evidence/projects-layout/validation-final"
+    },
+    {
+      "after_sha256": "61b2a0cc467893ba66d4ed24215999faec5886d7ccc84fe106b6b7656ff32515",
+      "before_sha256": "61b2a0cc467893ba66d4ed24215999faec5886d7ccc84fe106b6b7656ff32515",
+      "byte_and_mode_identical": true,
+      "file_count": 28,
+      "root": "docs/evidence/projects-layout/review"
+    },
+    {
+      "after_sha256": "122c3c6cc798f3ecf878d8eaf84f154511c1fd3208822363edc6cf1fcb99cd48",
+      "before_sha256": "122c3c6cc798f3ecf878d8eaf84f154511c1fd3208822363edc6cf1fcb99cd48",
+      "byte_and_mode_identical": true,
+      "file_count": 47,
+      "root": "docs/evidence/projects-layout/review-final"
+    },
+    {
+      "after_sha256": "ac3ee6f839bee7aad64ffb057d5c361606ff9a131b9b83d5c964a5a379d29b00",
+      "before_sha256": "ac3ee6f839bee7aad64ffb057d5c361606ff9a131b9b83d5c964a5a379d29b00",
+      "byte_and_mode_identical": true,
+      "file_count": 17,
+      "root": "docs/evidence/projects-layout/remediation"
+    }
+  ]
+}

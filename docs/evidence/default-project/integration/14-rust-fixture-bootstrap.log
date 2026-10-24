@@ -1,0 +1,6 @@
+
+running 1 test
+test dart_cloud::bootstrap_modes_keep_fake_keys_and_restart_resets_only_volatile_facts ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 24 filtered out; finished in 0.18s
+

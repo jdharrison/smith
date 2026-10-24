@@ -1,0 +1,136 @@
+{
+  "accepted_risk_or_waiver": false,
+  "baseline_files": 1459,
+  "blocking_findings": [
+    "core_records_and_identity_unchanged",
+    "core_selector_membership_equal",
+    "no_additional_unbound_paths_since_report"
+  ],
+  "bound_or_existing_evidence_edits": false,
+  "checked_at": "2026-10-17T22:54:15.042043+00:00",
+  "core": {
+    "files": 1265,
+    "sha256": "d45e67b33bf3630b00a007f8362f3871ea8443551f254a86d68edc57e35cf772"
+  },
+  "discrepancies": [
+    {
+      "disposition": "Reported, not edited/approved/waived; no whole-current-checkout PASS.",
+      "id": "D1",
+      "scope": "current whole-worktree closed-set inventory, not the bound files",
+      "severity": "low",
+      "unbound_documents": [
+        {
+          "mode": 436,
+          "path": "client/lib/instructions.dart",
+          "sha256": "5ff0c59b6994300f19203c9788c2d9bf9116683e755b87e315b0775386bae153",
+          "size": 9033
+        },
+        {
+          "mode": 436,
+          "path": "client/lib/instructions_controller.dart",
+          "sha256": "df6485a6d5f110c6148e0f1fb589c5bca312141273a88fd0ad240d44d7f7a376",
+          "size": 10946
+        },
+        {
+          "mode": 436,
+          "path": "docs/evidence/global-context/BASELINE.json",
+          "sha256": "752c421609183d024128cba9fa1b700d5c03c7e62562146b2ae95e30d5cce58f",
+          "size": 100518
+        },
+        {
+          "mode": 436,
+          "path": "docs/plans/LOCAL-SMITH-GLOBAL-CONTEXT.md",
+          "sha256": "fc01818323f37cefc86a40716c803d3a7e85fcf83ac4fada0ebc11b184886fcd",
+          "size": 11749
+        }
+      ]
+    }
+  ],
+  "human_approval_inferred": false,
+  "initial_failed_verifier_preserved": {
+    "mode": 436,
+    "path": "docs/evidence/projects-layout/review-docs/technical-verification.json",
+    "sha256": "8ca42587556ff07a2a4876e3574c9ce980362fdc0312d9b9c2248737340b3c8e",
+    "size": 22953
+  },
+  "layout_baseline_modifications": 13,
+  "layout_new_source_files": 12,
+  "limits": [
+    "unbound Global Context work not reviewed or approved",
+    "native graphics/IME/accessibility/display/font-weight acceptance",
+    "installed migration/restore/live manager/keyring/provider/model acceptance",
+    "clean-source/cold-cache/hermetic provenance, SBOM, imported-icon rights and publication/deployment approval"
+  ],
+  "local_markdown_file_links_checked": 130,
+  "markdown_anchors_checked": false,
+  "newly_executed_tests": 0,
+  "observed_parent_coverage": {
+    "aggregate": 1497,
+    "cached_installer": 283,
+    "controlled_ignores_cached": 2,
+    "controlled_ignores_fresh": 3,
+    "flutter_fresh": 869,
+    "fresh": 1214,
+    "gtk_fresh": 9,
+    "helpers_fresh": 34,
+    "interpreter_free_cli": "cached, not fresh",
+    "native_package_fresh": 41,
+    "other_skips": 0,
+    "service_fresh": 295
+  },
+  "package": {
+    "directories": 20,
+    "exact_assets": 26,
+    "files": 99,
+    "sha256": "d168fdf131402ee099b516ea752fb510c8b86f2eece1c7aca6b4f0e0e048f725"
+  },
+  "parent_binding": {
+    "mode": 436,
+    "path": "docs/evidence/projects-layout/closeout-binding.json",
+    "sha256": "a5bf0e6e5eab220f6eb2b08023449969ce2f3d5682dac232a4c28d50e964c16d",
+    "size": 5553
+  },
+  "parent_docs_canonical_files_sha256": "d7a32b500cbaf874f1f8ea840cd102f71406be7bd6a3f7b653a31c1a7d26c7a8",
+  "parent_mapping_origin": "technical interpretation independently assessed against already-approved R2/R5 requirements; not specific human direction",
+  "release_gate_decision": "no-go for release/deployment/publication",
+  "report": {
+    "mode": 436,
+    "path": "docs/evidence/projects-layout/review-docs/REVIEW-DOCS.md",
+    "sha256": "09ef934dec3cb1c36049339fcb26b34f63dcb35a93783ff36210a5b27805e504",
+    "size": 15815
+  },
+  "required_checks": {
+    "all_initial_required_failures_explained": true,
+    "canonical_docs_identity_equal": true,
+    "core_records_and_identity_unchanged": false,
+    "core_selector_membership_equal": false,
+    "every_bound_record_unchanged": true,
+    "no_additional_unbound_paths_since_report": false,
+    "package_records_and_identity_unchanged": true,
+    "parent_binding_raw_identity_unchanged": true,
+    "previous_480_evidence_files_unchanged": true
+  },
+  "required_in_slice_remediation": [
+    "Reconcile the reported identity drift without changing preserved records."
+  ],
+  "retained_independent_review_executions": {
+    "not_rerun_here": true,
+    "repository": 293,
+    "scratch": 29,
+    "total": 322
+  },
+  "review": "independent final docs/evidence-binding",
+  "source_or_test_edits": false,
+  "supplemental_reconciliation": {
+    "mode": 436,
+    "path": "docs/evidence/projects-layout/review-docs/supplemental-verification.json",
+    "sha256": "bc386d73d0bbb431ecb4dc819cf8bb448bd590e4ede73263c70667adb621993c",
+    "size": 14922
+  },
+  "unchanged_historical_evidence_files": 127,
+  "unchanged_imported_icons": 15,
+  "unchanged_old_pngs": 28,
+  "verdict": "fail",
+  "verdict_scope": "exact 27 bound files and unchanged previously reviewed layout core/package; not the whole current checkout",
+  "work_id": "LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT"
+}

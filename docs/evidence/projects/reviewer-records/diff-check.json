@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "git",
+    "--no-pager",
+    "diff",
+    "--check"
+  ],
+  "cwd": ".",
+  "exit_code": 0,
+  "finished_at": "2026-10-17T06:20:07.191603+00:00",
+  "log": "reviewer-records/diff-check.log",
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "started_at": "2026-10-17T06:20:07.169458+00:00",
+  "timed_out": false
+}

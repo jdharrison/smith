@@ -1,0 +1,43 @@
+{
+  "after": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+  "before": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+  "branch": "feature/autonomy",
+  "cache_policy": "Existing offline Cargo registry and cached Flutter SDK/pub packages; fresh isolated Cargo target. No old fixture executable. Dagger vertices may be cached.",
+  "copy_mismatches": [],
+  "driver": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "target/default-project/validation/run_validation.py",
+    "sha256": "8908cedb91ce97b22b34d44605e571004f41171e5ab1350a1872ce4f2327cb79",
+    "size": 11573,
+    "type": "file"
+  },
+  "head": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+  "local_recorder": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "target/default-project/validation/recorder.py",
+    "sha256": "2e46980343a658e1f8c065b3e35672f234aaf60c6e8ce65f16c05b62ebac8817",
+    "size": 11988,
+    "type": "file"
+  },
+  "recorder_lineage": [
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/projects-layout/validation-rebound/recorder.py",
+      "sha256": "88e03b440b567ddff4952874156723b8423474d6a1690ac4813b570a54b7c206",
+      "size": 3356,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/projects-layout/validation-closeout/recorder.py",
+      "sha256": "628c43687723cedbdcb496dc178d726e1922af0aa26a8f54b26827667794e06b",
+      "size": 12006,
+      "type": "file"
+    }
+  ],
+  "stable_capture": true
+}

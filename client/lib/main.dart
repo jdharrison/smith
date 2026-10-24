@@ -13,6 +13,14 @@ import 'chat_panel.dart';
 import 'control_api.dart';
 import 'native_control.dart';
 import 'queue_exit_guard.dart';
+import 'projects_controller.dart';
+import 'agents_controller.dart';
+import 'dev_jobs_controller.dart';
+import 'ui/dev_jobs_view.dart';
+import 'ui/agents_view.dart';
+import 'instructions_controller.dart';
+import 'ui/instructions_view.dart';
+import 'ui/projects_view.dart';
 import 'text_chat.dart';
 import 'workspace_controller.dart';
 import 'ui/build_info.dart';
@@ -112,6 +120,15 @@ class WorkspacePresentation extends ChangeNotifier {
   }
 
   void setPage(int index, String page) {
+    if (!const {
+      'chat',
+      'dev',
+      'projects',
+      'agents',
+      'settings',
+    }.contains(page)) {
+      throw ArgumentError.value(page, 'page', 'Unknown workspace destination');
+    }
     if (pages[index] == page) return;
     pages[index] = page;
     _selectionChanged();
@@ -329,10 +346,21 @@ class _ConversationScreenState extends State<ConversationScreen> {
 
   ChatController get chat => widget.chat;
   BuildInfo buildInfo = const BuildInfo.development();
+  late final ProjectsController projects;
+  late final AgentsController agents;
+  late final DevJobsController devJobs;
+  late final InstructionsController instructions;
 
   @override
   void initState() {
     super.initState();
+    projects = ProjectsController(chat.api);
+    agents = AgentsController(chat.api);
+    devJobs = DevJobsController(chat.api, projects);
+    instructions = InstructionsController(
+      widget.chat.api,
+      onApplied: chat.synchronize,
+    );
     widget.presentation?.addListener(_presentationChanged);
     widget.presentation?.hydrate();
     BuildInfo.load().then((info) {
@@ -442,6 +470,10 @@ class _ConversationScreenState extends State<ConversationScreen> {
   @override
   void dispose() {
     closed = true;
+    devJobs.dispose();
+    projects.dispose();
+    agents.dispose();
+    instructions.dispose();
     widget.presentation?.removeListener(_presentationChanged);
     super.dispose();
   }
@@ -535,6 +567,15 @@ class _ConversationScreenState extends State<ConversationScreen> {
                         return SmithWorkspace(
                           showAppHeader: pane == null,
                           page: widget.presentation?.pages[index],
+                          projects: ProjectsView(controller: projects),
+                          agents: AgentsView(controller: agents),
+                          devJobs: DevJobsView(controller: devJobs),
+                          instructions: InstructionsView(
+                            controller: instructions,
+                            route: selected is ConversationController
+                                ? selected.selectedRoute
+                                : null,
+                          ),
                           onPageChanged: widget.presentation == null
                               ? null
                               : (page) =>

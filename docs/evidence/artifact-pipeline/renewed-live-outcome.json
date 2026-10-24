@@ -1,0 +1,71 @@
+{
+  "status": "failed_not_functionally_accepted",
+  "approval": {
+    "scope": "one_start_one_no_model_execute_then_stop_exact_retained_engine",
+    "window_start_utc": "2026-10-21T02:20:37.173685Z",
+    "window_end_utc": "2026-10-21T02:35:37.173685Z",
+    "work_cutoff_utc": "2026-10-21T02:34:37.173685Z",
+    "window_reset": false
+  },
+  "first_renewed_supervisor": {
+    "stage": "ownership",
+    "reason": "config_drift",
+    "cleanup": "not_started",
+    "difference": "HostConfig.OomKillDisable_false_to_null",
+    "start_or_cli_dispatch": false
+  },
+  "reviewed_same_window_continuation": {
+    "normalization": "exact_present_field_false_or_null_only",
+    "owned_root_resource_admission": "passed",
+    "running_marker": true,
+    "dispatch_marker": true,
+    "cli_stdout_bytes": 0,
+    "cli_stderr_bytes": 19882,
+    "correlated_policy_denied_envelope": false,
+    "actual_progress": "Dagger_engine_connection_and_Python_SDK_module_runtime_preparation",
+    "module_loading_failure": "uv_editable_install_cannot_satisfy_dagger_io_exact_0_21_9_dependency",
+    "final_stage": "cleanup",
+    "final_reason": "cgroup_unavailable_or_unsafe",
+    "cleanup": "unknown"
+  },
+  "last_exact_cid_inspection": {
+    "status": "exited",
+    "running": false,
+    "pid": 0,
+    "exit_code": 137,
+    "started_at": "2026-10-21T02:30:32.270443876Z",
+    "finished_at": "2026-10-21T02:31:05.233674559Z"
+  },
+  "post_stop_readonly_observation": {
+    "at_utc": "2026-10-21T02:34:48Z",
+    "owned_scope_path_exists": false,
+    "original_running_pid_exists": false,
+    "cleanup_reclassified": false
+  },
+  "local_source_correction": {
+    "dependency": "dagger-io supplied editable by engine-managed Python SDK",
+    "engine_pin_unchanged": "v0.21.9",
+    "isolated_python_tests": 67,
+    "independent_delta_assurance": "passed_source_only",
+    "live_retested": false
+  },
+  "not_executed": [
+    "coding_image_build",
+    "Setup",
+    "OpenCode",
+    "model_or_provider_call",
+    "credential_injection",
+    "repository_acquisition",
+    "installed_Smith_change"
+  ],
+  "original_records_preserved": true,
+  "dispatched_request_replayed": false,
+  "remaining_gates": [
+    "identity_bound_removed_cgroup_cleanup_proof_or_other_supported_cleanup_design",
+    "fresh_module_manifest_and_live_transport_approval",
+    "real_correlated_File_scalar_transport",
+    "separately_approved_no_model_Setup",
+    "Execute_Submit_completion_and_provider_policy",
+    "service_API_desktop_wiring"
+  ]
+}

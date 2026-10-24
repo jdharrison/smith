@@ -1,0 +1,10 @@
+{
+  "command": "<cached-flutter-sdk>/bin/cache/dart-sdk/bin/dart format lib/workspace_preferences.dart test/workspace_preferences_test.dart test/workspace_restore_test.dart",
+  "cwd": "client",
+  "started_utc": "2026-10-18T00:57:07.786320+00:00",
+  "exit": 0,
+  "timeout_seconds": 180
+}
+Formatted test/workspace_preferences_test.dart
+Formatted test/workspace_restore_test.dart
+Formatted 3 files (2 changed) in 0.03 seconds.

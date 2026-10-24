@@ -1,0 +1,31 @@
+{
+  "owned_engine_state": {
+    "Status": "exited",
+    "Running": false,
+    "Pid": 0,
+    "ExitCode": 137,
+    "StartedAt": "2026-10-21T01:29:56.361287455Z",
+    "FinishedAt": "2026-10-21T01:30:06.509769583Z"
+  },
+  "daemon": {
+    "CgroupDriver": "systemd",
+    "CgroupVersion": "2",
+    "OperatingSystem": "Ubuntu 24.04.5 LTS",
+    "SecurityOptions": [
+      "name=apparmor,profile=default",
+      "name=seccomp,profile=builtin",
+      "name=cgroupns"
+    ]
+  },
+  "host_cgroup_controllers_present": true,
+  "self_cgroup_row_count": 1,
+  "cgroup2_mounts": [
+    {
+      "root_is_slash": true,
+      "mountpoint": "/sys/fs/cgroup",
+      "options": "rw,nosuid,nodev,noexec,relatime"
+    }
+  ],
+  "original_pid_still_exists": false,
+  "cli_request_dispatched": false
+}

@@ -1,0 +1,3 @@
+   Compiling smith-service v0.1.0 (<workspace>/target/default-project/integration/build-source-2/service)
+    Finished `test` profile [unoptimized] target(s) in 4.28s
+  Executable tests/debug_service.rs (<workspace>/target/default-project/integration/build-source/service/target/debug/deps/debug_service-0a4be2ddda80d80f)

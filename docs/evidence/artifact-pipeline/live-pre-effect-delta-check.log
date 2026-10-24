@@ -1,0 +1,86 @@
+{
+  "binding": {
+    "cli": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+    "destination": "e2ccb8dd1243321f6e72402e0804b542a8bd0f4cb28aebb3d52caefedeca6c37",
+    "docker_config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "engine_config": "e85a7d6a103649c0d0f7b40901d6511f1ac10ca3a30a9321a6a8a6fee4ad6821",
+    "installed_cli": "ac2b5d28bf9c1881f0e14685a4e19610f78a256fb4038932dcd1252d292f5236",
+    "module": "fd065edd5f6741e6ec05d6e8ce1a39999ebac2d7007dec98864130182ff10a93",
+    "preflight": "2bf297f9e2c615e8c6c5f74e63f14a7316f06cf375100cf3be4943eaf43605a6",
+    "request": "0b5b9300a8f7a706b98dcb677982bcf32693f7af84d655ab793ab7cb97f20e30",
+    "scope": {
+      "attempts": 1,
+      "cgroupns": "private",
+      "cleanup_seconds": 60,
+      "cpus": 4,
+      "endpoint": "unix:///run/docker.sock",
+      "engine": "smith-artifact-qa-20261020-01",
+      "image": "registry.dagger.io/engine:v0.21.9",
+      "memory": 4294967296,
+      "no_setup_model_provider_auth_installed_or_remote_mutation": true,
+      "operation": "execute-policy-denied-only",
+      "pids": 1024,
+      "privileged": true,
+      "seconds": 900,
+      "volume": "smith-artifact-qa-20261020-01-data"
+    },
+    "script": "3f6f16e7aef5a0264d7d3a0d2695e4c212eb2a37214ccd1e88904970edbec6bc",
+    "source": "fd065edd5f6741e6ec05d6e8ce1a39999ebac2d7007dec98864130182ff10a93",
+    "tests": "c603d8bf647e7daa4aef6987ca92b75ae0c6e0bc0cc75200784a27a474891aec"
+  },
+  "binding_matches_v2": true,
+  "branch": "feature/autonomy",
+  "changed_binding_keys_vs_original": [
+    "script",
+    "tests"
+  ],
+  "command": "python3 -B docs/evidence/artifact-pipeline/live-transport-qa.py check",
+  "exit": 0,
+  "original_binding_file_sha256": "905ee68ea4a4a313eb86a6b60bd811dc090aadd812608597519a0fedcdbede43",
+  "original_binding_file_unchanged": true,
+  "pipeline_files": 16,
+  "pipeline_manifest_unchanged": true,
+  "plan_unchanged": true,
+  "private_root_mode": "0o700",
+  "repository_head": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+  "retained_upstream_copies_unchanged": true,
+  "staged_cli_record_unchanged": true,
+  "target_mode": "0o775",
+  "utc": "2026-10-21T01:15:14.503966+00:00",
+  "v2_binding_file_sha256": "a50725402d221bb947a257b2c60f38efe95123a75750cc4a77479d7d12940e3e",
+  "work_entries_after": [
+    "cache",
+    "config",
+    "docker",
+    "engine.json",
+    "home",
+    "module",
+    "request.json"
+  ],
+  "work_entries_before": [
+    "cache",
+    "config",
+    "docker",
+    "engine.json",
+    "home",
+    "module",
+    "request.json"
+  ]
+}
+
+FINAL_POST_TEST_RECHECK
+{
+  "final_binding_matches_v2": true,
+  "final_check_exit": 0,
+  "final_staged_entries": [
+    "cache",
+    "config",
+    "docker",
+    "engine.json",
+    "home",
+    "module",
+    "request.json"
+  ],
+  "final_utc": "2026-10-21T01:16:04.330634+00:00",
+  "no_live_receipts_or_effect_markers": true
+}

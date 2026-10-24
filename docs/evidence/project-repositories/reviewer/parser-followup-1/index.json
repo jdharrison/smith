@@ -1,0 +1,72 @@
+{
+  "results": [
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "<repo>/target/project-repositories/assurance/duplicate_reply_test.dart"
+      ],
+      "exit_code": 0,
+      "stable_inputs": true,
+      "log_sha256": "d64b21b72d4c7e654785e789d87c1ebfc1d341408a978b30480c061e6589b042",
+      "original_artifacts_unchanged": true
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/app_reply_json_test.dart",
+        "<repo>/target/project-repositories/assurance/parser-followup-1/parser_adversarial_test.dart"
+      ],
+      "exit_code": 0,
+      "stable_inputs": true,
+      "log_sha256": "cda802adb29ff5bfc638e67c3b2ab42cc4bad6ac9eb9d8dc8009eb8fd997fcc5",
+      "original_artifacts_unchanged": true
+    },
+    {
+      "argv": [
+        "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+        "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+        "--suppress-analytics",
+        "--no-version-check",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/app_api_test.dart",
+        "test/projects_protocol_test.dart",
+        "test/projects_controller_test.dart",
+        "test/projects_view_test.dart",
+        "test/projects_navigation_test.dart",
+        "test/cloud_protocol_test.dart",
+        "test/cloud_routing_test.dart"
+      ],
+      "exit_code": 0,
+      "stable_inputs": true,
+      "log_sha256": "4a9ff5523e1a8568a773e8e746fc2e6fd19ff2fbbe5373286f5167add5eea692",
+      "original_artifacts_unchanged": true
+    }
+  ],
+  "artifact_hashes": {
+    "unchanged-repro.json": "fd0b79cb7272cf1cbd31f4ab8d40d5ba296e87f9e050b7ef61510d5e7bb5e1f2",
+    "unchanged-repro.log": "d64b21b72d4c7e654785e789d87c1ebfc1d341408a978b30480c061e6589b042",
+    "neighbors.json": "d4b98dea0d1cf6232dfab23c8fed87d4f4f548aa7929f3a4290a397666e0800e",
+    "neighbors.log": "4a9ff5523e1a8568a773e8e746fc2e6fd19ff2fbbe5373286f5167add5eea692",
+    "parser-edge-cases.json": "e4769f06573107eb0e2ed9886cc7d6aff4328165bbd0585655ab7b1c5ead0ee9",
+    "parser_adversarial_test.dart": "5e386f7b4f12631b8e5ce9243631f4747eed4b51f18d7291a574fb4f00b4358a",
+    "run.py": "b5607ce72e201c9ca6661fbd2e16b2f5925bb456f5e8f83da054bbc28ac275c7",
+    "parser-edge-cases.log": "cda802adb29ff5bfc638e67c3b2ab42cc4bad6ac9eb9d8dc8009eb8fd997fcc5"
+  }
+}

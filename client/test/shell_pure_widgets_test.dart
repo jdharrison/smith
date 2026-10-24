@@ -205,8 +205,9 @@ void main() {
         await tester.pump();
       }
       expect(selected, isEmpty);
-      final icon = find.byWidgetPredicate(
-        (widget) => widget is SmithIcon && widget.name == 'archive',
+      final icon = find.descendant(
+        of: find.byTooltip('Archived chats'),
+        matching: find.byType(SmithIcon),
       );
       // Focus the actual button's descendant, not its enclosing navigation scope.
       final focus = Focus.of(tester.element(icon.first));

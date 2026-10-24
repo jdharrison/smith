@@ -1,0 +1,10 @@
+{
+  "command": [
+    "python3",
+    "target/dev-navigation/ui/visual-rebase/close_round.py",
+    "prove",
+    "2",
+    "3"
+  ],
+  "exit": 0
+}

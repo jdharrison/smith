@@ -1,0 +1,350 @@
+{
+  "accepted_risk": false,
+  "bound_docs": {
+    "canonical_files_sha256": "d7a32b500cbaf874f1f8ea840cd102f71406be7bd6a3f7b653a31c1a7d26c7a8",
+    "count": 27,
+    "raw_binding": {
+      "mode": 436,
+      "path": "docs/evidence/projects-layout/closeout-binding.json",
+      "sha256": "a5bf0e6e5eab220f6eb2b08023449969ce2f3d5682dac232a4c28d50e964c16d",
+      "size": 5553
+    },
+    "result": "PASS"
+  },
+  "command": [
+    "python3",
+    "-B",
+    "docs/evidence/projects-layout/review-docs/supplemental_verification.py"
+  ],
+  "cwd": "<repo>",
+  "final_core": {
+    "changed": [],
+    "files": 1265,
+    "result": "PASS",
+    "sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164"
+  },
+  "helper_multiline_result": {
+    "actual": "unittest splits this test name and its descriptive docstring/result across adjacent lines",
+    "case": {
+      "result_line": 13,
+      "start_line": 12,
+      "text": "Replay v4.2.2 fetch/ref semantics with real local Git, not a hosted action. ... ok"
+    },
+    "cases": {
+      "test_actual_package_roundtrip_with_synthetic_source_identity": {
+        "result_line": 1,
+        "start_line": 1,
+        "text": "test_actual_package_roundtrip_with_synthetic_source_identity (test_installer_release.ArchiveTests.test_actual_package_roundtrip_with_synthetic_source_identity) ... ok"
+      },
+      "test_archive_tamper_missing_and_mode_fail_reverification": {
+        "result_line": 2,
+        "start_line": 2,
+        "text": "test_archive_tamper_missing_and_mode_fail_reverification (test_installer_release.ArchiveTests.test_archive_tamper_missing_and_mode_fail_reverification) ... ok"
+      },
+      "test_archive_unsafe_paths_links_modes_and_duplicates": {
+        "result_line": 3,
+        "start_line": 3,
+        "text": "test_archive_unsafe_paths_links_modes_and_duplicates (test_installer_release.ArchiveTests.test_archive_unsafe_paths_links_modes_and_duplicates) ... ok"
+      },
+      "test_bad_download_fails_checksum_before_extraction_execution_or_path_write": {
+        "result_line": 26,
+        "start_line": 26,
+        "text": "test_bad_download_fails_checksum_before_extraction_execution_or_path_write (test_pipeline_config.DaggerSetupTests.test_bad_download_fails_checksum_before_extraction_execution_or_path_write) ... ok"
+      },
+      "test_bad_tags_and_branch_only": {
+        "result_line": 11,
+        "start_line": 11,
+        "text": "test_bad_tags_and_branch_only (test_installer_release.SourceTests.test_bad_tags_and_branch_only) ... ok"
+      },
+      "test_both_checkouts_select_full_tag_ref_only_for_candidates": {
+        "result_line": 31,
+        "start_line": 31,
+        "text": "test_both_checkouts_select_full_tag_ref_only_for_candidates (test_pipeline_config.WorkflowContractTests.test_both_checkouts_select_full_tag_ref_only_for_candidates) ... ok"
+      },
+      "test_candidate_upload_is_gated_after_checks_build_and_archive": {
+        "result_line": 32,
+        "start_line": 32,
+        "text": "test_candidate_upload_is_gated_after_checks_build_and_archive (test_pipeline_config.WorkflowContractTests.test_candidate_upload_is_gated_after_checks_build_and_archive) ... ok"
+      },
+      "test_checkout_commit_fallback_loses_annotation_but_explicit_tag_preserves_it": {
+        "result_line": 13,
+        "start_line": 12,
+        "text": "Replay v4.2.2 fetch/ref semantics with real local Git, not a hosted action. ... ok"
+      },
+      "test_cli_normal_default_repo_and_import_from_unrelated_cwd": {
+        "result_line": 4,
+        "start_line": 4,
+        "text": "test_cli_normal_default_repo_and_import_from_unrelated_cwd (test_installer_release.ArchiveTests.test_cli_normal_default_repo_and_import_from_unrelated_cwd) ... ok"
+      },
+      "test_custom_dagger_executable_preserves_module": {
+        "result_line": 29,
+        "start_line": 29,
+        "text": "test_custom_dagger_executable_preserves_module (test_pipeline_config.MakeConfigTests.test_custom_dagger_executable_preserves_module) ... ok"
+      },
+      "test_dirty_staged_and_unstaged": {
+        "result_line": 14,
+        "start_line": 14,
+        "text": "test_dirty_staged_and_unstaged (test_installer_release.SourceTests.test_dirty_staged_and_unstaged) ... ok"
+      },
+      "test_every_dagger_recipe_has_explicit_module": {
+        "result_line": 30,
+        "start_line": 30,
+        "text": "test_every_dagger_recipe_has_explicit_module (test_pipeline_config.MakeConfigTests.test_every_dagger_recipe_has_explicit_module) ... ok"
+      },
+      "test_existing_output_and_dangling_symlink_refused": {
+        "result_line": 5,
+        "start_line": 5,
+        "text": "test_existing_output_and_dangling_symlink_refused (test_installer_release.ArchiveTests.test_existing_output_and_dangling_symlink_refused) ... ok"
+      },
+      "test_full_roundtrip_metadata_and_modes": {
+        "result_line": 6,
+        "start_line": 6,
+        "text": "test_full_roundtrip_metadata_and_modes (test_installer_release.ArchiveTests.test_full_roundtrip_metadata_and_modes) ... ok"
+      },
+      "test_invalid_payloads_leave_no_output": {
+        "result_line": 7,
+        "start_line": 7,
+        "text": "test_invalid_payloads_leave_no_output (test_installer_release.ArchiveTests.test_invalid_payloads_leave_no_output) ... ok"
+      },
+      "test_invalid_source_and_nested_output_write_nothing": {
+        "result_line": 8,
+        "start_line": 8,
+        "text": "test_invalid_source_and_nested_output_write_nothing (test_installer_release.ArchiveTests.test_invalid_source_and_nested_output_write_nothing) ... ok"
+      },
+      "test_lightweight_tag": {
+        "result_line": 15,
+        "start_line": 15,
+        "text": "test_lightweight_tag (test_installer_release.SourceTests.test_lightweight_tag) ... ok"
+      },
+      "test_main_and_pr_validate_without_candidate_default": {
+        "result_line": 33,
+        "start_line": 33,
+        "text": "test_main_and_pr_validate_without_candidate_default (test_pipeline_config.WorkflowContractTests.test_main_and_pr_validate_without_candidate_default) ... ok"
+      },
+      "test_missing_main_ref": {
+        "result_line": 16,
+        "start_line": 16,
+        "text": "test_missing_main_ref (test_installer_release.SourceTests.test_missing_main_ref) ... ok"
+      },
+      "test_module_and_installer_have_reviewed_version_and_digest": {
+        "result_line": 27,
+        "start_line": 27,
+        "text": "test_module_and_installer_have_reviewed_version_and_digest (test_pipeline_config.DaggerSetupTests.test_module_and_installer_have_reviewed_version_and_digest) ... ok"
+      },
+      "test_next_only_layout_refused": {
+        "result_line": 17,
+        "start_line": 17,
+        "text": "test_next_only_layout_refused (test_installer_release.SourceTests.test_next_only_layout_refused) ... ok"
+      },
+      "test_next_only_tooling_refused": {
+        "result_line": 9,
+        "start_line": 9,
+        "text": "test_next_only_tooling_refused (test_installer_release.PackageLoaderTests.test_next_only_tooling_refused) ... ok"
+      },
+      "test_release_is_tag_only_reusable_ci_caller": {
+        "result_line": 34,
+        "start_line": 34,
+        "text": "test_release_is_tag_only_reusable_ci_caller (test_pipeline_config.WorkflowContractTests.test_release_is_tag_only_reusable_ci_caller) ... ok"
+      },
+      "test_root_tooling_ignores_next_decoy": {
+        "result_line": 10,
+        "start_line": 10,
+        "text": "test_root_tooling_ignores_next_decoy (test_installer_release.PackageLoaderTests.test_root_tooling_ignores_next_decoy) ... ok"
+      },
+      "test_root_versions_ignore_next_decoys": {
+        "result_line": 18,
+        "start_line": 18,
+        "text": "test_root_versions_ignore_next_decoys (test_installer_release.SourceTests.test_root_versions_ignore_next_decoys) ... ok"
+      },
+      "test_strict_pubspec_and_lock_versions": {
+        "result_line": 19,
+        "start_line": 19,
+        "text": "test_strict_pubspec_and_lock_versions (test_installer_release.SourceTests.test_strict_pubspec_and_lock_versions) ... ok"
+      },
+      "test_tagged_side_branch_not_in_main_history": {
+        "result_line": 20,
+        "start_line": 20,
+        "text": "test_tagged_side_branch_not_in_main_history (test_installer_release.SourceTests.test_tagged_side_branch_not_in_main_history) ... ok"
+      },
+      "test_ubuntu_only_read_only_credential_free_pinned_actions": {
+        "result_line": 35,
+        "start_line": 35,
+        "text": "test_ubuntu_only_read_only_credential_free_pinned_actions (test_pipeline_config.WorkflowContractTests.test_ubuntu_only_read_only_credential_free_pinned_actions) ... ok"
+      },
+      "test_untracked_allowed": {
+        "result_line": 21,
+        "start_line": 21,
+        "text": "test_untracked_allowed (test_installer_release.SourceTests.test_untracked_allowed) ... ok"
+      },
+      "test_valid_annotated_identity_and_cli": {
+        "result_line": 22,
+        "start_line": 22,
+        "text": "test_valid_annotated_identity_and_cli (test_installer_release.SourceTests.test_valid_annotated_identity_and_cli) ... ok"
+      },
+      "test_version_mismatch": {
+        "result_line": 23,
+        "start_line": 23,
+        "text": "test_version_mismatch (test_installer_release.SourceTests.test_version_mismatch) ... ok"
+      },
+      "test_wrong_head": {
+        "result_line": 24,
+        "start_line": 24,
+        "text": "test_wrong_head (test_installer_release.SourceTests.test_wrong_head) ... ok"
+      },
+      "test_wrong_or_abbreviated_sha": {
+        "result_line": 25,
+        "start_line": 25,
+        "text": "test_wrong_or_abbreviated_sha (test_installer_release.SourceTests.test_wrong_or_abbreviated_sha) ... ok"
+      },
+      "test_wrong_platform_refuses_before_download": {
+        "result_line": 28,
+        "start_line": 28,
+        "text": "test_wrong_platform_refuses_before_download (test_pipeline_config.DaggerSetupTests.test_wrong_platform_refuses_before_download) ... ok"
+      }
+    },
+    "original_expectation": "name and ... ok on the same line",
+    "raw_log": {
+      "mode": 436,
+      "path": "docs/evidence/projects-layout/validation-rebound/pipeline-helpers.log",
+      "sha256": "33bb4dbf151009faefaddbfaa399a117735198d6f579551e107441380d6611fc",
+      "size": 4842
+    },
+    "result": "PASS"
+  },
+  "human_approval_inferred": false,
+  "new_tests_executed": 0,
+  "original_failures_preserved": [
+    {
+      "check": "process-change-is-mechanical-only",
+      "details": {
+        "change": "24 to 26 exact UI asset count only",
+        "path": "docs/PROCESS.md"
+      },
+      "result": "FAIL"
+    },
+    {
+      "check": "new-source-and-omitted-roots",
+      "details": {
+        "head_equal_omitted": [
+          ".gitattributes",
+          ".gitignore",
+          ".smith/project.yaml",
+          "LICENSE",
+          "SECURITY.md"
+        ],
+        "new_pngs": 8,
+        "new_source_files": 12,
+        "unexpected": [
+          "docs/evidence/global-context/BASELINE.json",
+          "docs/plans/LOCAL-SMITH-GLOBAL-CONTEXT.md"
+        ]
+      },
+      "result": "FAIL"
+    },
+    {
+      "check": "raw-ok-lines:pipeline_helpers",
+      "details": {
+        "checked": 34,
+        "missing": [
+          "test_checkout_commit_fallback_loses_annotation_but_explicit_tag_preserves_it"
+        ]
+      },
+      "result": "FAIL"
+    }
+  ],
+  "original_verifier_record": {
+    "mode": 436,
+    "path": "docs/evidence/projects-layout/review-docs/technical-verification.json",
+    "sha256": "8ca42587556ff07a2a4876e3574c9ce980362fdc0312d9b9c2248737340b3c8e",
+    "size": 22953
+  },
+  "parent_focused_terminal_counts": {
+    "compiled-projects": {
+      "expected": 7,
+      "observation_not_execution": true,
+      "passed": 7,
+      "record": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/compiled-projects.log",
+        "sha256": "429fc83adc97e594433f184fae4b006dcd9cd5908b4401891a26244e75ea6a88",
+        "size": 723
+      }
+    },
+    "focused-assets": {
+      "expected": 5,
+      "observation_not_execution": true,
+      "passed": 5,
+      "record": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/focused-assets.log",
+        "sha256": "e48059c91009a9b595e3e4cc1138f43a0166f1db23bf6d7245302a333bdfde56",
+        "size": 458
+      }
+    },
+    "focused-projects": {
+      "expected": 169,
+      "observation_not_execution": true,
+      "passed": 169,
+      "record": {
+        "mode": 436,
+        "path": "docs/evidence/projects-layout/validation-rebound/focused-projects.log",
+        "sha256": "d2b63ae96985cece2b108f16e54b7d0ce06d7264eb98e731b18f34727d6ec9fe",
+        "size": 24435
+      }
+    }
+  },
+  "previous_evidence_preservation": {
+    "changed": [],
+    "files": 480,
+    "result": "PASS"
+  },
+  "process_delta": {
+    "actual_exact_replacement": {
+      "new": "Current UI asset contract is26 exact nonempty paths, including the two locally authored Projects layout glyphs, not a permissive wildcard.",
+      "old": "Current UI asset contract is24 exact nonempty paths, not a permissive wildcard."
+    },
+    "original_expectation": "count-only literal replacement; too strict to recognize the descriptive glyph clause",
+    "policy_or_approval_boundary_relaxed": false,
+    "result": "PASS"
+  },
+  "quality_raw_excerpts": [
+    {
+      "actual": "125 : \u2506 [27.3s] | No issues found! (ran in 8.3s)",
+      "expected": "No issues found! (ran in 8.3s)",
+      "line": 1717,
+      "matches": true
+    },
+    {
+      "actual": "125 : \u2506 [17.5s] | Formatted 92 files (0 changed) in 1.17 seconds.",
+      "expected": "Formatted 92 files (0 changed) in 1.17 seconds.",
+      "line": 1626,
+      "matches": true
+    }
+  ],
+  "recorded_at": "2026-10-17T22:52:21.818215+00:00",
+  "supplemented_required_checks_pass": true,
+  "whole_current_worktree_audit": {
+    "matches_parent_closed_set": false,
+    "note": "These paths are outside the bound layout files. Observed mtimes are later than the parent binding; mtimes alone do not authenticate task ownership or approval. Do not apply layout source assurance to them.",
+    "unbound_additions": [
+      {
+        "authority_or_approval_inferred": false,
+        "included_in_parent_binding": false,
+        "mode": 436,
+        "mtime_utc": "2026-10-17T22:51:03.427749+00:00",
+        "path": "docs/evidence/global-context/BASELINE.json",
+        "sha256": "752c421609183d024128cba9fa1b700d5c03c7e62562146b2ae95e30d5cce58f",
+        "size": 100518
+      },
+      {
+        "authority_or_approval_inferred": false,
+        "included_in_parent_binding": false,
+        "mode": 436,
+        "mtime_utc": "2026-10-17T22:50:57.359451+00:00",
+        "path": "docs/plans/LOCAL-SMITH-GLOBAL-CONTEXT.md",
+        "sha256": "fc01818323f37cefc86a40716c803d3a7e85fcf83ac4fada0ebc11b184886fcd",
+        "size": 11749
+      }
+    ]
+  }
+}

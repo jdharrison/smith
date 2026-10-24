@@ -12,6 +12,20 @@ use std::time::{Duration, Instant};
 #[path = "app_v2.rs"]
 mod v2;
 use v2::{Durable, Job};
+#[path = "app_agents.rs"]
+mod agents;
+#[path = "app_dev_jobs.rs"]
+mod dev_jobs;
+#[path = "app_instructions.rs"]
+mod instructions;
+#[path = "app_dev_local.rs"]
+mod local_dev;
+#[path = "app_projects.rs"]
+mod projects;
+#[path = "app_retained_jobs.rs"]
+mod retained_api;
+#[path = "retained_jobs.rs"]
+pub mod retained_jobs;
 #[path = "app_timestamps.rs"]
 mod timestamps;
 #[path = "app_v3.rs"]
@@ -426,6 +440,7 @@ struct Inner {
     cloud: v3::Volatile,
 }
 struct WorkerOwner {
+    dev_jobs: Arc<dev_jobs::Owner>,
     provider: Arc<dyn Provider>,
     cloud: Arc<crate::cloud::Dependencies>,
     inner: Arc<Mutex<Inner>>,
@@ -439,9 +454,12 @@ impl Drop for WorkerOwner {
         if let Ok(mut inner) = self.inner.lock() {
             inner.owned = false;
         }
+        self.dev_jobs.close();
         self.cloud.cancel();
         let join_cleanup = self.provider.cancel_owned();
-        self.sender.take();
+        if let Some(sender) = self.sender.take() {
+            let _ = sender.try_send(());
+        }
         if let Some(thread) = self.thread.take() {
             if join_cleanup {
                 let _ = thread.join();
@@ -464,6 +482,7 @@ impl Drop for WorkerOwner {
 pub struct Application {
     inner: Arc<Mutex<Inner>>,
     owner: Option<Arc<WorkerOwner>>,
+    dev_jobs: Arc<dev_jobs::Owner>,
     path: PathBuf,
     pub instance_id: String,
     cloud: Arc<crate::cloud::Dependencies>,
@@ -475,6 +494,7 @@ struct Work {
     history: Vec<Message>,
     conversation_id: Option<String>,
     history_revision: Option<u64>,
+    instructions: Option<instructions::Snapshot>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -554,12 +574,30 @@ impl Application {
         provider: Arc<dyn Provider>,
         cloud: crate::cloud::Dependencies,
     ) -> Result<Self> {
+        Self::open_with_runtime(roots, provider, cloud, None)
+    }
+    /// Trusted in-process injection only; no environment or production capability switch.
+    /// The runtime must bound execute and cooperate with cancel during shutdown.
+    pub fn open_with_retained_runtime(
+        roots: &Roots,
+        provider: Arc<dyn Provider>,
+        cloud: crate::cloud::Dependencies,
+        runtime: Arc<dyn retained_jobs::Runtime>,
+    ) -> Result<Self> {
+        Self::open_with_runtime(roots, provider, cloud, Some(runtime))
+    }
+    fn open_with_runtime(
+        roots: &Roots,
+        provider: Arc<dyn Provider>,
+        cloud: crate::cloud::Dependencies,
+        runtime: Option<Arc<dyn retained_jobs::Runtime>>,
+    ) -> Result<Self> {
         let cloud = Arc::new(cloud);
         let path = roots.data.join("smith-next/app-state.json");
         filesystem::check_directory(&roots.data.join("smith-next"), true)?;
         let (mut durable, migrated) = match filesystem::read_file(&path, 0o600, STATE_LIMIT)? {
             Some(bytes) => Durable::load(&bytes)?,
-            None => (Durable::default(), false),
+            None => (projects::bootstrap(&path)?, false),
         };
         durable.validate()?;
         let mut changed = migrated;
@@ -573,6 +611,7 @@ impl Application {
                 changed = true;
             }
         }
+        changed |= durable.instructions.activate(&mut durable.config)?;
         if changed {
             durable.revision = durable
                 .revision
@@ -590,29 +629,68 @@ impl Application {
             cloud: v3::Volatile::default(),
         }));
         let instance_id = new_id()?;
+        let mut dev_owner = dev_jobs::Owner::open(
+            roots.data.join("smith-next/dev-jobs.json"),
+            Arc::new(crate::dev_runtime::DockerRuntime::new(
+                roots.runtime.clone(),
+            )),
+        );
+        dev_owner.local = Some(Arc::new(local_dev::Owner::open(
+            roots.data.join("smith-next/dev-local-jobs.json"),
+            Arc::new(crate::dev_runtime::DockerLocalRuntime::new(
+                roots.runtime.clone(),
+            )),
+        )));
+        dev_owner.retained_runtime = runtime;
+        let dev_jobs = Arc::new(dev_owner);
         let worker = Self {
             inner: inner.clone(),
             owner: None,
+            dev_jobs: dev_jobs.clone(),
             path: path.clone(),
             instance_id: instance_id.clone(),
             cloud: cloud.clone(),
         };
         let owner_provider = provider.clone();
+        let scheduler_sender = sender.clone();
         let thread = std::thread::Builder::new()
             .name("smith-app-worker".into())
             .spawn(move || {
                 // This thread is the only runner owner: idle stop uses its own
                 // receive timeout and shutdown happens here on exit.
+                let mut prefer_dev = true;
                 loop {
+                    if !worker.inner.lock().is_ok_and(|inner| inner.owned) {
+                        break;
+                    }
+                    let _ = worker.dispatch_dev(scheduler_sender.clone());
+                    if matches!(worker.run_retained_command(), Ok(true)) {
+                        continue;
+                    }
+                    if prefer_dev
+                        && matches!(worker.run_dev_completion(provider.as_ref()), Ok(true))
+                    {
+                        prefer_dev = false;
+                        continue;
+                    }
                     match worker.next_work() {
                         Ok(Some(work)) => {
                             worker.run(work, provider.as_ref());
+                            prefer_dev = true;
                             continue;
                         }
                         Ok(None) => {}
                         Err(_) => break,
                     }
-                    match provider.idle_timeout() {
+                    if matches!(worker.run_dev_completion(provider.as_ref()), Ok(true)) {
+                        prefer_dev = false;
+                        continue;
+                    }
+                    let wait = match (provider.idle_timeout(), worker.dev_queue_timeout()) {
+                        (Some(provider), Some(queue)) => Some(provider.min(queue)),
+                        (provider, queue) => provider.or(queue),
+                    };
+                    match wait {
                         Some(wait) => match receiver.recv_timeout(wait) {
                             Ok(work) => work,
                             Err(mpsc::RecvTimeoutError::Timeout) => {
@@ -630,11 +708,13 @@ impl Application {
                         break;
                     }
                 }
+                worker.join_dev_workers();
                 provider.shutdown();
             })
             .map_err(|_| "Cannot start provider worker")?;
         Ok(Self {
             owner: Some(Arc::new(WorkerOwner {
+                dev_jobs: dev_jobs.clone(),
                 provider: owner_provider,
                 cloud: cloud.clone(),
                 inner: inner.clone(),
@@ -642,6 +722,8 @@ impl Application {
                 thread: Some(thread),
             })),
             inner,
+            dev_jobs,
+
             path,
             instance_id,
             cloud,
@@ -832,6 +914,34 @@ impl Application {
         }
     }
     fn commit(&self, inner: &mut Inner, mut next: Durable) -> AppResult<()> {
+        // Admission and Dev model dependencies share the app -> ledger lock order.
+        if (serde_json::to_value(&next.config).map_err(|_| storage())?
+            != serde_json::to_value(&inner.durable.config).map_err(|_| storage())?
+            && self.dev_has_model_dependencies())
+            || next.jobs.iter().any(|job| {
+                v2::pending(&job.operation)
+                    && !inner.durable.jobs.iter().any(|old| old.operation.request_id == job.operation.request_id)
+                    && matches!(job.task.as_ref(), Some(Task::Remove(model)) if self.dev_model_referenced(&model.model))
+            })
+        {
+            return Err(AppError::new("BUSY", "Queued or executing Dev work references this model configuration"));
+        }
+        if self.dev_integrity_blocked()
+            && next.jobs.iter().any(|job| {
+                v2::pending(&job.operation)
+                    && !inner
+                        .durable
+                        .jobs
+                        .iter()
+                        .any(|old| old.operation.request_id == job.operation.request_id)
+            })
+        {
+            return Err(AppError::new(
+                "BUSY",
+                "Local inspection owns the shared provider capacity",
+            ));
+        }
+        next.instructions.prune(&next.jobs, &next.conversations);
         next.revision = next.revision.checked_add(1).ok_or_else(v2::capacity)?;
         next.preflight()?;
         if !inner.owned {
@@ -943,6 +1053,9 @@ impl Application {
             return Err(v2::capacity());
         }
         next.make_room()?;
+        if matches!(task, Task::Submit { .. }) {
+            next.instructions.capture(&id);
+        }
         next.jobs.push(Job {
             operation: operation.clone(),
             fingerprint,
@@ -956,6 +1069,13 @@ impl Application {
         self.wake()?;
         Ok(admission(&operation))
     }
+    fn app_effect_permission(&self) -> AppResult<()> {
+        let inner = self.inner.lock().map_err(|_| storage())?;
+        if inner.fault || !inner.owned || self.dev_integrity_blocked() {
+            return Err(storage());
+        }
+        Ok(())
+    }
     fn run(&self, work: Work, provider: &dyn Provider) {
         if matches!(work.task, Task::Routed(_) | Task::Provider(_)) {
             self.run_v3(work, provider);
@@ -964,6 +1084,7 @@ impl Application {
         let mut turn = None;
         let mut inventory = None;
         let result = (|| -> AppResult<Value> {
+            self.app_effect_permission()?;
             match &work.task {
                 Task::Models => {
                     let mut found = provider.inventory()?;
@@ -981,6 +1102,7 @@ impl Application {
                     if !found.models.iter().any(|m| m.name == a.model && m.digest == a.sha256) {
                         return Err(AppError::new("MODEL_MISMATCH", "Installed model identity differs from the approved model"));
                     }
+                    self.app_effect_permission()?;
                     let assistant = provider.chat(&a.model, &[Message {
                         role: "user".into(), content: "Say hello in one short sentence.".into(),
                     }])?;
@@ -1005,7 +1127,13 @@ impl Application {
                         role: "user".into(),
                         content: text.clone(),
                     });
-                    let assistant = provider.chat(model, &history)?;
+                    let snapshot = work.instructions.as_ref().ok_or_else(storage)?;
+                    while history.iter().map(|m| m.content.len()).sum::<usize>() + snapshot.text.len() > MAX_CONTEXT {
+                        if history.len() <= 1 { return Err(crate::cloud::error("CONTEXT_LIMIT")); }
+                        history.drain(..2);
+                    }
+                    self.app_effect_permission()?;
+                    let assistant = provider.chat(model, &snapshot.messages(&history))?;
                     if assistant.trim().is_empty() || assistant.len() > MAX_CONTEXT {
                         return Err(AppError::new(
                             "MODEL_RESULT_LIMIT",

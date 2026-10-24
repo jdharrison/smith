@@ -1,0 +1,31 @@
+{
+  "command": [
+    "<HOME>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+    "<HOME>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+    "--suppress-analytics",
+    "--no-version-check",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "test/projects_layout_golden_test.dart",
+    "test/ui_redesign_golden_test.dart",
+    "test/workspace_entrance_visual_test.dart",
+    "test/boot_visual_test.dart"
+  ],
+  "cwd": "client",
+  "duration_seconds": 8.966,
+  "environment_overrides": {
+    "CI": "true",
+    "DART_SUPPRESS_ANALYTICS": "true",
+    "FLUTTER_ALREADY_LOCKED": "true",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true"
+  },
+  "exit_code": 0,
+  "label": "visual",
+  "log": "visual.log",
+  "log_sha256": "dc742f343c61218221726a07d21f686ac5faab3d5afd8f11f422eeb4524dcce5",
+  "started_utc": "2026-10-17T22:27:06.445731+00:00",
+  "timed_out": false,
+  "timeout_seconds": 240
+}

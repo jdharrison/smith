@@ -5,6 +5,11 @@ import 'control_api.dart';
 import 'app_v2.dart';
 import 'cloud_routing.dart';
 import 'native_control.dart';
+import 'projects.dart';
+import 'instructions.dart';
+import 'agents.dart';
+import 'dev_jobs.dart';
+import 'retained_jobs.dart';
 
 const appFrameLimit = 4 * 1024 * 1024;
 final _idPattern = RegExp(r'^[0-9a-f]{32}$');
@@ -36,6 +41,7 @@ class AppReply {
     }
     final dynamic v;
     try {
+      _preflightAppJson(text);
       v = jsonDecode(text);
     } on Object {
       throw const AppFailure('PROTOCOL', 'Invalid app reply.');
@@ -87,6 +93,58 @@ class AppReply {
 
     return AppReply(v['instance_id'], result);
   }
+}
+
+// Check member identity before jsonDecode can collapse duplicates. Strings are
+// scanned atomically; only member names are decoded, so escaped names compare
+// exactly as they will in the final map. The frame limit bounds total work/key
+// storage, and this iterative depth cap also bounds the subsequent decoder.
+// Full JSON grammar validation remains jsonDecode's responsibility.
+void _preflightAppJson(String text) {
+  const maxDepth = 64;
+  final containers = <Set<String>?>[]; // null denotes an array.
+  bool whitespace(int code) =>
+      code == 32 || code == 9 || code == 10 || code == 13;
+  Never invalid() => throw const FormatException('Invalid app JSON structure.');
+
+  var offset = 0;
+  while (offset < text.length) {
+    final code = text.codeUnitAt(offset++);
+    if (code == 34) {
+      final start = offset - 1;
+      var closed = false;
+      while (offset < text.length) {
+        final character = text.codeUnitAt(offset++);
+        if (character == 92) {
+          // Skip the escaped character, never interpreting escaped punctuation.
+          if (offset == text.length) invalid();
+          offset++;
+        } else if (character == 34) {
+          closed = true;
+          break;
+        }
+      }
+      if (!closed) invalid();
+      var next = offset;
+      while (next < text.length && whitespace(text.codeUnitAt(next))) {
+        next++;
+      }
+      if (next < text.length && text.codeUnitAt(next) == 58) {
+        if (containers.isEmpty || containers.last == null) invalid();
+        final key = jsonDecode(text.substring(start, offset)) as String;
+        if (!containers.last!.add(key)) invalid();
+      }
+    } else if (code == 123 || code == 91) {
+      if (containers.length == maxDepth) invalid();
+      containers.add(code == 123 ? <String>{} : null);
+    } else if (code == 125 || code == 93) {
+      if (containers.isEmpty || (containers.last == null) != (code == 93)) {
+        invalid();
+      }
+      containers.removeLast();
+    }
+  }
+  if (containers.isNotEmpty) invalid();
 }
 
 // Observational compatibility only: these operations cannot be submitted by
@@ -212,10 +270,34 @@ class NativeAppApi implements AppApi {
         const AppFailure('CAPACITY', 'Application exchange queue unavailable.'),
       );
     }
+    final Map<String, dynamic> captured;
+    try {
+      captured =
+          const {
+            ...devJobOperations,
+            ...retainedJobOperations,
+            'agents_list_v2',
+            'agent_create_v1',
+            'agent_update_v2',
+            'agent_receipt',
+            'instructions_get',
+            'instructions_update',
+            'instructions_receipt',
+            'projects_list_v3',
+            'project_create_v3',
+            'project_update_v3',
+            'project_delete_v3',
+            'project_receipt',
+          }.contains(op)
+          ? freezeProjectArguments(args)
+          : args;
+    } on Object catch (e, stack) {
+      return Future.error(e, stack);
+    }
     _waiting++;
     final next = _tail.then((_) {
       if (_closed) throw const AppFailure('CLOSED', 'Client detached.');
-      return _exchange(op, args);
+      return _exchange(op, captured);
     });
     _tail = next
         .then<void>((_) {}, onError: (Object _, StackTrace _) {})
@@ -225,6 +307,15 @@ class NativeAppApi implements AppApi {
 
   Future<AppReply> _exchange(String op, Map<String, dynamic> args) async {
     if (![
+      ...devJobOperations,
+      ...retainedJobOperations,
+      'agents_list_v2',
+      'agent_create_v1',
+      'agent_update_v2',
+      'agent_receipt',
+      'instructions_get',
+      'instructions_update',
+      'instructions_receipt',
       'route_catalog',
       'conversation_routing',
       'conversation_timestamps',
@@ -232,6 +323,11 @@ class NativeAppApi implements AppApi {
       'route_prepare',
       'submit_routed',
       'provider_probe',
+      'projects_list_v3',
+      'project_create_v3',
+      'project_update_v3',
+      'project_delete_v3',
+      'project_receipt',
       'state',
       'models',
       'configure',
@@ -253,7 +349,13 @@ class NativeAppApi implements AppApi {
         'Only text chat and voice:null configuration are supported.',
       );
     }
-    validateV3Arguments(op, args);
+    if (retainedJobOperations.contains(op)) {
+      validateRetainedArguments(op, args);
+    } else if (devJobOperations.contains(op)) {
+      validateDevArguments(op, args);
+    } else {
+      validateV3Arguments(op, args);
+    }
     final id = appId();
     final payload = utf8.encode(
       jsonEncode({
@@ -274,7 +376,29 @@ class NativeAppApi implements AppApi {
         id,
         schemaVersion: 3,
       );
-      validateV3(op, reply.result);
+      if (retainedJobOperations.contains(op)) {
+        validateRetainedResult(op, args, reply.result);
+      } else if (devJobOperations.contains(op)) {
+        validateDevResult(op, args, reply.result);
+      } else {
+        validateV3(op, reply.result);
+      }
+      if (const {
+        'project_create_v3',
+        'project_update_v3',
+        'project_delete_v3',
+        'project_receipt',
+      }.contains(op)) {
+        correlateProjectReceipt(op, args, reply.result);
+      }
+      if (op == 'agent_create_v1' ||
+          op == 'agent_update_v2' ||
+          op == 'agent_receipt') {
+        correlateAgentReceipt(op, args, reply.result);
+      }
+      if (op.startsWith('instructions_')) {
+        correlateInstructionResult(op, args, reply.result);
+      }
       return reply;
     } on ControlFailure catch (e) {
       throw AppFailure('TRANSPORT', e.message, unknown: e.outcomeUnknown);

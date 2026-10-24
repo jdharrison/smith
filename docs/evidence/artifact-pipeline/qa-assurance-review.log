@@ -1,0 +1,58 @@
+Fresh independent delta assurance — three reproduced source defects
+Date: 2026-10-20
+Scope: approved second source-only, unwired milestone in docs/plans/LOCAL-SMITH-ARTIFACT-PIPELINE-MVP.md. Reused policy/role context from the preceding independent review. No source edits; no real Dagger/SDK/engine/image/provider/network/credential/installed effects. Parent owns build/lint/full stable-source acceptance.
+
+Candidate/delta evidence
+- Actual working-tree inputs (including untracked files) matched parent qa-source-check-binding.json at entry and exit. All 20 selected inputs stayed stable. This is a bounded delta binding, not a full service/repository build binding.
+- Only four bound files differ from prior assurance: service/src/artifact_dagger.rs, service/src/artifact_dagger_process.rs, pipeline/src/smith_agent/protocol.py, pipeline/tests/test_module_source.py.
+- Independently reconstructed prior file bytes in memory by reversing the observed changes; each complete reconstructed file SHA-256 matched the previous independent assurance snapshot. Retained unified diffs are therefore hash-verified deltas, not guessed tracked diffs of untracked files: qa-assurance-source-delta.log.
+
+Required Checks Evidence
+1. Request serialization limit
+   Source: artifact_dagger.rs:16–21,251–278; artifact_dagger_process.rs:10–12,114–120.
+   Expected: reject complete serialized requests >32768 bytes before consuming the attempt or invoking a runner; adapter and process launcher use one Rust MAX_REQUEST.
+   Actual: shared bound and serialized-byte rejection precede Invocation consumption/dispatched.push/runner. New regression constructs valid phase JSON padded to exactly 16384 input bytes with escaped newlines, requires InvalidInput/no runner/no consumed attempt, then successfully dispatches a shorter input using the same attempt.
+   Result: PASS, included in independent 50-test Rust run; exit 0.
+2. Response serialization limit
+   Source: protocol.py:8–10,127–143; main.py:26–48,127–142.
+   Expected: complete JSON envelope <=65536 UTF-8 bytes, not merely a <=16384-byte body. Oversize raises typed Invalid and wrapper catches produce bounded prerequisite envelopes.
+   Actual: response checks final encoded bytes. New regression covers control/backslash and Unicode/ASCII cases. Independent probes additionally confirmed exact 65536-byte envelope acceptance/round-trip, 65537 rejection as Invalid(response_size), bounded output or typed rejection for all non-NUL ASCII controls at 16384 body bytes, original-hash-bound fallback, and real size-check fallback through both pure and async fake-SDK Setup wrappers with an injected oversized encoded body. The injected body probes exercise error handling, not a claim that ordinary current Setup naturally produces such a body.
+   Result: PASS; Python suite 67 passed, exit 0; supplemental probes exit 0.
+3. Cancellation during independent verification
+   Source: artifact_dagger_process.rs:228–275 and regression at 1483–1516.
+   Expected: verifier sets cancellation then returns Verified: no successful Observation, no quiescent marker/pending removal; recreated runner with new identity remains fenced.
+   Actual: full Budget check gates verifier entry and post-verifier eligibility; checks precede quiescent publication and pending removal; cancellation is checked before returning Observation. New deterministic fake verifier regression requires Interrupted, retained pending, absence of .quiescent, and OutcomeUnknown on recreated/new identity admission.
+   Result: PASS, included in independent Rust suite. Cooperative cancellation checks are not an atomic cancellation/filesystem transaction or a hard-real-time syscall guarantee; neither is newly claimed.
+
+Independent command/results
+- service/: cargo test --offline --locked --lib artifact_
+  Expected all focused core/adapter/launcher checks pass. Actual 50 passed, 0 failed, 0 ignored; exit 0.
+  Evidence: qa-assurance-rust-focused.log.
+- PYTHONDONTWRITEBYTECODE=1 python3 -B pipeline/tests/run_module_isolated.py, executed through in-memory compile/exec with only its evidence destination redirected to qa-assurance-python-isolated.log; original __file__ preserved.
+  Expected fake SDK/disposable allowlisted source copies, socket/subprocess denied, all checks pass. Actual 67 passed; exit 0.
+  Evidence: qa-assurance-python-isolated.log (harness note included).
+- Independent response boundary/fallback probes: disposable allowlisted copies, fake SDK, socket/subprocess denied; exit 0.
+  Evidence: qa-assurance-response-probes.log.
+- Delta/hash binding: expected stable source matching parent; actual source_stable=true, matches_parent_qa_binding=true.
+  Evidence: qa-assurance-snapshot-before.log, qa-assurance-snapshot-after.log. The latter binds fresh check/delta log digests.
+
+Failing-before evidence and exclusions
+- Inspected qa-regressions-before.log: both new Rust regressions failed, exit 101; retained unchanged.
+- Inspected bounded module-source-tests.log excerpts: Python overflow failed at 98439 >65536. That invocation also had a distinct response-decoder test-fixture error; corrected current regression explicitly uses decode_bytes(..., limit=65536). Neither the initial error nor earlier failures are treated as passing evidence.
+- The original broad launcher-QA delegate did not complete. Its partial qa-launcher-* logs are explicitly NOT successful QA or part of this PASS.
+
+Findings by severity
+Critical: none unresolved within this delta scope.
+High: none unresolved within this delta scope.
+Medium: none unresolved within this delta scope.
+Low: none requiring remediation identified within this delta scope.
+All three reported defects are fixed against their stated source contracts and reproduced regressions. Prior wider source review remains historical; this delta review does not imply exhaustive launcher QA.
+
+Evidence Gaps / boundaries
+No missing check identified for this bounded three-fix assurance claim. Build/Clippy/full stable-source binding remain parent-owned and were not rerun or certified here. No new endpoint, credential, egress toggle, live graph caller, filesystem authority, replay path or production wiring appears in the hash-verified delta. Graph/SDK/image recipe/registration and other bound sources are unchanged.
+Real CLI File/scalar codec, SDK preparation, engine/cache/quiescence enforcement, image acquisition, provider/default behavior, resource/egress enforcement, semantic review, activation and installed acceptance remain separately approved/unverified gates. The source fixes grant none of those authorities.
+
+Verdict: PASS for the three-fix source-only delta.
+Release Gate Decision: GO for parent scoped source-delta closeout recommendation only; NO-GO for broader activation/live execution/release/deployment/installed acceptance.
+Required remediation: none identified within the reviewed delta. Preserve pending broader/parent-owned gates; no human approval or accepted-risk decision is supplied by assurance.
+Only new qa-assurance-* evidence files were written. Existing dirty/untracked source and earlier logs preserved.

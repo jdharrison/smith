@@ -1,0 +1,43 @@
+{
+  "argv": [
+    "git",
+    "--no-pager",
+    "diff",
+    "--check"
+  ],
+  "core_before_sha256": "b86b9d04d2867a23994b142d3850f1b4ea0a5a72c6df7f1d2321ec2f2a180777",
+  "cwd": "<repo>",
+  "environment": {
+    "CI": "true",
+    "DAGGER_CLOUD_TOKEN": "",
+    "DAGGER_NO_NAG": "1",
+    "DAGGER_PROGRESS": "plain",
+    "DNT": "1",
+    "DO_NOT_TRACK": "1",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "GIT_PAGER": "cat",
+    "GIT_TERMINAL_PROMPT": "0",
+    "HOME": "<home>",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "LOGNAME": "jdharrison",
+    "PATH": "<home>/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TERM": "dumb",
+    "TZ": "UTC",
+    "USER": "jdharrison",
+    "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+  },
+  "environment_policy": "explicit complete allowlist; no inherited provider credentials, session bus, display, analytics/cloud tokens",
+  "executable": {
+    "mode": 493,
+    "mode_octal": "0o755",
+    "path": "/usr/bin/git",
+    "sha256": "2a8c18fbf43da9f692d75474c72bea9dfd796c260b0f3dfe456376abc3bbd668",
+    "size": 4066232,
+    "type": "file"
+  },
+  "name": "diff-check",
+  "started_at": "2026-10-18T01:27:14.861551+00:00",
+  "timeout_seconds": 15
+}

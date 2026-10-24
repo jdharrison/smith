@@ -1,0 +1,7 @@
+cwd: installer
+command: cargo fmt --all -- --check
+timeout_seconds: 120
+exit: 0
+timed_out: False
+elapsed_seconds: 0.63
+

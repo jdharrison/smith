@@ -57,6 +57,74 @@ void main() {
     }
     await loader.load();
   });
+  for (final status in ['Sending…', 'Queued…', 'Thinking…']) {
+    for (final scale in [1.0, 2.0]) {
+      testWidgets('compact $status is one status at text scale $scale', (
+        tester,
+      ) async {
+        await tester.binding.setSurfaceSize(const Size(360, 400));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final c = PresentationController()
+          ..stale = false
+          ..busy = true
+          ..pendingId = 'active'
+          ..pendingKind = 'submit';
+        c.localSends['active'] = LocalTextSend('Question')..status = status;
+        await tester.pumpWidget(harness(c, scale: scale));
+        await tester.pumpAndSettle();
+        final statusWidget = find.text(status);
+        expect(statusWidget, findsOneWidget);
+        expect(tester.widget<Text>(statusWidget).maxLines, 2);
+        expect(
+          tester.getSize(statusWidget).height,
+          lessThanOrEqualTo(42 * scale),
+        );
+        expect(find.text('Request in progress'), findsNothing);
+        expect(find.byIcon(Icons.hourglass_top), findsNothing);
+        expect(
+          find.byKey(const ValueKey('conversation-recovery')),
+          findsNothing,
+        );
+        expect(find.text('Request pending'), findsNothing);
+        expect(find.text('Retry'), findsNothing);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+        c.dispose();
+      });
+    }
+  }
+
+  for (final problem in [
+    'error',
+    'stale',
+    'disconnected',
+    'unknown',
+    'expired',
+  ]) {
+    testWidgets('$problem keeps pending recovery visible', (tester) async {
+      final c = PresentationController()
+        ..stale = problem == 'stale'
+        ..connected = problem != 'disconnected'
+        ..pendingId = 'active'
+        ..pendingKind = 'submit'
+        ..expired = problem == 'expired'
+        ..error = problem == 'error' ? 'Request failed' : null;
+      c.localSends['active'] = LocalTextSend('Question')
+        ..active = problem != 'unknown'
+        ..status = problem == 'unknown' ? 'Outcome unknown' : 'Sending…';
+      await tester.pumpWidget(harness(c));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('conversation-recovery')),
+        findsOneWidget,
+      );
+      expect(find.text('Retry'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      c.dispose();
+    });
+  }
+
   for (final size in [
     const Size(400, 400),
     const Size(360, 800),
@@ -241,7 +309,7 @@ void main() {
           tester.widget<TextField>(find.byType(TextField)).controller!.text,
           'Review the complete wrapped draft\nand retain it',
         );
-        expect(api.calls, appCalls);
+        expect(api.calls, [...appCalls, 'instructions_get']);
         expect(core.calls, coreCalls);
         expect(
           api.calls.where((op) => ['submit', 'configure'].contains(op)),

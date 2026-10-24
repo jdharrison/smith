@@ -1,0 +1,3 @@
+compact-text2-620ms.png rails [[9, 136, 65, 400]] bbox (12, 136, 65, 400) changed 5285 outside 0 initial/current 0
+desktop-360ms.png rails [[9, 66, 65, 991]] bbox (12, 66, 65, 991) changed 6463 outside 0 initial/current 0
+mixed-grid-620ms.png rails [[9, 66, 65, 720], [1109, 66, 1165, 720], [9, 737, 65, 1391], [1109, 737, 1165, 1391]] bbox (12, 66, 1165, 1391) changed 24630 outside 0 initial/current 0

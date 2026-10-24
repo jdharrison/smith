@@ -1,0 +1,35 @@
+00:00 +0: loading <repo>/client/test/dev_navigation_test.dart
+00:00 +0: <repo>/client/test/dev_navigation_test.dart: Dev root is inert, independent, truthful and lazy at both widths
+00:00 +1: <repo>/client/test/dev_navigation_test.dart: Dev root is inert, independent, truthful and lazy at both widths
+00:00 +2: <repo>/client/test/dev_navigation_test.dart: Dev root is inert, independent, truthful and lazy at both widths
+00:00 +3: <repo>/client/test/dev_navigation_test.dart: Dev root is inert, independent, truthful and lazy at both widths
+00:01 +4: <repo>/client/test/dev_navigation_test.dart: Dev root is inert, independent, truthful and lazy at both widths
+00:01 +5: <repo>/client/test/dev_navigation_test.dart: Dev root is inert, independent, truthful and lazy at both widths
+00:01 +6: <repo>/client/test/dev_navigation_test.dart: Dev root is inert, independent, truthful and lazy at both widths
+00:01 +7: <repo>/client/test/dev_navigation_test.dart: Dev root is inert, independent, truthful and lazy at both widths
+00:01 +8: <repo>/client/test/projects_navigation_test.dart: same-revision restart fences each pane editor independently without losing chat drafts
+00:01 +9: <repo>/client/test/projects_navigation_test.dart: same-revision restart fences each pane editor independently without losing chat drafts
+00:01 +10: <repo>/client/test/projects_navigation_test.dart: same-revision restart fences each pane editor independently without losing chat drafts
+00:02 +11: <repo>/client/test/projects_navigation_test.dart: same-revision restart fences each pane editor independently without losing chat drafts
+00:02 +12: <repo>/client/test/projects_navigation_test.dart: same-revision restart fences each pane editor independently without losing chat drafts
+00:02 +13: <repo>/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +14: <repo>/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +15: <repo>/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +16: <repo>/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +17: <repo>/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +18: <repo>/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:04 +19: <repo>/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:04 +20: <repo>/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:04 +21: <repo>/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:04 +22: <repo>/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:04 +23: <repo>/client/test/projects_navigation_test.dart: Projects is lazy and explicit; tab switches retain mounted chat, draft, reading and project edits
+00:05 +24: <repo>/client/test/projects_navigation_test.dart: Projects is lazy and explicit; tab switches retain mounted chat, draft, reading and project edits
+00:05 +25: <repo>/client/test/projects_navigation_test.dart: Projects is lazy and explicit; tab switches retain mounted chat, draft, reading and project edits
+00:05 +26: <repo>/client/test/dev_navigation_test.dart: four panes retain disclosure separately and ignore hidden chooser
+00:05 +27: <repo>/client/test/projects_navigation_test.dart: panes share one coalesced registry but retain independent selections and dirty editors through hiding
+00:05 +28: <repo>/client/test/projects_navigation_test.dart: panes share one coalesced registry but retain independent selections and dirty editors through hiding
+00:06 +29: <repo>/client/test/projects_navigation_test.dart: accepted chat and local queue survive Projects and hidden panes without dispatch or inference effects
+00:07 +30: <repo>/client/test/projects_navigation_test.dart: restored Projects queries metadata only; preferences never contain project selection or edits
+00:07 +31: <repo>/client/test/projects_navigation_test.dart: four retained Projects panes preserve scroll, selections and disclosure through every layout, destination and hidden focus fence
+00:11 +32: <repo>/client/test/projects_navigation_test.dart: session-only startup never constructs preferences, still uses the shared service registry
+00:11 +33: All tests passed!

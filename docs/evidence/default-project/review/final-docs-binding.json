@@ -1,0 +1,85 @@
+{
+  "accepted_risk_or_external_approval": false,
+  "actual_canonical_files_sha256": "0cf75b86bf21aa69dbf716f1f94944d4779d5f53b919d1e75f0402bac746f087",
+  "baseline": {
+    "canonical_records_sha256": "aeb1ce67ebb10c0af866313901b7060a921018be60fd267901323a4d69d56ca2",
+    "changed_count": 17,
+    "changed_paths": [
+      "VALIDATION.md",
+      "client/test/rust_projects_integration_test.dart",
+      "docs/ARCHITECTURE.md",
+      "docs/ARCHITECTURE_DETAILS.md",
+      "docs/DESIGN.md",
+      "docs/HOST_PROFILE.md",
+      "docs/HOST_PROFILE_DETAILS.md",
+      "docs/PROCESS.md",
+      "docs/SCOPE.md",
+      "docs/SCOPE_DETAILS.md",
+      "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "docs/VALIDATION_DETAILS.md",
+      "docs/plans/LOCAL-SMITH-DEFAULT-PROJECT.md",
+      "service/src/app.rs",
+      "service/src/app_projects.rs",
+      "service/src/app_projects_tests.rs",
+      "service/tests/debug_service.rs"
+    ],
+    "same_as_closeout_allowed_list": true,
+    "unexpected_changed_paths": []
+  },
+  "bound_file_count": 24,
+  "bounded_feature_source": "PASS",
+  "canonical_files_match": true,
+  "closeout_sha256": "f95e6cbd24c4ffbc7b8817b774081377736894535c5aebd805f7ff91fc1f9a1f",
+  "combined_quality_gate": "BLOCKED",
+  "core": {
+    "added_members": [],
+    "changed_records": [],
+    "count": 1275,
+    "exact_records_equal_parent": true,
+    "matches_closeout": true,
+    "removed_members": [],
+    "selector_independently_reenumerated": true,
+    "sha256": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+    "untracked_count": 33
+  },
+  "current_package": "NOT BUILT; checks NOT RUN; old exports not current",
+  "existing_bound_files_modified": false,
+  "expected_canonical_files_sha256": "0cf75b86bf21aa69dbf716f1f94944d4779d5f53b919d1e75f0402bac746f087",
+  "file_byte_size_mode_mismatches": [],
+  "links": {
+    "broken": [],
+    "checked": 243,
+    "closeout_claimed_count": 196,
+    "count_matches": false,
+    "scope": "inline Markdown local file links in bound Markdown files; fragments removed; anchors not checked"
+  },
+  "narrative_review": {
+    "accurate_against_independent_review_and_retained_gate_scope": true,
+    "files_read": [
+      "docs/evidence/default-project/README.md",
+      "VALIDATION.md",
+      "docs/VALIDATION_DETAILS.md",
+      "docs/plans/LOCAL-SMITH-DEFAULT-PROJECT.md"
+    ],
+    "no_approval_or_accepted_risk_waiver_found": true,
+    "preserved_limits": [
+      "bounded feature-source PASS only",
+      "overall assurance FAIL; combined BLOCKED; release NO-GO",
+      "five broader Rust failures and instruction-test lint remain required failures",
+      "Flutter navigation failure remains required; historical causal blame unproved",
+      "root command failed; build not reached; parallel cancellation not PASS",
+      "current-package verification/helpers NOT RUN; old exports not current",
+      "two exploratory app_v2 failures retained in detailed narrative with attribution unverified",
+      "concurrent Global Context/disk7 and stale disk6 documentation remain external reconciliation",
+      "synthetic post-publication fault is not real hardware/fsync failure evidence"
+    ],
+    "review_sha256": "f73babd076cf76a84804c6bdd118f41fe68381a86fd4420015bc8cfd1b2a8532"
+  },
+  "operation": "docs-only independent final binding verification; no tests or bound-file changes",
+  "overall_assurance": "FAIL",
+  "recorded_at": "2026-10-17T23:38:03.295210+00:00",
+  "release_gate": "NO-GO",
+  "tests_run": false,
+  "verification_pass": false,
+  "work_id": "LOCAL-SMITH-DEFAULT-PROJECT"
+}

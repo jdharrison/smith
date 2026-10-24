@@ -1,0 +1,19 @@
+{
+  "recorded_utc": "2026-10-18T00:58:37.507654+00:00",
+  "baseline_canonical_sha256": "8d5e063fc8ec672d40b3218995fe3fdf98b170652c2dbb44d2ab561d2ade993f",
+  "baseline_file_count": 1337,
+  "baseline_archive_sha256": "968e688390737472076ac7ccef129bb8469e7a9ccc9b0627d0c74f837bc4802d",
+  "owned_hashes": {
+    "client/lib/workspace_preferences.dart": "2a31da5d14c38db93d418761bbb577f9d4ebe6566aa4d7be6d1aa833ba7dece4",
+    "client/lib/main.dart": "0f85137b9995f90f11d33c20a46ee563403045380a53b11c32274395c80678c4",
+    "client/test/workspace_preferences_test.dart": "e2dd1a3160aba8aa8c3c0663b73b98e29f060bea4ebf065c2ee8a9e857ebd6f7",
+    "client/test/workspace_restore_test.dart": "a13b1e9808c47f0a37e3df7d5d1624d629426cd04dc75d500bf606dd6d1a6c0b"
+  },
+  "main_only_formatted_setPage_allowlist_changed": true,
+  "client_lib_external_drift_from_capture": [
+    "client/lib/ui/smith_workspace.dart"
+  ],
+  "core_baseline_files_checked": 1069,
+  "core_baseline_drift": [],
+  "preference_io_unchanged_from_capture": true
+}

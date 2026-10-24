@@ -1,0 +1,31 @@
+{
+  "binary_candidates": [
+    {
+      "mode": 509,
+      "mode_octal": "0o775",
+      "path": "target/default-project/validation/cargo-target/debug/deps/debug_service-0a4be2ddda80d80f",
+      "sha256": "79b38c181580772aec9c8d97ea20008f211787cbc68d85023b573b8eae6e7737",
+      "size": 26102072,
+      "type": "file"
+    }
+  ],
+  "eligible": true,
+  "fixture": {
+    "mode": 509,
+    "mode_octal": "0o775",
+    "path": "target/default-project/validation/debug_service-fixture",
+    "sha256": "79b38c181580772aec9c8d97ea20008f211787cbc68d85023b573b8eae6e7737",
+    "size": 26102072,
+    "type": "file"
+  },
+  "new_build_completed": true,
+  "old_preseed_binary_used": false,
+  "service_archive": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "target/default-project/validation/candidate-core.tar.gz",
+    "sha256": "6290a3abceb7a4bba342a00818a5bc0886524b52622de48396d1c20bf536ce51",
+    "size": 21208847,
+    "type": "file"
+  }
+}

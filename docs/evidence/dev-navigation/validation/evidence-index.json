@@ -1,0 +1,2280 @@
+{
+  "core_sha256": "b86b9d04d2867a23994b142d3850f1b4ea0a5a72c6df7f1d2321ec2f2a180777",
+  "entries": [
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/RESULTS.md",
+      "sha256": "082c3fb631c3d7bacff3b993e2d3b73b31ea73d1aa82ef2eb171d65e7aa1e8bf",
+      "size": 7425,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/actual-package-helpers-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/actual-package-helpers-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/actual-package-helpers.json",
+      "sha256": "0bcffce57e589fdf2f25cfa4a038df66e0fe45a325739d6a247fff9f13f2318f",
+      "size": 2151,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/actual-package-helpers.log",
+      "sha256": "1f0b6c626560d202ae83b9b46b63c4608efd2bfc7be97fd64aff86ce0fc24c36",
+      "size": 138,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/actual-package-helpers.started.json",
+      "sha256": "59f5cb8d57186d17a2a3329a69fa79a06e0fb9adfeb991ab3cb3f3d97de83fe4",
+      "size": 1521,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-build-configured-module-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-build-configured-module-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-build-configured-module.json",
+      "sha256": "9002ecf06080e88ec978e0e99820fc01109b026d5b42408ca2dc589e317fd762",
+      "size": 1866,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-build-configured-module.log",
+      "sha256": "c845ebecb6d5a185f4d4af2e2aebb74e085c1cf01c1f4f53a06a4a89fcb05b4a",
+      "size": 36820,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-build-configured-module.started.json",
+      "sha256": "06527712b897e7b7b2d2b5d022a05370d0e48ee97d9f533986ff76b3557aafe4",
+      "size": 1359,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-build-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-build-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-build.json",
+      "sha256": "89ed7bdd1c172182e8f0bc901502122908fc67b0a71eeb0f409281ff9cf11a74",
+      "size": 1872,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-build.log",
+      "sha256": "0350044671596973218132c7aeacceecf0c61bd4db5ad372855a451a36772505",
+      "size": 2375,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-build.started.json",
+      "sha256": "9c9b392575913aae7542eddbea464efd188d7906f042f486221c00da8a832d2b",
+      "size": 1384,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-test-configured-module-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-test-configured-module-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-test-configured-module.json",
+      "sha256": "a25ccd72d328b61fa1db1dbcef2b66f6e0cd7f5f12e7eff9189890f139a4305f",
+      "size": 1864,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-test-configured-module.log",
+      "sha256": "e5705798829cfcdcfbe1239f7ed6ec5d5e7bbc186b9feaa4723933cb7cf447af",
+      "size": 364552,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-test-configured-module.started.json",
+      "sha256": "8612f86cdc0a24e6dab7d7354b1c9886997091fed8e93c07b4af19f53effdd2e",
+      "size": 1357,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-test-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-test-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-test.json",
+      "sha256": "67482684d07906173e97b8cb1bafc867479c5666742e3ef776a028f06076b7cc",
+      "size": 1869,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-test.log",
+      "sha256": "f36e6c719ace49ebaf011e0f0091a086bdd66beff0ad5cdd9110631c14e6eca6",
+      "size": 2338,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/client-test.started.json",
+      "sha256": "f1c72d3a075032af8fd683a270a90fff8b2b1bb6e55ec5bcfd4055614f86c692",
+      "size": 1382,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/component-redirect-binding.json",
+      "sha256": "61defb4596871704dd481b8f743c2d9c4e69fc24605992711f3de751c11825f7",
+      "size": 1261,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/configured-component-results.json",
+      "sha256": "743a041a31515ab0cda9102e5981f1c19bfda7e73fc09632ab4e893b46de9b87",
+      "size": 10112,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/configured_checks.py",
+      "sha256": "60c5c12b958e4b1335724de874cdc2d84632dde7c3fea5140b66ca1e4c9a2962",
+      "size": 2248,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/core-manifest-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/core-manifest-final.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/current-visual-failures.tar.gz",
+      "sha256": "0d09110c2d229e672fab0e0c7794a70d70ceb9534013cc8b5a2772c85f2d6452",
+      "size": 714617,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-help-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-help-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-help.json",
+      "sha256": "affd31792a6ebf76068861357f4bc4264dd19d833257bf8abe52eace1a655d2e",
+      "size": 1845,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-help.log",
+      "sha256": "a331f38fd7959e81fb2ea3377f1e0906091e174e4b167d6c137f3476dd911333",
+      "size": 3357,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-help.started.json",
+      "sha256": "db77964f09004e6232a789fbb295606e447e4fc22288f3a3492725b31236ff99",
+      "size": 1358,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-module-functions-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-module-functions-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-module-functions.json",
+      "sha256": "f4ed88303cddcb8b7d74991a7ab89d4bd5314e3d646bb01161a79248a073a37b",
+      "size": 1987,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-module-functions.log",
+      "sha256": "f9ab41758c481e32f03166dca53093bb8daff79ab9ea178798f9f15f5c713174",
+      "size": 1447,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-module-functions.started.json",
+      "sha256": "9a7418f2dda82d5b4c34d678209cc7ddf525f426ae5bf70ed05d8cd8af41b4b8",
+      "size": 1488,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-original-module-functions-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-original-module-functions-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-original-module-functions.json",
+      "sha256": "6b1fe52a29e10b57707abfede9c05d97ea9ce970333e2092cc6d2b3f270ba1e4",
+      "size": 1918,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-original-module-functions.log",
+      "sha256": "d8bafc2eecf2ea9cc1eb4d546ad23dedeaf2b8fa78a9da6aa1a8ea3b47a58d91",
+      "size": 2484,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-original-module-functions.started.json",
+      "sha256": "4a8980a9327dc5ffeaf7a8640c173622af7613c6feb763fc8c871f543d2562cc",
+      "size": 1410,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-version-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-version-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-version.json",
+      "sha256": "7902e9aa91c21b22e5d5e4835b4e930d4eea86537d00fa088e740587e36e836d",
+      "size": 1852,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-version.log",
+      "sha256": "0819b1f6a5d2080e67735b51514107720e0fb59ba70a251bd80bbc056bd8288a",
+      "size": 88,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/dagger-version.started.json",
+      "sha256": "0c4e34e300c9f0e53ba6b95b9b73436276e3ff7cf81785970d6cd16d3a2d228b",
+      "size": 1362,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "target/dev-navigation/validation/dagger_export.py",
+      "sha256": "d99d9370c65bd6e9978f54230f03f9f6cecfc8cc32b5648a077b5471eb329592",
+      "size": 681,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/diff-check-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/diff-check-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/diff-check.json",
+      "sha256": "be6c96d8beeee04b5fff1c303852859e5230c64b31d1a0743ea281a11c06f560",
+      "size": 1777,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/diff-check.started.json",
+      "sha256": "60a31cc1a9ff6c6ca92175e354521dc7c61beb54a10067b82e03b3014b4231ff",
+      "size": 1291,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/discovery-environment-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/discovery-environment-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/discovery-environment.json",
+      "sha256": "caa50a49508618714e0493e5b867ccdfc7b3cb1b476d15adf10e2268e039c60a",
+      "size": 1987,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/discovery-environment.log",
+      "sha256": "325da58088d4715dec1bcbf503b1bf12558c81c2930a733c937c9a7e12ef0a99",
+      "size": 58,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/discovery-environment.started.json",
+      "sha256": "216f9f8acf53f079f5a091fa52274b42440b4240a89f2bea694ee5473f46527a",
+      "size": 1490,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/engine-readiness-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/engine-readiness-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/engine-readiness.json",
+      "sha256": "4450c1a0e5721d3e1078f01a5fc367454e97da3792e05bbb2af5891dc29ca2c8",
+      "size": 1873,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/engine-readiness.log",
+      "sha256": "08becbf890a34fde2118104b839d04ce5dbd2f71c56e26fc20af6c6b782b3e99",
+      "size": 39,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/engine-readiness.started.json",
+      "sha256": "0415305bf114e50f6517627e8c666313af33c644d6ec36ad107633555489800f",
+      "size": 1381,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/final-results.json",
+      "sha256": "f2b6a19b310f240b45c53f349e67ecd565165b9827b3d5c58dc3584b8bd0ef09",
+      "size": 10643,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/final-source-binding.json",
+      "sha256": "c0a6a082a246a75af96ccf069c984fda832b7f4df3eecfe192e93f332c4a66b3",
+      "size": 3414,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/finalize.py",
+      "sha256": "48b2c12e5a9be8823136089d9dbd62fbc7cb1a3be96e17ed77f7592470b60b44",
+      "size": 9208,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused-configured-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused-configured-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused-configured.json",
+      "sha256": "e4b5822f3068fac09d48e311c40e127ff0ee94c0b7ff7f1231ac3709a0dc9e46",
+      "size": 3353,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused-configured.log",
+      "sha256": "affcc9293e69deae98bd81dc5fa793ab07e9628a1b4a8c7ee2139cfb35622f99",
+      "size": 72066,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused-configured.started.json",
+      "sha256": "c4aa44ce1c70c944d9c0a3aef8f70c7819bb74ae9236a8fa27520f4e11cd40d5",
+      "size": 2858,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused-safe-temp-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused-safe-temp-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused-safe-temp.json",
+      "sha256": "656cd1f877a9c2434bdf0c14df92ea9d0a1b3e4c1d8e4e2a977088c7c3404562",
+      "size": 3312,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused-safe-temp.log",
+      "sha256": "4b4235d5ec4430c680a101fe3d6289e09e941ad72a996b10950291411f7c1e77",
+      "size": 57224,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused-safe-temp.started.json",
+      "sha256": "26eeceef2090ded11cfaced435ed0f85645d0a1159b1a7cfbbb49bef38191e4e",
+      "size": 2818,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused.json",
+      "sha256": "59ff2320c6462e3e8534b51ec3f173dd5653c44be7daa1ae4474b0b4c953ee9e",
+      "size": 3330,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused.log",
+      "sha256": "7099d017073d79108693d9121befa686b30dfc88606896038641a4c353ca1d43",
+      "size": 473,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/focused.started.json",
+      "sha256": "f8c4ff20264dfb2411db2b95cdd86c795d3b09f337120ef033f9a649b9618ab1",
+      "size": 2847,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-analyzer-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-analyzer-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-analyzer.json",
+      "sha256": "95429b0cefdfc064db64a53acf7a1c63b29aab289a01092d01b5512ddbf80148",
+      "size": 2330,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-analyzer.log",
+      "sha256": "6b006e4456e72b7df11f40671ea6e5aca4e3a6ab3bc6c3a6c5fb8a5f61525976",
+      "size": 96,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-analyzer.started.json",
+      "sha256": "eea4102cc246e49337269c6b5c327209ff7196cf276c4447dc4990b80b008eed",
+      "size": 1842,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-format-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-format-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-format.json",
+      "sha256": "b4e0e1a916fd675d53c70ee54a806f3fe46fcc997c2056f2b255f064bf428db2",
+      "size": 2254,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-format.log",
+      "sha256": "f9ee71f28eae4eb7470dcefd7b6891ff1147c1319f27fea1ddab8796a698e7ad",
+      "size": 49,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-format.started.json",
+      "sha256": "3a02c256b6ae3e9d074255f5d5708a0ff7b164ac3986410b7168b7d555ed1731",
+      "size": 1767,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests-configured-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests-configured-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests-configured.json",
+      "sha256": "eadb322d0f8b5b7801832dc412b400a4eeeda9aa7c857034ab72f70f6023802e",
+      "size": 2393,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests-configured.log",
+      "sha256": "61ae1dd3d90051feb2bffae42e79965ca8802d32226df6ce4aa6375cd2a3deaa",
+      "size": 201862,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests-configured.started.json",
+      "sha256": "5ca34d79234f9b9e602fc15a20092b6824f80b450560e1418ad75d1e3952f667",
+      "size": 1888,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests-safe-temp-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests-safe-temp-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests-safe-temp.json",
+      "sha256": "1a8c2254180c7d607597e701af0edc8e9e89c678474598290fc854a8141d68be",
+      "size": 2352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests-safe-temp.log",
+      "sha256": "1e0b87bcbf5e667d546694be2dbb0c89b3ca5d17f9caeb88d29e10e87d3f7203",
+      "size": 192563,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests-safe-temp.started.json",
+      "sha256": "db3345b5b3992429e93ac9b40ef24e7fbb96d9d8e4d5f085a30e4a8edb7921c2",
+      "size": 1848,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests.json",
+      "sha256": "d93045e1d2d44d12a02534f70fa533fe72c868a4d8ea97c94cbdc64f6579ab1b",
+      "size": 2370,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests.log",
+      "sha256": "7099d017073d79108693d9121befa686b30dfc88606896038641a4c353ca1d43",
+      "size": 473,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/full-native-tests.started.json",
+      "sha256": "ee62e12b07f85af6496bd9ec254d15fff898f3c6d2b4ec1bb3c09594dd9ea0fa",
+      "size": 1877,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/gates-results.json",
+      "sha256": "d3026c04dbaaff3a0c2788ccccf1431161e5f3aafc3bcdf49ac08595f97aa6f4",
+      "size": 17869,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/isolated-temp-policy.json",
+      "sha256": "25643ffe1470d65b3f1d25b808b61395c71b59f556728ad7c7771a614ccb3486",
+      "size": 389,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/linux-artifact-file-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/linux-artifact-file-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/linux-artifact-file.json",
+      "sha256": "62d5830276b999e3f3dacf204cc3404e45dd68e917ed6a88991364f61d3b89e0",
+      "size": 1923,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/linux-artifact-file.log",
+      "sha256": "04813dcc115954e70371d6912bd88797cc587d66fbee7975cfa1774211216147",
+      "size": 592,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/linux-artifact-file.started.json",
+      "sha256": "024e43473b15597142945b64f356cec7d9c7315fd2b354852b905cb91c4a44a3",
+      "size": 1428,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/linux-client-export.json",
+      "sha256": "3fc2133288b4dd6d18def81cb3101b1fdef81400fee6d92a94db4978d3a60cf3",
+      "size": 31592,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/native-configured-results.json",
+      "sha256": "9d81a840c55cf74ede6f49e92bd732c04313afee018667745f98c4a84f452ab6",
+      "size": 7656,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/native-results.json",
+      "sha256": "c99df75a729490e7b65bfc607f6c5d507732e63889f3d2452ae2e71130ddc915",
+      "size": 12879,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/native-safe-temp-results.json",
+      "sha256": "eb290e3a5f153644f9ef50d9e1adf7e09c838adf9e596019b3541855428e3c59",
+      "size": 7467,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/native-toolchain.json",
+      "sha256": "489e907de9acfba3256e8bc83a3d37fad2ba06d064b1294c5c40c9dadf28f7bb",
+      "size": 1819,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/native_retry.py",
+      "sha256": "6afcedc3fcd60ffb3647abdb79619c2250649507cb66c8bbe1feefd9f367a26e",
+      "size": 1309,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/observed-gates.json",
+      "sha256": "5c50738460e56cded56ab4d05de06a8b5833520d30a49e4bda4a8614ab37f087",
+      "size": 5266,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/package-verify-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/package-verify-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/package-verify.json",
+      "sha256": "a4ff14f7c3a507a1c246b9cda65dcdcf4c360167b1b7f907746f92871e4f5445",
+      "size": 2010,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/package-verify.log",
+      "sha256": "1f0b6c626560d202ae83b9b46b63c4608efd2bfc7be97fd64aff86ce0fc24c36",
+      "size": 138,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/package-verify.started.json",
+      "sha256": "8d23f171d1a4161779c375d90c16251158f8a9c88c634e868010193115c1a86d",
+      "size": 1388,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/private-config-correction.json",
+      "sha256": "e8fc3465458e429e37420c5ac4e02d9698bfd6fae680c2f30eaec8160611380f",
+      "size": 758,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/recorder.py",
+      "sha256": "14670f79194828d61738a06a9ef649e72f336695e56803d0dc848fd13abfc5df",
+      "size": 11986,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/root-test-build-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/root-test-build-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/root-test-build.json",
+      "sha256": "ff8aa7ca53ed43dbc8e25343000066e160e86e83bc35294e3f81f536b2e99b1b",
+      "size": 1883,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/root-test-build.log",
+      "sha256": "2e4515081b9867dbb3740248f00b2a98525d5159a38a95eb8ff0072ecb83099f",
+      "size": 2406,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/root-test-build.started.json",
+      "sha256": "b703f0cfb83c790ef65aa503c998c2c93322eb0971822ac198dd18451b0fc554",
+      "size": 1392,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/seal.py",
+      "sha256": "1089f66a900233bf0713452014f2cf4164f862ef3598c496a9c20a64f1f2c18d",
+      "size": 1238,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/snapshot-binding.json",
+      "sha256": "e3fe50d5b6a558d6e886e7e01a024e23fdc6e34a6f375e8fe23cd12def7edd5a",
+      "size": 373012,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/source-snapshot.tar.gz",
+      "sha256": "18b688c3cde0cde886d784109896006b8d393c60e27fe83ebc04d28948d2fb11",
+      "size": 21703405,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/validate.py",
+      "sha256": "26f917257fb726608206b02e6575cf919ee37da2b312dfa2e070da8c42020c9b",
+      "size": 6898,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/visual-binding.json",
+      "sha256": "0512b4b7f4dafb0ff38c0afe301c742e3cecfb7eca16c916fbec902f2fb9e51f",
+      "size": 14111,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/RESULTS.md",
+      "sha256": "082c3fb631c3d7bacff3b993e2d3b73b31ea73d1aa82ef2eb171d65e7aa1e8bf",
+      "size": 7425,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/actual-package-helpers-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/actual-package-helpers-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/actual-package-helpers.json",
+      "sha256": "0bcffce57e589fdf2f25cfa4a038df66e0fe45a325739d6a247fff9f13f2318f",
+      "size": 2151,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/actual-package-helpers.log",
+      "sha256": "1f0b6c626560d202ae83b9b46b63c4608efd2bfc7be97fd64aff86ce0fc24c36",
+      "size": 138,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/actual-package-helpers.started.json",
+      "sha256": "59f5cb8d57186d17a2a3329a69fa79a06e0fb9adfeb991ab3cb3f3d97de83fe4",
+      "size": 1521,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-build-configured-module-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-build-configured-module-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-build-configured-module.json",
+      "sha256": "9002ecf06080e88ec978e0e99820fc01109b026d5b42408ca2dc589e317fd762",
+      "size": 1866,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-build-configured-module.log",
+      "sha256": "c845ebecb6d5a185f4d4af2e2aebb74e085c1cf01c1f4f53a06a4a89fcb05b4a",
+      "size": 36820,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-build-configured-module.started.json",
+      "sha256": "06527712b897e7b7b2d2b5d022a05370d0e48ee97d9f533986ff76b3557aafe4",
+      "size": 1359,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-build-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-build-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-build.json",
+      "sha256": "89ed7bdd1c172182e8f0bc901502122908fc67b0a71eeb0f409281ff9cf11a74",
+      "size": 1872,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-build.log",
+      "sha256": "0350044671596973218132c7aeacceecf0c61bd4db5ad372855a451a36772505",
+      "size": 2375,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-build.started.json",
+      "sha256": "9c9b392575913aae7542eddbea464efd188d7906f042f486221c00da8a832d2b",
+      "size": 1384,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-test-configured-module-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-test-configured-module-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-test-configured-module.json",
+      "sha256": "a25ccd72d328b61fa1db1dbcef2b66f6e0cd7f5f12e7eff9189890f139a4305f",
+      "size": 1864,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-test-configured-module.log",
+      "sha256": "e5705798829cfcdcfbe1239f7ed6ec5d5e7bbc186b9feaa4723933cb7cf447af",
+      "size": 364552,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-test-configured-module.started.json",
+      "sha256": "8612f86cdc0a24e6dab7d7354b1c9886997091fed8e93c07b4af19f53effdd2e",
+      "size": 1357,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-test-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-test-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-test.json",
+      "sha256": "67482684d07906173e97b8cb1bafc867479c5666742e3ef776a028f06076b7cc",
+      "size": 1869,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-test.log",
+      "sha256": "f36e6c719ace49ebaf011e0f0091a086bdd66beff0ad5cdd9110631c14e6eca6",
+      "size": 2338,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/client-test.started.json",
+      "sha256": "f1c72d3a075032af8fd683a270a90fff8b2b1bb6e55ec5bcfd4055614f86c692",
+      "size": 1382,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/component-redirect-binding.json",
+      "sha256": "61defb4596871704dd481b8f743c2d9c4e69fc24605992711f3de751c11825f7",
+      "size": 1261,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/configured-component-results.json",
+      "sha256": "743a041a31515ab0cda9102e5981f1c19bfda7e73fc09632ab4e893b46de9b87",
+      "size": 10112,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/configured_checks.py",
+      "sha256": "60c5c12b958e4b1335724de874cdc2d84632dde7c3fea5140b66ca1e4c9a2962",
+      "size": 2248,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/core-manifest-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/core-manifest-final.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-help-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-help-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-help.json",
+      "sha256": "affd31792a6ebf76068861357f4bc4264dd19d833257bf8abe52eace1a655d2e",
+      "size": 1845,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-help.log",
+      "sha256": "a331f38fd7959e81fb2ea3377f1e0906091e174e4b167d6c137f3476dd911333",
+      "size": 3357,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-help.started.json",
+      "sha256": "db77964f09004e6232a789fbb295606e447e4fc22288f3a3492725b31236ff99",
+      "size": 1358,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-module-functions-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-module-functions-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-module-functions.json",
+      "sha256": "f4ed88303cddcb8b7d74991a7ab89d4bd5314e3d646bb01161a79248a073a37b",
+      "size": 1987,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-module-functions.log",
+      "sha256": "f9ab41758c481e32f03166dca53093bb8daff79ab9ea178798f9f15f5c713174",
+      "size": 1447,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-module-functions.started.json",
+      "sha256": "9a7418f2dda82d5b4c34d678209cc7ddf525f426ae5bf70ed05d8cd8af41b4b8",
+      "size": 1488,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-original-module-functions-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-original-module-functions-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-original-module-functions.json",
+      "sha256": "6b1fe52a29e10b57707abfede9c05d97ea9ce970333e2092cc6d2b3f270ba1e4",
+      "size": 1918,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-original-module-functions.log",
+      "sha256": "d8bafc2eecf2ea9cc1eb4d546ad23dedeaf2b8fa78a9da6aa1a8ea3b47a58d91",
+      "size": 2484,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-original-module-functions.started.json",
+      "sha256": "4a8980a9327dc5ffeaf7a8640c173622af7613c6feb763fc8c871f543d2562cc",
+      "size": 1410,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-version-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-version-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-version.json",
+      "sha256": "7902e9aa91c21b22e5d5e4835b4e930d4eea86537d00fa088e740587e36e836d",
+      "size": 1852,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-version.log",
+      "sha256": "0819b1f6a5d2080e67735b51514107720e0fb59ba70a251bd80bbc056bd8288a",
+      "size": 88,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger-version.started.json",
+      "sha256": "0c4e34e300c9f0e53ba6b95b9b73436276e3ff7cf81785970d6cd16d3a2d228b",
+      "size": 1362,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/dagger_export.py",
+      "sha256": "d99d9370c65bd6e9978f54230f03f9f6cecfc8cc32b5648a077b5471eb329592",
+      "size": 681,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/diff-check-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/diff-check-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/diff-check.json",
+      "sha256": "be6c96d8beeee04b5fff1c303852859e5230c64b31d1a0743ea281a11c06f560",
+      "size": 1777,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/diff-check.started.json",
+      "sha256": "60a31cc1a9ff6c6ca92175e354521dc7c61beb54a10067b82e03b3014b4231ff",
+      "size": 1291,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/discovery-environment-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/discovery-environment-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/discovery-environment.json",
+      "sha256": "caa50a49508618714e0493e5b867ccdfc7b3cb1b476d15adf10e2268e039c60a",
+      "size": 1987,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/discovery-environment.log",
+      "sha256": "325da58088d4715dec1bcbf503b1bf12558c81c2930a733c937c9a7e12ef0a99",
+      "size": 58,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/discovery-environment.started.json",
+      "sha256": "216f9f8acf53f079f5a091fa52274b42440b4240a89f2bea694ee5473f46527a",
+      "size": 1490,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/engine-readiness-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/engine-readiness-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/engine-readiness.json",
+      "sha256": "4450c1a0e5721d3e1078f01a5fc367454e97da3792e05bbb2af5891dc29ca2c8",
+      "size": 1873,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/engine-readiness.log",
+      "sha256": "08becbf890a34fde2118104b839d04ce5dbd2f71c56e26fc20af6c6b782b3e99",
+      "size": 39,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/engine-readiness.started.json",
+      "sha256": "0415305bf114e50f6517627e8c666313af33c644d6ec36ad107633555489800f",
+      "size": 1381,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/final-results.json",
+      "sha256": "f2b6a19b310f240b45c53f349e67ecd565165b9827b3d5c58dc3584b8bd0ef09",
+      "size": 10643,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/final-source-binding.json",
+      "sha256": "c0a6a082a246a75af96ccf069c984fda832b7f4df3eecfe192e93f332c4a66b3",
+      "size": 3414,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/finalize.py",
+      "sha256": "48b2c12e5a9be8823136089d9dbd62fbc7cb1a3be96e17ed77f7592470b60b44",
+      "size": 9208,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused-configured-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused-configured-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused-configured.json",
+      "sha256": "e4b5822f3068fac09d48e311c40e127ff0ee94c0b7ff7f1231ac3709a0dc9e46",
+      "size": 3353,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused-configured.log",
+      "sha256": "affcc9293e69deae98bd81dc5fa793ab07e9628a1b4a8c7ee2139cfb35622f99",
+      "size": 72066,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused-configured.started.json",
+      "sha256": "c4aa44ce1c70c944d9c0a3aef8f70c7819bb74ae9236a8fa27520f4e11cd40d5",
+      "size": 2858,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused-safe-temp-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused-safe-temp-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused-safe-temp.json",
+      "sha256": "656cd1f877a9c2434bdf0c14df92ea9d0a1b3e4c1d8e4e2a977088c7c3404562",
+      "size": 3312,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused-safe-temp.log",
+      "sha256": "4b4235d5ec4430c680a101fe3d6289e09e941ad72a996b10950291411f7c1e77",
+      "size": 57224,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused-safe-temp.started.json",
+      "sha256": "26eeceef2090ded11cfaced435ed0f85645d0a1159b1a7cfbbb49bef38191e4e",
+      "size": 2818,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused.json",
+      "sha256": "59ff2320c6462e3e8534b51ec3f173dd5653c44be7daa1ae4474b0b4c953ee9e",
+      "size": 3330,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused.log",
+      "sha256": "7099d017073d79108693d9121befa686b30dfc88606896038641a4c353ca1d43",
+      "size": 473,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/focused.started.json",
+      "sha256": "f8c4ff20264dfb2411db2b95cdd86c795d3b09f337120ef033f9a649b9618ab1",
+      "size": 2847,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-analyzer-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-analyzer-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-analyzer.json",
+      "sha256": "95429b0cefdfc064db64a53acf7a1c63b29aab289a01092d01b5512ddbf80148",
+      "size": 2330,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-analyzer.log",
+      "sha256": "6b006e4456e72b7df11f40671ea6e5aca4e3a6ab3bc6c3a6c5fb8a5f61525976",
+      "size": 96,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-analyzer.started.json",
+      "sha256": "eea4102cc246e49337269c6b5c327209ff7196cf276c4447dc4990b80b008eed",
+      "size": 1842,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-format-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-format-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-format.json",
+      "sha256": "b4e0e1a916fd675d53c70ee54a806f3fe46fcc997c2056f2b255f064bf428db2",
+      "size": 2254,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-format.log",
+      "sha256": "f9ee71f28eae4eb7470dcefd7b6891ff1147c1319f27fea1ddab8796a698e7ad",
+      "size": 49,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-format.started.json",
+      "sha256": "3a02c256b6ae3e9d074255f5d5708a0ff7b164ac3986410b7168b7d555ed1731",
+      "size": 1767,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests-configured-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests-configured-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests-configured.json",
+      "sha256": "eadb322d0f8b5b7801832dc412b400a4eeeda9aa7c857034ab72f70f6023802e",
+      "size": 2393,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests-configured.log",
+      "sha256": "61ae1dd3d90051feb2bffae42e79965ca8802d32226df6ce4aa6375cd2a3deaa",
+      "size": 201862,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests-configured.started.json",
+      "sha256": "5ca34d79234f9b9e602fc15a20092b6824f80b450560e1418ad75d1e3952f667",
+      "size": 1888,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests-safe-temp-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests-safe-temp-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests-safe-temp.json",
+      "sha256": "1a8c2254180c7d607597e701af0edc8e9e89c678474598290fc854a8141d68be",
+      "size": 2352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests-safe-temp.log",
+      "sha256": "1e0b87bcbf5e667d546694be2dbb0c89b3ca5d17f9caeb88d29e10e87d3f7203",
+      "size": 192563,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests-safe-temp.started.json",
+      "sha256": "db3345b5b3992429e93ac9b40ef24e7fbb96d9d8e4d5f085a30e4a8edb7921c2",
+      "size": 1848,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests.json",
+      "sha256": "d93045e1d2d44d12a02534f70fa533fe72c868a4d8ea97c94cbdc64f6579ab1b",
+      "size": 2370,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests.log",
+      "sha256": "7099d017073d79108693d9121befa686b30dfc88606896038641a4c353ca1d43",
+      "size": 473,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/full-native-tests.started.json",
+      "sha256": "ee62e12b07f85af6496bd9ec254d15fff898f3c6d2b4ec1bb3c09594dd9ea0fa",
+      "size": 1877,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/gates-results.json",
+      "sha256": "d3026c04dbaaff3a0c2788ccccf1431161e5f3aafc3bcdf49ac08595f97aa6f4",
+      "size": 17869,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/isolated-temp-policy.json",
+      "sha256": "25643ffe1470d65b3f1d25b808b61395c71b59f556728ad7c7771a614ccb3486",
+      "size": 389,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/linux-artifact-file-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/linux-artifact-file-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/linux-artifact-file.json",
+      "sha256": "62d5830276b999e3f3dacf204cc3404e45dd68e917ed6a88991364f61d3b89e0",
+      "size": 1923,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/linux-artifact-file.log",
+      "sha256": "04813dcc115954e70371d6912bd88797cc587d66fbee7975cfa1774211216147",
+      "size": 592,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/linux-artifact-file.started.json",
+      "sha256": "024e43473b15597142945b64f356cec7d9c7315fd2b354852b905cb91c4a44a3",
+      "size": 1428,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/linux-client-export.json",
+      "sha256": "3fc2133288b4dd6d18def81cb3101b1fdef81400fee6d92a94db4978d3a60cf3",
+      "size": 31592,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/native-configured-results.json",
+      "sha256": "9d81a840c55cf74ede6f49e92bd732c04313afee018667745f98c4a84f452ab6",
+      "size": 7656,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/native-results.json",
+      "sha256": "c99df75a729490e7b65bfc607f6c5d507732e63889f3d2452ae2e71130ddc915",
+      "size": 12879,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/native-safe-temp-results.json",
+      "sha256": "eb290e3a5f153644f9ef50d9e1adf7e09c838adf9e596019b3541855428e3c59",
+      "size": 7467,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/native-toolchain.json",
+      "sha256": "489e907de9acfba3256e8bc83a3d37fad2ba06d064b1294c5c40c9dadf28f7bb",
+      "size": 1819,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/native_retry.py",
+      "sha256": "6afcedc3fcd60ffb3647abdb79619c2250649507cb66c8bbe1feefd9f367a26e",
+      "size": 1309,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/observed-gates.json",
+      "sha256": "5c50738460e56cded56ab4d05de06a8b5833520d30a49e4bda4a8614ab37f087",
+      "size": 5266,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/package-verify-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/package-verify-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/package-verify.json",
+      "sha256": "a4ff14f7c3a507a1c246b9cda65dcdcf4c360167b1b7f907746f92871e4f5445",
+      "size": 2010,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/package-verify.log",
+      "sha256": "1f0b6c626560d202ae83b9b46b63c4608efd2bfc7be97fd64aff86ce0fc24c36",
+      "size": 138,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/package-verify.started.json",
+      "sha256": "8d23f171d1a4161779c375d90c16251158f8a9c88c634e868010193115c1a86d",
+      "size": 1388,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/private-config-correction.json",
+      "sha256": "e8fc3465458e429e37420c5ac4e02d9698bfd6fae680c2f30eaec8160611380f",
+      "size": 758,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/recorder.py",
+      "sha256": "14670f79194828d61738a06a9ef649e72f336695e56803d0dc848fd13abfc5df",
+      "size": 11986,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/root-test-build-source-after.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/root-test-build-source-before.json",
+      "sha256": "a159af691d0831e3e39950a52f0f1e7a98a6ae8a8cf3453b86145250d2a8e442",
+      "size": 390352,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/root-test-build.json",
+      "sha256": "ff8aa7ca53ed43dbc8e25343000066e160e86e83bc35294e3f81f536b2e99b1b",
+      "size": 1883,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/root-test-build.log",
+      "sha256": "2e4515081b9867dbb3740248f00b2a98525d5159a38a95eb8ff0072ecb83099f",
+      "size": 2406,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/root-test-build.started.json",
+      "sha256": "b703f0cfb83c790ef65aa503c998c2c93322eb0971822ac198dd18451b0fc554",
+      "size": 1392,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/seal.py",
+      "sha256": "1089f66a900233bf0713452014f2cf4164f862ef3598c496a9c20a64f1f2c18d",
+      "size": 1238,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/snapshot-binding.json",
+      "sha256": "e3fe50d5b6a558d6e886e7e01a024e23fdc6e34a6f375e8fe23cd12def7edd5a",
+      "size": 373012,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/validate.py",
+      "sha256": "26f917257fb726608206b02e6575cf919ee37da2b312dfa2e070da8c42020c9b",
+      "size": 6898,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/visual-binding.json",
+      "sha256": "0512b4b7f4dafb0ff38c0afe301c742e3cecfb7eca16c916fbec902f2fb9e51f",
+      "size": 14111,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "target/dev-navigation/validation/seal-core-binding.json",
+      "sha256": "22bdfb3230ecd65bef9e86a482607f3dfcf128fb66cec6061211255b72dc6ea0",
+      "size": 215,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/dev-navigation/validation/seal-core-binding.json",
+      "sha256": "22bdfb3230ecd65bef9e86a482607f3dfcf128fb66cec6061211255b72dc6ea0",
+      "size": 215,
+      "type": "file"
+    }
+  ],
+  "entries_sha256": "a36bf6419239c4a977f5b3e8e2d85b6e65e36f05ea9625443f5131c0bb3855f0",
+  "recorded_at": "2026-10-18T01:28:01.449950+00:00",
+  "scope": "New validation files, recorders and archives only; expanded source/export contents bound by their manifests. Index itself excluded to avoid self-reference. Parent-owned digests, not independent assurance."
+}

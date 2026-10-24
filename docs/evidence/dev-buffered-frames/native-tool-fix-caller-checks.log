@@ -1,0 +1,560 @@
+BEFORE: cargo check --offline --locked --all-targets --all-features (installer)
+   Compiling serde v1.0.229
+   Compiling winnow v0.5.40
+   Compiling target-lexicon v0.12.16
+   Compiling smallvec v1.16.2
+   Compiling pkg-config v0.3.34
+   Compiling version-compare v0.2.1
+   Compiling heck v0.5.0
+    Checking futures-io v0.3.34
+   Compiling syn v1.0.109
+   Compiling proc-macro-error-attr v1.0.4
+   Compiling proc-macro-error v1.0.4
+   Compiling thiserror v1.0.69
+   Compiling heck v0.4.1
+   Compiling serde_core v1.0.229
+   Compiling futures-macro v0.3.34
+   Compiling thiserror-impl v1.0.69
+   Compiling gio v0.18.4
+   Compiling semver v1.0.28
+   Compiling once_cell v1.21.4
+    Checking icu_normalizer v2.1.1
+    Checking hyper v1.12.0
+   Compiling rustc_version v0.4.1
+   Compiling gtk v0.18.2
+    Checking idna_adapter v1.2.1
+   Compiling field-offset v0.3.6
+    Checking idna v1.1.0
+   Compiling cfg-expr v0.15.8
+    Checking futures-util v0.3.34
+    Checking url v2.5.8
+   Compiling toml_datetime v0.6.3
+   Compiling serde_spanned v0.6.9
+   Compiling toml_edit v0.20.2
+   Compiling toml_edit v0.19.15
+    Checking futures-executor v0.3.34
+    Checking hyper-util v0.1.20
+    Checking tower v0.5.3
+    Checking zbus v4.4.0
+    Checking tower-http v0.6.11
+    Checking hyper-rustls v0.27.9
+    Checking reqwest v0.12.28
+   Compiling proc-macro-crate v1.3.1
+   Compiling toml v0.8.2
+   Compiling proc-macro-crate v2.0.2
+   Compiling gtk3-macros v0.18.2
+   Compiling glib-macros v0.18.5
+   Compiling system-deps v6.2.2
+   Compiling glib-sys v0.18.1
+   Compiling gobject-sys v0.18.0
+   Compiling gio-sys v0.18.1
+   Compiling cairo-sys-rs v0.18.2
+   Compiling pango-sys v0.18.0
+   Compiling gdk-sys v0.18.2
+   Compiling atk-sys v0.18.2
+   Compiling gdk-pixbuf-sys v0.18.0
+   Compiling gtk-sys v0.18.2
+    Checking smith-service v0.1.0 (<repo>/service)
+    Checking glib v0.18.5
+    Checking cairo-rs v0.18.5
+    Checking atk v0.18.2
+    Checking gdk-pixbuf v0.18.5
+    Checking pango v0.18.3
+    Checking gdk v0.18.2
+    Checking smith-installer v0.1.0 (<repo>/installer)
+error[E0308]: `?` operator has incompatible types
+   --> src/catalog.rs:110:13
+    |
+110 | /             runner::verify_runtime_bounded(&roots, deadline, &consent::cancelled)
+111 | |                 .map_err(|e| format!("{}: {}", e.code, e.message))?,
+    | |___________________________________________________________________^ expected `VerifiedRuntime`, found `PathBuf`
+    |
+    = note: `?` operator cannot convert from `PathBuf` to `VerifiedRuntime`
+
+error[E0308]: `?` operator has incompatible types
+   --> src/catalog.rs:110:13
+    |
+110 | /             runner::verify_runtime_bounded(&roots, deadline, &consent::cancelled)
+111 | |                 .map_err(|e| format!("{}: {}", e.code, e.message))?,
+    | |___________________________________________________________________^ expected `VerifiedRuntime`, found `PathBuf`
+    |
+    = note: `?` operator cannot convert from `std::path::PathBuf` to `VerifiedRuntime`
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `smith-installer` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `smith-installer` (lib test) due to 1 previous error
+
+EXIT: 101
+
+AFTER: installer: cargo check --offline --locked --all-targets --all-features
+    Checking smith-installer v0.1.0 (<repo>/installer)
+error[E0603]: enum `Backend` is private
+   --> src/catalog.rs:112:25
+    |
+112 |                 runner::Backend::Cpu,
+    |                         ^^^^^^^  --- unit variant `Cpu` is not publicly re-exported
+    |                         |
+    |                         private enum
+    |
+note: the enum `Backend` is defined here
+   --> <repo>/service/src/runner.rs:8:45
+    |
+  8 | use crate::acceleration::{self, ActualMode, Backend};
+    |                                             ^^^^^^^
+
+For more information about this error, try `rustc --explain E0603`.
+error: could not compile `smith-installer` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `smith-installer` (lib test) due to 1 previous error
+
+EXIT: 101
+
+AFTER: installer: cargo test --offline --locked --test catalog
+   Compiling smith-service v0.1.0 (<repo>/service)
+   Compiling smith-installer v0.1.0 (<repo>/installer)
+error[E0603]: enum `Backend` is private
+   --> src/catalog.rs:112:25
+    |
+112 |                 runner::Backend::Cpu,
+    |                         ^^^^^^^  --- unit variant `Cpu` is not publicly re-exported
+    |                         |
+    |                         private enum
+    |
+note: the enum `Backend` is defined here
+   --> <repo>/service/src/runner.rs:8:45
+    |
+  8 | use crate::acceleration::{self, ActualMode, Backend};
+    |                                             ^^^^^^^
+
+For more information about this error, try `rustc --explain E0603`.
+error: could not compile `smith-installer` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+
+EXIT: 101
+
+AFTER: installer: cargo test --offline --locked --lib catalog::
+   Compiling smith-installer v0.1.0 (<repo>/installer)
+error[E0603]: enum `Backend` is private
+   --> src/catalog.rs:112:25
+    |
+112 |                 runner::Backend::Cpu,
+    |                         ^^^^^^^  --- unit variant `Cpu` is not publicly re-exported
+    |                         |
+    |                         private enum
+    |
+note: the enum `Backend` is defined here
+   --> <repo>/service/src/runner.rs:8:45
+    |
+  8 | use crate::acceleration::{self, ActualMode, Backend};
+    |                                             ^^^^^^^
+
+For more information about this error, try `rustc --explain E0603`.
+error: could not compile `smith-installer` (lib test) due to 1 previous error
+
+EXIT: 101
+
+AFTER: installer: cargo build --offline --locked --all-features --bins
+   Compiling smallvec v1.16.2
+   Compiling futures-io v0.3.34
+   Compiling serde v1.0.229
+   Compiling thiserror v1.0.69
+   Compiling field-offset v0.3.6
+   Compiling futures-util v0.3.34
+   Compiling icu_normalizer v2.1.1
+   Compiling hyper v1.12.0
+   Compiling toml_datetime v0.6.3
+   Compiling serde_spanned v0.6.9
+   Compiling idna_adapter v1.2.1
+   Compiling idna v1.1.0
+   Compiling toml_edit v0.20.2
+   Compiling toml_edit v0.19.15
+   Compiling url v2.5.8
+   Compiling proc-macro-crate v1.3.1
+   Compiling toml v0.8.2
+   Compiling proc-macro-crate v2.0.2
+   Compiling gtk3-macros v0.18.2
+   Compiling glib-macros v0.18.5
+   Compiling system-deps v6.2.2
+   Compiling futures-executor v0.3.34
+   Compiling hyper-util v0.1.20
+   Compiling tower v0.5.3
+   Compiling zbus v4.4.0
+   Compiling tower-http v0.6.11
+   Compiling glib-sys v0.18.1
+   Compiling gobject-sys v0.18.0
+   Compiling gio-sys v0.18.1
+   Compiling atk-sys v0.18.2
+   Compiling gdk-sys v0.18.2
+   Compiling cairo-sys-rs v0.18.2
+   Compiling gdk-pixbuf-sys v0.18.0
+   Compiling pango-sys v0.18.0
+   Compiling gtk-sys v0.18.2
+   Compiling gtk v0.18.2
+   Compiling hyper-rustls v0.27.9
+   Compiling reqwest v0.12.28
+   Compiling glib v0.18.5
+   Compiling smith-service v0.1.0 (<repo>/service)
+   Compiling gio v0.18.4
+   Compiling cairo-rs v0.18.5
+   Compiling atk v0.18.2
+   Compiling pango v0.18.3
+   Compiling gdk-pixbuf v0.18.5
+   Compiling gdk v0.18.2
+   Compiling smith-installer v0.1.0 (<repo>/installer)
+error[E0603]: enum `Backend` is private
+   --> src/catalog.rs:112:25
+    |
+112 |                 runner::Backend::Cpu,
+    |                         ^^^^^^^  --- unit variant `Cpu` is not publicly re-exported
+    |                         |
+    |                         private enum
+    |
+note: the enum `Backend` is defined here
+   --> <repo>/service/src/runner.rs:8:45
+    |
+  8 | use crate::acceleration::{self, ActualMode, Backend};
+    |                                             ^^^^^^^
+
+For more information about this error, try `rustc --explain E0603`.
+error: could not compile `smith-installer` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+
+EXIT: 101
+
+AFTER: installer: cargo clippy --offline --locked --all-features --lib --bins -- -D warnings
+    Checking smith-installer v0.1.0 (<repo>/installer)
+error[E0603]: enum `Backend` is private
+   --> src/catalog.rs:112:25
+    |
+112 |                 runner::Backend::Cpu,
+    |                         ^^^^^^^  --- unit variant `Cpu` is not publicly re-exported
+    |                         |
+    |                         private enum
+    |
+note: the enum `Backend` is defined here
+   --> <repo>/service/src/runner.rs:8:45
+    |
+  8 | use crate::acceleration::{self, ActualMode, Backend};
+    |                                             ^^^^^^^
+
+For more information about this error, try `rustc --explain E0603`.
+error: could not compile `smith-installer` (lib) due to 1 previous error
+
+EXIT: 101
+
+AFTER: installer: cargo fmt --all -- --check
+
+EXIT: 0
+
+FINAL: installer: cargo check --offline --locked --all-targets --all-features
+    Checking smith-installer v0.1.0 (<repo>/installer)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.33s
+
+EXIT: 0
+
+FINAL: installer: cargo test --offline --locked --test catalog
+
+running 8 tests
+test expired_operation_has_no_destination_effects ... ok
+test model_stream_cap_accepts_qwen_size_but_rejects_over_16_gib_without_weights ... ok
+test transport_error_preserves_stage_and_no_marker ... ok
+test verified_orphan_can_be_adopted_without_a_second_download ... ok
+test failed_progress_sink_blocks_publication ... ok
+test canonical_marker_comes_last_and_repeated_install_uses_verified_file ... ok
+test conflicts_links_and_unsafe_modes_are_preserved ... ok
+test failed_transfer_never_publishes_a_completion_marker ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+   Compiling smith-installer v0.1.0 (<repo>/installer)
+    Finished `test` profile [unoptimized] target(s) in 1.72s
+     Running tests/catalog.rs (target/debug/deps/catalog-6e6b98c6443129ce)
+
+EXIT: 0
+
+FINAL: installer: cargo test --offline --locked --lib catalog::
+
+running 4 tests
+test catalog::tests::every_redirect_hop_requires_exact_https_host_policy ... ok
+test catalog::tests::expired_download_wait_does_not_construct_a_request ... ok
+test catalog::tests::synchronous_worker_downloads_synthetic_http_body_without_ambient_runtime ... ok
+test catalog::tests::async_download_wait_has_absolute_deadline_and_no_abandoned_task ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 103 filtered out; finished in 0.10s
+
+   Compiling smith-installer v0.1.0 (<repo>/installer)
+    Finished `test` profile [unoptimized] target(s) in 1.65s
+     Running unittests src/lib.rs (target/debug/deps/smith_installer-a1254973064499d5)
+
+EXIT: 0
+
+FINAL: installer: cargo build --offline --locked --all-features --bins
+   Compiling smith-installer v0.1.0 (<repo>/installer)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.53s
+
+EXIT: 0
+
+FINAL: installer: cargo clippy --offline --locked --all-features --lib --bins -- -D warnings
+    Checking smith-installer v0.1.0 (<repo>/installer)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.09s
+
+EXIT: 0
+
+FINAL: installer: cargo fmt --all -- --check
+
+EXIT: 0
+
+SERVICE REBIND: cargo test --offline --locked --lib runner::
+
+running 37 tests
+test runner::lease_tests::dropping_model_does_not_unlock_raw_active_runner_lease ... ok
+test runner::lease_tests::model_dropped_then_stop_releases_final_parked_lease_with_duplicate_alive ... ok
+test runner::lease_tests::model_dropped_then_runner_drop_releases_final_parked_lease_with_duplicate_alive ... ok
+test runner::lease_tests::unknown_cleanup_ownership_state_simulation_keeps_duplicate_excluded_after_raw_close ... ok
+test runner::lease_tests::poisoned_empty_final_slot_does_not_unlock_raw_active_lease ... ok
+test runner::tests::completion_is_content_only_with_identity_and_no_tools ... ok
+test runner::tests::messages_must_alternate_and_end_with_user ... ok
+test runner::lease_tests::live_model_handback_and_reconsumption_keep_same_lease_until_final_owner_drop ... ok
+test runner::tests::inspection_read_calls_do_not_weaken_chat_parser ... ok
+test runner::lease_tests::poisoned_populated_final_slot_releases_lease_with_duplicate_alive ... ok
+test runner::tests::startup_capture_failure_cannot_accept_an_earlier_valid_record ... ok
+test runner::tests::inspection_counts_exact_tools_and_messages_without_trimming ... ok
+test runner::tests::startup_capture_keeps_raw_prefix_limit_and_never_rolls_evidence ... ok
+test runner::tool_tests::absent_third_requires_packaged_profile_not_native_version_text ... ok
+test runner::tests::startup_capture_retries_interruption_but_records_eof ... ok
+test runner::tests::http_reader_accepts_length_chunked_and_eof_bodies ... ok
+test runner::tool_tests::cached_success_does_not_grant_unknown_profiles_or_null_third ... ok
+test runner::tool_tests::explicit_false_null_and_nonboolean_third_never_take_exception ... ok
+test runner::tool_tests::loader_hash_or_self_reported_version_alone_cannot_identify_profile ... ok
+test runner::tool_tests::required_props_are_objects_and_exact_booleans ... ok
+test runner::tool_tests::runner_failure_and_shutdown_clear_instance_success_even_without_a_child ... ok
+test runner::tool_tests::status_malformed_duplicate_and_nonobject_capabilities_are_rejected ... ok
+test runner::tool_tests::verified_profile_cannot_be_reused_for_a_different_executable_path ... ok
+test runner::tests::http_reader_rejects_ambiguous_truncated_and_oversized_responses ... ok
+test runner::tool_tests::actual_request_template_and_context_guards_remain_exact ... ok
+test runner::tool_tests::probe_is_broker_valid_and_covers_call_counts_content_and_argument_shapes ... ok
+test runner::tool_tests::json_echo_missing_prompt_malformed_or_oversized_rendering_is_not_semantic_proof ... ok
+test runner::tool_tests::semantic_probe_accepts_object_or_string_arguments_without_call_ids ... ok
+test runner::tool_tests::losing_native_tool_structure_is_not_proof_even_when_all_content_survives ... ok
+test runner::tool_tests::success_cache_is_per_instance_and_still_rechecks_props ... ok
+test runner::tool_tests::failed_or_cancelled_expired_or_malformed_probe_never_caches_or_generates ... ok
+test runner::tool_tests::controlled_history_passes_actual_broker_without_any_io_or_generation ... ok
+test runner::tool_tests::profile_requires_complete_pinned_inventory_including_modes_and_libraries ... ok
+test runner::tool_tests::definition_arguments_system_and_call_structure_must_survive ... ok
+test runner::tool_tests::dropped_altered_duplicate_or_reordered_text_evidence_is_rejected ... ok
+test runner::tool_tests::semantic_evidence_supports_every_four_call_result_permutation ... ok
+test runner::tests::http_reader_deadline_is_absolute ... ok
+
+test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 324 filtered out; finished in 0.16s
+
+    Finished `test` profile [unoptimized] target(s) in 0.07s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-7c11b7ac37ef8548)
+
+EXIT: 0
+
+SERVICE REBIND: cargo test --offline --locked --test runner
+
+running 42 tests
+test fake_b11429_logger_suppresses_default_info_and_models_decorations ... ok
+test models_dir_is_part_of_private_root_validation ... ok
+test provider_inventory_reports_runtime_state_and_curated_models ... ok
+test removal_stopping_after_marker_unlink_reports_partial_and_preserves_orphan ... ok
+test list_models_accepts_only_exact_canonical_catalog_records ... ok
+test removal_rejects_lock_content_symlink_and_hardlink_without_unpublishing ... ok
+test removal_revalidates_held_directory_files_and_install_lock_before_unlink ... ok
+test model_removal_is_exact_safe_and_blocked_by_preverification_lease ... ok
+test verify_model_hashes_held_descriptor_and_rejects_tampering ... ok
+test runtime_executable_verifies_selected_release_against_manifest ... ok
+test runner_rejects_unsafe_inputs_before_spawning ... ok
+test spawn_uses_fixed_args_cleared_env_private_socket_and_own_group ... ok
+test crash_during_request_is_reported_and_runner_not_reused ... ok
+test peer_pid_mismatch_is_fatal_and_group_is_killed ... ok
+test verified_model_descriptor_survives_path_replacement ... ok
+test list_models_rejects_duplicate_names_and_excess_records ... ok
+test carried_lease_is_consumed_once_and_loaded_runner_blocks_all_removal ... ok
+test single_runner_lock_contention_is_runner_busy_without_waiting ... ok
+test stale_runner_dirs_are_removed_only_when_dead_and_exact ... ok
+test stderr_capture_is_bounded ... ok
+test chunked_responses_and_server_context_errors ... ok
+test verification_checks_deadline_and_cancellation_between_reads ... ok
+test identity_mismatch_and_tool_calls_are_rejected_and_stop_the_runner ... ok
+test smith_preamble_survives_token_trimming_and_counts_toward_limit ... ok
+test context_trims_oldest_pairs_in_request_only_or_reports_limit ... ok
+test explicit_cancellation_stops_a_blocked_completion_without_waiting_for_deadline ... ok
+test deadline_expiry_stops_runner_mid_generation ... ok
+test vulkan_post_health_window_obeys_cancellation_and_original_deadline ... ok
+test vulkan_startup_continuous_complete_records_do_not_slide_window ... ok
+test vulkan_startup_rejects_child_exit_and_stderr_eof_after_health ... ok
+test readiness_waits_for_load_and_bounded_failures_clean_up ... ok
+test vulkan_startup_observes_full_window_and_accepts_only_complete_fragmented_evidence ... ok
+test drop_and_stop_escalation_clean_up_child_dir_and_lock ... ok
+test provider_startup_fallback_reason_requires_confirmed_cleanup ... ok
+test provider_startup_fallback_reason_accessor_is_nonblocking_during_slow_inference ... ok
+test app_reports_busy_lock_saved_ollama_model_and_tampered_model ... ok
+test application_teardown_cancels_active_native_inference_and_joins_cleanup ... ok
+test vulkan_startup_rejects_partial_unterminated_duplicate_and_overflow_during_window ... ok
+test provider_startup_fallback_reason_survives_cpu_startup_and_completion_failure ... ok
+test app_worker_owns_runner_restart_switch_idle_and_shutdown ... ok
+test provider_startup_fallback_reason_survives_success_reuse_and_idle_then_resets ... ok
+test provider_prefers_full_vulkan_and_falls_back_once_only_before_completion_dispatch ... ok
+
+test result: ok. 42 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.86s
+
+    Finished `test` profile [unoptimized] target(s) in 0.05s
+     Running tests/runner.rs (target/debug/deps/runner-6791028eb42a466c)
+
+EXIT: 0
+
+SERVICE REBIND: cargo test --offline --locked --lib dev_
+
+running 114 tests
+test dev_broker::tests::equivalent_argument_json_is_not_a_transcript_substitution ... ok
+test dev_broker::tests::original_task_and_system_cannot_be_replaced_or_retried ... ok
+test dev_broker::tests::final_response_without_read_evidence_is_rejected_before_publication ... ok
+test dev_completion::tests::exact_checkout_roots_are_allowed_without_relaxing_containment ... ok
+test dev_completion::tests::per_round_calls_and_unknown_response_fields ... ok
+test dev_broker::tests::recorded_read_must_be_consumed_before_final_reply ... ok
+test dev_completion::tests::read_bounds_and_unknown_fields_fail_closed ... ok
+test dev_completion::tests::response_strips_reasoning_and_rejects_incomplete_or_foreign ... ok
+test dev_broker::tests::foreign_call_paths_and_mutated_history_are_refused_before_execution ... ok
+test dev_completion::tests::optional_compatible_fields_and_text_only_parts ... ok
+test dev_broker::tests::reserved_or_rejected_reads_do_not_establish_inspection_evidence ... ok
+test dev_fetch::tests::address_classes_fail_closed ... ok
+test dev_completion::tests::text_normalization_and_exact_trusted_system ... ok
+test dev_broker::tests::read_authorization_evidence_and_transcript_are_single_use ... ok
+test dev_completion::tests::tool_transcript_requires_complete_unique_results ... ok
+test dev_fetch::tests::branches_are_narrow_git_refs ... ok
+test dev_fetch::tests::advertisement_duplicate_refs_late_caps_and_zero_oid ... ok
+test dev_fetch::tests::advertisement_pins_exact_branch_or_head ... ok
+test dev_fetch::tests::advertisement_retained_parameters_are_unique_safe_and_consistent ... ok
+test dev_fetch::tests::advertisement_no_fallback_or_sha256 ... ok
+test dev_fetch::tests::fixed_wire_requests_do_not_use_worker_authority ... ok
+test dev_fetch::tests::dns_addresses_are_frozen_after_advertisement ... ok
+test dev_fetch::tests::cancellation_and_deadline_remain_latched_in_pack_phase ... ok
+test dev_fetch::tests::final_response_accepts_fragmented_pack_signature_and_inert_progress ... ok
+test dev_fetch::tests::dropped_upstream_capabilities_never_authorize_client_use ... ok
+test dev_fetch::tests::job_wide_request_cap ... ok
+test dev_fetch::tests::exact_http_types_and_status ... ok
+test dev_fetch::tests::http_chunked_bounds_and_no_trailers_or_extensions ... ok
+test dev_fetch::tests::http_raw_header_budget_and_control ... ok
+test dev_fetch::tests::packet_malformed_and_truncated ... ok
+test dev_fetch::tests::http_length_body_budget_truncation_and_trailing_bytes ... ok
+test dev_fetch::tests::pack_negotiation_shape_is_exact ... ok
+test dev_fetch::tests::repository_allowlist ... ok
+test dev_fetch::tests::pack_exact_want_and_no_haves ... ok
+test dev_fetch::tests::multiple_advertised_wants_include_pin_not_necessarily_first ... ok
+test dev_fetch::tests::pack_extensions_and_capability_conflicts_fail ... ok
+test dev_fetch::tests::invalid_index_or_ad_body_seals ... ok
+test dev_fetch::tests::missing_exact_branch_never_falls_back_and_seals_session ... ok
+test dev_fetch::tests::resolver_answer_count_port_and_mixed_results ... ok
+test dev_fetch::tests::repository_rejects_authority_and_path_escape ... ok
+test dev_fetch::tests::job_wide_pack_budget_not_per_repository ... ok
+test dev_fetch::tests::multiple_repositories_preserve_order_and_identity ... ok
+test dev_fetch::tests::safe_pack_capabilities_and_optional_final_flush ... ok
+test dev_fetch::tests::server_failure_latches_even_with_valid_retry_queued ... ok
+test dev_completion::tests::total_call_budget_and_argument_identity ... ok
+test dev_fetch::tests::synthetic_private_dns_rejected_before_response ... ok
+test dev_fetch::tests::advertisement_normalizes_bare_and_qualified_branches ... ok
+test dev_fetch::tests::synthetic_transport_never_falls_back_live ... ok
+test dev_fetch::tests::phases_and_failure_never_retry ... ok
+test dev_fetch::tests::session_advertisement_pack_verify_seals ... ok
+test dev_fetch::tests::http_header_framing_rejections ... ok
+test dev_fetch::tests::sideband_packet_and_progress_budgets_are_enforced ... ok
+test dev_local::tests::buffered_frames_still_check_cancellation_and_deadline_without_consuming ... ok
+test dev_local::tests::coalesced_frames_preserve_overread_without_waiting_for_kernel_data_or_eof ... ok
+test dev_fetch::tests::every_advertisement_truncation_fails ... ok
+test dev_fetch::tests::session_empty_and_premature_verification ... ok
+test dev_fetch::tests::worker_advertisement_is_a_positive_upstream_subset_and_preserves_refs ... ok
+test dev_local::tests::fragmented_frames_retry_transient_errors_but_reject_fatal_io ... ok
+test dev_runtime::local::tests::current_local_runtime_selects_rootful_adapter_without_rootless_fallback ... ok
+test dev_fetch::tests::session_wrong_checkout_seals_irreversibly ... ok
+test dev_runtime::local::tests::local_rpc_sequences_are_monotonic_and_single_use ... ok
+test dev_read::tests::untrusted_stage_parent_and_existing_stage_refuse ... ok
+test dev_read::tests::expanded_tree_seals_and_rejects_symlinks ... ok
+test app::local_dev::tests::corrupt_local_ledger_blocks_dev_but_not_chat_reservation ... ok
+test dev_read::tests::rejects_links_binary_special_and_bad_ranges ... ok
+test dev_fetch::tests::request_text_controls_whitespace_and_extensions_fail_closed ... ok
+test dev_runtime::tests::adapter_modes_fix_endpoints_and_isolate_each_lifecycle_command ... ok
+test dev_local::tests::malformed_duplicate_typed_and_eof_frames_remain_protocol_errors ... ok
+test dev_runtime::tests::both_worker_commands_disable_compression_with_one_bounded_log_file ... ok
+test dev_runtime::tests::diagnostic_messages_are_exact_static_bounded_and_single_line ... ok
+test dev_runtime::tests::metadata_absence_is_distinct_from_inaccessibility ... ok
+test dev_runtime::tests::rootful_daemon_accepts_only_supported_security_set_in_any_order ... ok
+test dev_runtime::tests::rootful_daemon_rejects_missing_malformed_duplicate_unknown_and_rootless_data ... ok
+test dev_runtime::tests::rootful_directory_metadata_requires_native_root_owned_safe_ancestors ... ok
+test dev_runtime::tests::rootless_and_image_validation_keep_existing_acceptance_rules ... ok
+test dev_worker::tests::protocol_rejects_uncorrelated_or_changed_receipts ... ok
+test dev_worker_local::tests::buffered_completion_becomes_compatible_sse ... ok
+test dev_runtime::tests::untrusted_errors_use_fallback_and_context_preserves_prerequisites ... ok
+test dev_runtime::tests::socket_metadata_keeps_rootless_rules_and_requires_rootful_native_0660 ... ok
+test dev_worker_local::tests::clone_branch_and_checkout_evidence_share_identity ... ok
+test dev_worker::tests::framing_reads_complete_frame_without_pipe_eof ... ok
+test dev_completion::tests::schema_request_and_size_limits ... ok
+test dev_read::tests::text_range_staging_and_single_use ... ok
+test dev_read::tests::quotas_are_reserved_before_failed_io_and_output_is_bounded ... ok
+test dev_worker_local::tests::final_reply_uses_only_exact_correlated_text ... ok
+test dev_worker_local::tests::original_inference_deadline_does_not_reset_with_phase_changes ... ok
+test dev_worker_local::tests::prepared_git_command_has_no_ambient_helpers_or_protocol_fallback ... ok
+test dev_worker_local::tests::sealed_fetch_and_unguarded_model_never_emit_requests ... ok
+test dev_worker_local::tests::guard_system_literal_and_no_pure ... ok
+test app::dev_jobs::tests::untrusted_runtime_error_is_not_published ... ok
+test app::dev_jobs::tests::reopening_historical_failed_record_preserves_generic_diagnostic_without_probing ... ok
+test dev_worker_local::tests::strict_headers_reject_duplicates_and_smuggling ... ok
+test app::dev_jobs::tests::restart_preserves_possible_delivery_without_running_and_corruption_is_isolated ... ok
+test app::dev_jobs::tests::uncertain_prior_runtime_blocks_new_dispatch ... ok
+test app::dev_jobs::tests::dispatch_publication_error_fences_and_keeps_durable_ambiguity ... ok
+test dev_read::tests::exact_checkout_root_enumeration_uses_fixed_descriptor_and_bounded_ranges ... ok
+test app::dev_jobs::tests::verified_receipt_requires_stopped_runtime_and_omits_prompt ... ok
+test app::dev_jobs::tests::custom_agent_ledger_reopens_without_runtime_effects_and_rejects_noncanonical_ids ... ok
+test dev_runtime::local::tests::local_responses_are_chunked_correlated_and_bounded ... ok
+test app::dev_jobs::tests::admission_freezes_saved_context_and_replay_precedes_instance_drift ... ok
+test dev_worker_local::tests::central_reader_rejects_oversized_uncorrelated_and_eof_frames ... ok
+test dev_fetch::tests::ten_repositories_fit_without_expanding_the_request_budget ... ok
+test dev_runtime::local::tests::post_reply_eof_check_rejects_buffered_trailing_data_without_waiting ... ok
+test dev_fetch::tests::final_response_rejects_negotiation_errors_and_bad_sidebands ... ok
+test dev_read::tests::concurrent_reservations_cannot_exceed_quota_or_reuse_calls ... ok
+test dev_read::tests::directories_and_depth_are_bounded ... ok
+test dev_local::tests::realistic_32k_chunk_reads_scale_with_buffer_capacity_not_wire_bytes ... ok
+test app::dev_jobs::tests::prerequisite_diagnostic_preserves_delivery_and_cleanup_uncertainty ... ok
+test dev_worker_local::tests::initialize_overread_is_preserved_when_same_reader_moves_into_demux ... ok
+test dev_local::tests::empty_socket_wait_observes_cancellation_and_original_deadline ... ok
+test dev_worker_local::tests::central_reader_correlates_sequence_zero_and_chunks_without_eof ... ok
+test dev_fetch::tests::cancellation_deadline_and_async_stall_are_bounded ... ok
+test dev_local::tests::exact_payload_limit_excludes_newline_and_rejects_before_append ... ok
+test dev_fetch::tests::executable::git_243_full_clones_through_actual_broker_with_pinned_checkout ... ok
+
+test result: ok. 114 passed; 0 failed; 0 ignored; 0 measured; 247 filtered out; finished in 1.09s
+
+    Finished `test` profile [unoptimized] target(s) in 0.04s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-7c11b7ac37ef8548)
+
+EXIT: 0
+
+SERVICE REBIND: cargo test --offline --locked --lib providers::
+
+running 1 test
+test providers::inspection_tests::original_deadline_is_not_reset_between_rounds ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 360 filtered out; finished in 0.00s
+
+    Finished `test` profile [unoptimized] target(s) in 0.05s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-7c11b7ac37ef8548)
+
+EXIT: 0
+
+SERVICE REBIND: cargo build --offline --locked
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+
+EXIT: 0
+
+SERVICE REBIND: cargo clippy --offline --locked --lib --bins -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s
+
+EXIT: 0
+
+SERVICE REBIND: cargo fmt --all -- --check
+
+EXIT: 0
+
+REBOUND SOURCE AND ARTIFACTS: {"artifacts": {"installer/src/catalog.rs": "99bc7f062919e744170bd577b8174a3a9a96ca739d6bf9229face4825fb8b3af", "installer/target/debug/smith-installer": "af414e167032143957bb2ec08005225208166e2500febc110098fc56f18cbef4", "installer/target/debug/smith-installer-ui": "51601112f5e042d18a12ca1560b1855e2c7af20e4f29c7396eae01c60e5e5e65", "service/target/debug/smith-service": "b40f3b2be4cb644234d86de9bf3df0a4a0899dfc4bf01e53e41f0298f0502a36"}, "source_input_count": 87, "source_inputs": {"installer/Cargo.lock": "d18f896cb4a9cc6ffaf7ca832fc9f826033e96883b6f95f02a271dafbe673c75", "installer/Cargo.toml": "a85ebd7dea7f37201899282a0b373578f6df8be50f75259bc4a3be4680d336a4", "installer/src/appearance.rs": "3600a3378b5c04139139cf0973231f1220e092f78b8dbdc5e3125f2a5a50727d", "installer/src/artifact.rs": "b92e2a7bf94283e79a5b51ef244f482bdf4607bffcc6da408c2265c7a1f44c81", "installer/src/catalog.rs": "99bc7f062919e744170bd577b8174a3a9a96ca739d6bf9229face4825fb8b3af", "installer/src/cli.rs": "7a504ffbf15968de57ff9a076cf83ae40aeaa2c1515810b87cb6f42eb7ba8051", "installer/src/consent.rs": "86b033d8a1ef383641cc124c8da441b32c6f3906ea475082d72dd9b95475ee6b", "installer/src/fs.rs": "77eda85941c99e40ad6a13904722b8418b29457f0328971119a6a3084f27b08b", "installer/src/launch.rs": "8c14a5ed6f3b3006d5333b4fb7830279064e1d95c5c2b307490c9dab67cadb2b", "installer/src/lib.rs": "fb1a59e964027032615d5f5f5f6ed64b0be8d1d8a247073e850281d7fee18d3b", "installer/src/main.rs": "1f2ceff4d9fd308922ab916e7580c6ddea7328169e1126a314a3a9071a5dcbb6", "installer/src/maintenance.rs": "c1d009744ad805cd73a1efbed6b2f542c0291667ec2f59339fc6b2740d75ee03", "installer/src/manifest.rs": "b91558374ddd8a644708f134a589d5f6bcada6c9ef98703b19ec353f0740d0ff", "installer/src/model.rs": "54a65212a7f7231d9e123b96646190d8c4818c2421438aee5d42e54e06bafe98", "installer/src/providers.rs": "cf3a0c339c9a1247df37c4b6fdb903ab4dcc2948b573ccf2c6c9c695fed14e36", "installer/src/secret.rs": "f67e9acf54e1a582eba1ffc311ed5495f544922b44e33cae250d065dbdb1854c", "installer/src/setup.rs": "f8f2f882819993509db15818e7328706e32f2e97bb1818545eac707cf82b4347", "installer/src/ui.rs": "e5f9a656536d57e61e2981654a72c7dc29c871c6c1ae99c060cf4e09f5367aee", "installer/src/wizard.rs": "e5b6f401289143dfc1678ef5b1a05f87125eacc0e4834b2774308cb75f470328", "installer/tests/artifact.rs": "2bb0073921ef734c963b9df31658ecae71234d1e8a96074fe445365579050273", "installer/tests/catalog.rs": "30e5a92fdf350315ec08f15fbdc292c099ddb12adca0107b1bbe608e275a789c", "installer/tests/cli.rs": "0ba1d779ce64b70a35a5f7fc753b9c0d997df5fe21a33eff6e0613f692f51361", "installer/tests/fixtures/desktop.rs": "50581efee135b62efcf9f8bea4af4af919b885917dc686c188276dd647e6e441", "installer/tests/fixtures/publisher.rs": "f17d8e0c2ac26e2f842354b13e860a11b6c726d6261826cd17f1a0f943c017ec", "installer/tests/maintenance.rs": "dfa24e6c00e756bdc1b55fc6eba391e23e5602a5a4ab2342b7c0bc99854e406c", "installer/tests/model.rs": "08554fc1ccd25922777445bb6f87068ec2077910100aac307fc75a9d7ba482ad", "installer/tests/model_wizard.rs": "f6af71efa90219fa7ae513e509bb6e2227abf093e8bde4e5f0438de9751f838b", "installer/tests/multi_chat_compatibility.rs": "07104e8f0265cb411aad49ef9d6e98d567e4536599648328b6949fa2c599a16d", "installer/tests/providers.rs": "d05c0d06650a103f640cc388fd22a30467f3b64a820dccdd5a8ee718254d66de", "installer/tests/setup.rs": "8ecebda44be6cda42b342ecb33a2c0b7f06646be37100a90bd790c058f0d4aac", "installer/tests/wizard.rs": "d128356a80e61c4bad831f0504c618d1ee52acb3b3cf4fe08390c748bdac1b7d", "service/Cargo.lock": "28c0a55661c6d63024e484307075fde42a600ff863c132b596816b102316692e", "service/Cargo.toml": "8f423111abe8c293b6eb997085802e7810415074c66fa1b0eaebb7d310bdda9a", "service/dev-worker/guard.mjs": "b8c512c1b80382783bec41a76204815a9ddf3c234cee6c8ad6e721295e2489f0", "service/src/acceleration.rs": "d9ee167d6d60555f0ba16ed0fca49de0916522a62644771b30df7ec227df7abe", "service/src/app.rs": "e5fe9cdb97d4a5bb9f921dc7fb718457f95d54bf72a66569af6e24b5bf006ea1", "service/src/app_agents.rs": "1c5467d5f8e3ce96f575e5f6666320dab5466d9bade0718174b96a8c30847cdf", "service/src/app_agents_tests.rs": "ae21b1e32884bceba987be1e0b16775949affce6a42aba16f9e11fe56623de17", "service/src/app_dev_jobs.rs": "fbd27f0edb72a546e9e2f6ef09a5dd3f176b5a54b8d1e9f2f66c46b4ef859ca6", "service/src/app_dev_local.rs": "6431aed05381438ebe0b07e73d050e7d0edac3a8404e439bc8c1235be8acbf26", "service/src/app_dev_local_tests.rs": "f628ee46b0e046bc2e6229317e3be40c150abfc7a715b26db908c794ca8dee32", "service/src/app_instructions.rs": "2700cefec3f785847898e78584c24c9a1658f7feb3734265d41afff9f83bd473", "service/src/app_instructions_tests.rs": "dcbdbef88c2abc7582b887bfee37b0efa364002d989296332f081a4c2074a4c2", "service/src/app_projects.rs": "70f24498d378061fde368bd3c3b62c9c72af037eafe8f76aa1d3623eb5b6a62e", "service/src/app_projects_tests.rs": "08c46fe3b67726ac440f84c9935175cb72bc3efaced611e40864d03c3be46b62", "service/src/app_projects_v3_tests.rs": "d06c4a3fbcaae8f603d9e76bd41268a8143de76082eff6fe121c0457f67c3ea4", "service/src/app_timestamps.rs": "e4386e813887345c5aade50a264351c99d2018fdc633030027ffbd8e608ffc49", "service/src/app_timestamps_tests.rs": "b3b78954baaac2845ec6af65ee293bb00171158108e595aded8b3f0c6de7801c", "service/src/app_transport.rs": "797c258df171d2caada66edf859c3cf8ffcccfb0c7268e7d065497fcfd798324", "service/src/app_v2.rs": "774b0281ad34814f1dd225f3fcb88e596eb6162e0195150ba7c634cd71b3705f", "service/src/app_v2_tests.rs": "8e0a0f8f53a17448c2f908bb16b8fc86946f40b9482a27c875d7bda64bdf57f2", "service/src/app_v3.rs": "e9a2778cbb79e91a51595d40a68cfd9805f6798651eda8d9e33ca694ebd11ee9", "service/src/app_v3_tests.rs": "136f6ee273224daf90cb043a447523e0d64c3946c69d9ec29b39bb2f5e3637b9", "service/src/app_v3_worker.rs": "a3e115253e94aea820106d14f73aabb86fc143025244dc2906c2a4042db60838", "service/src/catalog.rs": "e25e6f724c76bc2fbf3c0db74008839145327fcb6bcb5b8df612325f9851afdd", "service/src/cloud.rs": "01cc395a530eb898fac20ec0363e34a6a1e716f9b2f7cb454a060fe34ad1670c", "service/src/cloud_http.rs": "d7abfee1b22c877d1e23ea1ab629df15dbcde126a81c159b74042b5c21b78abe", "service/src/cloud_http_tests.rs": "4c52b289494e952eb288be4e0e1aff44cde4a9cab2af9f9f6ea0ab136b9b17db", "service/src/cloud_keyring.rs": "f6ac5c6ea536992ad7bf252d92ef06b4ab8085b6393dc2e1592c53f5628c20aa", "service/src/cloud_keyring_tests.rs": "bd51d10ff5bc2a6657df7b06aa5d85d8dcaf445a76ec7ac2b36fa095ae565888", "service/src/control.rs": "844bdd3d4225ddce66ec6a10ab750e2c776d57a9f6cecb712ad0cf2a4a26b58f", "service/src/dev_broker.rs": "62601058249b0063cc02cdc5c0d41059700670a4d2eb6b13ddb6dd50058a6199", "service/src/dev_completion.rs": "f6681dd919a02f68ecbec88e0be3c1cce0519ac67fdd132334973c1a41fbda01", "service/src/dev_fetch.rs": "417d583e5ec847a512e3c959d061e70283b29a974fc404aa8b3bd8b0809175d6", "service/src/dev_fetch_tests.rs": "317cdc1cc58ea597ddcbf5695339377689f25c8a61c9eb5e30a83972ea00e6dd", "service/src/dev_local.rs": "bf5b49144207c95c06e5659b106a7ffe39a7ae37208c3490cab000e5e64c1543", "service/src/dev_read.rs": "530df51a5d6bdd35ed86f97ff25b8f6384c3cd6a59f0a7636c1acbe048467973", "service/src/dev_runtime.rs": "20bc9e91e12e06225485faecdf9af89dccef1f15dca07a45cf7527b4326f1d8b", "service/src/dev_runtime_local.rs": "7f30d9aed5477d9941ee34b285b4e93279ee8455103f7cef161703dae2a8f8d2", "service/src/dev_worker.rs": "de75fec9530f16b1d0fbe5b69303096558b3cbb6a70f610b1d02342b0d90530f", "service/src/dev_worker_local.rs": "4f5e1e2558ed1ccbbce64044b2c78d52f91d28566311a8f7de83c2dfd42dc33b", "service/src/filesystem.rs": "7b29a067bab48228af44377abecb4cb3156ff39c308ba4277d79478adadbddf4", "service/src/lib.rs": "609d5a162fef90166ce2c11e0d72abe54789594ce4324ea115690341000a8cd8", "service/src/main.rs": "ac5d1d224365bc78dbf4f77653d9b0722782bae3fa21775587c40da5ec0972ec", "service/src/maintenance.rs": "d83e185a2a57900bd5c8f0c2c40484b8a67b19b52aea9dc0042e328ed0f5a957", "service/src/manager.rs": "00265b79414e5344ce4e67e2f22ce7f17a7eb9bdc04a3df1d35f657d2ad331a2", "service/src/providers.rs": "0fe69d2e55a3f2d800936c92f1804824358233057c10b7937be653ffc7e187b6", "service/src/runner.rs": "7da94a8e4643db8fe4defe2bb7acaf216d97828706ef2381b5736c9b9c1bce88", "service/src/runner_lease_tests.rs": "350c7b389bc25a97c9dcc6f97ecbda0a2b406681093dbc725cebd18e4cf5384f", "service/src/runner_tool_tests.rs": "5b23750aac3c76efea20540a729a9fc0995eb9c4bdbc0dc5329a131e369187b6", "service/src/transport.rs": "8626ad11aca4b5472389e8f89856f73e71752598e1716a4dcdef74c6f67749b5", "service/tests/application.rs": "bfc6225c3f2dd0e300a8a4d00b1a9ff20dbe9db095bbe5dca73cdff81c48cd12", "service/tests/cloud.rs": "ab9933e1de693bcac4313a5107c3f7c0397aed5572c78cfc4869bcef7313d0e2", "service/tests/cloud_protocol.rs": "2a7723410f451fec85fa4c37403038c7d21669ccca85329438cd16917fdccb25", "service/tests/debug_service.rs": "543ab3b0fe91b6f6805a4d51fb6101edd33abcbc59b6df95cb31071d036fbed7", "service/tests/maintenance.rs": "4928b587a7e0009bb2dcf62b01b6aca9adcbd9fea2b61bca912f992d46bffa94", "service/tests/runner.rs": "258cacfd0f9e31ea77d952e3f5535d13e01df155c3f1427f72dafdac9ccabce2"}, "source_snapshot": "995d29f946275dc53186938e6a3bf02aa17ccbd71476d5732e089e6cc6ce74c0"}

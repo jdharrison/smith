@@ -1,0 +1,36 @@
+LOCAL-SMITH-DEV-BUFFERED-FRAMES — developer self-check evidence
+
+Disposition: IMPLEMENTED, selected source gates PASS. Not independent assurance, human acceptance, live performance acceptance, deployment or release approval.
+Approval: user's bounded source-only implementation request and approved local plan. No commit/branch/remote/host effects authorized or performed.
+Branch: feature/autonomy
+HEAD/base: 14d960975e76f906efb5e447ff3dece0e8e4385b
+Environment: Ubuntu 24.04.5 LTS, UID 1000, rustc/cargo 1.98.0.
+
+Write scope: service/src/dev_local.rs, service/src/dev_worker_local.rs, service/src/dev_runtime_local.rs (including directly needed inline tests); evidence logs in this directory. No dev_fetch, documentation-policy or UI edits. The three source files were pre-existing untracked files, so HEAD alone does not identify their content. 08-source-identity.log binds all 49 service source/manifest/lock/guard inputs; 13-final-validation.log confirms no drift across final validation and binds the debug binary/library hashes. No initial content hashes were captured before implementation; do not infer an original-source digest from Git.
+
+BUF-1 implemented: receive takes &mut BufReader<R> with R: Read + AsRawFd. Inspect buffered data first; scan at most the remaining frame allowance, append only payload strictly below MAX_FRAME, consume only through the first newline. Wait on get_ref().as_raw_fd() only with an empty buffer, then fill_buf. Preserve unique_json before typed decoding, duplicate rejection, EOF/protocol errors and transient WouldBlock/Interrupted retries.
+BUF-1 evidence: 09-test-1.log. Deterministic counted real reads from anonymous Linux memfd; realistic 32KiB payload containing all byte values serializes to 117101 bytes. Capacities 1024/8192/32768 take exactly 115/15/4 underlying reads, respectively (ceil(wire_bytes/capacity)). This measures read scaling, not end-to-end elapsed time or live-job attribution. Boundary cases cover MAX_FRAME-1/MAX_FRAME/MAX_FRAME+1 with/without newline and capacities 17/8192/MAX_FRAME+32. Malformed, escaped/root/nested duplicate, unknown-field/type, invalid typed fields/bytes, empty/truncated/missing-newline EOF and fatal IO remain Protocol.
+
+BUF-2 implemented: cancellation and original deadline checked on every receive iteration, including buffered data and after refill. Worker stdin wrapped once before Initialize and moved unchanged into demux; host stdout wrapped once before its receive loop. The host post-Reply EOF check also honors buffered overread before polling and preserves trailing-byte rejection and shutdown errors.
+BUF-2 evidence: 09-test-1/2/3.log. Coalesced frames with live empty sockets; Initialize-to-demux buffered ResponseStart/ResponseChunk sequence 0; original sequence-0 fragmented response regression; buffered cancellation/deadline without consumption, cancellation between prefixes, empty-socket wait cancellation/deadline; three-byte reads with WouldBlock and Interrupted before/after partial progress; buffered trailing post-Reply data rejected without waiting for EOF.
+
+BUF-3 evidence: final commands below, all from service/, all exit 0. No budget, schema, network, concurrency, permissions, provider, replay or cleanup-ownership changes.
+- cargo test --offline --locked --lib <filter> -- --nocapture
+  dev_local::tests: 7 passed
+  dev_worker_local::tests: 11 passed
+  dev_runtime::local::tests: 4 passed
+  app::local_dev::tests: 25 passed
+  dev_broker::tests: 7 passed
+  dev_completion::tests: 9 passed
+  dev_read::tests: 8 passed
+  Total: 71 passed, zero failed/ignored in selected filters. These are source/isolated fixture tests, not live integration.
+- cargo build --offline --locked: PASS
+- cargo clippy --offline --locked --lib --bins -- -D warnings: PASS
+- cargo fmt --all -- --check: PASS
+Expected: selected tests pass, locked build succeeds, production warnings denied, no formatting diff. Actual: all expected outcomes observed. No unrelated full-suite/installer/package/UI gates claimed.
+
+Retained intermediate failure: 02-framing-tests.log compiled with E0599 because BufReader does not implement AsRawFd at the post-Reply EOF check. Corrected with get_ref().as_raw_fd(), buffer-aware EOF handling and its direct regression test. Final selected checks were rerun after all edits. No unresolved defect found by these checks.
+
+API/repository notes: use BufRead::buffer/fill_buf/consume and retain the sole reader across ownership transfer; no dependency additions. Counting fixture uses anonymous memfd, not filesystem paths, pipes with capacity races, Docker or network. Socket tests use private UnixStream pairs only. Logs retain command, result and output; repository absolute roots in compiler output are redacted as <repo>. Each retained log is bounded below 32000 characters and lines below 2000 characters.
+
+Limitations: fresh independent assurance/adversarial review remains pending; no separate fresh-context review tool was available in this execution. No live Docker/job/network/model/service/image activity, Git clone or installed acceptance was performed. The change fixes a concrete byte-per-poll inefficiency but does not prove its share of the historical approximately 88-second delay or guarantee a live job now fits the unchanged deadline. Evidence digests are locally retained and owner-writable, not independently anchored.

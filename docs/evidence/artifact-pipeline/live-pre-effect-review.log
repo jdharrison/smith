@@ -1,0 +1,79 @@
+Independent PRE-EFFECT assurance — NO-GO
+
+Scope
+- Review only the single privileged smith-artifact-qa-20261020-01 engine and smith-artifact-qa-20261020-01-data volume through unix:///run/docker.sock, with one Execute request expected to return policy_denied.
+- Offline source/input/approval-binding review, read-only check, supplied offline tests, and additional injected-command failure probes only.
+- No live Docker/Dagger/engine/image/network/provider/model operations, installed-Smith changes, live receipts or effect markers. No code changes. This is assurance, not human approval, release acceptance, or a live transport result.
+
+Reviewed identity
+Repository HEAD: 14d960975e76f906efb5e447ff3dece0e8e4385b
+Branch: feature/autonomy (existing bootstrap exception; no branch/commit operation)
+Retained binding file SHA-256: 905ee68ea4a4a313eb86a6b60bd811dc090aadd812608597519a0fedcdbede43
+Script SHA-256: 8c5e56d25327ffd2f6039b9822088d657683f1c96699c1a93d599d7e404709ad
+Tests SHA-256: 40f7a039ed2a0b65c5e192aacd73953b94e2ca1092c4450e2434e77e0e45ee34
+Staged CLI SHA-256: 609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af
+Source/module canonical all-file manifest SHA-256: fd065edd5f6741e6ec05d6e8ce1a39999ebac2d7007dec98864130182ff10a93
+Request SHA-256: 0b5b9300a8f7a706b98dcb677982bcf32693f7af84d655ab793ab7cb97f20e30
+Destination SHA-256: e2ccb8dd1243321f6e72402e0804b542a8bd0f4cb28aebb3d52caefedeca6c37
+Installed beta CLI SHA-256 retained: ac2b5d28bf9c1881f0e14685a4e19610f78a256fb4038932dcd1252d292f5236
+Complete config/preflight/plan/upstream-copy identities, all 16 pipeline file hashes, branch and observed UTC timestamps: live-pre-effect-binding.log. Observation clock reported 2026-10-21 UTC; the fixed 20261020 resource names are identities, not receipt validity timestamps.
+
+Required Checks Evidence
+1. Policy and approval scope
+   Scenario: read AGENTS.md, docs/SCOPE.md, relevant architecture/design/host entry and detailed sections, docs/PROCESS.md approval boundaries and PROCESS_DETAILS.md approval/evidence gates, roles/assurance.md, active MVP plan and functional-qa-readonly-preflight.json.
+   Expected: exact bounded live scope remains separate from this offline review and future approval receipts.
+   Actual: active plan lines 119-130 records only first transport-test authority. Current explicit user scope names the replacement private staging root and leaves target0775 unchanged. This review grants no effects; parent must authenticate and record fresh independent/operator receipts outside the harness immediately before any later effect. No receipts exist or were supplied by this reviewer. Absence is intentional at this stage, not proof of approval.
+   Result: scope identified; approval enforcement defect below blocks readiness.
+2. Actual staged check
+   Command: python3 -B docs/evidence/artifact-pipeline/live-transport-qa.py check
+   Expected: exit0 and exact retained binding, no Docker contact or file creation.
+   Actual: exit0; entire emitted binding equals live-transport-binding.json, staged CLI digest equals live-staged-cli.json. Work entries unchanged. Code check path returns before Supervisor construction/commands.
+   Result: PASS. Evidence: live-pre-effect-check.log.
+3. Supplied offline suite
+   Scenario: import test_live_transport_qa.py with importlib and run unittest.defaultTestLoader.loadTestsFromModule via TextTestRunner, writing only a new live-pre-effect log rather than invoking its __main__ log-appending wrapper.
+   Expected: fake Docker/CLI supervisor tests and bounded local Python process tests pass.
+   Actual: 31 tests, zero failures/errors; exit0. No live Docker/Dagger executable used. Disposable fake marker/receipt fixtures remain test-only, not staged live receipts.
+   Result: PASS for covered offline scenarios, not proof of live enforcement. Evidence: live-pre-effect-offline-tests.log.
+4. Source/module/input preservation
+   Scenario: canonical complete-file tree comparison in check, comparison against all 16 pipeline inputs in qa-source-check-binding.json, final staged directory inventory.
+   Expected: exact reviewed source snapshot and canonical request; no generated-SDK exclusions or staged effect/receipt files; unchanged existing target permissions.
+   Actual: all 16 prior-reviewed pipeline file hashes match; staged module equals source, request matches exact Execute baseline and identities; private root0700; existing target0775. Final run-01 entries only cache, config, docker, engine.json, home, module, request.json.
+   Result: PASS. Evidence: live-pre-effect-binding.log and live-pre-effect-check.log.
+5. Additional adversarial checks
+   Scenario: instantiate existing FakeInputs/FakeCommands in disposable temporary roots, flip authorization to denied immediately after fake pull; separately trigger source drift at next unchanged check after fake pull; separately alter only inspected PidsLimit after fake CLI returns joined. No live entry point or staged writes.
+   Expected: no new preparation mutation after invalidation; still-owned running CID stopped even when runtime limits no longer match.
+   Actual: first two scenarios create volume and container before refusing (no start/dispatch); quota-drift scenario returns policy_denied/unknown with fake engine still running and zero stop attempts.
+   Result: FAIL. Evidence: live-pre-effect-adversarial.log (exact fake operation sequences and results).
+
+Findings
+Critical: none identified in this scoped offline review.
+
+HIGH — full configuration validation gates owned-engine stop
+live-transport-qa.py:357-375, 450-460.
+Cleanup calls inspect(cleanup=True), which requires not only captured CID/image/name/nonce ownership but also exact resource, network and mount configuration. If a still-owned engine's inspected PidsLimit changes after dispatch, inspect raises before the stop call. The fake-only probe changes only PidsLimit to0 after CLI join, preserving CID, image and nonce; the engine remains running, no stop is attempted, cleanup is unknown. This violates the requested stop-own-CID failure behavior. Unknown correctly prevents overall success, but does not compensate for the avoidable failure to attempt shutdown.
+Required remediation: separate minimal exact ownership validation from operational configuration validation. Preserve any drift as failure/unknown, refuse further dispatch, but attempt bounded stop of the positively identified owned CID despite quota/cgroup/configuration proof failure. Never stop foreign/mismatched ownership. Add after-start drift regressions, preserving join-before-stop behavior and nonempty/missing cgroup unknown results. New source/tests require a new binding and independent review; do not waive this finding with the 31-test pass.
+
+HIGH — preparation effects continue after approval/source invalidation during pull
+live-transport-qa.py:397-419.
+Authorization and input checks precede potentially long pull. After it returns, image inspection, volume creation and container creation occur before the next unchanged/authorize calls. If authorization has expired during pull, the harness still creates volume/container before the next authorize refuses. If source drifts during pull, the harness likewise creates volume/container before unchanged refuses. Fake-only probes reproduce both sequences. Neither starts nor dispatches, and the stopped created container is retained, but mutation already occurred outside the immediately revalidated scope.
+Required remediation: immediately revalidate authorization and frozen inputs after long preparation and before each new externally mutating preparation/start/dispatch boundary (including volume create and container create), with cancellation/deadline checks. Cleanup remains permitted without fresh work authorization. Add regressions proving expiry/drift after pull causes no volume/container creation. Fresh parent receipts must bind the corrected implementation; do not treat time-valid initial authorization as permanently valid.
+
+Medium/low: no additional blocking finding asserted. Normal single-operator trust is not hostile-same-UID protection; receipt identity authentication remains explicitly parent-owned.
+
+Positive implemented/source observations (not live guarantees)
+- Fixed custom runner URI is container+docker:// followed by captured full CID. Retained custom-runner source lines 59-68 supports explicit Docker transport; clean environment prevents ambient session/provider/config inheritance. No fallback URI exists in the harness.
+- Main module run_fixture reads and validates the exact File request and trusted module assets. Execute reaches unconditional policy_denied before coding/setup graph construction. Import-time inspected code does not run a coding graph. SDK runtime/dependency preparation is distinct and is within the separately bounded proposed live test, not evidence that Setup ran.
+- SDK retained main source lines 113-120, 334-346 and 386-445, together with retained discovery AddFile/AddDirectory implementations, supports engine-side ContextDir codegen; only init/develop export generated files according to its source comment. Full host snapshot remains frozen with no SDK exclusions. This is retained-source evidence, not a new upstream fetch or live no-write proof.
+- Intended create args and inspect checks enforce declarations for4CPU/4GiB/1024PIDs/private cgroup namespace, memory-swap cap, no restart, no published ports, only dedicated data volume and read-only exact engine.json bind. No host socket/home/repo mount. Engine config disables insecureRootCapabilities. Local logging uses max-size1m/max-file1/compressfalse.
+- Runtime cgroup code requires unified cgroup2, bounded cpu.max, exact memory.max/pids.max, captured PID correlation and descendant-empty observations after stop. Missing proof correctly blocks dispatch or verified cleanup. These live checks have NOT been executed here.
+- Supplied tests cover existing-name refusal before preparation, foreign-CID/changed-image cleanup refusal, cancellation, capture failures, process-group joining, missing/nonempty cgroup proof, bad correlation, nonzero CLI and duplicate-attempt fences. Supplied tests did not cover the two findings above.
+
+Evidence Gaps / exclusions
+- Live CLI File/scalar decoding remains UNVERIFIED and is the explicit test goal, not a pre-effect blocker by itself. Harness rejects quoted/ambiguous JSON and requires exact policy_denied/correlation plus exit0; no success may be inferred now.
+- Live Docker resource availability, config consumption, SDK/dependency compatibility, engine identity/quiescence and actual kernel quota enforcement remain unexecuted. No functional, installed or broader MVP acceptance claim follows.
+- Existing-name absence is deliberately checked only by a later authorized live run; no daemon query was made in this review.
+- Retained upstream copies were inspected and hash-bound locally, not re-fetched/authenticated over the network. Staged CLI archive/version result is parent-retained evidence; this reviewer independently verified actual executable hash but did not invoke it or download/reverify an archive.
+
+Verdict: FAIL / NO-GO for PRE-EFFECT readiness on the exact bound implementation above.
+Release Gate Decision: no-go (no release/deployment requested or authorized).
+Required next step: correct both harness failure paths in the parent-owned work scope, add focused fake regressions, regenerate the exact binding and request as necessary, and obtain fresh independent pre-effect assurance. This reviewer made no code changes, created no live receipts, and performed no live effects. Parent must not record this report as PASS or use it as an approved review receipt.

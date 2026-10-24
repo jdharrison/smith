@@ -165,6 +165,13 @@ impl Default for CloudDurable {
     }
 }
 impl CloudDurable {
+    pub(super) fn has_destination(&self, id: &str, provider: Vendor, generation: &str) -> bool {
+        self.conversations.get(id).is_some_and(|r| {
+            r.approved_destinations
+                .iter()
+                .any(|d| d.provider == provider && d.credential_generation == generation)
+        })
+    }
     pub(super) fn validate(&self, d: &Durable) -> Result<()> {
         let fail = || "Invalid cloud state; preserved".to_string();
         for (i, p) in self.providers.iter().enumerate() {
@@ -242,6 +249,18 @@ impl CloudDurable {
                 }
             }
         }
+        for j in &d.jobs {
+            if let Some(Task::Routed(t)) = &j.task {
+                let hash = match d.instructions.snapshot(&j.operation.request_id) {
+                    Some(s) => s.digest(&t.messages),
+                    None => digest_messages(&t.messages),
+                }
+                .map_err(|_| fail())?;
+                if hash != t.context_sha256 {
+                    return Err(fail());
+                }
+            }
+        }
         for j in d.jobs.iter().filter(|j| v2::pending(&j.operation)) {
             match &j.task {
                 Some(Task::Routed(t)) => {
@@ -255,7 +274,13 @@ impl CloudDurable {
                     if r.last_route.as_ref() != Some(&t.route)
                         || t.history_revision != c.history_revision
                         || t.config_revision != j.operation.config_revision
-                        || !snapshot_context_matches(t, &c.history)
+                        || !snapshot_context_matches(
+                            t,
+                            &c.history,
+                            d.instructions
+                                .snapshot(&j.operation.request_id)
+                                .map_or(0, |s| s.text.len()),
+                        )
                     {
                         return Err(fail());
                     }
@@ -346,13 +371,13 @@ fn digest_messages(messages: &[Message]) -> AppResult<String> {
         &serde_json::to_vec(messages).map_err(|_| invalid())?,
     ))
 }
-fn snapshot_context_matches(t: &RoutedTask, history: &[Message]) -> bool {
+fn snapshot_context_matches(t: &RoutedTask, history: &[Message], preamble_bytes: usize) -> bool {
     let Some(input) = t.messages.last() else {
         return false;
     };
     let mut expected = history.to_vec();
     while expected.iter().map(|m| m.content.len()).sum::<usize>() + input.content.len()
-        > MAX_CONTEXT
+        > MAX_CONTEXT.saturating_sub(preamble_bytes)
     {
         if expected.len() < 2 {
             return false;
@@ -360,7 +385,7 @@ fn snapshot_context_matches(t: &RoutedTask, history: &[Message]) -> bool {
         expected.drain(..2);
     }
     expected.push(input.clone());
-    digest_messages(&expected).is_ok_and(|h| h == t.context_sha256)
+    digest_messages(&expected).ok() == digest_messages(&t.messages).ok()
 }
 fn valid_messages(t: &RoutedTask) -> bool {
     !t.messages.is_empty()
@@ -374,7 +399,7 @@ fn valid_messages(t: &RoutedTask) -> bool {
         && t.messages
             .last()
             .is_some_and(|m| text(&m.content, MAX_TEXT).is_ok())
-        && digest_messages(&t.messages).is_ok_and(|h| h == t.context_sha256)
+        && instructions::valid_hash(&t.context_sha256)
 }
 pub(super) fn valid_job(j: &Job) -> bool {
     let o = &j.operation;
@@ -885,12 +910,18 @@ fn route_candidate(inner: &Inner, a: &RouteArgs) -> AppResult<RouteCandidate> {
         }
         vec![]
     };
+    if a.route.vendor().is_some() {
+        inner.durable.instructions.cloud_eligible()?;
+    }
+    let snapshot = inner.durable.instructions.preview();
     let (credential, provider_revision, local_digest) = ready(inner, &a.route)?;
     let messages = if let Some(v) = a.route.vendor() {
-        cloud::context(v, &a.route.model, &history, &a.text)?
+        cloud::context_with_instructions(v, &a.route.model, &history, &a.text, &snapshot.text)?
     } else {
         let mut h = history;
-        while h.iter().map(|m| m.content.len()).sum::<usize>() + a.text.len() > MAX_CONTEXT {
+        while h.iter().map(|m| m.content.len()).sum::<usize>() + a.text.len() + snapshot.text.len()
+            > MAX_CONTEXT
+        {
             h.drain(..2);
         }
         h.push(Message {
@@ -904,12 +935,22 @@ fn route_candidate(inner: &Inner, a: &RouteArgs) -> AppResult<RouteCandidate> {
             .as_ref()
             .and_then(|id| inner.durable.cloud.conversations.get(id))
             .is_none_or(|r| !r.approved_destinations.contains(&d))
+            || !inner.durable.instructions.approved(
+                a.conversation_id.as_deref(),
+                d.provider,
+                &d.credential_generation,
+            )
     });
     if requires_consent
         && a.conversation_id
             .as_ref()
             .and_then(|id| inner.durable.cloud.conversations.get(id))
-            .is_some_and(|r| r.approved_destinations.len() >= 16)
+            .is_some_and(|r| {
+                r.approved_destinations.len() >= 16
+                    && a.route
+                        .destination()
+                        .is_some_and(|d| !r.approved_destinations.contains(&d))
+            })
     {
         return Err(capacity());
     }
@@ -922,7 +963,7 @@ fn route_candidate(inner: &Inner, a: &RouteArgs) -> AppResult<RouteCandidate> {
         policy: cloud::POLICY.into(),
         config_revision: a.expected_config_revision,
         history_revision: a.expected_history_revision.unwrap_or(0),
-        context_sha256: digest_messages(&messages)?,
+        context_sha256: snapshot.digest(&messages)?,
         messages,
         output_tokens: if a.route.vendor().is_some() {
             cloud::OUTPUT_TOKENS
@@ -948,8 +989,9 @@ fn route_result(
     requires: bool,
     token: Option<&str>,
     expires: Option<u64>,
+    preamble_bytes: usize,
 ) -> Value {
-    json!({"request_id":a.request_id,"conversation_id":a.conversation_id,"route":a.route,"config_revision":v2::wire_config_revision(a.expected_config_revision),"history_revision":a.expected_history_revision,"context_sha256":t.context_sha256,"context_messages":t.messages.len(),"context_bytes":t.messages.iter().map(|m|m.content.len()).sum::<usize>(),"requires_consent":requires,"approval_token":token,"expires_at_ms":expires,"dispatch_expires_at_ms":t.dispatch_expires_at_ms})
+    json!({"request_id":a.request_id,"conversation_id":a.conversation_id,"route":a.route,"config_revision":v2::wire_config_revision(a.expected_config_revision),"history_revision":a.expected_history_revision,"context_sha256":t.context_sha256,"context_messages":t.messages.len(),"context_bytes":t.messages.iter().map(|m|m.content.len()).sum::<usize>() + preamble_bytes,"requires_consent":requires,"approval_token":token,"expires_at_ms":expires,"dispatch_expires_at_ms":t.dispatch_expires_at_ms})
 }
 
 impl Application {
@@ -1014,6 +1056,29 @@ impl Application {
             .cloud
             .expire(self.cloud.clock.now());
         match req.op.as_str() {
+            "dev_sessions_state_v1"
+            | "dev_session_get_v1"
+            | "dev_session_start_v1"
+            | "dev_session_prompt_v1"
+            | "dev_session_finish_v1"
+            | "dev_session_delete_v1"
+            | "dev_session_receipt_v1" => self.call_retained_jobs(req),
+            "dev_jobs_state_v4"
+            | "dev_job_get_v4"
+            | "dev_job_start_v4"
+            | "dev_jobs_state_v2"
+            | "dev_job_get_v2"
+            | "dev_job_start_v2"
+            | "dev_job_delete_v3"
+            | "dev_job_deletion_v3" => self.call_dev_local(req),
+            "dev_jobs_state" | "dev_job_get" => self.call_dev_jobs(req),
+            "dev_job_start" => Err(AppError::new(
+                "UPGRADE_REQUIRED",
+                "Use the versioned local inspection operation; no legacy execution",
+            )),
+            "instructions_get" | "instructions_update" | "instructions_receipt" => {
+                self.call_instructions(req)
+            }
             "route_catalog" => {
                 let _: Empty = decode(req.args)?;
                 self.route_catalog()
@@ -1026,6 +1091,14 @@ impl Application {
             "route_prepare" => self.route_prepare(req.args),
             "submit_routed" => self.submit_routed(req.args),
             "request_routing" => self.request_routing(req.args),
+            "agents_list_v1" | "agent_update_v1" | "agents_list_v2" | "agent_create_v1"
+            | "agent_update_v2" | "agent_receipt" => self.call_agents(req),
+            "projects_list" | "project_create" | "project_update" | "project_delete"
+            | "projects_list_v2" | "project_create_v2" | "project_update_v2"
+            | "project_delete_v2" | "projects_list_v3" | "project_create_v3"
+            | "project_update_v3" | "project_delete_v3" | "project_receipt" => {
+                self.call_projects(req)
+            }
             _ => {
                 req.schema_version = 2;
                 self.call_v2(req)
@@ -1374,6 +1447,12 @@ impl Application {
         require_instance(&a.instance_id, &self.instance_id)?;
         let mut inner = self.inner.lock().map_err(|_| storage())?;
         fresh(&inner, &a.request_id)?;
+        if a.expected_config_revision != inner.durable.config.revision {
+            return Err(stale());
+        }
+        if a.route.vendor().is_some() {
+            inner.durable.instructions.cloud_eligible()?;
+        }
         let fingerprint = fp("route_prepare", &public)?;
         if inner
             .cloud
@@ -1394,7 +1473,14 @@ impl Application {
         }
         let mut candidate = route_candidate(&inner, &a)?;
         if a.route.vendor().is_none() {
-            return Ok(route_result(&a, &candidate.task, false, None, None));
+            return Ok(route_result(
+                &a,
+                &candidate.task,
+                false,
+                None,
+                None,
+                inner.durable.instructions.preview().text.len(),
+            ));
         }
         let wall = self.cloud.clock.wall_ms();
         let dispatch_wall = wall
@@ -1409,6 +1495,7 @@ impl Application {
             candidate.requires_consent,
             Some(&token),
             Some(wall + 60_000),
+            inner.durable.instructions.preview().text.len(),
         );
         inner.cloud.preparations.insert(
             a.request_id,
@@ -1511,9 +1598,12 @@ impl Application {
                 ..Routing::default()
             });
         if candidate.requires_consent {
-            routing
-                .approved_destinations
-                .push(a.route.destination().ok_or_else(invalid)?);
+            let dest = a.route.destination().ok_or_else(invalid)?;
+            if !routing.approved_destinations.contains(&dest) {
+                routing.approved_destinations.push(dest.clone());
+            }
+            next.instructions
+                .approve(&target, dest.provider, &dest.credential_generation);
         }
         routing.last_route = Some(a.route.clone());
         next.make_room()?;
@@ -1540,6 +1630,7 @@ impl Application {
             accepted_ms: self.cloud.clock.wall_ms(),
         };
         let receipt = job.summary();
+        next.instructions.capture(&a.request_id);
         next.jobs.push(job);
         self.commit(&mut inner, next)?;
         inner.cloud.preparations.remove(&a.request_id);

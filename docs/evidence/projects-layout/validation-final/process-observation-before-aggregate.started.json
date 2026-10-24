@@ -1,0 +1,42 @@
+{
+  "argv": [
+    "python3",
+    "-B",
+    "<repo>/target/projects-layout/validation-final/probe_processes.py"
+  ],
+  "core_before_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+  "cwd": "<repo>",
+  "environment": {
+    "CI": "true",
+    "DAGGER_CLOUD_TOKEN": "",
+    "DAGGER_NO_NAG": "1",
+    "DAGGER_PROGRESS": "plain",
+    "DNT": "1",
+    "DO_NOT_TRACK": "1",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "GIT_PAGER": "cat",
+    "GIT_TERMINAL_PROMPT": "0",
+    "HOME": "<home>",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "LOGNAME": "jdharrison",
+    "PATH": "<home>/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TERM": "dumb",
+    "TZ": "UTC",
+    "USER": "jdharrison",
+    "_EXPERIMENTAL_DAGGER_RUNNER_HOST": "docker-container://smith-installer-pipeline-dagger-v0.21.9"
+  },
+  "environment_policy": "explicit complete allowlist; no inherited provider credentials, session bus, display, analytics/cloud tokens",
+  "executable": {
+    "mode": 493,
+    "mode_octal": "0o755",
+    "path": "/usr/bin/python3.12",
+    "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+    "size": 8020928,
+    "type": "file"
+  },
+  "name": "process-observation-before-aggregate",
+  "started_at": "2026-10-17T21:36:55.152703+00:00",
+  "timeout_seconds": 15
+}

@@ -1,0 +1,11 @@
+00:00 +0: loading <repo>/target/project-repositories/assurance/reviewer_test.dart
+00:00 +0: independent name-only dirty restart and newer-input recovery
+00:00 +1: independent url-only dirty restart and newer-input recovery
+00:01 +2: independent base-only dirty restart and newer-input recovery
+00:01 +3: independent work-only dirty restart and newer-input recovery
+00:01 +4: independent feature-only dirty restart and newer-input recovery
+00:01 +5: independent fix-only dirty restart and newer-input recovery
+00:02 +6: independent release-only dirty restart and newer-input recovery
+00:02 +7: independent hotfix-only dirty restart and newer-input recovery
+00:02 +8: independent null metadata survives unrelated save and dirty delete recovery
+00:02 +9: All tests passed!

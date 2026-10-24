@@ -3,6 +3,25 @@ use std::path::PathBuf;
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().is_some_and(|arg| arg == "dev-local-worker") {
+        if args.len() != 2 || smith_service::dev_worker_local::run(&args[1]).is_err() {
+            std::process::exit(1);
+        }
+        return;
+    }
+    if args.first().is_some_and(|arg| arg == "dev-source-export") {
+        if args.len() != 2 || smith_service::dev_worker_local::run_export(&args[1]).is_err() {
+            std::process::exit(1);
+        }
+        return;
+    }
+    if args.first().is_some_and(|arg| arg == "dev-worker") {
+        // Never mix normal control envelopes or raw diagnostics into worker stdout.
+        if args.len() != 2 || smith_service::dev_worker::run(&args[1]).is_err() {
+            std::process::exit(1);
+        }
+        return;
+    }
     if args.is_empty() {
         println!("Hello, world! Smith next debug service — use inspect for read-only state.");
         return;

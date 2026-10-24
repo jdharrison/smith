@@ -1,0 +1,3 @@
+command: dart format test/rust_dev_jobs_integration_test.dart
+Formatted 1 file (0 changed) in 0.01 seconds.
+exit: 0

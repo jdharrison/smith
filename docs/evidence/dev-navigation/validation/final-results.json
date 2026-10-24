@@ -1,0 +1,286 @@
+{
+  "analyzer": "PASS:no issues",
+  "combined": "BLOCKED",
+  "commands": [
+    {
+      "exit_code": null,
+      "log_sha256": "1f0b6c626560d202ae83b9b46b63c4608efd2bfc7be97fd64aff86ce0fc24c36",
+      "name": "actual-package-helpers",
+      "stable_inputs": true,
+      "status": "not_run",
+      "timed_out": false,
+      "timeout_seconds": 120
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "c845ebecb6d5a185f4d4af2e2aebb74e085c1cf01c1f4f53a06a4a89fcb05b4a",
+      "name": "client-build-configured-module",
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "exit_code": 2,
+      "log_sha256": "0350044671596973218132c7aeacceecf0c61bd4db5ad372855a451a36772505",
+      "name": "client-build",
+      "stable_inputs": true,
+      "status": "fail",
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "exit_code": 2,
+      "log_sha256": "e5705798829cfcdcfbe1239f7ed6ec5d5e7bbc186b9feaa4723933cb7cf447af",
+      "name": "client-test-configured-module",
+      "stable_inputs": true,
+      "status": "fail",
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "exit_code": 2,
+      "log_sha256": "f36e6c719ace49ebaf011e0f0091a086bdd66beff0ad5cdd9110631c14e6eca6",
+      "name": "client-test",
+      "stable_inputs": true,
+      "status": "fail",
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "a331f38fd7959e81fb2ea3377f1e0906091e174e4b167d6c137f3476dd911333",
+      "name": "dagger-help",
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 15
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "f9ab41758c481e32f03166dca53093bb8daff79ab9ea178798f9f15f5c713174",
+      "name": "dagger-module-functions",
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 120
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "d8bafc2eecf2ea9cc1eb4d546ad23dedeaf2b8fa78a9da6aa1a8ea3b47a58d91",
+      "name": "dagger-original-module-functions",
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 120
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "0819b1f6a5d2080e67735b51514107720e0fb59ba70a251bd80bbc056bd8288a",
+      "name": "dagger-version",
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 15
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "diff-check",
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 15
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "325da58088d4715dec1bcbf503b1bf12558c81c2930a733c937c9a7e12ef0a99",
+      "name": "discovery-environment",
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 15
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "08becbf890a34fde2118104b839d04ce5dbd2f71c56e26fc20af6c6b782b3e99",
+      "name": "engine-readiness",
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 15
+    },
+    {
+      "exit_code": 1,
+      "log_sha256": "affcc9293e69deae98bd81dc5fa793ab07e9628a1b4a8c7ee2139cfb35622f99",
+      "name": "focused-configured",
+      "stable_inputs": true,
+      "status": "fail",
+      "timed_out": false,
+      "timeout_seconds": 300
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "4b4235d5ec4430c680a101fe3d6289e09e941ad72a996b10950291411f7c1e77",
+      "name": "focused-safe-temp",
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 300
+    },
+    {
+      "exit_code": 1,
+      "log_sha256": "7099d017073d79108693d9121befa686b30dfc88606896038641a4c353ca1d43",
+      "name": "focused",
+      "stable_inputs": true,
+      "status": "fail",
+      "timed_out": false,
+      "timeout_seconds": 300
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "6b006e4456e72b7df11f40671ea6e5aca4e3a6ab3bc6c3a6c5fb8a5f61525976",
+      "name": "full-analyzer",
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 180
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "f9ee71f28eae4eb7470dcefd7b6891ff1147c1319f27fea1ddab8796a698e7ad",
+      "name": "full-format",
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 120
+    },
+    {
+      "exit_code": 1,
+      "log_sha256": "61ae1dd3d90051feb2bffae42e79965ca8802d32226df6ce4aa6375cd2a3deaa",
+      "name": "full-native-tests-configured",
+      "stable_inputs": true,
+      "status": "fail",
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "exit_code": 1,
+      "log_sha256": "1e0b87bcbf5e667d546694be2dbb0c89b3ca5d17f9caeb88d29e10e87d3f7203",
+      "name": "full-native-tests-safe-temp",
+      "stable_inputs": true,
+      "status": "fail",
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "exit_code": 1,
+      "log_sha256": "7099d017073d79108693d9121befa686b30dfc88606896038641a4c353ca1d43",
+      "name": "full-native-tests",
+      "stable_inputs": true,
+      "status": "fail",
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "exit_code": 0,
+      "log_sha256": "04813dcc115954e70371d6912bd88797cc587d66fbee7975cfa1774211216147",
+      "name": "linux-artifact-file",
+      "stable_inputs": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 15
+    },
+    {
+      "exit_code": null,
+      "log_sha256": "1f0b6c626560d202ae83b9b46b63c4608efd2bfc7be97fd64aff86ce0fc24c36",
+      "name": "package-verify",
+      "stable_inputs": true,
+      "status": "not_run",
+      "timed_out": false,
+      "timeout_seconds": 60
+    },
+    {
+      "exit_code": 2,
+      "log_sha256": "2e4515081b9867dbb3740248f00b2a98525d5159a38a95eb8ff0072ecb83099f",
+      "name": "root-test-build",
+      "stable_inputs": true,
+      "status": "fail",
+      "timed_out": false,
+      "timeout_seconds": 900
+    }
+  ],
+  "core_count": 1296,
+  "core_sha256": "b86b9d04d2867a23994b142d3850f1b4ea0a5a72c6df7f1d2321ec2f2a180777",
+  "focused": "PASS:305 passed,0 failed,0 skipped in one invocation",
+  "format": "PASS:111 files,0 changed",
+  "full_compiled_client": {
+    "count_policy": "One final Flutter terminal summary for this invocation; no addition across reruns or Dagger failure replay.",
+    "explicit_skip_reasons": [],
+    "failed": 15,
+    "failures": [
+      "multi_chat_widget_test.dart: multi-chat small 400x400 2x Settings and drawer preserve draft without overflow",
+      "projects_layout_golden_test.dart: Projects layout bundled-font golden compact-editor-400x400",
+      "projects_layout_golden_test.dart: Projects layout bundled-font golden ultrawide-4200x2400",
+      "projects_layout_golden_test.dart: Projects layout bundled-font golden wide-1536x1024",
+      "rust_projects_integration_test.dart: compiled Projects CRUD persists structured repositories without changing chat projections",
+      "rust_projects_integration_test.dart: compiled branch-only uncertain update resolves original nested payload without replay",
+      "rust_projects_integration_test.dart: compiled concurrent project edits and stale service instances fail closed",
+      "rust_projects_integration_test.dart: compiled disk5 URLs migrate without invented repository names or branches",
+      "rust_projects_integration_test.dart: compiled fresh profile persists an ordinary Smith starter without resurrection or extra effects",
+      "rust_projects_integration_test.dart: compiled historical create receipt cannot recreate a deleted project",
+      "rust_projects_integration_test.dart: compiled legacy Projects calls cannot erase settings or bypass replay identities",
+      "rust_projects_integration_test.dart: compiled lost Projects acknowledgement resolves across restart without replay",
+      "rust_socket_integration_test.dart: real Rust migrated inert voice, interrupted job and config revision 1",
+      "rust_socket_integration_test.dart: real Rust migrated inert voice, interrupted job and config revision 18446744073709551615",
+      "rust_socket_integration_test.dart: real Rust migrated inert voice, interrupted job and config revision 9007199254740992"
+    ],
+    "passed": 989,
+    "skipped": 0,
+    "terminal": "Some tests failed."
+  },
+  "full_native": {
+    "count_policy": "One final Flutter terminal summary for this invocation; no addition across reruns or Dagger failure replay.",
+    "explicit_skip_reasons": [
+      "Skip: Requires the compiled, fake-injected Rust schema3 fixture.",
+      "Skip: Run make client/test for the mandatory compiled Projects fixture.",
+      "Skip: SMITH_TEST_SERVICE required for isolated Rust migration fixture.",
+      "Skip: SMITH_TEST_SERVICE not supplied: set an explicit compiled Rust binary path to run the isolated Unix-socket integration test.",
+      "Skip: Run make client/test for mandatory compiled schema3 fixture.",
+      "Skip: Run make client/test for the mandatory compiled Agents fixture."
+    ],
+    "failed": 4,
+    "failures": [
+      "multi_chat_widget_test.dart: multi-chat small 400x400 2x Settings and drawer preserve draft without overflow",
+      "projects_layout_golden_test.dart: Projects layout bundled-font golden compact-editor-400x400",
+      "projects_layout_golden_test.dart: Projects layout bundled-font golden ultrawide-4200x2400",
+      "projects_layout_golden_test.dart: Projects layout bundled-font golden wide-1536x1024"
+    ],
+    "passed": 978,
+    "skipped": 22,
+    "terminal": "Some tests failed."
+  },
+  "implemented_validation_only": true,
+  "linux_build": "PASS:current configured module/client/build,private exported bundle; not full package",
+  "not_claimed": [
+    "acceptance",
+    "waiver",
+    "independent assurance",
+    "full root success",
+    "full package rebuild/verify",
+    "installed/GUI/native IME acceptance",
+    "cold cache/hermeticity",
+    "historical baseline blame outside frozen byte proof"
+  ],
+  "production_changes_from_baseline": [
+    "client/lib/main.dart",
+    "client/lib/ui/smith_workspace.dart",
+    "client/lib/workspace_preferences.dart"
+  ],
+  "recorded_at": "2026-10-18T01:27:15.532719+00:00",
+  "source_snapshot_core_matches": true,
+  "source_stable": true,
+  "untracked_count": 54,
+  "warnings": "Analyzer clean; required test failures remain",
+  "work_id": "LOCAL-SMITH-DEV-NAVIGATION"
+}

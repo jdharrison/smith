@@ -1,0 +1,11 @@
+{
+  "all_prior_files_preserved": true,
+  "broken_report_links": [],
+  "core_still_matches": true,
+  "literal_home_path_leaks": [],
+  "release_gate_decision": "no-go for external release",
+  "report_sha256": "944b295624dd00098639b37fd549658abcb8d3b44fd874d50a2e7dad6bd3db4d",
+  "scope": "bounded source/layout assurance",
+  "timestamp_utc": "2026-10-17T22:35:48.643168+00:00",
+  "verdict": "pass"
+}

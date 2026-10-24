@@ -1,0 +1,23 @@
+{
+  "result": "PASS",
+  "core_files": 1265,
+  "changed_baseline_paths": [
+    "VALIDATION.md",
+    "client/assets/README.md",
+    "client/lib/ui/projects_view.dart",
+    "client/lib/ui/smith_icon.dart",
+    "client/test/projects_navigation_test.dart",
+    "client/test/projects_view_test.dart",
+    "dagger/package.py",
+    "dagger/tests/test_package.py",
+    "docs/DESIGN.md",
+    "docs/PROCESS.md",
+    "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+    "docs/VALIDATION_DETAILS.md",
+    "docs/plans/LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT.md"
+  ],
+  "historical_files_unchanged": 127,
+  "golden_PNGs_unchanged": 28,
+  "local_file_links_checked": 130,
+  "closeout_sha256": "d7a32b500cbaf874f1f8ea840cd102f71406be7bd6a3f7b653a31c1a7d26c7a8"
+}

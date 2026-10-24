@@ -1,0 +1,27 @@
+{
+  "request_id": "f8f90d19e68643dea6bce5083659d93d",
+  "status": "failed",
+  "message": "Public repository checkout could not be verified; no credentials or replay",
+  "failed_stage": "cloning",
+  "observed_phases": [
+    "preparing",
+    "failed"
+  ],
+  "reply_available": false,
+  "cleanup_verified": true,
+  "reply_bytes": 0,
+  "reply_sha256": null,
+  "recognized_language_mentions": [],
+  "repositories": [],
+  "container": {
+    "id": "5c4cca5ec4325e07e6eda89e9aee66ae6e318422061f9052e85a580d94aa0962",
+    "status": "exited",
+    "running": false,
+    "exit_code": 0,
+    "started": true,
+    "state_error_present": false,
+    "compression_explicitly_disabled": true
+  },
+  "submission_count": 1,
+  "automatic_retry": false
+}

@@ -1,0 +1,388 @@
+--- baseline/service/src/app.rs
++++ current/service/src/app.rs
+@@ -564,7 +564,7 @@
+         filesystem::check_directory(&roots.data.join("smith-next"), true)?;
+         let (mut durable, migrated) = match filesystem::read_file(&path, 0o600, STATE_LIMIT)? {
+             Some(bytes) => Durable::load(&bytes)?,
+-            None => (Durable::default(), false),
++            None => (projects::bootstrap(&path)?, false),
+         };
+         durable.validate()?;
+         let mut changed = migrated;
+--- baseline/service/src/app_projects.rs
++++ current/service/src/app_projects.rs
+@@ -447,6 +447,53 @@
+     instance_id: String,
+     expected_revision: u64,
+     project_id: String,
++}
++
++// Only the safe absent-state startup path may call this factory. Shared defaults
++// remain empty for existing profiles and frozen legacy migrations.
++pub(super) fn bootstrap(path: &std::path::Path) -> Result<Durable> {
++    let request_id = new_id()?;
++    let seed = new_id()?;
++    let project_id = format!("{}{:016x}", &seed[..16], 1);
++    let mut repository = Repository::unknown("https://github.com/jdharrison/smith".into());
++    repository.branch.base = Some("main".into());
++    repository.branch.work = Some("main".into());
++    let project = Project {
++        project_id: project_id.clone(),
++        name: "Smith".into(),
++        repositories: vec![repository],
++        agent: "opencode".into(),
++    };
++    let fp = fingerprint("v3:projects:bootstrap", &json!(project))
++        .map_err(|_| "Cannot fingerprint initial project")?;
++    let mut durable = Durable::default();
++    durable.revision = 1;
++    durable.projects = Registry {
++        revision: 1,
++        projects: vec![project],
++        receipts: vec![RetainedReceipt {
++            receipt: Receipt {
++                request_id,
++                project_id,
++                revision: 1,
++                deleted: false,
++            },
++            fingerprint: Some(fp),
++        }],
++        expired_ids: vec![],
++    };
++    durable.validate()?;
++    durable
++        .preflight()
++        .map_err(|_| "Initial application state exceeds capacity")?;
++    let bytes = serde_json::to_vec(&durable).map_err(|_| "Cannot encode application state")?;
++    if bytes.len() as u64 > STATE_LIMIT {
++        return Err("Application state exceeds durable limit".into());
++    }
++    // Never replace/adopt a destination that appeared after the absent read.
++    // A publication error may be uncertain; leave recovery to the operator.
++    filesystem::publish(path, &bytes, 0o600, false)?;
++    Ok(durable)
+ }
+ 
+ impl Application {
+--- baseline/service/src/app_projects_tests.rs
++++ current/service/src/app_projects_tests.rs
+@@ -133,6 +133,318 @@
+         assert_eq!(self.provider.calls.load(Ordering::SeqCst), 0);
+         fs::remove_dir_all(&self.base).unwrap();
+     }
++}
++
++fn fresh_fixture() -> Fixture {
++    let mut f = Fixture::new(Durable::default());
++    fs::remove_file(&f.app.path).unwrap();
++    f.app = f.reopen().unwrap();
++    f
++}
++
++#[test]
++fn projects_bootstrap_fresh_exact_private_published_state_and_stable_reopen() {
++    assert_eq!(
++        json!(Registry::default()),
++        json!({"revision":0,"projects":[],"receipts":[],"expired_ids":[]})
++    );
++    let defaults = Durable::default();
++    assert_eq!(json!(defaults.projects), json!(Registry::default()));
++    let f = fresh_fixture();
++    // Inspect disk immediately after open: readiness requires prior publication.
++    let bytes = f.bytes();
++    assert_eq!(
++        fs::metadata(&f.app.path).unwrap().permissions().mode() & 0o7777,
++        0o600
++    );
++    let disk = f.disk();
++    let registry = &disk["projects"];
++    let project = &registry["projects"][0];
++    let project_id = project["project_id"].as_str().unwrap();
++    assert!(valid_id(project_id));
++    assert!(project_id.ends_with("0000000000000001"));
++    assert_eq!(
++        project,
++        &json!({"project_id":project_id,"name":"Smith",
++        "repositories":[{"name":null,"url":"https://github.com/jdharrison/smith",
++        "branch":{"base":"main","work":"main","types":{"feature":null,"fix":null,"release":null,"hotfix":null}}}],"agent":"opencode"})
++    );
++    assert_eq!(registry["projects"].as_array().unwrap().len(), 1);
++    assert_eq!(registry["revision"], 1);
++    assert_eq!(registry["expired_ids"], json!([]));
++    let retained = &registry["receipts"][0];
++    assert_eq!(registry["receipts"].as_array().unwrap().len(), 1);
++    let request_id = retained["receipt"]["request_id"].as_str().unwrap();
++    assert!(valid_id(request_id));
++    assert_ne!(request_id, project_id);
++    assert_eq!(
++        retained["receipt"],
++        json!({"request_id":request_id,"project_id":project_id,"revision":1,"deleted":false})
++    );
++    assert_eq!(
++        retained["fingerprint"],
++        fingerprint("v3:projects:bootstrap", project).unwrap()
++    );
++    assert_eq!(
++        call(&f.app, "project_receipt", json!({"request_id":request_id})).unwrap(),
++        retained["receipt"]
++    );
++    let (loaded, migrated) = Durable::load(&bytes).unwrap();
++    assert!(!migrated);
++    loaded.validate().unwrap();
++    loaded.preflight().unwrap();
++    let mut expected = json!(defaults);
++    expected["projects"] = registry.clone();
++    expected["revision"] = json!(1);
++    assert_eq!(disk, expected);
++    assert_eq!(json!(f.app.inner.lock().unwrap().durable), disk);
++    for _ in 0..3 {
++        let app = f.reopen().unwrap();
++        assert_eq!(list(&app), list(&f.app));
++        assert_eq!(f.bytes(), bytes);
++    }
++    let other = fresh_fixture();
++    assert_ne!(
++        other.disk()["projects"]["projects"][0]["project_id"],
++        project["project_id"]
++    );
++    assert_ne!(
++        other.disk()["projects"]["receipts"][0]["receipt"]["request_id"],
++        request_id
++    );
++}
++
++#[test]
++fn projects_bootstrap_ordinary_all_fields_clear_delete_and_history_never_resurrect() {
++    let mut f = fresh_fixture();
++    let initial = f.disk()["projects"]["receipts"][0]["receipt"].clone();
++    let target = initial["project_id"].clone();
++    let mut a = update(&f.app, 1, 1, &target);
++    a["name"] = json!("Renamed starter");
++    a["repositories"] = json!([repository()]);
++    a["repositories"][0]["branch"]["base"] = json!("stable");
++    a["repositories"][0]["branch"]["work"] = json!("develop");
++    call(&f.app, "project_update_v2", a).unwrap();
++    f.app = f.reopen().unwrap();
++    let saved = list(&f.app);
++    assert_eq!(saved["projects"][0]["name"], "Renamed starter");
++    assert_eq!(saved["projects"][0]["project_id"], target);
++    let mut expected_repo = repository();
++    expected_repo["branch"]["base"] = json!("stable");
++    expected_repo["branch"]["work"] = json!("develop");
++    assert_eq!(saved["projects"][0]["repositories"], json!([expected_repo]));
++    let mut a = update(&f.app, 2, 2, &target);
++    let cleared = json!(Repository::unknown(
++        "https://example.invalid/cleared".into()
++    ));
++    a["repositories"] = json!([cleared]);
++    call(&f.app, "project_update_v2", a).unwrap();
++    f.app = f.reopen().unwrap();
++    assert_eq!(
++        list(&f.app)["projects"][0]["repositories"],
++        json!([cleared])
++    );
++    call(&f.app, "project_update_v2", update(&f.app, 3, 3, &target)).unwrap();
++    f.app = f.reopen().unwrap();
++    assert_eq!(list(&f.app)["projects"][0]["repositories"], json!([]));
++    let deleted = call(&f.app, "project_delete_v2", delete(&f.app, 4, 4, &target)).unwrap();
++    let bytes = f.bytes();
++    let disk = f.disk();
++    for retained in &disk["projects"]["receipts"].as_array().unwrap()[..4] {
++        assert!(retained["fingerprint"].is_null());
++    }
++    assert!(disk["projects"]["receipts"][4]["fingerprint"].is_string());
++    for _ in 0..3 {
++        f.app = f.reopen().unwrap();
++        assert_eq!(list(&f.app), json!({"revision":5,"projects":[]}));
++        assert_eq!(f.bytes(), bytes);
++        assert_eq!(
++            call(
++                &f.app,
++                "project_receipt",
++                json!({"request_id":initial["request_id"]})
++            )
++            .unwrap(),
++            initial
++        );
++        assert_eq!(receipt(&f.app, 4).unwrap(), deleted);
++        for n in 1..=3 {
++            assert_eq!(receipt(&f.app, n).unwrap()["project_id"], target);
++            assert_eq!(
++                call(&f.app, "project_update_v2", update(&f.app, n, 5, &target))
++                    .unwrap_err()
++                    .code,
++                "REQUEST_EXPIRED"
++            );
++        }
++    }
++}
++
++#[test]
++fn projects_bootstrap_existing_current_empty_populated_full_and_exhausted_are_untouched() {
++    let mut populated = Durable::default();
++    populated.projects = maximal_registry();
++    let mut one = populated.clone();
++    one.projects.projects.truncate(1);
++    one.projects.receipts.truncate(1);
++    one.projects.revision = 1;
++    let mut exhausted = populated.clone();
++    exhausted.projects.expired_ids = (2000..2000 + MAX_TOMBSTONES).map(id).collect();
++    for durable in [Durable::default(), one, populated, exhausted] {
++        let f = Fixture::new(durable);
++        let before = f.bytes();
++        let expected = list(&f.app);
++        for _ in 0..2 {
++            let app = f.reopen().unwrap();
++            assert_eq!(list(&app), expected);
++            assert_eq!(f.bytes(), before);
++        }
++    }
++}
++
++#[test]
++fn projects_bootstrap_supported_legacy_never_inserts_or_consumes_registry_capacity() {
++    for version in 1..=6 {
++        let f = Fixture::new(Durable::default());
++        let mut old = if version == 1 {
++            serde_json::from_slice(include_bytes!("../tests/fixtures/voice-v1.json")).unwrap()
++        } else if version == 5 {
++            frozen_disk5().0
++        } else {
++            json!(Durable::default())
++        };
++        old["schema_version"] = json!(version);
++        // This cohort test needs migration headroom; rich frozen fixtures also
++        // exercise exhausted revisions in their existing dedicated regressions.
++        if version == 5 {
++            old["config"]["revision"] = json!(10);
++        }
++        old.as_object_mut().unwrap().remove("instructions");
++        if version < 5 {
++            old.as_object_mut().unwrap().remove("projects");
++        }
++        if version < 4 {
++            old.as_object_mut().unwrap().remove("timestamps");
++        }
++        if version < 3 {
++            old.as_object_mut().unwrap().remove("cloud");
++        }
++        let bytes = f.write(&old);
++        let (converted, migrated) = Durable::load(&bytes).unwrap();
++        assert!(migrated);
++        let expected = json!(converted.projects);
++        let app = f.reopen().unwrap();
++        assert_eq!(f.disk()["projects"], expected, "disk{version}");
++        assert_eq!(list(&app)["projects"], expected["projects"]);
++        drop(app);
++        let published = f.bytes();
++        let app = f.reopen().unwrap();
++        assert_eq!(f.bytes(), published);
++        assert_eq!(list(&app)["revision"], expected["revision"]);
++    }
++}
++
++#[test]
++fn projects_bootstrap_corrupt_empty_unsupported_and_unsafe_destinations_are_preserved() {
++    for bytes in [
++        vec![],
++        b"not json".to_vec(),
++        b"{}".to_vec(),
++        b"{\"schema_version\":999}".to_vec(),
++    ] {
++        let f = Fixture::new(Durable::default());
++        fs::write(&f.app.path, &bytes).unwrap();
++        assert!(f.reopen().is_err());
++        assert_eq!(f.bytes(), bytes);
++    }
++    let f = Fixture::new(Durable::default());
++    let bytes = f.bytes();
++    fs::set_permissions(&f.app.path, fs::Permissions::from_mode(0o644)).unwrap();
++    assert!(f.reopen().is_err());
++    assert_eq!(f.bytes(), bytes);
++    assert_eq!(
++        fs::metadata(&f.app.path).unwrap().permissions().mode() & 0o7777,
++        0o644
++    );
++    let preserved = f.app.path.with_extension("preserved");
++    fs::rename(&f.app.path, &preserved).unwrap();
++    std::os::unix::fs::symlink(&preserved, &f.app.path).unwrap();
++    assert!(f.reopen().is_err());
++    assert_eq!(fs::read_link(&f.app.path).unwrap(), preserved);
++    assert_eq!(fs::read(&preserved).unwrap(), bytes);
++    fs::remove_file(&f.app.path).unwrap();
++    fs::hard_link(&preserved, &f.app.path).unwrap();
++    assert!(f.reopen().is_err());
++    assert_eq!(f.bytes(), bytes);
++    fs::remove_file(&f.app.path).unwrap();
++    fs::create_dir(&f.app.path).unwrap();
++    assert!(f.reopen().is_err());
++    assert!(f.app.path.is_dir());
++    assert_eq!(fs::read(&preserved).unwrap(), bytes);
++}
++
++#[test]
++fn projects_bootstrap_staging_obstruction_and_appeared_destination_fail_without_clobber() {
++    let f = Fixture::new(Durable::default());
++    fs::remove_file(&f.app.path).unwrap();
++    let staging = f.app.path.parent().unwrap().join(format!(
++        ".smith-next-app-state.json-{}-tmp",
++        std::process::id()
++    ));
++    fs::write(&staging, b"staging obstruction").unwrap();
++    assert_eq!(f.reopen().err().unwrap(), "Cannot create staging file");
++    assert!(!f.app.path.exists());
++    assert_eq!(fs::read(&staging).unwrap(), b"staging obstruction");
++    fs::remove_file(staging).unwrap();
++    // Model a destination appearing after the caller's successful absent read.
++    assert!(filesystem::read_file(&f.app.path, 0o600, STATE_LIMIT)
++        .unwrap()
++        .is_none());
++    let existing = b"preserve even invalid newly appeared state";
++    fs::write(&f.app.path, existing).unwrap();
++    fs::set_permissions(&f.app.path, fs::Permissions::from_mode(0o600)).unwrap();
++    assert_eq!(
++        bootstrap(&f.app.path).err().unwrap(),
++        "Destination exists or cannot publish"
++    );
++    assert_eq!(f.bytes(), existing);
++    assert!(f.reopen().is_err());
++    assert_eq!(f.bytes(), existing);
++}
++
++#[test]
++fn projects_bootstrap_consumes_ordinary_capacity_and_honors_revoked_ownership() {
++    let f = fresh_fixture();
++    for revision in 1..MAX_PROJECTS {
++        call(
++            &f.app,
++            "project_create_v2",
++            create(&f.app, revision, revision as u64),
++        )
++        .unwrap();
++    }
++    assert_eq!(
++        list(&f.app)["projects"].as_array().unwrap().len(),
++        MAX_PROJECTS
++    );
++    f.assert_rejected(
++        "project_create_v2",
++        create(&f.app, 100, MAX_PROJECTS as u64),
++        "CAPACITY",
++    );
++    let app = f.reopen().unwrap();
++    assert_eq!(list(&app), list(&f.app));
++    f.app.inner.lock().unwrap().owned = false;
++    let target = list(&app)["projects"][0]["project_id"].clone();
++    f.assert_rejected(
++        "project_delete_v2",
++        delete(&f.app, 101, MAX_PROJECTS as u64, &target),
++        "STATE_UNAVAILABLE",
++    );
++    assert_eq!(
++        list(&app)["projects"].as_array().unwrap().len(),
++        MAX_PROJECTS
++    );
+ }
+ 
+ #[test]

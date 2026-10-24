@@ -1,0 +1,116 @@
+{
+  "binding": {
+    "anchor_ns": 1792545470863107632,
+    "captures": {
+      "capture-008.out": "99f2deaee1303381e2d3084a35135a3525b53bef5dc3c5bd89476f6b82829dc8",
+      "capture-009.out": "99f2deaee1303381e2d3084a35135a3525b53bef5dc3c5bd89476f6b82829dc8",
+      "capture-011.out": "99f2deaee1303381e2d3084a35135a3525b53bef5dc3c5bd89476f6b82829dc8"
+    },
+    "original": {
+      "cli": "609fad4ab7ec88bd62ed79dbb4baf479154f7df4047149476b8f854a8f5f04af",
+      "destination": "e2ccb8dd1243321f6e72402e0804b542a8bd0f4cb28aebb3d52caefedeca6c37",
+      "docker_config": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "engine_config": "e85a7d6a103649c0d0f7b40901d6511f1ac10ca3a30a9321a6a8a6fee4ad6821",
+      "installed_cli": "ac2b5d28bf9c1881f0e14685a4e19610f78a256fb4038932dcd1252d292f5236",
+      "module": "fd065edd5f6741e6ec05d6e8ce1a39999ebac2d7007dec98864130182ff10a93",
+      "preflight": "2bf297f9e2c615e8c6c5f74e63f14a7316f06cf375100cf3be4943eaf43605a6",
+      "request": "0b5b9300a8f7a706b98dcb677982bcf32693f7af84d655ab793ab7cb97f20e30",
+      "scope": {
+        "attempts": 1,
+        "cgroupns": "private",
+        "cleanup_seconds": 60,
+        "cpus": 4,
+        "endpoint": "unix:///run/docker.sock",
+        "engine": "smith-artifact-qa-20261020-01",
+        "image": "registry.dagger.io/engine:v0.21.9",
+        "memory": 4294967296,
+        "no_setup_model_provider_auth_installed_or_remote_mutation": true,
+        "operation": "execute-policy-denied-only",
+        "pids": 1024,
+        "privileged": true,
+        "seconds": 900,
+        "volume": "smith-artifact-qa-20261020-01-data"
+      },
+      "script": "3f6f16e7aef5a0264d7d3a0d2695e4c212eb2a37214ccd1e88904970edbec6bc",
+      "source": "fd065edd5f6741e6ec05d6e8ce1a39999ebac2d7007dec98864130182ff10a93",
+      "tests": "c603d8bf647e7daa4aef6987ca92b75ae0c6e0bc0cc75200784a27a474891aec"
+    },
+    "original_files": {
+      "approval.json": "efbd53fedf2ddc7b637a94ee76b8f2a0006669827103bb3d35748097f8e10440",
+      "consumed.json": "ea50b2c7a2b630c3038a4c4a5a9b8ca4f38d0901a7861aa01de68485f786bac4",
+      "owned.json": "ae8739a239bb46b64706c610103edc7745997c277cb69c46d16411289684628e",
+      "pending.json": "2c0c9451aef45b8e1bda7818afb116aec2cb7afa304156e58e0f652325e4e578",
+      "result.json": "3a2884f6185420060ed31048d7acf6b7cc1851448d14e096e2a0dda189f14a19",
+      "review.json": "f77b98a990efe17c3aa748c5344a37eab53e12a4ddf9e158db68009fd236fdd8"
+    },
+    "safety_seconds": 5,
+    "script": "4306dd47b486c26761eaddc7b6d9312ed132716f84ceb799e13bd7dba1912f47",
+    "tests": "0fea9b3f1ce4544fcfbab3e627d0a033dd98a18e50c37bade5d87e19edd2e15c"
+  },
+  "canonical_check_binding_sha256": "2c4ab277226f960f643a8d535e88265026515b0323f55bb973decde3a2b8a683",
+  "check_stdout_sha256": "91529e75c4c9c29f37f372ea571fdd7ef7b33895a813af11318a2ea04edf3272",
+  "command": "python3 -B docs/evidence/artifact-pipeline/live-transport-continue.py check",
+  "exit": 0,
+  "never_started_capture_states": {
+    "capture-008.out": {
+      "Id": "0884539ca66f915d98ba20f3543c8cf33c07d865a0f0c619a7d2e0980ff01be3",
+      "Image": "sha256:3c4e0cedaea400d7e30155e050f94910ea5f381b6f5942dd2172382657628cb4",
+      "NetworkMode": "bridge",
+      "State": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "0001-01-01T00:00:00Z",
+        "Status": "created"
+      }
+    },
+    "capture-009.out": {
+      "Id": "0884539ca66f915d98ba20f3543c8cf33c07d865a0f0c619a7d2e0980ff01be3",
+      "Image": "sha256:3c4e0cedaea400d7e30155e050f94910ea5f381b6f5942dd2172382657628cb4",
+      "NetworkMode": "bridge",
+      "State": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "0001-01-01T00:00:00Z",
+        "Status": "created"
+      }
+    },
+    "capture-011.out": {
+      "Id": "0884539ca66f915d98ba20f3543c8cf33c07d865a0f0c619a7d2e0980ff01be3",
+      "Image": "sha256:3c4e0cedaea400d7e30155e050f94910ea5f381b6f5942dd2172382657628cb4",
+      "NetworkMode": "bridge",
+      "State": {
+        "Dead": false,
+        "Error": "",
+        "ExitCode": 0,
+        "FinishedAt": "0001-01-01T00:00:00Z",
+        "OOMKilled": false,
+        "Paused": false,
+        "Pid": 0,
+        "Restarting": false,
+        "Running": false,
+        "StartedAt": "0001-01-01T00:00:00Z",
+        "Status": "created"
+      }
+    }
+  },
+  "no_continuation_entries": true,
+  "no_original_running_or_dispatch": true,
+  "original_files_bytes_and_mtimes_preserved": true,
+  "remaining_with_5s_margin": 327.5533802509308,
+  "utc": "2026-10-21T01:27:18.309761+00:00",
+  "work_remaining_after_60s_cleanup": 267.5533802509308
+}

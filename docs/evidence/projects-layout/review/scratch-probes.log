@@ -1,0 +1,121 @@
+00:00 +0: loading <REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart
+00:00 +0: independent unsaved New Back resume at 1.0x
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: no matching candidates
+  Actual: _TextWidgetFinder:<Found 1 widget with text "Discard unsaved project changes?": [
+            Text("Discard unsaved project changes?", dependencies: [DefaultSelectionStyle,
+DefaultTextStyle, MediaQuery]),
+          ]>
+   Which: means one was found but none were expected
+Back must offer a route back to the preserved unsaved form, not only discard/replacement.
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart:86:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart line 86
+The test description was:
+  independent unsaved New Back resume at 1.0x
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -1: independent unsaved New Back resume at 1.0x [E]
+  Test failed. See exception logs above.
+  The test description was: independent unsaved New Back resume at 1.0x
+  
+00:01 +0 -1: independent compact actual Tab traversal and 48px targets at 1.0x
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: be in range from 0 (inclusive) to 400 (inclusive)
+  Actual: <-751.0>
+back-to-projects focused but vertically unreachable
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart:145:15)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart line 145
+The test description was:
+  independent compact actual Tab traversal and 48px targets at 1.0x
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -2: independent compact actual Tab traversal and 48px targets at 1.0x [E]
+  Test failed. See exception logs above.
+  The test description was: independent compact actual Tab traversal and 48px targets at 1.0x
+  
+00:01 +0 -2: independent unsaved New Back resume at 2.0x
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: no matching candidates
+  Actual: _TextWidgetFinder:<Found 1 widget with text "Discard unsaved project changes?": [
+            Text("Discard unsaved project changes?", dependencies: [DefaultSelectionStyle,
+DefaultTextStyle, MediaQuery]),
+          ]>
+   Which: means one was found but none were expected
+Back must offer a route back to the preserved unsaved form, not only discard/replacement.
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart:86:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart line 86
+The test description was:
+  independent unsaved New Back resume at 2.0x
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -3: independent unsaved New Back resume at 2.0x [E]
+  Test failed. See exception logs above.
+  The test description was: independent unsaved New Back resume at 2.0x
+  
+00:02 +0 -3: independent compact actual Tab traversal and 48px targets at 2.0x
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: be in range from 0 (inclusive) to 400 (inclusive)
+  Actual: <-2114.0>
+back-to-projects focused but vertically unreachable
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart:145:15)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart line 145
+The test description was:
+  independent compact actual Tab traversal and 48px targets at 2.0x
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -4: independent compact actual Tab traversal and 48px targets at 2.0x [E]
+  Test failed. See exception logs above.
+  The test description was: independent compact actual Tab traversal and 48px targets at 2.0x
+  
+00:02 +0 -4: independent list bookmark through filter clamp and wide compact reflow
+00:02 +1 -4: Some tests failed.
+
+Failing tests:
+  <REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart: independent compact actual Tab traversal and 48px targets at 1.0x
+  <REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart: independent compact actual Tab traversal and 48px targets at 2.0x
+  <REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart: independent unsaved New Back resume at 1.0x
+  <REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart: independent unsaved New Back resume at 2.0x

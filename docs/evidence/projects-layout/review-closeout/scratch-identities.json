@@ -1,0 +1,80 @@
+{
+  "all_new_fixtures_ignored": true,
+  "files": [
+    {
+      "path": "target/projects-layout/assurance/closeout/client__assets__README.md.diff",
+      "sha256": "c36f9742ae3417ae5e9db2f2364dc2a0bac5fde76f096d2c3e9cc88941d904d6",
+      "size": 2997
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/client__lib__ui__projects_view.dart.diff",
+      "sha256": "aab6c7d5b0662c9958fee75a16e9ed5e4f5d0fe39f3901e5db496b394f6b59fa",
+      "size": 28009
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/client__lib__ui__smith_icon.dart.diff",
+      "sha256": "cab284dd9fc77404d92c8c162d63e8aa3ea75d393951922c9828bd1acef36377",
+      "size": 216
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/client__test__projects_navigation_test.dart.diff",
+      "sha256": "05d6d416aae19cf1927bd9d841a456bc06ed92bf321ce5e59eb12ca5da8f3295",
+      "size": 7382
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/client__test__projects_view_test.dart.diff",
+      "sha256": "a96006974710fc570811f97054209860dcde0381807dbe2a874940c2633f40b6",
+      "size": 3636
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/closeout_check.py",
+      "sha256": "4875772915c4ea44845f84e0b51903de09e5741efc8b3d8e4c4b666db7c5f296",
+      "size": 6111
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/dagger__package.py.diff",
+      "sha256": "36869b3dcce07e45e448b9104018a3628a1c14008528973985bac74efc91678c",
+      "size": 429
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/dagger__tests__test_package.py.diff",
+      "sha256": "2680e2a5f07552fb6e0245b9834e881b3b199405ba2fa3545722cf48bbd73852",
+      "size": 881
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/docs__DESIGN.md.diff",
+      "sha256": "eb9ecf03d8f42e286fb8690972f2a449a1b36ac8f23dda06ff5f1dd03172e62e",
+      "size": 8619
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/docs__PROCESS.md.diff",
+      "sha256": "7ff183b4e05235e394749cddad42b053af518c2e2a55cf4acd25a0c391c14109",
+      "size": 2485
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/docs__SMITH_LINUX_ARCHITECTURE_REPORT.md.diff",
+      "sha256": "642db6a4f1db00e12ab86e269775e4a3a3c1e0fff4577dc64963efc033f96e74",
+      "size": 6372
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/docs__plans__LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT.md.diff",
+      "sha256": "2ced728ece851a83ef63df143cacafa15a3c9edc327e44ca170f548ad7ff6cfd",
+      "size": 6395
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/reveal_policy_test.dart",
+      "sha256": "e849c3137352df484870b1d96837f2c520dc726c6475ea7666ee4911af599d98",
+      "size": 5247
+    },
+    {
+      "path": "target/projects-layout/assurance/closeout/verify_closeout_evidence.py",
+      "sha256": "be32646e22e3a64bf3021e285a30ae01a48f75b08066cfbc949a4818d6ab9b9f",
+      "size": 15705
+    },
+    {
+      "path": "target/projects-layout/assurance/independent_layout_probe_m1_return_test.dart",
+      "sha256": "f89cb5df481dc5e79a65c9c079bd386d592c3f8eea6bbf64686b572a6c32db8d",
+      "size": 8204
+    }
+  ]
+}

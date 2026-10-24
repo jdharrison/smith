@@ -1,0 +1,111 @@
+00:00 +0: loading <REPO>/client/test/app_api_test.dart
+00:00 +0: <REPO>/client/test/app_api_test.dart: v2 rejects missing nullable fields, unknown keys and malformed conversation data
+00:00 +1: <REPO>/client/test/app_api_test.dart: v2 outgoing operations require exact frozen argument keys
+00:00 +2: <REPO>/client/test/app_api_test.dart: installer model operations are observation-only with strict results
+00:00 +3: <REPO>/client/test/app_api_test.dart: retired operations and speech arguments never reach executor
+00:00 +4: <REPO>/client/test/app_api_test.dart: app stdin frame, fixed argv, response above Core cap supported
+00:00 +5: <REPO>/client/test/app_api_test.dart: app output over4MiB kills only captured helper
+00:00 +6: <REPO>/client/test/app_api_test.dart: API bounds input and rejects wrong call or instance identity
+00:00 +7: loading <REPO>/client/test/shell_pure_widgets_test.dart
+00:00 +7: <REPO>/client/test/shell_pure_widgets_test.dart: HUD keeps branding and status; version is only in Settings
+00:01 +8: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only status observation semantics and distinct selected focus frame
+00:01 +9: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only inline recovery and retry stay reachable at 400 text two
+00:01 +10: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only keyboard focus selection and archive close restoration
+00:01 +11: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only open archive consumes parent updates and preserves child on errors
+00:01 +12: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only delete confirmation remains reachable at 400 text two
+00:01 +13: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only unsupported management controls are absent
+00:01 +14: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only geometry Size(400.0, 400.0) text 1.0 preserves child across views
+00:01 +15: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only geometry Size(400.0, 400.0) text 2.0 preserves child across views
+00:01 +16: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only geometry Size(1280.0, 720.0) text 1.0 preserves child across views
+00:02 +17: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only geometry Size(1280.0, 720.0) text 2.0 preserves child across views
+00:02 +18: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only geometry Size(4200.0, 2400.0) text 1.0 preserves child across views
+00:02 +19: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only geometry Size(4200.0, 2400.0) text 2.0 preserves child across views
+00:02 +20: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only duplicate titles select stable IDs and supported actions
+00:02 +21: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only archive full collection and delete defaults to cancel
+00:02 +22: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only mutation failure is visible without replay
+00:02 +23: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only archive loading errors and long collection fit small modal
+00:02 +24: <REPO>/client/test/shell_pure_widgets_test.dart: shell-only pending mutation cannot be submitted twice
+00:02 +25: loading <REPO>/client/test/workspace_entrance_test.dart
+00:03 +25: <REPO>/client/test/workspace_entrance_test.dart: WorkspaceEntrance presentation contract a reveal without a scope leaves its child unchanged
+00:03 +26: <REPO>/client/test/workspace_entrance_test.dart: WorkspaceEntrance presentation contract one post-frame clock staggers all regions through 620ms
+00:03 +27: <REPO>/client/test/workspace_entrance_test.dart: WorkspaceEntrance presentation contract newly exposed regions join the shared clock, not a new one
+00:03 +28: <REPO>/client/test/workspace_entrance_test.dart: WorkspaceEntrance presentation contract initial reduced motion settles immediately and permanently
+00:03 +29: <REPO>/client/test/workspace_entrance_test.dart: WorkspaceEntrance presentation contract reduced motion at 0ms settles without replay
+00:03 +30: <REPO>/client/test/workspace_entrance_test.dart: WorkspaceEntrance presentation contract reduced motion at 200ms settles without replay
+00:03 +31: <REPO>/client/test/workspace_entrance_test.dart: WorkspaceEntrance presentation contract skipMotion makes recovery immediately usable without replay
+00:03 +32: <REPO>/client/test/workspace_entrance_test.dart: WorkspaceEntrance presentation contract mid-sequence skip settles permanently without remounting
+00:03 +33: <REPO>/client/test/workspace_entrance_test.dart: WorkspaceEntrance presentation contract pointer, Tab/Enter and semantics are gated, then restored without autofocus
+00:03 +34: <REPO>/client/test/workspace_entrance_test.dart: WorkspaceEntrance presentation contract a delayed tick settles the whole finite sequence
+00:03 +35: <REPO>/client/test/workspace_entrance_test.dart: WorkspaceEntrance presentation contract disposal before the first tick and mid-sequence cancels work
+00:04 +36: <REPO>/client/test/workspace_entrance_test.dart: SmithApp workspace entrance integration entrance waits for held Boot, loader outro and restoration
+00:04 +37: <REPO>/client/test/workspace_entrance_test.dart: SmithApp workspace entrance integration 1x1 restored Chat/Settings panes share one timeline
+00:04 +38: <REPO>/client/test/workspace_entrance_test.dart: SmithApp workspace entrance integration 2x1 restored Chat/Settings panes share one timeline
+00:04 +39: <REPO>/client/test/workspace_entrance_test.dart: SmithApp workspace entrance integration 1x2 restored Chat/Settings panes share one timeline
+00:04 +40: <REPO>/client/test/workspace_entrance_test.dart: SmithApp workspace entrance integration 2x2 restored Chat/Settings panes share one timeline
+00:05 +41: <REPO>/client/test/workspace_entrance_test.dart: SmithApp workspace entrance integration status, Settings, resize and layout never replay or remount editors
+00:07 +42: <REPO>/client/test/workspace_entrance_test.dart: SmithApp workspace entrance integration restoration warning bypasses entrance on its first frame
+00:07 +43: <REPO>/client/test/workspace_entrance_test.dart: SmithApp workspace entrance integration mid-entrance outage exposes recovery immediately and never replays
+00:07 +44: <REPO>/client/test/workspace_entrance_test.dart: selected-route entrance recovery openai replacement keeps every active choice eligible and only the old generation unavailable
+00:07 +45: <REPO>/client/test/workspace_entrance_test.dart: selected-route entrance recovery anthropic replacement keeps every active choice eligible and only the old generation unavailable
+00:07 +46: <REPO>/client/test/workspace_entrance_test.dart: selected-route entrance recovery historical local route unavailable on the first frame bypasses entrance
+00:07 +47: <REPO>/client/test/workspace_entrance_test.dart: selected-route entrance recovery historical openai route unavailable on the first frame bypasses entrance
+00:07 +48: <REPO>/client/test/workspace_entrance_test.dart: selected-route entrance recovery selected local route becoming unavailable mid-entrance settles permanently
+00:08 +49: <REPO>/client/test/workspace_entrance_test.dart: selected-route entrance recovery healthy selected local route still animates when an unselected optional destination is unavailable
+00:08 +50: <REPO>/client/test/workspace_entrance_test.dart: selected-route entrance recovery selected openai route becoming unavailable mid-entrance settles permanently
+00:08 +51: <REPO>/client/test/workspace_entrance_test.dart: selected-route entrance recovery healthy selected openai route still animates when an unselected optional destination is unavailable
+00:08 +52: <REPO>/client/test/workspace_entrance_test.dart: selected-route entrance recovery a hidden unavailable historical route does not suppress the visible healthy pane
+00:08 +53: loading <REPO>/client/test/compact_workspace_navigation_test.dart
+00:08 +53: <REPO>/client/test/compact_workspace_navigation_test.dart: shared status header controls the grid including Settings
+00:10 +54: <REPO>/client/test/compact_workspace_navigation_test.dart: title chooser and direct New act only on originating tile
+00:10 +55: <REPO>/client/test/compact_workspace_navigation_test.dart: chooser follows live membership and current selection callbacks
+00:10 +56: <REPO>/client/test/compact_workspace_navigation_test.dart: stale chooser callbacks recheck membership, busy and current owner
+00:10 +57: <REPO>/client/test/compact_workspace_navigation_test.dart: open chooser action cannot dispatch after authority revoked
+00:10 +58: <REPO>/client/test/compact_workspace_navigation_test.dart: 400 square at 2x bounds long title and chooser; empty and breakpoint states
+00:10 +59: <REPO>/client/test/compact_workspace_navigation_test.dart: hiding fourth tile keeps its draft and focuses visible layout not composer
+00:11 +60: loading <REPO>/client/test/split_workspace_widget_test.dart
+00:11 +60: <REPO>/client/test/split_workspace_widget_test.dart: Linux overflowing 2x2 canvas has one draggable scrollbar per axis
+00:12 +61: <REPO>/client/test/split_workspace_widget_test.dart: reading bookmark survives pane four hiding and clamping
+00:14 +62: <REPO>/client/test/split_workspace_widget_test.dart: reading bookmark survives visible resizing and clamping
+00:14 +63: <REPO>/client/test/split_workspace_widget_test.dart: complete stable shells retain independent navigation and blanks across presets
+00:15 +64: <REPO>/client/test/split_workspace_widget_test.dart: duplicate saved views share drafts but preserve independent anchors on send
+00:16 +65: <REPO>/client/test/split_workspace_widget_test.dart: hidden composers lose focus and cannot send after layout reduction
+00:16 +66: <REPO>/client/test/split_workspace_widget_test.dart: duplicate editors preserve IME and keyboard send ownership
+00:16 +67: <REPO>/client/test/split_workspace_widget_test.dart: 400 square at 2x retains equal minimum tiles without overflow
+00:16 +68: loading <REPO>/client/test/workspace_restore_test.dart
+00:17 +68: <REPO>/client/test/workspace_restore_test.dart: explicit first send persists promoted ID; restart never resubmits
+00:18 +69: <REPO>/client/test/workspace_restore_test.dart: full app restart retains 1x1, active, pages and hidden slots
+00:18 +70: <REPO>/client/test/workspace_restore_test.dart: full app restart retains 2x1, active, pages and hidden slots
+00:19 +71: <REPO>/client/test/workspace_restore_test.dart: full app restart retains 1x2, active, pages and hidden slots
+00:19 +72: <REPO>/client/test/workspace_restore_test.dart: full app restart retains 2x2, active, pages and hidden slots
+00:20 +73: <REPO>/client/test/workspace_restore_test.dart: delayed load gates interaction after Boot and never saves defaults
+00:20 +74: <REPO>/client/test/workspace_restore_test.dart: missing preferences retains first use selection
+00:20 +75: <REPO>/client/test/workspace_restore_test.dart: missing chats repair hidden and visible slots without mutation
+00:20 +76: <REPO>/client/test/workspace_restore_test.dart: archived chats repair hidden and visible slots without mutation
+00:20 +77: <REPO>/client/test/workspace_restore_test.dart: detail outage after Boot preserves restored IDs
+00:20 +78: <REPO>/client/test/workspace_restore_test.dart: load error keeps usable session-only UI and never overwrites
+00:20 +79: <REPO>/client/test/workspace_restore_test.dart: save error warns without disabling navigation
+00:21 +80: <REPO>/client/test/workspace_restore_test.dart: latest-only serial saves drain before single close; drafts do not save
+00:21 +81: <REPO>/client/test/workspace_restore_test.dart: disposal during load ignores late hydration and closes once
+00:21 +82: <REPO>/client/test/workspace_restore_test.dart: post-hydration selection and authoritative removal persist without drafts
+00:21 +83: loading <REPO>/client/test/message_queue_widget_test.dart
+00:21 +83: <REPO>/client/test/message_queue_widget_test.dart: busy empty queue keeps Queue action without reserving shelf space
+00:22 +84: <REPO>/client/test/message_queue_widget_test.dart: all captured details actions reject inactive owner
+00:22 +85: <REPO>/client/test/message_queue_widget_test.dart: all captured details actions reject replaced owner
+00:22 +86: <REPO>/client/test/message_queue_widget_test.dart: all captured details actions reject disposed owner
+00:22 +87: <REPO>/client/test/message_queue_widget_test.dart: Pause and Remove affect local work through captured row authority
+00:22 +88: <REPO>/client/test/message_queue_widget_test.dart: shared panes queue once without moving another reader or focus
+00:23 +89: <REPO>/client/test/message_queue_widget_test.dart: idle Send is unchanged; busy action explicitly queues, never adds YOU
+00:23 +90: <REPO>/client/test/message_queue_widget_test.dart: Enter/numpad queue once; repeat, Shift and IME do not submit
+00:23 +91: <REPO>/client/test/message_queue_widget_test.dart: inactive pane and rejected enqueue retain draft
+00:23 +92: <REPO>/client/test/message_queue_widget_test.dart: failed controls carry row token; unknown/running offer no retry or skip
+00:23 +93: <REPO>/client/test/message_queue_widget_test.dart: Resume confirmation retains stale snapshot token
+00:23 +94: <REPO>/client/test/message_queue_widget_test.dart: Clear confirmation retains stale snapshot token
+00:23 +95: <REPO>/client/test/message_queue_widget_test.dart: 400x400 enlarged long queue and recovery remain bounded
+00:23 +96: loading <REPO>/client/test/message_queue_ui_assurance_test.dart
+00:24 +96: <REPO>/client/test/message_queue_ui_assurance_test.dart: assurance: actual shell native channel cancels then confirms without service mutation
+00:25 +97: <REPO>/client/test/message_queue_ui_assurance_test.dart: assurance: queue details fits actual navigator 400x400 at 2x
+00:25 +98: <REPO>/client/test/message_queue_ui_assurance_test.dart: assurance: synchronous reentry during hold acquisition shares decision
+00:25 +99: <REPO>/client/test/message_queue_ui_assurance_test.dart: assurance: close consent fits 400x400 at 2x text
+00:25 +100: <REPO>/client/test/message_queue_ui_assurance_test.dart: assurance: empty draft is not described as queue unavailable
+00:25 +101: <REPO>/client/test/message_queue_ui_assurance_test.dart: assurance: open details cannot mutate after originating pane becomes inactive
+00:25 +102: All tests passed!

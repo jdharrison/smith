@@ -1,0 +1,16 @@
+{
+  "request_id": "9a8d5ecb22fa4b85629e69f7a1e624b1",
+  "container_id": "0ca7c8870d282ec2100ba2ad8a0d8f0573c8500094a4fe9ec5a95f8ae79df05b",
+  "same_paired_binary_sha256": "493616d4172236d160e2789697d53b3f72c30eac2bba804a42f5625e47d61288",
+  "original_ledger_sha256": "1a691fa08886efe9b86730244a30811b67a0df7c33dcaa2cebafcf794a337378",
+  "resolved_ledger_sha256": "7970750467547a1f2773d1924ba26b73358d8fcbd1b65298cb4854896de5d903",
+  "status": "failed",
+  "cleanup_verified": true,
+  "original_failure_and_other_records_preserved": true,
+  "container_retained_unchanged": true,
+  "private_snapshot_retained": true,
+  "unit_and_pair_unchanged": true,
+  "no_other_state_changed": true,
+  "job_replayed": false,
+  "new_job_submitted": false
+}

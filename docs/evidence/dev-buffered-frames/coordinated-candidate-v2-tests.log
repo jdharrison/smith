@@ -1,0 +1,217 @@
+COMMAND: /snap/bin/flutter --no-version-check test --no-pub --reporter expanded test/dev_jobs_test.dart test/dev_jobs_controller_list_test.dart test/dev_jobs_list_view_test.dart test/agents_navigation_test.dart
+00:00 +0: loading smith/client/test/dev_jobs_test.dart
+00:00 +0: smith/client/test/dev_jobs_test.dart: deletion schemas and safe terminals; no fixed history count cap
+00:00 +1: smith/client/test/dev_jobs_test.dart: reconciled preserves uncertain history and requires quiescence evidence
+00:00 +2: smith/client/test/dev_jobs_test.dart: frozen pre-reconciled v2 status allowlist rejects the new value
+00:00 +3: smith/client/test/dev_jobs_test.dart: NativeAppApi validates reconciled state and detail responses
+00:00 +4: smith/client/test/dev_jobs_test.dart: strict exact v2 summary, statuses, reply and cleanup invariants
+00:00 +5: smith/client/test/dev_jobs_test.dart: canonical u64 config revision stays a literal string at all boundaries
+00:00 +6: smith/client/test/dev_jobs_test.dart: strict state, capacity, model and detail schemas and correlation
+00:00 +7: smith/client/test/dev_jobs_test.dart: NativeAppApi freezes v2 get arguments without legacy fallback
+00:00 +8: smith/client/test/dev_jobs_test.dart: TRANSPORT: shared guard, original identity, query-only Resolve
+00:00 +9: smith/client/test/dev_jobs_test.dart: APP_UNAVAILABLE: shared guard, original identity, query-only Resolve
+00:00 +10: smith/client/test/dev_jobs_test.dart: APP_UNAVAILABLE accepted before ack preserves original detail and capacity
+00:00 +11: smith/client/test/dev_jobs_test.dart: Resolve keeps original result but another retained active job still guards desktop
+00:00 +12: smith/client/test/dev_jobs_test.dart: foreign admission or detail never releases uncertainty
+00:00 +13: smith/client/test/dev_jobs_test.dart: missing model/readiness, service mismatch, revision drift gate Start
+00:00 +14: smith/client/test/dev_jobs_test.dart: missing previously accepted identity is a sticky protocol block
+00:00 +15: smith/client/test/dev_jobs_test.dart: used includes legacy capacity without loading Agent records
+00:00 +16: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +17: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +18: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +19: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +20: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +21: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +22: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +23: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +24: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +25: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +26: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +27: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +28: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +29: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +30: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +31: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +32: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +33: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +34: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +35: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +36: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +37: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +38: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +39: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +40: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +41: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +42: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +43: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +44: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +45: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +46: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +47: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +48: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +49: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +50: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +51: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +52: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +53: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +54: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +55: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +56: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +57: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +58: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +59: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +60: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +61: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +62: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +63: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +64: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +65: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +66: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +67: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +68: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +69: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +70: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +71: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +72: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +73: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +74: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +75: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +76: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +77: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +78: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +79: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +80: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +81: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +82: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +83: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +84: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +85: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +86: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +87: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +88: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +89: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +90: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +91: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +92: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +93: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +94: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +95: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +96: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +97: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +98: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +99: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +100: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +101: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +102: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +103: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +104: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +105: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +106: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +107: smith/client/test/dev_jobs_test.dart: form has no Agent, picker or cloud switch; Enter/IME never submit
+00:00 +108: smith/client/test/dev_jobs_list_view_test.dart: completed Delete is detail-only and Cancel never mutates
+00:00 +109: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +110: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +111: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:00 +112: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +113: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +114: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +115: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +116: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +117: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +118: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +119: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +120: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +121: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +122: smith/client/test/agents_navigation_test.dart: only Agents and Projects omit the outer destination header
+00:01 +123: smith/client/test/dev_jobs_list_view_test.dart: stale confirmation cannot dispatch after hide or instance change
+00:01 +124: smith/client/test/agents_navigation_test.dart: compact sidebar keeps separate inline disclosure and hides Agents
+00:01 +125: smith/client/test/agents_navigation_test.dart: compact sidebar keeps separate inline disclosure and hides Agents
+00:02 +126: smith/client/test/dev_jobs_list_view_test.dart: shared pane deletion updates an already open detail and both lists
+00:02 +127: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +128: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +129: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +130: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +131: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +132: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +133: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +134: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +135: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:02 +136: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +137: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +138: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +139: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +140: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +141: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +142: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +143: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +144: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +145: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +146: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +147: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +148: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:03 +149: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:04 +150: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:04 +151: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:04 +152: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:04 +153: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:04 +154: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:04 +155: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:04 +156: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+00:05 +157: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: [
+            'projects_list_v3',
+            'agents_list_v2',
+            'dev_jobs_state',
+            'projects_list_v3',
+            'agents_list_v2',
+            'dev_jobs_state',
+            'projects_list_v3',
+            'agents_list_v2',
+            'dev_jobs_state',
+            'projects_list_v3',
+            'agents_list_v2',
+            'dev_jobs_state'
+          ]
+  Actual: SubListIterable<String>:[
+            'projects_list_v3',
+            'dev_jobs_state_v2',
+            'projects_list_v3',
+            'dev_jobs_state_v2',
+            'projects_list_v3',
+            'dev_jobs_state_v2',
+            'projects_list_v3',
+            'dev_jobs_state_v2'
+          ]
+   Which: at location [1] is 'dev_jobs_state_v2' instead of 'agents_list_v2'
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://smith/client/test/agents_navigation_test.dart:231:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://smith/client/test/agents_navigation_test.dart line 231
+The test description was:
+  four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:05 +157 -1: smith/client/test/dev_jobs_list_view_test.dart: two views retain independent modal projects and exact drafts
+00:05 +157 -1: smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus [E]
+  Test failed. See exception logs above.
+  The test description was: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+  
+00:05 +158 -1: smith/client/test/agents_navigation_test.dart: v3 restoration observes Agents only and saves no editor data; session-only creates no store
+00:05 +159 -1: smith/client/test/agents_navigation_test.dart: v3 restoration observes Agents only and saves no editor data; session-only creates no store
+00:05 +160 -1: smith/client/test/dev_jobs_list_view_test.dart: 400x400 text2 rows and short modals scroll with 48px actions
+00:05 +161 -1: Some tests failed.
+
+Failing tests:
+  smith/client/test/agents_navigation_test.dart: four panes share one registry and retain independent drafts, selection, scroll and hidden focus
+
+EXIT_CODE: 1

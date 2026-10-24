@@ -1,0 +1,30 @@
+{
+  "command": [
+    "<HOME>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+    "<HOME>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+    "--suppress-analytics",
+    "--no-version-check",
+    "test",
+    "--no-pub",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "--plain-name",
+    "independent return new preserves identities and guards at 1.0x",
+    "../target/projects-layout/assurance/final/return_paths_test.dart"
+  ],
+  "cwd": "client",
+  "duration_seconds": 3.666,
+  "environment_overrides": {
+    "CI": "true",
+    "DART_SUPPRESS_ANALYTICS": "true",
+    "FLUTTER_ALREADY_LOCKED": "true",
+    "FLUTTER_SUPPRESS_ANALYTICS": "true"
+  },
+  "exit_code": 1,
+  "label": "return-paths-trace",
+  "log": "return-paths-trace.log",
+  "log_sha256": "a19158f5851a77a7f6376a3468a5cd7949db0b540e2f9beb6c8d08acafde6c69",
+  "started_utc": "2026-10-17T21:49:52.166251+00:00",
+  "timed_out": false,
+  "timeout_seconds": 240
+}

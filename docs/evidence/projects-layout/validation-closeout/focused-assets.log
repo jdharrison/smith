@@ -1,0 +1,7 @@
+00:00 +0: loading <repo>/client/test/ui_foundation_assets_test.dart
+00:00 +0: foundation bundles and loads all six real font weights and notices
+00:00 +1: foundation text and meaningful focus colors meet contrast on surfaces
+00:00 +2: foundation every approved SVG renders locally with explicit tint
+00:00 +3: foundation SVG tint reaches rendered pixels
+00:00 +4: foundation version uses generated pubspec metadata, not a literal
+00:00 +5: All tests passed!

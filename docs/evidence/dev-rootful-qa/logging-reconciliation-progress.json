@@ -1,0 +1,12 @@
+{
+  "invocation_id": "f7bd3df83bed4726994ecf2314389bce",
+  "request_id": "9a8d5ecb22fa4b85629e69f7a1e624b1",
+  "container_id": "0ca7c8870d282ec2100ba2ad8a0d8f0573c8500094a4fe9ec5a95f8ae79df05b",
+  "phase": "completed",
+  "service_stop_requested": true,
+  "ledger_publish_attempted": true,
+  "service_start_requested": true,
+  "original_ledger_sha256": "1a691fa08886efe9b86730244a30811b67a0df7c33dcaa2cebafcf794a337378",
+  "resolved_ledger_sha256": "7970750467547a1f2773d1924ba26b73358d8fcbd1b65298cb4854896de5d903",
+  "completed": true
+}

@@ -1,0 +1,158 @@
+{
+  "status": "failed",
+  "cleanup": "unknown",
+  "markers": {
+    "consumed.json": true,
+    "pending.json": true,
+    "engine.cid": true,
+    "owned.json": true,
+    "running.json": false,
+    "dispatch.json": false
+  },
+  "captures": [
+    {
+      "name": "capture-001.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classifiers": []
+    },
+    {
+      "name": "capture-001.out",
+      "bytes": 615,
+      "sha256": "0f12872a522c18c98b1f3ac6fa710a6c19aa0bca6590e86ace55daeaed3856d0",
+      "classifiers": []
+    },
+    {
+      "name": "capture-002.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classifiers": []
+    },
+    {
+      "name": "capture-002.out",
+      "bytes": 3250,
+      "sha256": "7e9f469c6a8beea0cf5244f607e1916ac70665cb7a44d8b100c07759a3fa592a",
+      "classifiers": []
+    },
+    {
+      "name": "capture-003.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classifiers": []
+    },
+    {
+      "name": "capture-003.out",
+      "bytes": 209,
+      "sha256": "015a5237450336a75290f7f7feee6278e3c469db85fa133522bb9a32b23e3343",
+      "classifiers": []
+    },
+    {
+      "name": "capture-004.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classifiers": []
+    },
+    {
+      "name": "capture-004.out",
+      "bytes": 11346,
+      "sha256": "5fa2b301f05a06e99624a6aa2cae78dbf6067c4641720a77583c81824ee48909",
+      "classifiers": []
+    },
+    {
+      "name": "capture-005.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classifiers": []
+    },
+    {
+      "name": "capture-005.out",
+      "bytes": 35,
+      "sha256": "82ae45ad2baee645b7d6049b3326e4560f46e77445bbd9227bc7c3378474f74d",
+      "classifiers": []
+    },
+    {
+      "name": "capture-006.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classifiers": []
+    },
+    {
+      "name": "capture-006.out",
+      "bytes": 392,
+      "sha256": "65aac03277944d0b1d6ea80f33c609efa4685db17c05341bc58098983d40917c",
+      "classifiers": []
+    },
+    {
+      "name": "capture-007.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classifiers": []
+    },
+    {
+      "name": "capture-007.out",
+      "bytes": 65,
+      "sha256": "564a6127a1407174a86a26d58e0a59dcb6f5a078314f190a2eb7053bd043c0bd",
+      "classifiers": []
+    },
+    {
+      "name": "capture-008.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classifiers": []
+    },
+    {
+      "name": "capture-008.out",
+      "bytes": 7573,
+      "sha256": "99f2deaee1303381e2d3084a35135a3525b53bef5dc3c5bd89476f6b82829dc8",
+      "classifiers": [
+        "error"
+      ]
+    },
+    {
+      "name": "capture-009.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classifiers": []
+    },
+    {
+      "name": "capture-009.out",
+      "bytes": 7573,
+      "sha256": "99f2deaee1303381e2d3084a35135a3525b53bef5dc3c5bd89476f6b82829dc8",
+      "classifiers": [
+        "error"
+      ]
+    },
+    {
+      "name": "capture-010.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classifiers": []
+    },
+    {
+      "name": "capture-010.out",
+      "bytes": 120,
+      "sha256": "315dde732d36e13e6a6bf6aed84f28958d3ef00ce8ebbeaaea502bc981cc394c",
+      "classifiers": [
+        "timeout"
+      ]
+    },
+    {
+      "name": "capture-011.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classifiers": []
+    },
+    {
+      "name": "capture-011.out",
+      "bytes": 7573,
+      "sha256": "99f2deaee1303381e2d3084a35135a3525b53bef5dc3c5bd89476f6b82829dc8",
+      "classifiers": [
+        "error"
+      ]
+    }
+  ],
+  "owned": {
+    "cid": "0884539ca66f915d98ba20f3543c8cf33c07d865a0f0c619a7d2e0980ff01be3",
+    "image": "sha256:3c4e0cedaea400d7e30155e050f94910ea5f381b6f5942dd2172382657628cb4"
+  }
+}

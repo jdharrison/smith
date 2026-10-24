@@ -1,0 +1,14 @@
+00:00 +0: loading <REPO>/target/projects-layout/assurance/final/return_pointer_test.dart
+00:00 +0: independent pointer return new preserves identities and guards at 1.0x
+00:01 +1: independent pointer return missing preserves identities and guards at 1.0x
+00:02 +2: independent pointer return uncertain preserves identities and guards at 1.0x
+00:02 +3: independent pointer return filtered preserves identities and guards at 1.0x
+00:03 +4: independent pointer return restarted-filtered preserves identities and guards at 1.0x
+00:03 +5: independent pointer return new preserves identities and guards at 2.0x
+00:04 +6: independent pointer return missing preserves identities and guards at 2.0x
+00:04 +7: independent pointer return uncertain preserves identities and guards at 2.0x
+00:04 +8: independent pointer return filtered preserves identities and guards at 2.0x
+00:05 +9: independent pointer return restarted-filtered preserves identities and guards at 2.0x
+00:05 +10: independent New replacement Keep editing actually returns retained form at 1.0x
+00:05 +11: independent New replacement Keep editing actually returns retained form at 2.0x
+00:06 +12: All tests passed!

@@ -8,13 +8,26 @@ Fonts are unmodified official static TTFs: JetBrains Mono v2.304 (commit
 Font License 1.1 in its `OFL.txt`, including copyright/reserved-name notices.
 Weights: Regular 400, Medium 500, SemiBold 600. Fonts are bundled, not installed.
 
-Icons originate solely from the operator-provided `smith-flutter-ui-redesign.zip`,
-SHA256 `c1ea52cebd00f860d61bd38b2fcad10234cdbfcde0fc4a8a6bbafc808a23a960`.
-Only the named icon entries below were imported; no archive instructions or raster
-reference were extracted. Geometry is unchanged; CSS currentColor is normalized
-to literal white, then SmithIcon applies an explicit srcIn tint.
-**Icon redistribution license was not supplied. Publication remains blocked until
-rights are established; do not infer an upstream license from visual similarity.**
+The 15 pre-existing imported icons originate from the operator-provided
+`smith-flutter-ui-redesign.zip`, SHA256
+`c1ea52cebd00f860d61bd38b2fcad10234cdbfcde0fc4a8a6bbafc808a23a960`.
+Only the named ZIP icon entries below were imported; no archive instructions or
+raster reference were extracted. Their geometry is unchanged; CSS currentColor
+was normalized to literal white, then SmithIcon applies an explicit srcIn tint.
+**Redistribution license for these 15 imported icons was not supplied.
+Publication remains blocked until their rights are established; do not infer an
+upstream license from visual similarity.**
+
+The two Projects layout glyphs, `layers.svg` and `git-branch.svg`, were newly
+authored in this repository by the Smith coding assistant on 2026-10-17 for
+`LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT` section0/T4. Their paths/circles were written
+directly for this task, not imported from the operator ZIP or copied/traced from
+an upstream icon set. `layers` uses stacked diamonds; `git-branch` uses a branch
+line and three circles. Both are 24×24 white outlines (`viewBox="0 0 24 24"`),
+tinted through the existing SmithIcon wrapper, with no fonts, raster content,
+remote references, scripts or gradients. This separate authorship record does
+not establish redistribution rights for the 15 ZIP glyphs or clear the existing
+publication gate.
 
 ## Integration and packaging handoff
 
@@ -115,3 +128,14 @@ rights are established; do not infer an upstream license from visual similarity.
 - `assets/icons/chevron-down.svg`
   - SHA256 `640e640066191f6b26236c4c24f487ed9ba4493ba0d33b480f930825dffecfbc`
   - user ZIP: smith_ui_handoff/icons/chevron-down.svg
+
+### Newly authored Projects layout glyphs (not from the ZIP)
+
+- `assets/icons/layers.svg`
+  - SHA256 `00adb0125d9692f03e4a64037e07499c3df717fd0aa5f575c0783501f2904a37`
+  - Origin: newly authored stacked-diamond paths by the Smith coding assistant,
+    2026-10-17, `LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT` section0/T4.
+- `assets/icons/git-branch.svg`
+  - SHA256 `b7dd6ca760a47aec57e93a6f1b9bc0a8ed835490193ca317a7bfbc497fcfaae4`
+  - Origin: newly authored branch path and circles by the Smith coding assistant,
+    2026-10-17, `LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT` section0/T4.

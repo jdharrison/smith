@@ -1,0 +1,45 @@
+{
+  "branch": {
+    "exit": 0,
+    "output": "feature/autonomy\n"
+  },
+  "hashes": {
+    "live-transport-continue.py": "4306dd47b486c26761eaddc7b6d9312ed132716f84ceb799e13bd7dba1912f47",
+    "live-transport-qa.py": "3f6f16e7aef5a0264d7d3a0d2695e4c212eb2a37214ccd1e88904970edbec6bc",
+    "live-transport-renewed.py": "fd343fa1e7380f91a613ddc08f9875052dc3dd80eb515682fedaaaa4775e621e",
+    "owned_cgroup_verifier.py": "af1e8e5197a295e127490904cc4fc8358bd1e12d8425089d9a884fcdcfa6d460",
+    "test_live_transport_continue.py": "0fea9b3f1ce4544fcfbab3e627d0a033dd98a18e50c37bade5d87e19edd2e15c",
+    "test_live_transport_qa.py": "c603d8bf647e7daa4aef6987ca92b75ae0c6e0bc0cc75200784a27a474891aec",
+    "test_live_transport_renewed.py": "fc9d0c3f9c3135a74707c673aa3a76e7490b5bdfaf36a6b99ed0d3756e221aa3",
+    "test_owned_cgroup_verifier.py": "a4b1b2035bf429e875e00326b99af82f4e145c148ab74eb88902b8ab3bdc9bac"
+  },
+  "head": {
+    "exit": 0,
+    "output": "14d960975e76f906efb5e447ff3dece0e8e4385b\n"
+  },
+  "historical_files_sha256": "c5f660c334c8b59cb6076a5fb1ec8355050361f513299c4233b6062cc72ed584",
+  "reviewed_pin_match": true,
+  "root": {
+    "mode": "0o755",
+    "owner_allowed": true,
+    "safe": "PASS",
+    "symlink": false
+  },
+  "run02_still_absent": true,
+  "source_evidence_directory": {
+    "mode": "0o775",
+    "owner_allowed": true,
+    "safe": "REFUSED",
+    "symlink": false
+  },
+  "source_pipeline": {
+    "mode": "0o755",
+    "owner_allowed": true,
+    "safe": "PASS",
+    "symlink": false
+  },
+  "target_status": {
+    "exit": 0,
+    "output": "?? docs/evidence/artifact-pipeline/live-transport-continue.py\n?? docs/evidence/artifact-pipeline/live-transport-qa.py\n?? docs/evidence/artifact-pipeline/live-transport-renewed.py\n?? docs/evidence/artifact-pipeline/owned_cgroup_verifier.py\n?? docs/evidence/artifact-pipeline/test_live_transport_continue.py\n?? docs/evidence/artifact-pipeline/test_live_transport_qa.py\n?? docs/evidence/artifact-pipeline/test_live_transport_renewed.py\n?? docs/evidence/artifact-pipeline/test_owned_cgroup_verifier.py\n"
+  }
+}

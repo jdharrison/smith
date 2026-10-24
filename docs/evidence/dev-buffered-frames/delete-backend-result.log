@@ -1,0 +1,10 @@
+local-tests: exit 0;     Finished `test` profile [unoptimized] target(s) in 2.76s; test result: ok. 40 passed; 0 failed; 0 ignored; 0 measured; 301 filtered out; finished in 1.03s
+dev-tests: exit 0;     Finished `test` profile [unoptimized] target(s) in 0.05s; test result: ok. 114 passed; 0 failed; 0 ignored; 0 measured; 227 filtered out; finished in 1.11s
+build: exit 0;     Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.92s
+clippy: exit 0;     Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.41s
+fmt: exit 0; 
+Source stable during checks: True
+6431aed05381438ebe0b07e73d050e7d0edac3a8404e439bc8c1235be8acbf26  service/src/app_dev_local.rs
+f628ee46b0e046bc2e6229317e3be40c150abfc7a715b26db908c794ca8dee32  service/src/app_dev_local_tests.rs
+e9a2778cbb79e91a51595d40a68cfd9805f6798651eda8d9e33ca694ebd11ee9  service/src/app_v3.rs
+No live service, Docker, external network, inference, deployment or retained job mutation invoked.

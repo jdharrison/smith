@@ -1,0 +1,31 @@
+   Compiling smith-coordinated-driver v0.1.0 (<PROJECT>/docs/evidence/dev-buffered-frames/coordinated-driver)
+error[E0308]: mismatched types
+   --> src/hook.rs:197:18
+    |
+197 |         unsafe { libc::kill(-self.pgid, 0) == 0 }
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found `bool`
+    |
+help: you might have meant to return this value
+    |
+197 |         unsafe { return libc::kill(-self.pgid, 0) == 0; }
+    |                  ++++++                               +
+
+error[E0308]: mismatched types
+   --> src/hook.rs:198:9
+    |
+195 |     fn exists(&self) -> bool {
+    |                         ---- expected `bool` because of return type
+...
+198 |         || std::io::Error::last_os_error().raw_os_error() != Some(libc::ESRCH)
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `bool`, found closure
+    |
+    = note: expected type `bool`
+            found closure `{closure@src/hook.rs:198:9: 198:11}`
+help: parentheses are required to parse this as an expression
+    |
+197 |         (unsafe { libc::kill(-self.pgid, 0) == 0 })
+    |         +                                         +
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `smith-coordinated-driver` (bin "smith-coordinated-driver" test) due to 2 previous errors
+exit=101

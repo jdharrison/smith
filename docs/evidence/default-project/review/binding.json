@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-17T23:29:04.559440+00:00",
+  "baseline_archive_sha256": "6073eea510d781fb3acd83aa9afe11c93ce57851bf7fd6c07d1cc3e132a1c6b8",
+  "baseline_keys": {
+    "archive_exclusion": "docs/evidence/ bytes not recopied; hashes retained",
+    "archive_sha256": "6073eea510d781fb3acd83aa9afe11c93ce57851bf7fd6c07d1cc3e132a1c6b8",
+    "archived_count": 1316,
+    "changed_during_capture": [],
+    "count": 1994,
+    "recorded_at": "2026-10-17T23:11:12.447662+00:00",
+    "sha256": "aeb1ce67ebb10c0af866313901b7060a921018be60fd267901323a4d69d56ca2"
+  },
+  "baseline_records_canonical_sha256": "aeb1ce67ebb10c0af866313901b7060a921018be60fd267901323a4d69d56ca2",
+  "current_sha256": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9",
+  "matches_parent": true,
+  "parent_sha256": "e51a718bbc9d990622ff64e3847e7bae095416d66f344fb48fb7e6be5e8d12d9"
+}

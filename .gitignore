@@ -17,6 +17,7 @@
 /installer/build/
 /installer/dist/
 /installer/target/
+/.smith-inspection-diag-v3/
 
 # Developer-only generated SDK/environment and Python caches
 /dagger/sdk/

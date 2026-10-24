@@ -1,0 +1,470 @@
+{
+  "changes": [
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/lib/app_api.dart",
+        "sha256": "92c7a940312e67e32f08326fffc8190562463efc239fce7094ace7e05f257beb",
+        "size": 11398
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/lib/app_api.dart",
+        "sha256": "9505dcb4eea2c5b7115a4044b542d30d33eb19d4d9d36b7dd5b8ccc04b6fe285",
+        "size": 8907
+      },
+      "path": "client/lib/app_api.dart"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/lib/cloud_routing.dart",
+        "sha256": "1374dd11845316c13dec5476436fee86c1a39a50986a45279edc9c621e883e9e",
+        "size": 19246
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/lib/cloud_routing.dart",
+        "sha256": "0e2b912a4432c8232d90ce79a4f1cadc16f48e0771b6b65c3012f64a923e2a8a",
+        "size": 19222
+      },
+      "path": "client/lib/cloud_routing.dart"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/lib/projects.dart",
+        "sha256": "d93f8dcfd9850e1c93cdca46adcf45ab291c2b1f3027e8b8b0fad82cac9aef1f",
+        "size": 12373
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/lib/projects.dart",
+        "sha256": "1336d7401cb29e0de36a257b6070e816eb7b7451f92fe100ace000efd6b6e7e4",
+        "size": 7263
+      },
+      "path": "client/lib/projects.dart"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/lib/projects_controller.dart",
+        "sha256": "80826fb7c992af7b6d5e27aeb32cf6803ba8d0cfa1344d4fd62ea73c83793985",
+        "size": 13014
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/lib/projects_controller.dart",
+        "sha256": "5bede0ef793034c75486e5721971657b1e2a3493168dcf615b7d54191ce9f8f2",
+        "size": 12906
+      },
+      "path": "client/lib/projects_controller.dart"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/lib/ui/projects_view.dart",
+        "sha256": "70cf31830400d561bfedb9d2123da703553ddb0f1bb77c6563b95bd055adc0d9",
+        "size": 36562
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/lib/ui/projects_view.dart",
+        "sha256": "db5b4a831a07ae7ce5be31e97a2f42ecb48b0fd271a376c7195e5f72faa634fd",
+        "size": 28918
+      },
+      "path": "client/lib/ui/projects_view.dart"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/test/app_reply_json_test.dart",
+        "sha256": "2282c5b3dd63434eec360a18ce98b1214ffd1c6b7cd61bb59a19a97cb06f3315",
+        "size": 10062
+      },
+      "before": null,
+      "path": "client/test/app_reply_json_test.dart"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/test/projects_controller_test.dart",
+        "sha256": "4e5d99aa9a6637af7497dbc66e0c28b9a9356f1963e15b0693f0913b53dad1f3",
+        "size": 45773
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/test/projects_controller_test.dart",
+        "sha256": "6aa30154ca1dcd4e94c7c7e82cf6ebaf33d4c40ca5c8a797550ae69179a9ff68",
+        "size": 40266
+      },
+      "path": "client/test/projects_controller_test.dart"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/test/projects_navigation_test.dart",
+        "sha256": "d98956073d877a6bc4c05dca94ee600ce6013320e0b7360a151593e6f2ce4c8e",
+        "size": 18108
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/test/projects_navigation_test.dart",
+        "sha256": "60946df200d7a8039d2a2f0344270f183ce63e717cec04e13ca91aad0754cf33",
+        "size": 17091
+      },
+      "path": "client/test/projects_navigation_test.dart"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/test/projects_protocol_test.dart",
+        "sha256": "c17414912b72249d6b0c99e4e54957b4929201ec42741c4c80539b30a6f314c2",
+        "size": 31314
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/test/projects_protocol_test.dart",
+        "sha256": "cb198ae41a5ceb5834cf3c8e30824c14e60002b3f1164eb5ff601b82e6c34f41",
+        "size": 16911
+      },
+      "path": "client/test/projects_protocol_test.dart"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/test/projects_view_test.dart",
+        "sha256": "fbf8348d16372bfdbff0d0f7f0e2535ee8862904c1fb71b75c1d24378aec9af2",
+        "size": 52259
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/test/projects_view_test.dart",
+        "sha256": "efe396b465360b8e9646362010a577db7f20226aa8998974c0731e5eb397f039",
+        "size": 41221
+      },
+      "path": "client/test/projects_view_test.dart"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "client/test/rust_projects_integration_test.dart",
+        "sha256": "ef2f197f0e0b722b2d8fcfec66df4aba402d50e4cc039a677fcee2422297b564",
+        "size": 18755
+      },
+      "before": {
+        "mode": 436,
+        "path": "client/test/rust_projects_integration_test.dart",
+        "sha256": "78f7fc59a0a274bf26d5ceb475965ba16258d2b5c8476b1ef4c8f5686045641f",
+        "size": 9859
+      },
+      "path": "client/test/rust_projects_integration_test.dart"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "installer/tests/multi_chat_compatibility.rs",
+        "sha256": "8d550bb0901c141fa6ce8c53c4708fe5616035eb113aa3cdb56c619cb0c6ef7b",
+        "size": 16447
+      },
+      "before": {
+        "mode": 436,
+        "path": "installer/tests/multi_chat_compatibility.rs",
+        "sha256": "f80e0df09646d16eeae5de66876818265999f7fe37ec45cc5969cc626ae05b18",
+        "size": 16447
+      },
+      "path": "installer/tests/multi_chat_compatibility.rs"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "service/src/app_projects.rs",
+        "sha256": "9e67428d5040d1abb05b578076e21322b910cbb89834f9985f96fd74128c9d2f",
+        "size": 21048
+      },
+      "before": {
+        "mode": 436,
+        "path": "service/src/app_projects.rs",
+        "sha256": "1caadf877ae17eb6309985a9f534ee979b5dfe3b2e0b1b489e90b7223eacd58e",
+        "size": 15509
+      },
+      "path": "service/src/app_projects.rs"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "service/src/app_projects_tests.rs",
+        "sha256": "f30e526ecff53c1d42062d6b187c581b4def28e12e04f04a5fe8e99df34a411a",
+        "size": 60459
+      },
+      "before": {
+        "mode": 436,
+        "path": "service/src/app_projects_tests.rs",
+        "sha256": "0917b3108e555ffca9c2c4fd93fd1fd547cb292e56cbd51d98bb5e305f1af54d",
+        "size": 45778
+      },
+      "path": "service/src/app_projects_tests.rs"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "service/src/app_timestamps_tests.rs",
+        "sha256": "9fa2e82824d2f32468fc3923cd72ca619ee0a8182fa2a5b5441e32345f971d94",
+        "size": 20125
+      },
+      "before": {
+        "mode": 436,
+        "path": "service/src/app_timestamps_tests.rs",
+        "sha256": "6252094ba3ce06d009034853f910a65ff5287edc682c672a5fb37185a8169bd1",
+        "size": 20125
+      },
+      "path": "service/src/app_timestamps_tests.rs"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "service/src/app_v2.rs",
+        "sha256": "41b85e3a07a9adf0f3f8e9ea052c05a71a4f36ab9f307d9eb32ef96c49b5a237",
+        "size": 49120
+      },
+      "before": {
+        "mode": 436,
+        "path": "service/src/app_v2.rs",
+        "sha256": "a05f58a29c1f5783d098b078c1019d7eee9d606fe6d87ba17530266e826993af",
+        "size": 47386
+      },
+      "path": "service/src/app_v2.rs"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "service/src/app_v3.rs",
+        "sha256": "d8ba0e7af755e3b56433a56841f07e132419ec974ad09c2dc24c8375908dda28",
+        "size": 59462
+      },
+      "before": {
+        "mode": 436,
+        "path": "service/src/app_v3.rs",
+        "sha256": "df3aa31a2887022d4773bff64f67bb5abc24e8c53174315684a9c708ba518c51",
+        "size": 59363
+      },
+      "path": "service/src/app_v3.rs"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "service/tests/cloud.rs",
+        "sha256": "ab9933e1de693bcac4313a5107c3f7c0397aed5572c78cfc4869bcef7313d0e2",
+        "size": 70198
+      },
+      "before": {
+        "mode": 436,
+        "path": "service/tests/cloud.rs",
+        "sha256": "7f3882a933aad0c0f83cfef2efe6af177140635599cebe036e16c64d45cbe9bc",
+        "size": 70198
+      },
+      "path": "service/tests/cloud.rs"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "service/tests/debug_service.rs",
+        "sha256": "021803ec93a2b452bb298303df68359b17500ac3f629fd07b99d17827cc49498",
+        "size": 64547
+      },
+      "before": {
+        "mode": 436,
+        "path": "service/tests/debug_service.rs",
+        "sha256": "e238f9ae5ede99dd1dca006a9eb5d6d9be8ee2c7d7cca6f8d768cc4db3365ffd",
+        "size": 57783
+      },
+      "path": "service/tests/debug_service.rs"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "VALIDATION.md",
+        "sha256": "cf3e2a2638d51576d2aef06c05480833d0721b54a3a8127068d8745b372f6f9d",
+        "size": 3939
+      },
+      "before": {
+        "mode": 436,
+        "path": "VALIDATION.md",
+        "sha256": "fb12b002d54020d69b26e620b9f9cf67e4529bc80fdf68e82e3a756d8f2030b0",
+        "size": 3514
+      },
+      "path": "VALIDATION.md"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "docs/ARCHITECTURE.md",
+        "sha256": "e4d0b8161d506f94e017b4bb5c470f3ff551c33bc4d6e53e2bded122169a246a",
+        "size": 4067
+      },
+      "before": {
+        "mode": 436,
+        "path": "docs/ARCHITECTURE.md",
+        "sha256": "a6e991c44f786069fe67e61d2a45e218f79b254e4611843c83af730d42bc3ec9",
+        "size": 3868
+      },
+      "path": "docs/ARCHITECTURE.md"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "docs/ARCHITECTURE_DETAILS.md",
+        "sha256": "0a218cd2dfdd37f279b6a6a263ede23b7ac5c5e44662e579e22c45870b53cbd4",
+        "size": 49428
+      },
+      "before": {
+        "mode": 436,
+        "path": "docs/ARCHITECTURE_DETAILS.md",
+        "sha256": "6562510c903d50e5744a8261853d573037871a3984e5c08cd6fb9273dd893e1b",
+        "size": 44780
+      },
+      "path": "docs/ARCHITECTURE_DETAILS.md"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "docs/DESIGN.md",
+        "sha256": "68a713cc703a96384f42a13963e0db3f6cd9a9c41d018d36807530737f1c43e1",
+        "size": 35622
+      },
+      "before": {
+        "mode": 436,
+        "path": "docs/DESIGN.md",
+        "sha256": "64b866d9fbe51da405bb9244b5bade9434bf1ff3d5498a4860451b0a2aca058d",
+        "size": 33675
+      },
+      "path": "docs/DESIGN.md"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "docs/HOST_PROFILE.md",
+        "sha256": "6dc515473a841f7c9c2fde4323cbbfee9b46aa0fb69e9245e28e8b14dd1b2849",
+        "size": 4195
+      },
+      "before": {
+        "mode": 436,
+        "path": "docs/HOST_PROFILE.md",
+        "sha256": "4c1981380cdf30b3dc974543fea9c4307d2b6e6a1833b40a2026f983719f0ccf",
+        "size": 3993
+      },
+      "path": "docs/HOST_PROFILE.md"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "docs/HOST_PROFILE_DETAILS.md",
+        "sha256": "aa19be9c9db9b47a9386bbf2c29ba223b3b03b756b230bd34971f42ed65165f7",
+        "size": 21369
+      },
+      "before": {
+        "mode": 436,
+        "path": "docs/HOST_PROFILE_DETAILS.md",
+        "sha256": "c521e6e12acc94b268c8e9345b84dbf8ec96df4a345f577a59b3b07f654fc40d",
+        "size": 20233
+      },
+      "path": "docs/HOST_PROFILE_DETAILS.md"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "docs/PROCESS.md",
+        "sha256": "1bbcc63445688151a7a152332d636fab4d0952cbed35df3e9583ada362cb81aa",
+        "size": 33522
+      },
+      "before": {
+        "mode": 436,
+        "path": "docs/PROCESS.md",
+        "sha256": "c0e32184c9047a8e854b26140808ee6aebff382fc9df48ac4e9f0e4d97bc2323",
+        "size": 30430
+      },
+      "path": "docs/PROCESS.md"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "docs/SCOPE.md",
+        "sha256": "659152609b926585762c848d7770912196b57c61ff89554f78e34b5b9e0a9747",
+        "size": 3254
+      },
+      "before": {
+        "mode": 436,
+        "path": "docs/SCOPE.md",
+        "sha256": "bfb8e4e8cba4347342246614e76b7d6860726a57925c3b0e8aa3791941d22c69",
+        "size": 3109
+      },
+      "path": "docs/SCOPE.md"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "docs/SCOPE_DETAILS.md",
+        "sha256": "4ec8340455b0ba59975ce81cccdc77f1bb979c4343c883d66df0c23be56c7b91",
+        "size": 17843
+      },
+      "before": {
+        "mode": 436,
+        "path": "docs/SCOPE_DETAILS.md",
+        "sha256": "7787291b76ccc6a12a69f22cdb99f5f75e56857ce316eb111aacf8661761fa9b",
+        "size": 15903
+      },
+      "path": "docs/SCOPE_DETAILS.md"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+        "sha256": "bb6ed27d139e7f6938fb6cec366a297be47bb609e921192f684f7fe90237f7d5",
+        "size": 29219
+      },
+      "before": {
+        "mode": 436,
+        "path": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+        "sha256": "ce90d268b91b8588e699eeec6df8fb8e1283d998d83f86e4b381a7bcf153610a",
+        "size": 25592
+      },
+      "path": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "docs/VALIDATION_DETAILS.md",
+        "sha256": "3fa916eea7a543e4d4073a30cc20b62516971c3e7eb023c35de20ae3f9ce0eac",
+        "size": 22223
+      },
+      "before": {
+        "mode": 436,
+        "path": "docs/VALIDATION_DETAILS.md",
+        "sha256": "7b7c44cbc85bab0c1796f37f7be9ca9f303cad59d866867a57e3d88d698abdcb",
+        "size": 18165
+      },
+      "path": "docs/VALIDATION_DETAILS.md"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "docs/evidence/project-repositories/README.md",
+        "sha256": "f70f407b10477b20b11c3598d90299fed89b9ebeaabf8cbdaca98827bfd13965",
+        "size": 10203
+      },
+      "before": null,
+      "path": "docs/evidence/project-repositories/README.md"
+    },
+    {
+      "after": {
+        "mode": 436,
+        "path": "docs/plans/LOCAL-SMITH-PROJECT-REPOSITORIES.md",
+        "sha256": "a3fad2f53d8cb29d6960a6a20d399191d8d28f90911e01f62ff1d3f6a0b6f78e",
+        "size": 15552
+      },
+      "before": null,
+      "path": "docs/plans/LOCAL-SMITH-PROJECT-REPOSITORIES.md"
+    }
+  ],
+  "comparison": "Selected final core/control paths against preserved actual working-tree baseline; unselected paths are not claimed removed."
+}

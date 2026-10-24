@@ -1,0 +1,184 @@
+{
+  "assets": [
+    {
+      "sha256": "bce8709527e4a9e43147d09ed35bd822e4b42ff827debdffc24b042b09660af0",
+      "source": "client/assets/README.md",
+      "ui_asset_path": "data/flutter_assets/assets/README.md"
+    },
+    {
+      "sha256": "0bede3debdea8488bbb927f8f0650d915073209734a67fe8cd5a3320b572511c",
+      "source": "client/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf",
+      "ui_asset_path": "data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf"
+    },
+    {
+      "sha256": "fe11304a5fe956d5744e9b6a246cc83d90425245e75a62230044966ca96a7f50",
+      "source": "client/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf",
+      "ui_asset_path": "data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf"
+    },
+    {
+      "sha256": "c9417148ce13f8fa7d2d5c9180bbc141f72aa0d814ffeb280f6904dc2b1bbd7a",
+      "source": "client/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf",
+      "ui_asset_path": "data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf"
+    },
+    {
+      "sha256": "91c25c350d3cac39da2736d74f7ba37ef648f5237a4e330a240615bc8d8c4360",
+      "source": "client/assets/fonts/ibm-plex-mono/OFL.txt",
+      "ui_asset_path": "data/flutter_assets/assets/fonts/ibm-plex-mono/OFL.txt"
+    },
+    {
+      "sha256": "31c92d01a8a08528b718a43addf0ad3df0af2ca4b7b3290a452f70f358e14d3d",
+      "source": "client/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf",
+      "ui_asset_path": "data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf"
+    },
+    {
+      "sha256": "a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f",
+      "source": "client/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf",
+      "ui_asset_path": "data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf"
+    },
+    {
+      "sha256": "1b3bfa1ed5665a4ce3f9feb68d2d4e40e70bf8b4b7d9a3edd418f321b4e166a0",
+      "source": "client/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf",
+      "ui_asset_path": "data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf"
+    },
+    {
+      "sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad",
+      "source": "client/assets/fonts/jetbrains-mono/OFL.txt",
+      "ui_asset_path": "data/flutter_assets/assets/fonts/jetbrains-mono/OFL.txt"
+    },
+    {
+      "sha256": "ce0af5c71277130bdad501ed06249213e9805b0dd445e3da97af3bc6d32909ce",
+      "source": "client/assets/icons/archive.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/archive.svg"
+    },
+    {
+      "sha256": "f5914af9d3a5dc1e77ebf278af6488dc17b1935d96f50f1f8dae78e625b1c5b1",
+      "source": "client/assets/icons/check.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/check.svg"
+    },
+    {
+      "sha256": "640e640066191f6b26236c4c24f487ed9ba4493ba0d33b480f930825dffecfbc",
+      "source": "client/assets/icons/chevron-down.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/chevron-down.svg"
+    },
+    {
+      "sha256": "43b39bf125cee680dd474f2f0ba9c7bfc370df2087280cacfd5d62499a7cbb0b",
+      "source": "client/assets/icons/chevron-right.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/chevron-right.svg"
+    },
+    {
+      "sha256": "af99c5d1a45eef4e3f59765b1440fe51f39169bb057473fdaf925666f57e8e5a",
+      "source": "client/assets/icons/ellipsis-vertical.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/ellipsis-vertical.svg"
+    },
+    {
+      "sha256": "b7dd6ca760a47aec57e93a6f1b9bc0a8ed835490193ca317a7bfbc497fcfaae4",
+      "source": "client/assets/icons/git-branch.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/git-branch.svg"
+    },
+    {
+      "sha256": "62505fa5145acd57a45fd93f49df02f1e0dc86d4c43c75a2ca69fabe8fe554b3",
+      "source": "client/assets/icons/info.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/info.svg"
+    },
+    {
+      "sha256": "00adb0125d9692f03e4a64037e07499c3df717fd0aa5f575c0783501f2904a37",
+      "source": "client/assets/icons/layers.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/layers.svg"
+    },
+    {
+      "sha256": "69a8310d92c0f2a42fd3127e50c2f7bebd87398d32c5def66db31a180e88f277",
+      "source": "client/assets/icons/menu.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/menu.svg"
+    },
+    {
+      "sha256": "39ef163029f320935e3becc3e478393ce5ea4e4b917d4d8f222542eb5758f741",
+      "source": "client/assets/icons/message-square.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/message-square.svg"
+    },
+    {
+      "sha256": "6de88a293c49416488fb0c5c79177d7af7c855240391b99a561062498a179ab4",
+      "source": "client/assets/icons/pencil.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/pencil.svg"
+    },
+    {
+      "sha256": "6e1a6a826663c1a4fbd4fd8f8bf9d7765fa965744d4e1d6791f163ba378b2b09",
+      "source": "client/assets/icons/plus.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/plus.svg"
+    },
+    {
+      "sha256": "837375539874ab13b51911472d13a947582ff79cb5b926388b279d03914d64bb",
+      "source": "client/assets/icons/rotate-ccw.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/rotate-ccw.svg"
+    },
+    {
+      "sha256": "789dbefe721043a8fbb92c7eac0904c59cfab83b2faaa9ee924a53d9f6045933",
+      "source": "client/assets/icons/send.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/send.svg"
+    },
+    {
+      "sha256": "0b22e51750886c65688e044434a578191799ffcf4afea4cbf60fdf2e9ea90327",
+      "source": "client/assets/icons/settings.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/settings.svg"
+    },
+    {
+      "sha256": "958240c9bacb4dca8f2ea66e08a817eab4ace45c9e72086472095edaa7cc3a9f",
+      "source": "client/assets/icons/trash-2.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/trash-2.svg"
+    },
+    {
+      "sha256": "046d06a319a47b847e1053e557f1cddf3fad2f53abad2150e563cec9ad404d92",
+      "source": "client/assets/icons/x.svg",
+      "ui_asset_path": "data/flutter_assets/assets/icons/x.svg"
+    }
+  ],
+  "checksum_file_sha256": "c849eeb10bc2507a69a913c97501414db387fa70b25e3e81c2acd478cc507679",
+  "client_dist_tree_sha256": "133ed4174f9ae7af0ec096f3df171ca60a624832b30078ae9bfa21a2521d35a2",
+  "complete_client_export_equals_package": true,
+  "core_sha256": "d27c35e900fea8b00345cb5633fd43e71a8c0ba6706b7d0a01648cb5d46daaec",
+  "exact_ui_asset_count": 26,
+  "final_parent_binding_raw_sha256": "8bdb77c0c530f1df0c9ab3c347d90b7a145ff5718604983971a5e4cf098fc0b0",
+  "installer_dist_directories": 20,
+  "installer_dist_files": 99,
+  "installer_dist_tree_sha256_independently_recomputed": "94ad66ae1857abe580bdf94704fbf829933c3998858ced909f97bc2f02c21531",
+  "limitations": [
+    "Byte/mode/source binding is not clean-cache reconstruction, clean-source release provenance, installation or native runtime acceptance.",
+    "The archive round trip was executed by the parent helper suite, not by this checker."
+  ],
+  "native_header_checks_only": true,
+  "package_manifest_sha256": "39844736cb75d408c17e05b132211eb3c5e6efa9e445b91a700cb569712dca1d",
+  "package_root_mode": "0o700",
+  "paired_helpers": [
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "service/dist/smith-service",
+      "sha256": "30202135a35e4b188aa2ffd7f332d552c969585f0cf8a050ce23eb806e262d65",
+      "size": 9621032,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "client/dist/smith_backend/smith-service",
+      "sha256": "30202135a35e4b188aa2ffd7f332d552c969585f0cf8a050ce23eb806e262d65",
+      "size": 9621032,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/service/smith-service",
+      "sha256": "30202135a35e4b188aa2ffd7f332d552c969585f0cf8a050ce23eb806e262d65",
+      "size": 9621032,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "mode_octal": "0o755",
+      "path": "installer/dist/payload/client/smith_backend/smith-service",
+      "sha256": "30202135a35e4b188aa2ffd7f332d552c969585f0cf8a050ce23eb806e262d65",
+      "size": 9621032,
+      "type": "file"
+    }
+  ]
+}

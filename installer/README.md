@@ -26,6 +26,18 @@ the bundled Vulkan-first/CPU-fallback runner and a separately installed curated 
 Docker are not recipient installer dependencies; Python may be used by builder
 package tooling only.
 
+### Local build/export permissions
+
+Make checks the export's full directory ancestry before Dagger and again after export; `installer/run` rechecks immediately before launching GTK. Only a missing final generated output directory is created privately (`0700`), with export scoped under umask `077`. Existing source/output permissions are never repaired automatically. A safe `installer/dist` cannot mask a group-writable `installer` parent. For example, after reviewing ownership/shared access, remove unintended write access on that directory only—not recursively—or use a safe checkout location.
+
+A builder-only, read-only location check is available without attempting installation:
+
+```sh
+python3 -B dagger/package.py --root installer/dist --check-location
+```
+
+The native installer still validates paths independently; this helper neither authorizes an upgrade nor adds a recipient Python dependency. See the [approved prevention plan](../docs/plans/LOCAL-SMITH-INSTALLER-LOCATION.md).
+
 ## Terminal-inspired installer appearance
 
 **Implemented presentation-only redesign:** the native GTK3 shell matches the app's dark-teal/cyan palette, thin bordered panels, small radii and bundled JetBrains Mono. A `> SMITH` header shows the actual installer version from Cargo metadata. Package/install and uninstall actions use the supplied outline icon geometry. Font/icon bytes are embedded in the GUI executable, so appearance does not depend on an intact client payload or system-installed fonts; no runtime asset downloads or persistent font installation occur.

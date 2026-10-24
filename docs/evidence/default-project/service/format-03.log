@@ -1,0 +1,3 @@
+2026-10-17T23:16:17.525600+00:00
+COMMAND ['rustfmt', '--edition', '2021', '--config', 'skip_children=true', 'service/src/app_projects.rs', 'service/src/app_projects_tests.rs']
+EXIT 0

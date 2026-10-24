@@ -1,0 +1,387 @@
+{
+  "directory_count": 0,
+  "entries": [
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/after-core-manifest.json",
+      "sha256": "91f06792b0edefaed6c9e4097f98411d8a8a180d67a717259e84a940fb7487dc",
+      "size": 287131,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/after-prior-preservation.json",
+      "sha256": "0023e4b33f1f72aba35cd50d98a966ae8fb6c7b3d52e6bba19535003e8b84e0e",
+      "size": 1174,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/artifact-bytes-verified.json",
+      "sha256": "40e6780e959e1f459a45f173e80e3a9c2cd845f1925c3ed4cbcccd168c1d57cd",
+      "size": 8166,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/baseline-verification.json",
+      "sha256": "acea0ef8fdf7755235dc776924b12439c25e037ce8a72ef06deb817d4846d55c",
+      "size": 8597,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/before-core-manifest.json",
+      "sha256": "5c5c52234d1b9243db3fc2820150221eeb806632b19b4a56e777041c99b7c0ae",
+      "size": 287131,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/before-prior-preservation.json",
+      "sha256": "0023e4b33f1f72aba35cd50d98a966ae8fb6c7b3d52e6bba19535003e8b84e0e",
+      "size": 1174,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/evidence-manifest.json",
+      "sha256": "fb8eedbab96ab7c8d016b571dcd4d04fdc30523cd25260f81a9d5bf290270126",
+      "size": 9740,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/final-review-check.json",
+      "sha256": "62c3703889d019012a287c1f3f21a5ec0dfebe28f83e0cae46c695a4d4198b3c",
+      "size": 336,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/focused.json",
+      "sha256": "c17c787b2668938547ac790cc94ebb21d72423e09f43764e8bed4d49b9520ee3",
+      "size": 965,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/focused.log",
+      "sha256": "ccc617ac961e38fca09f1d0a32d77fe5925b0c4977fccbef00527d18a134e631",
+      "size": 21750,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/independent-package-verify.json",
+      "sha256": "a5551ce1c3aab78dc1a488894b70d00306ab9c026765508955e8c065a6fa92a0",
+      "size": 431,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/independent-package-verify.log",
+      "sha256": "dbb15ef4b875625b2df9589ec18961d93c26d400ab83f45478df083083a73904",
+      "size": 78,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/keyboard-wrap-bundled-font.json",
+      "sha256": "038a010ccc96fa3a589256f57d192b2ba6e373a4122410ab4e3d6f95747f5cb1",
+      "size": 883,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/keyboard-wrap-bundled-font.log",
+      "sha256": "49a7351c7f543a180b22ee43a4a7ae0d6d9f69bb76230aa3b05e7748df91aa79",
+      "size": 4337,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/keyboard-wrap.json",
+      "sha256": "df12bf6fc33792f9dd270bebc573b72b894964e2e677b8504f2586c3e185139e",
+      "size": 857,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/keyboard-wrap.log",
+      "sha256": "7f2a48d842328c8c64132b10358e2f98e5adee5e1b1888b31a4ed593f67e5c94",
+      "size": 4289,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/neighboring.json",
+      "sha256": "4b783b467f2d79beec45d9633966fed95ae4b70be22d75076df2ef49fe4fc029",
+      "size": 1115,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/neighboring.log",
+      "sha256": "ce310922868324db0f9b29a249157b5c7dc17fdc5361915bf3b907cc1d62ccd1",
+      "size": 14407,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/original-m1-unchanged.json",
+      "sha256": "9c5d84b26be3b96ec612c6d8b1dea985253aeaac1dd4d87ac0fa37018e94bf08",
+      "size": 923,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/original-m1-unchanged.log",
+      "sha256": "f652b079819cc612547174ee23a5c405cc2b34a4195e8e3a363460d5429e9d55",
+      "size": 4306,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/original-nondefect-probes.json",
+      "sha256": "ab6eac2871d7007a71cc480647e00da5458f80aa33637720c57ebc0becdc8361",
+      "size": 936,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/original-nondefect-probes.log",
+      "sha256": "d8273e0121e2aa3cd3f9de6979971e331eca9e40f62fbef5b337f07e5326605f",
+      "size": 354,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/parent-final-gates-observed.json",
+      "sha256": "e36e615f0a0713ba49ad418d219977021441bfe5899670e59b8f8ec5790ddbaf",
+      "size": 12245,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/pre-run-focused-prior-preservation.json",
+      "sha256": "0023e4b33f1f72aba35cd50d98a966ae8fb6c7b3d52e6bba19535003e8b84e0e",
+      "size": 1174,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/pre-run-keyboard-wrap-bundled-font-prior-preservation.json",
+      "sha256": "0023e4b33f1f72aba35cd50d98a966ae8fb6c7b3d52e6bba19535003e8b84e0e",
+      "size": 1174,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/pre-run-keyboard-wrap-prior-preservation.json",
+      "sha256": "0023e4b33f1f72aba35cd50d98a966ae8fb6c7b3d52e6bba19535003e8b84e0e",
+      "size": 1174,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/pre-run-neighboring-prior-preservation.json",
+      "sha256": "0023e4b33f1f72aba35cd50d98a966ae8fb6c7b3d52e6bba19535003e8b84e0e",
+      "size": 1174,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/pre-run-original-m1-unchanged-prior-preservation.json",
+      "sha256": "0023e4b33f1f72aba35cd50d98a966ae8fb6c7b3d52e6bba19535003e8b84e0e",
+      "size": 1174,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/pre-run-original-nondefect-probes-prior-preservation.json",
+      "sha256": "0023e4b33f1f72aba35cd50d98a966ae8fb6c7b3d52e6bba19535003e8b84e0e",
+      "size": 1174,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/pre-run-return-paths-prior-preservation.json",
+      "sha256": "0023e4b33f1f72aba35cd50d98a966ae8fb6c7b3d52e6bba19535003e8b84e0e",
+      "size": 1174,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/pre-run-return-paths-trace-prior-preservation.json",
+      "sha256": "0023e4b33f1f72aba35cd50d98a966ae8fb6c7b3d52e6bba19535003e8b84e0e",
+      "size": 1174,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/pre-run-return-pointer-prior-preservation.json",
+      "sha256": "0023e4b33f1f72aba35cd50d98a966ae8fb6c7b3d52e6bba19535003e8b84e0e",
+      "size": 1174,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/pre-run-visual-prior-preservation.json",
+      "sha256": "0023e4b33f1f72aba35cd50d98a966ae8fb6c7b3d52e6bba19535003e8b84e0e",
+      "size": 1174,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/remediation-delta.json",
+      "sha256": "c65cb8e5a5d1bede7c71aea762f93cedf1b46f49583a4b55e0892a3766d5f4ea",
+      "size": 1320,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/remediation-view.diff",
+      "sha256": "2d871debc259d69bf1f504c73392c824850bc8717c72630c74e9d395ff5c10c2",
+      "size": 1347,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/return-paths-trace.json",
+      "sha256": "a1bf5a9e1af267ab4e9a071aa569987c7e39892847f8d74fee7db9f055be22a7",
+      "size": 950,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/return-paths-trace.log",
+      "sha256": "a19158f5851a77a7f6376a3468a5cd7949db0b540e2f9beb6c8d08acafde6c69",
+      "size": 2405,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/return-paths.json",
+      "sha256": "f2629e3f6efff4a70f5cfbb7ef2bff28b996b38afc7fc0676f681fe74d7e9f21",
+      "size": 849,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/return-paths.log",
+      "sha256": "356f7566d71c5f26bd303077c696dceda8416e3ed2baea061675483d6eb78fe9",
+      "size": 16205,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/return-pointer.json",
+      "sha256": "966cd548786bb59ef688dc62f9961d168dcf59ed36d2292b9bef01da96b13e95",
+      "size": 854,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/return-pointer.log",
+      "sha256": "5945e688c8d6d5305aeb10ba042a8c8e3e3527bf1662907776d69874625dd7c9",
+      "size": 1170,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/review-summary.json",
+      "sha256": "f8f2e92dc5f25bbe6fd100f8c1cbf91a85c07340c82426e5a5cb7a541761cc8d",
+      "size": 5242,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/scratch-identities.json",
+      "sha256": "6c38ea88b568fb78c7bca1577d501d46dd5b05382c40c9e91d0713c1db863222",
+      "size": 3951,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/source-and-safety-binding.json",
+      "sha256": "e6afc91cec38a8884edb15d2924a44c9345a8126af6c3ef686959f7f3eda8176",
+      "size": 1948,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/source-stability.json",
+      "sha256": "522f584c41f14575ebf8c3653374d9917fcbf24b7c17201be347dfde8661cfa5",
+      "size": 217,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/visual.json",
+      "sha256": "96b1e498266cb207657695205bdfb992612b5ccc2c0a0f5d669532ab5d85c3e5",
+      "size": 932,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "mode_octal": "0o664",
+      "path": "docs/evidence/projects-layout/review-final/visual.log",
+      "sha256": "1f02252b4519a900a5874f9fdbbb11272ce74306a066e67fe95fdba52805c4ef",
+      "size": 4711,
+      "type": "file"
+    }
+  ],
+  "exists": true,
+  "file_count": 47,
+  "recorded_at": "2026-10-17T22:05:37.363506+00:00",
+  "root": "docs/evidence/projects-layout/review-final",
+  "sha256": "122c3c6cc798f3ecf878d8eaf84f154511c1fd3208822363edc6cf1fcb99cd48",
+  "total_file_bytes": 725166
+}

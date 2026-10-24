@@ -1,0 +1,18 @@
+   Compiling smith-service v0.1.0 (<repo>/target/project-repositories/assurance/native/service)
+    Finished `test` profile [unoptimized] target(s) in 1.42s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-7c11b7ac37ef8548)
+
+running 10 tests
+test app::projects::tests::assurance_branch_ascii_and_total_pattern_limit ... ok
+test app::v2::tests::assurance_legacy_valid_revision_must_migrate ... ok
+test app::v2::tests::assurance_last_sequence_and_late_completion_after_dispose ... ok
+test app::v2::tests::assurance_duplicate_origins_must_fail_validation ... ok
+test app::v2::tests::assurance_delete_receipt_must_not_describe_existing_target ... ok
+test app::projects::tests::assurance_duplicate_keys_at_every_nested_level_preserve_disk5_and_disk6_bytes ... ok
+test app::projects::tests::assurance_null_migration_unrelated_save_nested_id_conflicts_and_legacy_erasure_refusal ... ok
+test app::v2::tests::assurance_reserved_revision_must_allow_dispatch ... ok
+test app::v2::tests::assurance_legacy_maximum_escaped_results_migrate ... ok
+test app::v2::tests::assurance_exact_byte_reservation_must_allow_dispatch ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 132 filtered out; finished in 1.54s
+

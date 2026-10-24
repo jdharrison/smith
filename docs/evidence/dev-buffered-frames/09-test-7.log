@@ -1,0 +1,20 @@
+timestamp=2026-10-19T19:32:23.497389+00:00
+command=['cargo', 'test', '--offline', '--locked', '--lib', 'dev_read::tests', '--', '--nocapture']
+cwd=service
+    Finished `test` profile [unoptimized] target(s) in 0.05s
+     Running unittests src/lib.rs (target/debug/deps/smith_service-7c11b7ac37ef8548)
+
+running 8 tests
+test dev_read::tests::untrusted_stage_parent_and_existing_stage_refuse ... ok
+test dev_read::tests::expanded_tree_seals_and_rejects_symlinks ... ok
+test dev_read::tests::rejects_links_binary_special_and_bad_ranges ... ok
+test dev_read::tests::text_range_staging_and_single_use ... ok
+test dev_read::tests::quotas_are_reserved_before_failed_io_and_output_is_bounded ... ok
+test dev_read::tests::concurrent_reservations_cannot_exceed_quota_or_reuse_calls ... ok
+test dev_read::tests::exact_checkout_root_enumeration_uses_fixed_descriptor_and_bounded_ranges ... ok
+test dev_read::tests::directories_and_depth_are_bounded ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 318 filtered out; finished in 0.01s
+
+
+exit=0

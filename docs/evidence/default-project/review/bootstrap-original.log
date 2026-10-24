@@ -1,0 +1,183 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling libc v0.2.190
+   Compiling version_check v0.9.5
+   Compiling cfg-if v1.0.5
+   Compiling typenum v1.20.1
+   Compiling pin-project-lite v0.2.17
+   Compiling autocfg v1.5.1
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.14
+   Compiling bytes v1.12.1
+   Compiling hashbrown v0.16.1
+   Compiling winnow v1.0.4
+   Compiling equivalent v1.0.3
+   Compiling serde_core v1.0.229
+   Compiling subtle v2.6.1
+   Compiling futures-core v0.3.34
+   Compiling toml_datetime v1.0.1+spec-1.1.0
+   Compiling zeroize v1.8.2
+   Compiling itoa v1.0.18
+   Compiling serde v1.0.229
+   Compiling zerocopy v0.8.63
+   Compiling untrusted v0.9.0
+   Compiling once_cell v1.21.4
+   Compiling parking v2.2.1
+   Compiling cfg_aliases v0.2.2
+   Compiling powerfmt v0.2.1
+   Compiling httparse v1.10.1
+   Compiling cpufeatures v0.2.17
+   Compiling time-core v0.1.7
+   Compiling endi v1.1.1
+   Compiling rustls v0.23.46
+   Compiling zmij v1.0.23
+   Compiling num-conv v0.1.0
+   Compiling try-lock v0.2.5
+   Compiling static_assertions v1.1.0
+   Compiling nix v0.29.0
+   Compiling want v0.3.2
+   Compiling atomic-waker v1.1.2
+   Compiling base64 v0.22.1
+   Compiling rustls-pki-types v1.15.1
+   Compiling event-listener v5.4.2
+   Compiling smallvec v1.16.3
+   Compiling serde_json v1.0.154
+   Compiling futures-task v0.3.34
+   Compiling slab v0.4.12
+   Compiling bitflags v2.13.2
+   Compiling futures-sink v0.3.34
+   Compiling deranged v0.5.5
+   Compiling ordered-stream v0.2.0
+   Compiling tracing-core v0.1.36
+   Compiling hex v0.4.3
+   Compiling memchr v2.8.3
+   Compiling cc v1.8.0
+   Compiling generic-array v0.14.7
+   Compiling futures-util v0.3.34
+   Compiling event-listener-strategy v0.5.4
+   Compiling memoffset v0.9.1
+   Compiling num-traits v0.2.19
+   Compiling async-broadcast v0.7.2
+   Compiling pem v3.0.6
+   Compiling webpki-roots v1.0.9
+   Compiling indexmap v2.13.1
+   Compiling http v1.5.0
+   Compiling syn v3.0.9
+   Compiling syn v2.0.119
+   Compiling num-integer v0.1.47
+   Compiling toml_parser v1.0.10+spec-1.1.0
+   Compiling num-bigint v0.4.8
+   Compiling http-body v1.1.0
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling block-padding v0.3.3
+   Compiling http-body-util v0.1.5
+   Compiling inout v0.1.4
+   Compiling digest v0.10.7
+   Compiling ring v0.17.14
+   Compiling time v0.3.45
+   Compiling cipher v0.4.4
+   Compiling toml_edit v0.25.5+spec-1.1.0
+   Compiling hmac v0.12.1
+   Compiling sha1 v0.10.7
+   Compiling sha2 v0.10.9
+   Compiling hkdf v0.12.4
+   Compiling aes v0.8.4
+   Compiling cbc v0.1.2
+   Compiling yasna v0.5.2
+   Compiling getrandom v0.2.17
+   Compiling errno v0.3.14
+   Compiling mio v1.2.4
+   Compiling socket2 v0.6.5
+   Compiling xdg-home v1.3.0
+   Compiling proc-macro-crate v3.5.0
+   Compiling signal-hook-registry v1.4.8
+   Compiling rand_core v0.6.4
+   Compiling tokio-macros v2.7.2
+   Compiling serde_derive v1.0.229
+   Compiling async-trait v0.1.92
+   Compiling serde_repr v0.1.21
+   Compiling ppv-lite86 v0.2.21
+   Compiling zvariant_utils v2.1.0
+   Compiling tokio v1.53.3
+   Compiling rand_chacha v0.3.1
+   Compiling rand v0.8.8
+   Compiling enumflags2_derive v0.7.12
+   Compiling zvariant_derive v4.2.0
+   Compiling tracing-attributes v0.1.31
+   Compiling zbus_macros v4.4.0
+   Compiling tracing v0.1.44
+   Compiling rustls-webpki v0.103.15
+   Compiling rcgen v0.13.2
+   Compiling enumflags2 v0.7.12
+   Compiling zvariant v4.2.0
+   Compiling hyper v1.12.0
+   Compiling zbus_names v3.0.0
+   Compiling tokio-rustls v0.26.6
+   Compiling hyper-util v0.1.20
+   Compiling zbus v4.4.0
+   Compiling smith-service v0.1.0 (<repo>/target/default-project/assurance/candidate/service)
+    Finished `test` profile [unoptimized] target(s) in 11.36s
+     Running unittests src/lib.rs (<repo>/target/default-project/assurance/cargo-original/debug/deps/smith_service-ceb3038db9ebf868)
+
+running 7 tests
+test app::projects::tests::projects_bootstrap_consumes_ordinary_capacity_and_honors_revoked_ownership ... FAILED
+test app::projects::tests::projects_bootstrap_corrupt_empty_unsupported_and_unsafe_destinations_are_preserved ... FAILED
+test app::projects::tests::projects_bootstrap_existing_current_empty_populated_full_and_exhausted_are_untouched ... FAILED
+test app::projects::tests::projects_bootstrap_fresh_exact_private_published_state_and_stable_reopen ... FAILED
+test app::projects::tests::projects_bootstrap_ordinary_all_fields_clear_delete_and_history_never_resurrect ... FAILED
+test app::projects::tests::projects_bootstrap_staging_obstruction_and_appeared_destination_fail_without_clobber ... FAILED
+test app::projects::tests::projects_bootstrap_supported_legacy_never_inserts_or_consumes_registry_capacity ... FAILED
+
+failures:
+
+---- app::projects::tests::projects_bootstrap_consumes_ordinary_capacity_and_honors_revoked_ownership stdout ----
+
+thread 'app::projects::tests::projects_bootstrap_consumes_ordinary_capacity_and_honors_revoked_ownership' (890792) panicked at src/app_projects_tests.rs:85:34:
+called `Result::unwrap()` on an `Err` value: "Unsafe ancestor ownership or permissions"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- app::projects::tests::projects_bootstrap_corrupt_empty_unsupported_and_unsafe_destinations_are_preserved stdout ----
+
+thread 'app::projects::tests::projects_bootstrap_corrupt_empty_unsupported_and_unsafe_destinations_are_preserved' (890793) panicked at src/app_projects_tests.rs:85:34:
+called `Result::unwrap()` on an `Err` value: "Unsafe ancestor ownership or permissions"
+
+---- app::projects::tests::projects_bootstrap_existing_current_empty_populated_full_and_exhausted_are_untouched stdout ----
+
+thread 'app::projects::tests::projects_bootstrap_existing_current_empty_populated_full_and_exhausted_are_untouched' (890794) panicked at src/app_projects_tests.rs:85:34:
+called `Result::unwrap()` on an `Err` value: "Unsafe ancestor ownership or permissions"
+
+---- app::projects::tests::projects_bootstrap_fresh_exact_private_published_state_and_stable_reopen stdout ----
+
+thread 'app::projects::tests::projects_bootstrap_fresh_exact_private_published_state_and_stable_reopen' (890795) panicked at src/app_projects_tests.rs:85:34:
+called `Result::unwrap()` on an `Err` value: "Unsafe ancestor ownership or permissions"
+
+---- app::projects::tests::projects_bootstrap_ordinary_all_fields_clear_delete_and_history_never_resurrect stdout ----
+
+thread 'app::projects::tests::projects_bootstrap_ordinary_all_fields_clear_delete_and_history_never_resurrect' (890796) panicked at src/app_projects_tests.rs:85:34:
+called `Result::unwrap()` on an `Err` value: "Unsafe ancestor ownership or permissions"
+
+---- app::projects::tests::projects_bootstrap_staging_obstruction_and_appeared_destination_fail_without_clobber stdout ----
+
+thread 'app::projects::tests::projects_bootstrap_staging_obstruction_and_appeared_destination_fail_without_clobber' (890797) panicked at src/app_projects_tests.rs:85:34:
+called `Result::unwrap()` on an `Err` value: "Unsafe ancestor ownership or permissions"
+
+---- app::projects::tests::projects_bootstrap_supported_legacy_never_inserts_or_consumes_registry_capacity stdout ----
+
+thread 'app::projects::tests::projects_bootstrap_supported_legacy_never_inserts_or_consumes_registry_capacity' (890798) panicked at src/app_projects_tests.rs:85:34:
+called `Result::unwrap()` on an `Err` value: "Unsafe ancestor ownership or permissions"
+
+
+failures:
+    app::projects::tests::projects_bootstrap_consumes_ordinary_capacity_and_honors_revoked_ownership
+    app::projects::tests::projects_bootstrap_corrupt_empty_unsupported_and_unsafe_destinations_are_preserved
+    app::projects::tests::projects_bootstrap_existing_current_empty_populated_full_and_exhausted_are_untouched
+    app::projects::tests::projects_bootstrap_fresh_exact_private_published_state_and_stable_reopen
+    app::projects::tests::projects_bootstrap_ordinary_all_fields_clear_delete_and_history_never_resurrect
+    app::projects::tests::projects_bootstrap_staging_obstruction_and_appeared_destination_fail_without_clobber
+    app::projects::tests::projects_bootstrap_supported_legacy_never_inserts_or_consumes_registry_capacity
+
+test result: FAILED. 0 passed; 7 failed; 0 ignored; 0 measured; 148 filtered out; finished in 0.04s
+
+error: test failed, to rerun pass `--lib`

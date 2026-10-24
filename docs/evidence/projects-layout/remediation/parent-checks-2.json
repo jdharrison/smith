@@ -1,0 +1,51 @@
+[
+  {
+    "argv": [
+      "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+      "format",
+      "lib/ui/projects_view.dart",
+      "test/projects_layout_test.dart"
+    ],
+    "cwd": "client",
+    "exit_code": 0,
+    "finished_at": "2026-10-17T21:33:26.085134+00:00",
+    "inputs_after": {
+      "client/lib/ui/projects_view.dart": "63174aabca0e5287c3a564bfe5227e91f959ed859395f46e7cffe5a647ada94b",
+      "client/test/projects_layout_test.dart": "c14b89ef88664f482bf3a75d18ab4893009da4d6cfc0aba257a647673277784e"
+    },
+    "inputs_before": {
+      "client/lib/ui/projects_view.dart": "63174aabca0e5287c3a564bfe5227e91f959ed859395f46e7cffe5a647ada94b",
+      "client/test/projects_layout_test.dart": "c14b89ef88664f482bf3a75d18ab4893009da4d6cfc0aba257a647673277784e"
+    },
+    "log_sha256": "496e595f1c6c48775fe87dc8f716b26746dc64a8405f3168ac13bf5d14248b1a",
+    "name": "format-2",
+    "started_at": "2026-10-17T21:33:26.022987+00:00"
+  },
+  {
+    "argv": [
+      "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+      "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+      "--suppress-analytics",
+      "--no-version-check",
+      "test",
+      "--no-pub",
+      "--reporter",
+      "expanded",
+      "test/projects_layout_test.dart"
+    ],
+    "cwd": "client",
+    "exit_code": 0,
+    "finished_at": "2026-10-17T21:33:32.050373+00:00",
+    "inputs_after": {
+      "client/lib/ui/projects_view.dart": "63174aabca0e5287c3a564bfe5227e91f959ed859395f46e7cffe5a647ada94b",
+      "client/test/projects_layout_test.dart": "c14b89ef88664f482bf3a75d18ab4893009da4d6cfc0aba257a647673277784e"
+    },
+    "inputs_before": {
+      "client/lib/ui/projects_view.dart": "63174aabca0e5287c3a564bfe5227e91f959ed859395f46e7cffe5a647ada94b",
+      "client/test/projects_layout_test.dart": "c14b89ef88664f482bf3a75d18ab4893009da4d6cfc0aba257a647673277784e"
+    },
+    "log_sha256": "001d81c4559d176ed4d91bdda36d9b16a7bdcda0ab9573f155a54e7d8e0e29cd",
+    "name": "regression-2",
+    "started_at": "2026-10-17T21:33:26.085342+00:00"
+  }
+]

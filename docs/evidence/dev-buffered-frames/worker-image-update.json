@@ -1,0 +1,31 @@
+{
+  "status": "worker-image-updated",
+  "service_sha256": "2500f2f114342895d4a0e8c7da3247b2ccde7c47685716dd3c32450fed32e708",
+  "staged_payload_sha256": "af6f560867cbfa17b9d374a47dde95bb1f415d6c9f65de669b27e85aafd993c7",
+  "old_payload_sha256": "2500f2f114342895d4a0e8c7da3247b2ccde7c47685716dd3c32450fed32e708",
+  "worker_artifact_sha256": "af6f560867cbfa17b9d374a47dde95bb1f415d6c9f65de669b27e85aafd993c7",
+  "dev_ledger_unchanged": true,
+  "worker_only_qa": true,
+  "live_performance_verified": false,
+  "known_broader_gate": "local timestamp fixture fails before framing; not waived for overall acceptance",
+  "old_image": "sha256:3bb245491a8879160b2e61af480afc292ab03ee951c34278df3a139677b51d49",
+  "preserved_image_tag": "smith-dev-worker-local:before-buffered-20261019",
+  "new_image": "sha256:e799b3750e8f8e6dd3f7256f040e625996a2301d7566a934c1d14ea706e94df7",
+  "runtime_tag": "smith-dev-worker-local:1.19.3",
+  "candidate_tag": "smith-dev-worker-local:buffered-verified-20261019",
+  "build_network": "none",
+  "pull": false,
+  "image_build_hash_and_ownership_checks": true,
+  "image_user": "1000:1000",
+  "entrypoint": [
+    "/usr/local/bin/smith-service",
+    "dev-local-worker"
+  ],
+  "service_pid_unchanged": true,
+  "service_restarted": false,
+  "job_submitted": false,
+  "inference_run": false,
+  "historical_record_mutated": false,
+  "recipe_sha256": "625763f44e7492a3903354ffaacf5499f7c30855e7a543cd0373994c331b320e",
+  "build_log_sha256": "c2eec3e501a3e420ba7c01c60a942adf9739687126637cac234bb4a246478f28"
+}

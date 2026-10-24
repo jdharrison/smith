@@ -1,0 +1,50 @@
+[
+  {
+    "argv": [
+      "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+      "format",
+      "--output=none",
+      "--set-exit-if-changed",
+      "lib/ui/projects_view.dart",
+      "test/projects_layout_test.dart"
+    ],
+    "cwd": "client",
+    "exit_code": 0,
+    "finished_at": "2026-10-17T22:10:06.090613+00:00",
+    "inputs_after": {
+      "client/lib/ui/projects_view.dart": "8cca857c1e956c37fea12e4ad7161ede08ff27088f72235657efc676e7bd6590",
+      "client/test/projects_layout_test.dart": "e0860d0bddddc91e250cc1d9c1bffeca5ccfa21d6f6fa9b56b15871e049e3dd6"
+    },
+    "inputs_before": {
+      "client/lib/ui/projects_view.dart": "8cca857c1e956c37fea12e4ad7161ede08ff27088f72235657efc676e7bd6590",
+      "client/test/projects_layout_test.dart": "e0860d0bddddc91e250cc1d9c1bffeca5ccfa21d6f6fa9b56b15871e049e3dd6"
+    },
+    "log_sha256": "11a57d97889bc161aad83f19055424c45a757ed0654809f75c0ad99f31bb11b7",
+    "name": "format-final",
+    "started_at": "2026-10-17T22:10:06.018042+00:00"
+  },
+  {
+    "argv": [
+      "<home>/snap/flutter/common/flutter/bin/cache/dart-sdk/bin/dart",
+      "<home>/snap/flutter/common/flutter/bin/cache/flutter_tools.snapshot",
+      "--suppress-analytics",
+      "--no-version-check",
+      "analyze",
+      "--no-pub"
+    ],
+    "cwd": "client",
+    "exit_code": 0,
+    "finished_at": "2026-10-17T22:10:08.390362+00:00",
+    "inputs_after": {
+      "client/lib/ui/projects_view.dart": "8cca857c1e956c37fea12e4ad7161ede08ff27088f72235657efc676e7bd6590",
+      "client/test/projects_layout_test.dart": "e0860d0bddddc91e250cc1d9c1bffeca5ccfa21d6f6fa9b56b15871e049e3dd6"
+    },
+    "inputs_before": {
+      "client/lib/ui/projects_view.dart": "8cca857c1e956c37fea12e4ad7161ede08ff27088f72235657efc676e7bd6590",
+      "client/test/projects_layout_test.dart": "e0860d0bddddc91e250cc1d9c1bffeca5ccfa21d6f6fa9b56b15871e049e3dd6"
+    },
+    "log_sha256": "e037418aa5dcf30b75a43bdb666d9e03ecfa08ef685489d852a652f52b5792cd",
+    "name": "analyze-final",
+    "started_at": "2026-10-17T22:10:06.090872+00:00"
+  }
+]

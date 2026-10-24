@@ -1,0 +1,87 @@
+{
+  "cache_observations": [],
+  "canceled": [],
+  "debug_fixture": "Configured current-source cargo test --locked --test debug_service --no-run executed (vertex15); selected private executable injected as /opt/smith-cloud-fixture, not an old host fixture. Internal fixture not exported/hash unavailable; raw execution and source bindings retained.",
+  "not_run": [
+    {
+      "name": "actual-package-helpers",
+      "reason": "NOT RUN: root test/build did not complete; old host exports are stale and private standalone client export is not a full package"
+    },
+    {
+      "name": "package-verify",
+      "reason": "NOT RUN: root test/build did not complete; old host exports are stale and private standalone client export is not a full package"
+    }
+  ],
+  "package_verify_and_actual_helpers": "NOT RUN: no completed current full package; no old exports validated",
+  "release_helper": "Configured current-source build dependency uses Dagger content-addressed cache where logged CACHED. Exported helper SHA256 recorded in linux-client-export.json. Not a cold/rebuilt-every-vertex claim.",
+  "root_once": {
+    "invocations": 1,
+    "not_reached": [
+      "service/test",
+      "client/test within aggregate",
+      "installer/test",
+      "package/test",
+      "all root build prerequisites"
+    ],
+    "rerun": false,
+    "status": "BLOCKED at private copied module discovery, unknown command test"
+  },
+  "test_invocations": {
+    "client-test-configured-module": {
+      "count_policy": "One final Flutter terminal summary for this invocation; no addition across reruns or Dagger failure replay.",
+      "explicit_skip_reasons": [],
+      "failed": 15,
+      "failures": [
+        "multi_chat_widget_test.dart: multi-chat small 400x400 2x Settings and drawer preserve draft without overflow",
+        "projects_layout_golden_test.dart: Projects layout bundled-font golden compact-editor-400x400",
+        "projects_layout_golden_test.dart: Projects layout bundled-font golden ultrawide-4200x2400",
+        "projects_layout_golden_test.dart: Projects layout bundled-font golden wide-1536x1024",
+        "rust_projects_integration_test.dart: compiled Projects CRUD persists structured repositories without changing chat projections",
+        "rust_projects_integration_test.dart: compiled branch-only uncertain update resolves original nested payload without replay",
+        "rust_projects_integration_test.dart: compiled concurrent project edits and stale service instances fail closed",
+        "rust_projects_integration_test.dart: compiled disk5 URLs migrate without invented repository names or branches",
+        "rust_projects_integration_test.dart: compiled fresh profile persists an ordinary Smith starter without resurrection or extra effects",
+        "rust_projects_integration_test.dart: compiled historical create receipt cannot recreate a deleted project",
+        "rust_projects_integration_test.dart: compiled legacy Projects calls cannot erase settings or bypass replay identities",
+        "rust_projects_integration_test.dart: compiled lost Projects acknowledgement resolves across restart without replay",
+        "rust_socket_integration_test.dart: real Rust migrated inert voice, interrupted job and config revision 1",
+        "rust_socket_integration_test.dart: real Rust migrated inert voice, interrupted job and config revision 18446744073709551615",
+        "rust_socket_integration_test.dart: real Rust migrated inert voice, interrupted job and config revision 9007199254740992"
+      ],
+      "passed": 989,
+      "skipped": 0,
+      "terminal": "Some tests failed."
+    },
+    "focused-safe-temp": {
+      "count_policy": "One final Flutter terminal summary for this invocation; no addition across reruns or Dagger failure replay.",
+      "explicit_skip_reasons": [],
+      "failed": 0,
+      "failures": [],
+      "passed": 305,
+      "skipped": 0,
+      "terminal": "All tests passed!"
+    },
+    "full-native-tests-safe-temp": {
+      "count_policy": "One final Flutter terminal summary for this invocation; no addition across reruns or Dagger failure replay.",
+      "explicit_skip_reasons": [
+        "Skip: Requires the compiled, fake-injected Rust schema3 fixture.",
+        "Skip: Run make client/test for the mandatory compiled Projects fixture.",
+        "Skip: SMITH_TEST_SERVICE required for isolated Rust migration fixture.",
+        "Skip: SMITH_TEST_SERVICE not supplied: set an explicit compiled Rust binary path to run the isolated Unix-socket integration test.",
+        "Skip: Run make client/test for mandatory compiled schema3 fixture.",
+        "Skip: Run make client/test for the mandatory compiled Agents fixture."
+      ],
+      "failed": 4,
+      "failures": [
+        "multi_chat_widget_test.dart: multi-chat small 400x400 2x Settings and drawer preserve draft without overflow",
+        "projects_layout_golden_test.dart: Projects layout bundled-font golden compact-editor-400x400",
+        "projects_layout_golden_test.dart: Projects layout bundled-font golden ultrawide-4200x2400",
+        "projects_layout_golden_test.dart: Projects layout bundled-font golden wide-1536x1024"
+      ],
+      "passed": 978,
+      "skipped": 22,
+      "terminal": "Some tests failed."
+    }
+  },
+  "timeouts": []
+}

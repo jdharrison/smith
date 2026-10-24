@@ -14,9 +14,14 @@ Obtain the complete installer package from a trusted source. Tagged GitHub Actio
 
 Compare the archive's SHA-256 against an **independently trusted digest** before extracting. A checksum bundled beside the archive does not establish authenticity.
 
+
+Use a trusted directory tree owned by you/root with no group/world-writable parents or symlink ancestors. A private extracted folder does not make an unsafe parent safe. Set a restrictive umask for new directories; it does not change existing parents. If the installer names an unsafe ancestor, review that exact directory's ownership/shared access before correcting only its unintended write permissions, or choose a safe location. Do not use recursive chmod, sudo or deletion to bypass the check.
+
+
 Replace `X.Y.Z` with your version, then extract into a fresh directory:
 
 ```sh
+umask 077
 sha256sum smith-installer_vX.Y.Z.tar.gz
 sha256sum -c smith-installer_vX.Y.Z.tar.gz.sha256
 tar -xzf smith-installer_vX.Y.Z.tar.gz

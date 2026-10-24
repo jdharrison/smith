@@ -1,0 +1,4558 @@
+{
+  "build_evidence": {
+    "client_linux_build": [
+      {
+        "line": 11608,
+        "text": "Building Linux application..."
+      },
+      {
+        "line": 11609,
+        "text": "\u2713 Built build/linux/x64/release/bundle/smith_client"
+      }
+    ],
+    "installer_linux_build": [
+      {
+        "line": 11903,
+        "text": "Building Linux application..."
+      },
+      {
+        "line": 11904,
+        "text": "\u2713 Built build/linux/x64/release/bundle/smith_client"
+      }
+    ],
+    "package_assembly": [
+      {
+        "line": 11906,
+        "text": "Native recipient package verified: 97 files; reviewed text-only payload paths"
+      }
+    ],
+    "service_export": [
+      {
+        "line": 11275,
+        "text": "8   : smithNext CACHED [0.0s]"
+      },
+      {
+        "line": 11281,
+        "text": "10  : \u2506 container CACHED [0.0s]"
+      },
+      {
+        "line": 11285,
+        "text": "12  : \u2506 Container.withExec CACHED [0.0s]"
+      },
+      {
+        "line": 11291,
+        "text": "13  : \u2506 Container.withDirectory CACHED [0.0s]"
+      },
+      {
+        "line": 11293,
+        "text": "14  : \u2506 Container.withExec CACHED [0.0s]"
+      },
+      {
+        "line": 11295,
+        "text": "15  : \u2506 Container.withExec CACHED [0.0s]"
+      },
+      {
+        "line": 11297,
+        "text": "16  : \u2506 Container.withEnvVariable CACHED [0.0s]"
+      },
+      {
+        "line": 11299,
+        "text": "17  : \u2506 Container.withEnvVariable CACHED [0.0s]"
+      },
+      {
+        "line": 11301,
+        "text": "18  : \u2506 Container.withUser CACHED [0.0s]"
+      },
+      {
+        "line": 11303,
+        "text": "19  : \u2506 Container.withWorkdir CACHED [0.0s]"
+      },
+      {
+        "line": 11305,
+        "text": "20  : \u2506 Container.withExec CACHED [0.0s]"
+      },
+      {
+        "line": 11307,
+        "text": "21  : \u2506 Container.file CACHED [0.0s]"
+      },
+      {
+        "line": 11308,
+        "text": "9   : SmithNext.buildService DONE [1.6s]"
+      },
+      {
+        "line": 11316,
+        "text": "Saved to \"<repo>/service/dist/smith-service\"."
+      }
+    ]
+  },
+  "cache_limitations": [
+    "Existing engine and setup/dependency/runtime caches were reused; service release export explicitly reused a cached build.",
+    "All five test vertices show fresh test terminal results and are not marked CACHED.",
+    "Both Linux client build invocations show fresh build output. No cold-cache or hermetic/clean-source reconstruction claim.",
+    "Configured Rust/Flutter image/tag identities are recorded separately; retained lockfiles are not proof of effective image locking."
+  ],
+  "cached_test_vertices": [],
+  "cached_vertex_counts_by_invocation": {
+    "0": 27,
+    "1": 12,
+    "2": 78,
+    "3": 53
+  },
+  "cached_vertices": [
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 22,
+          "text": "smithNext CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 22,
+        "text": "smithNext CACHED [0.0s]"
+      },
+      "vertex": 8
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 31,
+          "text": "container CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 31,
+        "text": "container CACHED [0.0s]"
+      },
+      "vertex": 10
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 34,
+          "text": "Directory.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 34,
+        "text": "Directory.file CACHED [0.0s]"
+      },
+      "vertex": 12
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 36,
+          "text": "Directory.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 36,
+        "text": "Directory.file CACHED [0.0s]"
+      },
+      "vertex": 13
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 38,
+          "text": "Directory.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 38,
+        "text": "Directory.file CACHED [0.0s]"
+      },
+      "vertex": 14
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 40,
+          "text": "directory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 40,
+        "text": "directory CACHED [0.0s]"
+      },
+      "vertex": 15
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 45,
+          "text": "Directory.withFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 45,
+        "text": "Directory.withFile CACHED [0.0s]"
+      },
+      "vertex": 16
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 50,
+          "text": "Directory.withFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 50,
+        "text": "Directory.withFile CACHED [0.0s]"
+      },
+      "vertex": 17
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 55,
+          "text": "Directory.withFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 55,
+        "text": "Directory.withFile CACHED [0.0s]"
+      },
+      "vertex": 18
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 58,
+          "text": "Container.directory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 58,
+        "text": "Container.directory CACHED [0.0s]"
+      },
+      "vertex": 19
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 65,
+          "text": "Container.directory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 65,
+        "text": "Container.directory CACHED [0.0s]"
+      },
+      "vertex": 23
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 93,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 92,
+          "text": "withExec rustup component add rustfmt clippy"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 93,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 35
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 137,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 136,
+          "text": "withExec apt-get update"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 137,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 53
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 170,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 169,
+          "text": "withExec apt-get install --yes --no-install-recommends build-essential ca-certificates"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 170,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 67
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 175,
+          "text": "Container.withDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 175,
+        "text": "Container.withDirectory CACHED [0.0s]"
+      },
+      "vertex": 68
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 180,
+          "text": "Container.withDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 180,
+        "text": "Container.withDirectory CACHED [0.0s]"
+      },
+      "vertex": 69
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 197,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 196,
+          "text": "withEnvVariable DEBIAN_FRONTEND=noninteractive"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 197,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 75
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 199,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 198,
+          "text": "withEnvVariable CI=true"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 199,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 76
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 201,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 200,
+          "text": "withExec apt-get update"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 201,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 77
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 203,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 202,
+          "text": "withExec apt-get install --yes --no-install-recommends ca-certificates curl git unzip xz-utils clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 203,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 78
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 205,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 204,
+          "text": "withExec git clone --depth 1 --branch 3.47.2 https://github.com/flutter/flutter.git /opt/flutter"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 205,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 79
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 207,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 206,
+          "text": "withEnvVariable PATH=/opt/flutter/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 207,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 80
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 209,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 208,
+          "text": "withExec flutter --disable-analytics"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 209,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 81
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 211,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 210,
+          "text": "withExec dart --disable-analytics"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 211,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 82
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 213,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 212,
+          "text": "withExec flutter config --enable-linux-desktop"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 213,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 83
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 291,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 290,
+          "text": "withExec apt-get install --yes --no-install-recommends python3 libgtk-3-0t64"
+        }
+      ],
+      "invocation": 0,
+      "last_event": {
+        "line": 291,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 113
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 299,
+          "text": "Container.withDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 0,
+      "last_event": {
+        "line": 299,
+        "text": "Container.withDirectory CACHED [0.0s]"
+      },
+      "vertex": 114
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11275,
+          "text": "smithNext CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 1,
+      "last_event": {
+        "line": 11275,
+        "text": "smithNext CACHED [0.0s]"
+      },
+      "vertex": 8
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11281,
+          "text": "container CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 1,
+      "last_event": {
+        "line": 11281,
+        "text": "container CACHED [0.0s]"
+      },
+      "vertex": 10
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11285,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11284,
+          "text": "withExec rustup component add rustfmt clippy"
+        }
+      ],
+      "invocation": 1,
+      "last_event": {
+        "line": 11285,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 12
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11291,
+          "text": "Container.withDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 1,
+      "last_event": {
+        "line": 11291,
+        "text": "Container.withDirectory CACHED [0.0s]"
+      },
+      "vertex": 13
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11293,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11292,
+          "text": "withExec install -d -m 0755 /home/smith"
+        }
+      ],
+      "invocation": 1,
+      "last_event": {
+        "line": 11293,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 14
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11295,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11294,
+          "text": "withExec chown -R 1000:1000 /src /home/smith"
+        }
+      ],
+      "invocation": 1,
+      "last_event": {
+        "line": 11295,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 15
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11297,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11296,
+          "text": "withEnvVariable HOME=/home/smith"
+        }
+      ],
+      "invocation": 1,
+      "last_event": {
+        "line": 11297,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 16
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11299,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11298,
+          "text": "withEnvVariable CARGO_HOME=/home/smith/.cargo"
+        }
+      ],
+      "invocation": 1,
+      "last_event": {
+        "line": 11299,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 17
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11301,
+          "text": "Container.withUser CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11300,
+          "text": "user 1000:1000"
+        }
+      ],
+      "invocation": 1,
+      "last_event": {
+        "line": 11301,
+        "text": "Container.withUser CACHED [0.0s]"
+      },
+      "vertex": 18
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11303,
+          "text": "Container.withWorkdir CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11302,
+          "text": "withWorkdir /src"
+        }
+      ],
+      "invocation": 1,
+      "last_event": {
+        "line": 11303,
+        "text": "Container.withWorkdir CACHED [0.0s]"
+      },
+      "vertex": 19
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11305,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11304,
+          "text": "withExec sh scripts/build.sh"
+        }
+      ],
+      "invocation": 1,
+      "last_event": {
+        "line": 11305,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 20
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11307,
+          "text": "Container.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 1,
+      "last_event": {
+        "line": 11307,
+        "text": "Container.file CACHED [0.0s]"
+      },
+      "vertex": 21
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11342,
+          "text": "smithNext CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11342,
+        "text": "smithNext CACHED [0.0s]"
+      },
+      "vertex": 8
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11350,
+          "text": "container CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11350,
+        "text": "container CACHED [0.0s]"
+      },
+      "vertex": 11
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11365,
+          "text": "ModuleSource.contextDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11365,
+        "text": "ModuleSource.contextDirectory CACHED [0.0s]"
+      },
+      "vertex": 19
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11367,
+          "text": "Directory.directory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11367,
+        "text": "Directory.directory CACHED [0.0s]"
+      },
+      "vertex": 20
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11373,
+          "text": "Directory.glob CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11373,
+        "text": "Directory.glob CACHED [0.0s]"
+      },
+      "vertex": 23
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11379,
+          "text": "Directory.glob CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11379,
+        "text": "Directory.glob CACHED [0.0s]"
+      },
+      "vertex": 26
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11381,
+          "text": "Directory.directory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11381,
+        "text": "Directory.directory CACHED [0.0s]"
+      },
+      "vertex": 27
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11383,
+          "text": "Directory.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11383,
+        "text": "Directory.file CACHED [0.0s]"
+      },
+      "vertex": 28
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11385,
+          "text": "Missing.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11385,
+        "text": "Missing.file CACHED [0.0s]"
+      },
+      "vertex": 29
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11387,
+          "text": "Directory.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11387,
+        "text": "Directory.file CACHED [0.0s]"
+      },
+      "vertex": 30
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11389,
+          "text": "Directory.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11389,
+        "text": "Directory.file CACHED [0.0s]"
+      },
+      "vertex": 31
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11391,
+          "text": "Directory.withoutDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11391,
+        "text": "Directory.withoutDirectory CACHED [0.0s]"
+      },
+      "vertex": 32
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11393,
+          "text": "Container.from CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11393,
+        "text": "Container.from CACHED [0.0s]"
+      },
+      "vertex": 33
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11395,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11394,
+          "text": "withEnvVariable DAGGER_BASE_IMAGE=docker.io/library/python:3.14-slim@sha256:486b8092bfb12997e10d4920897213a06563449c951c5506c2a2cfaf591c599f"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11395,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 34
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11397,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11396,
+          "text": "withEnvVariable PYTHONUNBUFFERED=1"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11397,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 35
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11399,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11398,
+          "text": "withEnvVariable PIP_DISABLE_PIP_VERSION_CHECK=1"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11399,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 36
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11401,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11400,
+          "text": "withEnvVariable PIP_ROOT_USER_ACTION=ignore"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11401,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 37
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11406,
+          "text": "Container.withMountedFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11406,
+        "text": "Container.withMountedFile CACHED [0.0s]"
+      },
+      "vertex": 38
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11411,
+          "text": "Container.withMountedFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11411,
+        "text": "Container.withMountedFile CACHED [0.0s]"
+      },
+      "vertex": 39
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11416,
+          "text": "Container.withMountedCache CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11416,
+        "text": "Container.withMountedCache CACHED [0.0s]"
+      },
+      "vertex": 40
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11418,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11417,
+          "text": "withEnvVariable DAGGER_UV_IMAGE=ghcr.io/astral-sh/uv:0.10.3@sha256:7a88d4c4e6f44200575000638453a5a381db0ae31ad5c3a51b14f8687c9d93a3"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11418,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 41
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11420,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11419,
+          "text": "withEnvVariable DAGGER_UV_VERSION=0.10.3"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11420,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 42
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11422,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11421,
+          "text": "withEnvVariable UV_SYSTEM_PYTHON=1"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11422,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 43
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11424,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11423,
+          "text": "withEnvVariable UV_LINK_MODE=copy"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11424,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 44
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11426,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11425,
+          "text": "withEnvVariable UV_NATIVE_TLS=1"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11426,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 45
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11428,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11427,
+          "text": "withEnvVariable UV_PROJECT_ENVIRONMENT=/opt/venv"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11428,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 46
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11433,
+          "text": "Container.withMountedCache CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11433,
+        "text": "Container.withMountedCache CACHED [0.0s]"
+      },
+      "vertex": 47
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11438,
+          "text": "Container.withMountedFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11438,
+        "text": "Container.withMountedFile CACHED [0.0s]"
+      },
+      "vertex": 48
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11443,
+          "text": "Container.withMountedFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11443,
+        "text": "Container.withMountedFile CACHED [0.0s]"
+      },
+      "vertex": 49
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11445,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11444,
+          "text": "withExec codegen generate -i /schema.json -o /gen.py"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11445,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 50
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11447,
+          "text": "Container.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11447,
+        "text": "Container.file CACHED [0.0s]"
+      },
+      "vertex": 51
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11452,
+          "text": "Directory.withDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11452,
+        "text": "Directory.withDirectory CACHED [0.0s]"
+      },
+      "vertex": 52
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11457,
+          "text": "Directory.withFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11457,
+        "text": "Directory.withFile CACHED [0.0s]"
+      },
+      "vertex": 53
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11463,
+          "text": "Container.withFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11463,
+        "text": "Container.withFile CACHED [0.0s]"
+      },
+      "vertex": 54
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11465,
+          "text": "Container.withEntrypoint CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11465,
+        "text": "Container.withEntrypoint CACHED [0.0s]"
+      },
+      "vertex": 55
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11467,
+          "text": "Container.withWorkdir CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11466,
+          "text": "withWorkdir /src/xxh3:d073f9839bc4b537/dagger"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11467,
+        "text": "Container.withWorkdir CACHED [0.0s]"
+      },
+      "vertex": 56
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11475,
+          "text": "Container.withMountedDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11475,
+        "text": "Container.withMountedDirectory CACHED [0.0s]"
+      },
+      "vertex": 57
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11477,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11476,
+          "text": "withEnvVariable DAGGER_MODULE=smith-next"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11477,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 58
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11479,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11478,
+          "text": "withEnvVariable DAGGER_DEFAULT_PYTHON_PACKAGE=smith_next"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11479,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 59
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11481,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11480,
+          "text": "withEnvVariable DAGGER_MAIN_OBJECT=SmithNext"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11481,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 60
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11496,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11495,
+          "text": "withExec rustup component add rustfmt clippy"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11496,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 67
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11502,
+          "text": "Container.withDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11502,
+        "text": "Container.withDirectory CACHED [0.0s]"
+      },
+      "vertex": 68
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11504,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11503,
+          "text": "withExec install -d -m 0755 /home/smith"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11504,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 69
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11506,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11505,
+          "text": "withExec chown -R 1000:1000 /src /home/smith"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11506,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 70
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11508,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11507,
+          "text": "withEnvVariable HOME=/home/smith"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11508,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 71
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11510,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11509,
+          "text": "withEnvVariable CARGO_HOME=/home/smith/.cargo"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11510,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 72
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11512,
+          "text": "Container.withUser CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11511,
+          "text": "user 1000:1000"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11512,
+        "text": "Container.withUser CACHED [0.0s]"
+      },
+      "vertex": 73
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11514,
+          "text": "Container.withWorkdir CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11513,
+          "text": "withWorkdir /src"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11514,
+        "text": "Container.withWorkdir CACHED [0.0s]"
+      },
+      "vertex": 74
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11516,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11515,
+          "text": "withExec sh scripts/build.sh"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11516,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 75
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11518,
+          "text": "Container.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11518,
+        "text": "Container.file CACHED [0.0s]"
+      },
+      "vertex": 76
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11521,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11520,
+          "text": "withExec apt-get update"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11521,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 77
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11523,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11522,
+          "text": "withExec apt-get install --yes --no-install-recommends curl ca-certificates python3 'libgomp1=14.2.0-4ubuntu2~24.04.1'"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11523,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 78
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11528,
+          "text": "Container.withFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11528,
+        "text": "Container.withFile CACHED [0.0s]"
+      },
+      "vertex": 79
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11530,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11529,
+          "text": "withExec install -d -m 0755 /out"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11530,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 80
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11532,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11531,
+          "text": "withExec curl --fail --silent --show-error --location --proto =https --proto-redir =https --max-time 180 --output /tmp/runner-cpu.tar.gz https://github.com/ggml-org/llama.cpp/releases/download/b11429/llama-b11429-bin-ubuntu-x64.tar.gz"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11532,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 81
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11534,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11533,
+          "text": "withExec curl --fail --silent --show-error --location --proto =https --proto-redir =https --max-time 180 --output /tmp/runner-vulkan.tar.gz https://github.com/ggml-org/llama.cpp/releases/download/b11429/llama-b11429-bin-ubuntu-vulkan-x64.tar.gz"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11534,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 82
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11536,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11535,
+          "text": "withExec python3 -B /tools/runtime.py --archive /tmp/runner-cpu.tar.gz --output /out/cpu --backend cpu"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11536,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 83
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11538,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11537,
+          "text": "withExec python3 -B /tools/runtime.py --archive /tmp/runner-vulkan.tar.gz --output /out/vulkan --backend vulkan"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11538,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 84
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11540,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11539,
+          "text": "withExec env -i /out/cpu/llama-server --version"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11540,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 85
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11542,
+          "text": "Container.directory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11542,
+        "text": "Container.directory CACHED [0.0s]"
+      },
+      "vertex": 86
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11544,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11543,
+          "text": "withEnvVariable DEBIAN_FRONTEND=noninteractive"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11544,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 87
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11546,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11545,
+          "text": "withEnvVariable CI=true"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11546,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 88
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11548,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11547,
+          "text": "withExec apt-get update"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11548,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 89
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11550,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11549,
+          "text": "withExec apt-get install --yes --no-install-recommends ca-certificates curl git unzip xz-utils clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11550,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 90
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11552,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11551,
+          "text": "withExec git clone --depth 1 --branch 3.47.2 https://github.com/flutter/flutter.git /opt/flutter"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11552,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 91
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11554,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11553,
+          "text": "withEnvVariable PATH=/opt/flutter/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11554,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 92
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11556,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11555,
+          "text": "withExec flutter --disable-analytics"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11556,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 93
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11558,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11557,
+          "text": "withExec dart --disable-analytics"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11558,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 94
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11560,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11559,
+          "text": "withExec flutter config --enable-linux-desktop"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11560,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 95
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11566,
+          "text": "Container.withFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11566,
+        "text": "Container.withFile CACHED [0.0s]"
+      },
+      "vertex": 96
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11568,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11567,
+          "text": "withEnvVariable SMITH_TEST_SERVICE=/opt/smith-service"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11568,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 97
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11574,
+          "text": "Container.withDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 2,
+      "last_event": {
+        "line": 11574,
+        "text": "Container.withDirectory CACHED [0.0s]"
+      },
+      "vertex": 98
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11576,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11575,
+          "text": "withExec install -d -m 0755 /home/smith"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11576,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 99
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11578,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11577,
+          "text": "withExec chown -R 1000:1000 /src /opt/flutter /opt/smith-service /home/smith"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11578,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 100
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11580,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11579,
+          "text": "withEnvVariable HOME=/home/smith"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11580,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 101
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11582,
+          "text": "Container.withUser CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11581,
+          "text": "user 1000:1000"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11582,
+        "text": "Container.withUser CACHED [0.0s]"
+      },
+      "vertex": 102
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11584,
+          "text": "Container.withWorkdir CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11583,
+          "text": "withWorkdir /src"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11584,
+        "text": "Container.withWorkdir CACHED [0.0s]"
+      },
+      "vertex": 103
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11586,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11585,
+          "text": "withExec flutter pub get --enforce-lockfile"
+        }
+      ],
+      "invocation": 2,
+      "last_event": {
+        "line": 11586,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 104
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11645,
+          "text": "smithNext CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11645,
+        "text": "smithNext CACHED [0.0s]"
+      },
+      "vertex": 8
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11654,
+          "text": "Directory.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11654,
+        "text": "Directory.file CACHED [0.0s]"
+      },
+      "vertex": 10
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11656,
+          "text": "Missing.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11656,
+        "text": "Missing.file CACHED [0.0s]"
+      },
+      "vertex": 11
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11658,
+          "text": "Directory.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11658,
+        "text": "Directory.file CACHED [0.0s]"
+      },
+      "vertex": 12
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11662,
+          "text": "container CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11662,
+        "text": "container CACHED [0.0s]"
+      },
+      "vertex": 14
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11667,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11666,
+          "text": "withExec apt-get update"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11667,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 17
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11669,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11668,
+          "text": "withExec apt-get install --yes --no-install-recommends curl ca-certificates python3 'libgomp1=14.2.0-4ubuntu2~24.04.1'"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11669,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 18
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11674,
+          "text": "Container.withFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11674,
+        "text": "Container.withFile CACHED [0.0s]"
+      },
+      "vertex": 19
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11676,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11675,
+          "text": "withExec install -d -m 0755 /out"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11676,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 20
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11678,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11677,
+          "text": "withExec curl --fail --silent --show-error --location --proto =https --proto-redir =https --max-time 180 --output /tmp/runner-cpu.tar.gz https://github.com/ggml-org/llama.cpp/releases/download/b11429/llama-b11429-bin-ubuntu-x64.tar.gz"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11678,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 21
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11680,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11679,
+          "text": "withExec curl --fail --silent --show-error --location --proto =https --proto-redir =https --max-time 180 --output /tmp/runner-vulkan.tar.gz https://github.com/ggml-org/llama.cpp/releases/download/b11429/llama-b11429-bin-ubuntu-vulkan-x64.tar.gz"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11680,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 22
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11682,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11681,
+          "text": "withExec python3 -B /tools/runtime.py --archive /tmp/runner-cpu.tar.gz --output /out/cpu --backend cpu"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11682,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 23
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11684,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11683,
+          "text": "withExec python3 -B /tools/runtime.py --archive /tmp/runner-vulkan.tar.gz --output /out/vulkan --backend vulkan"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11684,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 24
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11686,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11685,
+          "text": "withExec env -i /out/cpu/llama-server --version"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11686,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 25
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11688,
+          "text": "Container.directory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11688,
+        "text": "Container.directory CACHED [0.0s]"
+      },
+      "vertex": 26
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11691,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11690,
+          "text": "withExec rustup component add rustfmt clippy"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11691,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 27
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11693,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11692,
+          "text": "withExec chown -R 1000:1000 /src /home/smith"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11693,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 28
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11695,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11694,
+          "text": "withEnvVariable CARGO_HOME=/home/smith/.cargo"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11695,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 29
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11697,
+          "text": "Container.withUser CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11696,
+          "text": "user 1000:1000"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11697,
+        "text": "Container.withUser CACHED [0.0s]"
+      },
+      "vertex": 30
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11699,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11698,
+          "text": "withExec sh scripts/build.sh"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11699,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 31
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11701,
+          "text": "Container.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11701,
+        "text": "Container.file CACHED [0.0s]"
+      },
+      "vertex": 32
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11707,
+          "text": "Container.withDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11707,
+        "text": "Container.withDirectory CACHED [0.0s]"
+      },
+      "vertex": 33
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11709,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11708,
+          "text": "withExec install -d -m 0755 /home/smith"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11709,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 34
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11711,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11710,
+          "text": "withExec chown -R 1000:1000 /src /home/smith"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11711,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 35
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11713,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11712,
+          "text": "withEnvVariable HOME=/home/smith"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11713,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 36
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11715,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11714,
+          "text": "withEnvVariable CARGO_HOME=/home/smith/.cargo"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11715,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 37
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11717,
+          "text": "Container.withUser CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11716,
+          "text": "user 1000:1000"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11717,
+        "text": "Container.withUser CACHED [0.0s]"
+      },
+      "vertex": 38
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11719,
+          "text": "Container.withWorkdir CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11718,
+          "text": "withWorkdir /src/installer"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11719,
+        "text": "Container.withWorkdir CACHED [0.0s]"
+      },
+      "vertex": 39
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11721,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11720,
+          "text": "withExec sh scripts/build.sh"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11721,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 40
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11723,
+          "text": "Container.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11723,
+        "text": "Container.file CACHED [0.0s]"
+      },
+      "vertex": 41
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11729,
+          "text": "Container.withDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11729,
+        "text": "Container.withDirectory CACHED [0.0s]"
+      },
+      "vertex": 42
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11731,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11730,
+          "text": "withExec install -d -m 0755 /home/smith"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11731,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 43
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11733,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11732,
+          "text": "withEnvVariable HOME=/home/smith"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11733,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 44
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11735,
+          "text": "Container.withWorkdir CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11734,
+          "text": "withWorkdir /src"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11735,
+        "text": "Container.withWorkdir CACHED [0.0s]"
+      },
+      "vertex": 45
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11741,
+          "text": "Container.withDirectory CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11741,
+        "text": "Container.withDirectory CACHED [0.0s]"
+      },
+      "vertex": 46
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11743,
+          "text": "Container.withUser CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11742,
+          "text": "user root"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11743,
+        "text": "Container.withUser CACHED [0.0s]"
+      },
+      "vertex": 47
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11745,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11744,
+          "text": "withExec apt-get update"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11745,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 48
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11747,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11746,
+          "text": "withExec apt-get install --yes --no-install-recommends libgtk-3-dev"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11747,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 49
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11749,
+          "text": "Container.withUser CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11748,
+          "text": "user 1000:1000"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11749,
+        "text": "Container.withUser CACHED [0.0s]"
+      },
+      "vertex": 50
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11751,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11750,
+          "text": "withExec sh scripts/build-ui.sh"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11751,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 51
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11753,
+          "text": "Container.file CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11753,
+        "text": "Container.file CACHED [0.0s]"
+      },
+      "vertex": 52
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11755,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11754,
+          "text": "withEnvVariable DEBIAN_FRONTEND=noninteractive"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11755,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 53
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11757,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11756,
+          "text": "withEnvVariable CI=true"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11757,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 54
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11759,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11758,
+          "text": "withExec apt-get update"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11759,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 55
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11761,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11760,
+          "text": "withExec apt-get install --yes --no-install-recommends ca-certificates curl git unzip xz-utils clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11761,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 56
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11763,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11762,
+          "text": "withExec git clone --depth 1 --branch 3.47.2 https://github.com/flutter/flutter.git /opt/flutter"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11763,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 57
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11765,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11764,
+          "text": "withEnvVariable PATH=/opt/flutter/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11765,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 58
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11767,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11766,
+          "text": "withExec flutter --disable-analytics"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11767,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 59
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11769,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11768,
+          "text": "withExec dart --disable-analytics"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11769,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 60
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11771,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11770,
+          "text": "withExec flutter config --enable-linux-desktop"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11771,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 61
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11777,
+          "text": "Container.withFile CACHED [0.0s]"
+        }
+      ],
+      "definitions": [],
+      "invocation": 3,
+      "last_event": {
+        "line": 11777,
+        "text": "Container.withFile CACHED [0.0s]"
+      },
+      "vertex": 62
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11779,
+          "text": "Container.withEnvVariable CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11778,
+          "text": "withEnvVariable SMITH_TEST_SERVICE=/opt/smith-service"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11779,
+        "text": "Container.withEnvVariable CACHED [0.0s]"
+      },
+      "vertex": 63
+    },
+    {
+      "cached": true,
+      "cached_events": [
+        {
+          "line": 11808,
+          "text": "Container.withExec CACHED [0.0s]"
+        }
+      ],
+      "definitions": [
+        {
+          "line": 11807,
+          "text": "withExec apt-get install --yes --no-install-recommends python3 libgtk-3-0t64"
+        }
+      ],
+      "invocation": 3,
+      "last_event": {
+        "line": 11808,
+        "text": "Container.withExec CACHED [0.0s]"
+      },
+      "vertex": 74
+    }
+  ],
+  "controlled_ignore_count": 5,
+  "controlled_ignored_fixtures": [
+    {
+      "classification": "controlled_subprocess_fixture_ignore",
+      "line": 4714,
+      "text": "test cloud::http::tests::proxy_environment_child ... ignored, isolated proxy-environment subprocess fixture",
+      "vertex": 21
+    },
+    {
+      "classification": "controlled_subprocess_fixture_ignore",
+      "line": 4737,
+      "text": "test manager::tests::captured_helper_fixture ... ignored, fixture invoked only by captured-helper subprocess tests",
+      "vertex": 21
+    },
+    {
+      "classification": "controlled_subprocess_fixture_ignore",
+      "line": 6194,
+      "text": "test dart_cloud::dart_cloud_fixture ... ignored, launched explicitly by the Dart schema3 fixture gate",
+      "vertex": 21
+    },
+    {
+      "classification": "controlled_subprocess_fixture_ignore",
+      "line": 5466,
+      "text": "test launch::tests::launch_parent_fixture ... ignored, finite subprocess fixture, invoked only with private test roots",
+      "vertex": 73
+    },
+    {
+      "classification": "controlled_subprocess_fixture_ignore",
+      "line": 5495,
+      "text": "test model::tests::progress_output_probe_child ... ignored, controlled signal-probe child only",
+      "vertex": 73
+    }
+  ],
+  "counting_method": "Group by Dagger invocation and vertex; vertex IDs restart for each CLI call. Count only timestamped test output, not replayed generic output. Multiline unittest descriptions/results are reconciled to suite totals.",
+  "dagger_invocations": [
+    {
+      "command": "target/installer-pipeline/smith-dagger-0.21.9/dagger --mod dagger call test --service service --client client --installer installer --tooling dagger",
+      "invocation": 0,
+      "line": 1
+    },
+    {
+      "command": "target/installer-pipeline/smith-dagger-0.21.9/dagger --mod dagger call -o service/dist/smith-service build-service --source service",
+      "invocation": 1,
+      "line": 11254
+    },
+    {
+      "command": "target/installer-pipeline/smith-dagger-0.21.9/dagger --mod dagger call -o client/dist build-client --source client --service service",
+      "invocation": 2,
+      "line": 11321
+    },
+    {
+      "command": "target/installer-pipeline/smith-dagger-0.21.9/dagger --mod dagger call -o installer/dist build-installer --installer installer --client client --service service --tooling dagger",
+      "invocation": 3,
+      "line": 11624
+    }
+  ],
+  "engine_connections": [
+    {
+      "line": 7,
+      "text": "3   : \u2506 [0.0s] | 21:36:56 INF connected name=d4139a37e7e8 client-version=v0.21.9 server-version=v0.21.9"
+    },
+    {
+      "line": 11260,
+      "text": "3   : \u2506 [0.0s] | 21:39:04 INF connected name=d4139a37e7e8 client-version=v0.21.9 server-version=v0.21.9"
+    },
+    {
+      "line": 11327,
+      "text": "3   : \u2506 [0.0s] | 21:39:08 INF connected name=d4139a37e7e8 client-version=v0.21.9 server-version=v0.21.9"
+    },
+    {
+      "line": 11630,
+      "text": "3   : \u2506 [0.0s] | 21:39:30 INF connected name=d4139a37e7e8 client-version=v0.21.9 server-version=v0.21.9"
+    }
+  ],
+  "flutter": {
+    "analyzer": [
+      {
+        "line": 10205,
+        "text": "No issues found! (ran in 8.5s)"
+      }
+    ],
+    "cached": false,
+    "completion_vertex": 96,
+    "format": [
+      {
+        "line": 9853,
+        "text": "Formatted 92 files (0 changed) in 0.61 seconds."
+      }
+    ],
+    "terminal_result": {
+      "failed": 0,
+      "line": 11244,
+      "passed": 865,
+      "skipped": 0,
+      "text": "00:24 +865: All tests passed!"
+    },
+    "vertex": 95
+  },
+  "fresh_test_vertices": [
+    {
+      "cached": false,
+      "invocation": 0,
+      "vertex": 21
+    },
+    {
+      "cached": false,
+      "invocation": 0,
+      "vertex": 73
+    },
+    {
+      "cached": false,
+      "invocation": 0,
+      "vertex": 65
+    },
+    {
+      "cached": false,
+      "invocation": 0,
+      "vertex": 95
+    },
+    {
+      "cached": false,
+      "invocation": 0,
+      "vertex": 125
+    }
+  ],
+  "installer_gtk": {
+    "cached": false,
+    "completion": {
+      "line": 11246,
+      "text": "Container.stdout DONE [1m58s]"
+    },
+    "completion_vertex": 66,
+    "suites": [
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 11195,
+        "measured": 0,
+        "passed": 9,
+        "status": "ok",
+        "text": "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.94s"
+      }
+    ],
+    "totals": {
+      "failed": 0,
+      "filtered": 0,
+      "ignored": 0,
+      "measured": 0,
+      "passed": 9
+    },
+    "vertex": 65
+  },
+  "installer_native": {
+    "cached": false,
+    "completion": {
+      "line": 9829,
+      "text": "Container.stdout DONE [53.4s]"
+    },
+    "completion_vertex": 74,
+    "suites": [
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 2,
+        "line": 6346,
+        "measured": 0,
+        "passed": 105,
+        "status": "ok",
+        "text": "test result: ok. 105 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 6.14s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 6352,
+        "measured": 0,
+        "passed": 0,
+        "status": "ok",
+        "text": "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 7590,
+        "measured": 0,
+        "passed": 36,
+        "status": "ok",
+        "text": "test result: ok. 36 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.01s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 7604,
+        "measured": 0,
+        "passed": 8,
+        "status": "ok",
+        "text": "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 7659,
+        "measured": 0,
+        "passed": 17,
+        "status": "ok",
+        "text": "test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.41s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 9663,
+        "measured": 0,
+        "passed": 20,
+        "status": "ok",
+        "text": "test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.43s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 9673,
+        "measured": 0,
+        "passed": 4,
+        "status": "ok",
+        "text": "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 9690,
+        "measured": 0,
+        "passed": 11,
+        "status": "ok",
+        "text": "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 9704,
+        "measured": 0,
+        "passed": 2,
+        "status": "ok",
+        "text": "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.53s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 9739,
+        "measured": 0,
+        "passed": 20,
+        "status": "ok",
+        "text": "test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.83s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 9796,
+        "measured": 0,
+        "passed": 35,
+        "status": "ok",
+        "text": "test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.43s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 9827,
+        "measured": 0,
+        "passed": 25,
+        "status": "ok",
+        "text": "test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s"
+      }
+    ],
+    "totals": {
+      "failed": 0,
+      "filtered": 0,
+      "ignored": 2,
+      "measured": 0,
+      "passed": 283
+    },
+    "vertex": 73
+  },
+  "native_interpreter_free_runtime": {
+    "command_nodes": [
+      {
+        "cached": false,
+        "cached_events": [],
+        "definitions": [
+          {
+            "line": 279,
+            "text": "withExec /fixture/smith-installer --help"
+          }
+        ],
+        "invocation": 0,
+        "last_event": {
+          "line": 3357,
+          "text": "Container.withExec DONE [0.1s]"
+        },
+        "output": [
+          {
+            "line": 3358,
+            "text": "Smith native installer \u2014 Ubuntu 24.04 LTS x86_64, unprivileged user"
+          },
+          {
+            "line": 3359,
+            "text": ""
+          },
+          {
+            "line": 3360,
+            "text": "Usage: smith-installer [--bundle ROOT] [--dry-run] [--model EXACT]"
+          },
+          {
+            "line": 3361,
+            "text": "[--download-model] [--verify-inference]"
+          },
+          {
+            "line": 3362,
+            "text": "smith-installer --artifacts-only [--client BUNDLE] [--service BINARY]"
+          },
+          {
+            "line": 3363,
+            "text": "[--dry-run] [--yes]"
+          },
+          {
+            "line": 3364,
+            "text": "smith-installer --providers [--bundle ROOT]"
+          },
+          {
+            "line": 3365,
+            "text": ""
+          },
+          {
+            "line": 3366,
+            "text": "--bundle ROOT       Recipient package root (default: actual executable directory)"
+          },
+          {
+            "line": 3367,
+            "text": "--dry-run           Read-only artifact plan; no locks/writes, manager or provider"
+          },
+          {
+            "line": 3368,
+            "text": "--model EXACT       Exact eligible local name:tag; no default model"
+          },
+          {
+            "line": 3369,
+            "text": "--download-model    Offer separate curated GGUF download consent only if missing"
+          },
+          {
+            "line": 3370,
+            "text": "--models            List the pinned local model catalog (no discovery/download)"
+          },
+          {
+            "line": 3371,
+            "text": "--providers         Optional interactive OpenAI/Anthropic management; no install"
+          },
+          {
+            "line": 3372,
+            "text": "--pull-model        Compatibility alias for --download-model"
+          },
+          {
+            "line": 3373,
+            "text": "--verify-inference  Offer separate fixed minimal inference, not a saved chat turn"
+          },
+          {
+            "line": 3374,
+            "text": "--artifacts-only    Developer artifact publication only; never register/start"
+          },
+          {
+            "line": 3375,
+            "text": "--client BUNDLE     Complete paired Flutter bundle, only with --artifacts-only"
+          },
+          {
+            "line": 3376,
+            "text": "--service BINARY    Native service artifact, only with --artifacts-only"
+          },
+          {
+            "line": 3377,
+            "text": "--yes              Artifact plan consent only; requires --artifacts-only"
+          },
+          {
+            "line": 3378,
+            "text": "-h, --help          Show help without operational discovery"
+          },
+          {
+            "line": 3379,
+            "text": "-V, --version       Show version without operational discovery"
+          },
+          {
+            "line": 3380,
+            "text": ""
+          },
+          {
+            "line": 3381,
+            "text": "Recipient confirmations are separate for artifacts, registration/reload, Start,"
+          },
+          {
+            "line": 3382,
+            "text": "exact-model download, saved preference and optional inference. No recipient --yes."
+          },
+          {
+            "line": 3383,
+            "text": "CPU/Vulkan llama.cpp runtimes are bundled with CPU fallback; no Ollama, Python or Docker."
+          },
+          {
+            "line": 3384,
+            "text": "No OS/GPU provisioning, upgrades, lingering changes or GUI launch."
+          },
+          {
+            "line": 3385,
+            "text": "Use a prepared Ubuntu session and existing safe XDG roots."
+          },
+          {
+            "line": 3386,
+            "text": "Later decline/failure preserves prior effects; no automatic retry or rollback."
+          }
+        ],
+        "vertex": 107
+      },
+      {
+        "cached": false,
+        "cached_events": [],
+        "definitions": [
+          {
+            "line": 281,
+            "text": "withExec /fixture/smith-installer --version"
+          }
+        ],
+        "invocation": 0,
+        "last_event": {
+          "line": 3875,
+          "text": "Container.withExec DONE [0.1s]"
+        },
+        "output": [
+          {
+            "line": 3876,
+            "text": "smith-installer 0.1.0"
+          }
+        ],
+        "vertex": 108
+      },
+      {
+        "cached": false,
+        "cached_events": [],
+        "definitions": [
+          {
+            "line": 283,
+            "text": "withExec /fixture/smith-installer --artifacts-only --service /fixture/smith-service --dry-run"
+          }
+        ],
+        "invocation": 0,
+        "last_event": {
+          "line": 3877,
+          "text": "Container.withExec DONE [0.1s]"
+        },
+        "output": [
+          {
+            "line": 3878,
+            "text": "Artifact installation only; no build, GUI launch, unit registration or service start."
+          },
+          {
+            "line": 3879,
+            "text": "Helper SHA256: 30202135a35e4b188aa2ffd7f332d552c969585f0cf8a050ce23eb806e262d65"
+          },
+          {
+            "line": 3880,
+            "text": "Service source: /fixture/smith-service"
+          },
+          {
+            "line": 3881,
+            "text": "Standalone binary (no overwrite): /home/smith/.local/share/smith-next/bin/smith-service"
+          },
+          {
+            "line": 3882,
+            "text": "Installation lock: /home/smith/.local/share/.smith-next-install.lock"
+          },
+          {
+            "line": 3883,
+            "text": "Creates named parents/staging files and a persistent private installation lock; preserves earlier releases. Multiple publications are not a global transaction. Failed stages are retained for inspection, not deleted."
+          },
+          {
+            "line": 3884,
+            "text": "Dry run: no mutation."
+          }
+        ],
+        "vertex": 109
+      }
+    ],
+    "completion": {
+      "line": 3885,
+      "text": "Container.stdout DONE [28.6s]"
+    },
+    "status": "pass"
+  },
+  "native_package": {
+    "all_six_native_cases_observed_ok": true,
+    "cached": false,
+    "cases": [
+      {
+        "qualified_test": "test_package.PackageTests.test_alias_does_not_choose_a_cwd_or_alias_directory_payload",
+        "result": "ok",
+        "result_line": 10242,
+        "start_line": 10242,
+        "test": "test_alias_does_not_choose_a_cwd_or_alias_directory_payload"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_backend_runtime_link_is_rejected",
+        "result": "ok",
+        "result_line": 10243,
+        "start_line": 10243,
+        "test": "test_backend_runtime_link_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_both_backend_servers_must_be_native_elfs",
+        "result": "ok",
+        "result_line": 10253,
+        "start_line": 10253,
+        "test": "test_both_backend_servers_must_be_native_elfs"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_complete_native_payload_and_checksums",
+        "result": "ok",
+        "result_line": 10257,
+        "start_line": 10257,
+        "test": "test_complete_native_payload_and_checksums"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_declared_version_asset_is_required_and_nonempty",
+        "result": "ok",
+        "result_line": 10305,
+        "start_line": 10305,
+        "test": "test_declared_version_asset_is_required_and_nonempty"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_empty_model_directory_is_rejected",
+        "result": "ok",
+        "result_line": 10306,
+        "start_line": 10306,
+        "test": "test_empty_model_directory_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_empty_unreviewed_ui_directory_is_rejected",
+        "result": "ok",
+        "result_line": 10307,
+        "start_line": 10307,
+        "test": "test_empty_unreviewed_ui_directory_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_every_ui_asset_is_required_and_nonempty",
+        "result": "ok",
+        "result_line": 10352,
+        "start_line": 10352,
+        "test": "test_every_ui_asset_is_required_and_nonempty"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_exact_ui_asset_contract_and_manifest_coverage",
+        "result": "ok",
+        "result_line": 10353,
+        "start_line": 10353,
+        "test": "test_exact_ui_asset_contract_and_manifest_coverage"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_extra_vulkan_backend_file_is_rejected",
+        "result": "ok",
+        "result_line": 10354,
+        "start_line": 10354,
+        "test": "test_extra_vulkan_backend_file_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_flat_runtime_file_is_rejected",
+        "result": "ok",
+        "result_line": 10355,
+        "start_line": 10355,
+        "test": "test_flat_runtime_file_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_incomplete_native_runtime_is_rejected",
+        "result": "ok",
+        "result_line": 10356,
+        "start_line": 10356,
+        "test": "test_incomplete_native_runtime_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_initial_native_decline_executes_no_synthetic_service",
+        "result": "ok",
+        "result_line": 10357,
+        "start_line": 10357,
+        "test": "test_initial_native_decline_executes_no_synthetic_service"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_mismatched_pair_blocks_assembly",
+        "result": "ok",
+        "result_line": 10358,
+        "start_line": 10358,
+        "test": "test_mismatched_pair_blocks_assembly"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_missing_visual_native_payload_is_rejected",
+        "result": "ok",
+        "result_line": 10359,
+        "start_line": 10359,
+        "test": "test_missing_visual_native_payload_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_missing_vulkan_library_is_rejected",
+        "result": "ok",
+        "result_line": 10360,
+        "start_line": 10360,
+        "test": "test_missing_vulkan_library_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_mode_tamper_blocks_verification",
+        "result": "ok",
+        "result_line": 10364,
+        "start_line": 10364,
+        "test": "test_mode_tamper_blocks_verification"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_model_gguf_is_rejected",
+        "result": "ok",
+        "result_line": 10365,
+        "start_line": 10365,
+        "test": "test_model_gguf_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_model_weights_inside_ui_assets_are_rejected",
+        "result": "ok",
+        "result_line": 10366,
+        "start_line": 10366,
+        "test": "test_model_weights_inside_ui_assets_are_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_native_help_runs_without_interpreter_or_build_tools",
+        "result": "ok",
+        "result_line": 10367,
+        "start_line": 10367,
+        "test": "test_native_help_runs_without_interpreter_or_build_tools"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_nested_safetensors_are_rejected",
+        "result": "ok",
+        "result_line": 10368,
+        "start_line": 10368,
+        "test": "test_nested_safetensors_are_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_opaque_file_inside_approved_icon_directory_is_rejected",
+        "result": "ok",
+        "result_line": 10369,
+        "start_line": 10369,
+        "test": "test_opaque_file_inside_approved_icon_directory_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_packaged_dry_run_uses_real_executable_root_and_writes_nothing",
+        "result": "ok",
+        "result_line": 10370,
+        "start_line": 10370,
+        "test": "test_packaged_dry_run_uses_real_executable_root_and_writes_nothing"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_payload_tamper_blocks_verification",
+        "result": "ok",
+        "result_line": 10378,
+        "start_line": 10378,
+        "test": "test_payload_tamper_blocks_verification"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_pinned_dual_runtime_contract",
+        "result": "ok",
+        "result_line": 10379,
+        "start_line": 10379,
+        "test": "test_pinned_dual_runtime_contract"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_raster_reference_is_rejected",
+        "result": "ok",
+        "result_line": 10380,
+        "start_line": 10380,
+        "test": "test_raster_reference_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_script_entrypoint_is_rejected",
+        "result": "ok",
+        "result_line": 10403,
+        "start_line": 10403,
+        "test": "test_script_entrypoint_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_symlink_payload_is_rejected",
+        "result": "ok",
+        "result_line": 10404,
+        "start_line": 10404,
+        "test": "test_symlink_payload_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_ui_asset_link_is_rejected",
+        "result": "ok",
+        "result_line": 10410,
+        "start_line": 10410,
+        "test": "test_ui_asset_link_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_ui_asset_size_limit_is_preserved",
+        "result": "ok",
+        "result_line": 10411,
+        "start_line": 10411,
+        "test": "test_ui_asset_size_limit_is_preserved"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_ui_asset_tamper_blocks_verification",
+        "result": "ok",
+        "result_line": 10417,
+        "start_line": 10417,
+        "test": "test_ui_asset_tamper_blocks_verification"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_unknown_icon_is_rejected",
+        "result": "ok",
+        "result_line": 10418,
+        "start_line": 10418,
+        "test": "test_unknown_icon_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_unreviewed_font_weight_is_rejected",
+        "result": "ok",
+        "result_line": 10423,
+        "start_line": 10423,
+        "test": "test_unreviewed_font_weight_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_unreviewed_opaque_asset_is_rejected",
+        "result": "ok",
+        "result_line": 10424,
+        "start_line": 10424,
+        "test": "test_unreviewed_opaque_asset_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_unreviewed_runtime_backend_is_rejected",
+        "result": "ok",
+        "result_line": 10425,
+        "start_line": 10425,
+        "test": "test_unreviewed_runtime_backend_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_visual_help_and_version_need_no_display_or_interpreter",
+        "result": "ok",
+        "result_line": 10429,
+        "start_line": 10429,
+        "test": "test_visual_help_and_version_need_no_display_or_interpreter"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_visual_mode_tamper_blocks_verification",
+        "result": "ok",
+        "result_line": 10433,
+        "start_line": 10433,
+        "test": "test_visual_mode_tamper_blocks_verification"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_visual_script_entrypoint_is_rejected",
+        "result": "ok",
+        "result_line": 10434,
+        "start_line": 10434,
+        "test": "test_visual_script_entrypoint_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_visual_without_display_exits_before_any_installation",
+        "result": "ok",
+        "result_line": 10435,
+        "start_line": 10435,
+        "test": "test_visual_without_display_exits_before_any_installation"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_voice_onnx_is_rejected",
+        "result": "ok",
+        "result_line": 10439,
+        "start_line": 10439,
+        "test": "test_voice_onnx_is_rejected"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_vulkan_library_in_cpu_runtime_is_rejected",
+        "result": "ok",
+        "result_line": 10440,
+        "start_line": 10440,
+        "test": "test_vulkan_library_in_cpu_runtime_is_rejected"
+      }
+    ],
+    "completion": {
+      "line": 10468,
+      "text": "Container.stdout DONE [1m24s]"
+    },
+    "completion_vertex": 126,
+    "errors": 0,
+    "failed": 0,
+    "passed": 41,
+    "ran": 41,
+    "six_native_cases": [
+      {
+        "qualified_test": "test_package.PackageTests.test_alias_does_not_choose_a_cwd_or_alias_directory_payload",
+        "result": "ok",
+        "result_line": 10242,
+        "start_line": 10242,
+        "test": "test_alias_does_not_choose_a_cwd_or_alias_directory_payload"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_initial_native_decline_executes_no_synthetic_service",
+        "result": "ok",
+        "result_line": 10357,
+        "start_line": 10357,
+        "test": "test_initial_native_decline_executes_no_synthetic_service"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_native_help_runs_without_interpreter_or_build_tools",
+        "result": "ok",
+        "result_line": 10367,
+        "start_line": 10367,
+        "test": "test_native_help_runs_without_interpreter_or_build_tools"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_packaged_dry_run_uses_real_executable_root_and_writes_nothing",
+        "result": "ok",
+        "result_line": 10370,
+        "start_line": 10370,
+        "test": "test_packaged_dry_run_uses_real_executable_root_and_writes_nothing"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_visual_help_and_version_need_no_display_or_interpreter",
+        "result": "ok",
+        "result_line": 10429,
+        "start_line": 10429,
+        "test": "test_visual_help_and_version_need_no_display_or_interpreter"
+      },
+      {
+        "qualified_test": "test_package.PackageTests.test_visual_without_display_exits_before_any_installation",
+        "result": "ok",
+        "result_line": 10435,
+        "start_line": 10435,
+        "test": "test_visual_without_display_exits_before_any_installation"
+      }
+    ],
+    "skipped": 0,
+    "vertex": 125
+  },
+  "ordinary_package_skips": 0,
+  "original_failure_cause": "Unknown. Passing isolated and aggregate observations do not establish the cause of the preserved earlier failure.",
+  "pipeline_helpers": {
+    "cases": [
+      {
+        "qualified_test": "test_installer_release.ArchiveTests.test_actual_package_roundtrip_with_synthetic_source_identity",
+        "result": "ok",
+        "result_line": 1,
+        "start_line": 1,
+        "test": "test_actual_package_roundtrip_with_synthetic_source_identity"
+      },
+      {
+        "qualified_test": "test_installer_release.ArchiveTests.test_archive_tamper_missing_and_mode_fail_reverification",
+        "result": "ok",
+        "result_line": 2,
+        "start_line": 2,
+        "test": "test_archive_tamper_missing_and_mode_fail_reverification"
+      },
+      {
+        "qualified_test": "test_installer_release.ArchiveTests.test_archive_unsafe_paths_links_modes_and_duplicates",
+        "result": "ok",
+        "result_line": 3,
+        "start_line": 3,
+        "test": "test_archive_unsafe_paths_links_modes_and_duplicates"
+      },
+      {
+        "qualified_test": "test_installer_release.ArchiveTests.test_cli_normal_default_repo_and_import_from_unrelated_cwd",
+        "result": "ok",
+        "result_line": 4,
+        "start_line": 4,
+        "test": "test_cli_normal_default_repo_and_import_from_unrelated_cwd"
+      },
+      {
+        "qualified_test": "test_installer_release.ArchiveTests.test_existing_output_and_dangling_symlink_refused",
+        "result": "ok",
+        "result_line": 5,
+        "start_line": 5,
+        "test": "test_existing_output_and_dangling_symlink_refused"
+      },
+      {
+        "qualified_test": "test_installer_release.ArchiveTests.test_full_roundtrip_metadata_and_modes",
+        "result": "ok",
+        "result_line": 6,
+        "start_line": 6,
+        "test": "test_full_roundtrip_metadata_and_modes"
+      },
+      {
+        "qualified_test": "test_installer_release.ArchiveTests.test_invalid_payloads_leave_no_output",
+        "result": "ok",
+        "result_line": 7,
+        "start_line": 7,
+        "test": "test_invalid_payloads_leave_no_output"
+      },
+      {
+        "qualified_test": "test_installer_release.ArchiveTests.test_invalid_source_and_nested_output_write_nothing",
+        "result": "ok",
+        "result_line": 8,
+        "start_line": 8,
+        "test": "test_invalid_source_and_nested_output_write_nothing"
+      },
+      {
+        "qualified_test": "test_installer_release.PackageLoaderTests.test_next_only_tooling_refused",
+        "result": "ok",
+        "result_line": 9,
+        "start_line": 9,
+        "test": "test_next_only_tooling_refused"
+      },
+      {
+        "qualified_test": "test_installer_release.PackageLoaderTests.test_root_tooling_ignores_next_decoy",
+        "result": "ok",
+        "result_line": 10,
+        "start_line": 10,
+        "test": "test_root_tooling_ignores_next_decoy"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_bad_tags_and_branch_only",
+        "result": "ok",
+        "result_line": 11,
+        "start_line": 11,
+        "test": "test_bad_tags_and_branch_only"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_checkout_commit_fallback_loses_annotation_but_explicit_tag_preserves_it",
+        "result": "ok",
+        "result_line": 13,
+        "start_line": 12,
+        "test": "test_checkout_commit_fallback_loses_annotation_but_explicit_tag_preserves_it"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_dirty_staged_and_unstaged",
+        "result": "ok",
+        "result_line": 14,
+        "start_line": 14,
+        "test": "test_dirty_staged_and_unstaged"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_lightweight_tag",
+        "result": "ok",
+        "result_line": 15,
+        "start_line": 15,
+        "test": "test_lightweight_tag"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_missing_main_ref",
+        "result": "ok",
+        "result_line": 16,
+        "start_line": 16,
+        "test": "test_missing_main_ref"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_next_only_layout_refused",
+        "result": "ok",
+        "result_line": 17,
+        "start_line": 17,
+        "test": "test_next_only_layout_refused"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_root_versions_ignore_next_decoys",
+        "result": "ok",
+        "result_line": 18,
+        "start_line": 18,
+        "test": "test_root_versions_ignore_next_decoys"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_strict_pubspec_and_lock_versions",
+        "result": "ok",
+        "result_line": 19,
+        "start_line": 19,
+        "test": "test_strict_pubspec_and_lock_versions"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_tagged_side_branch_not_in_main_history",
+        "result": "ok",
+        "result_line": 20,
+        "start_line": 20,
+        "test": "test_tagged_side_branch_not_in_main_history"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_untracked_allowed",
+        "result": "ok",
+        "result_line": 21,
+        "start_line": 21,
+        "test": "test_untracked_allowed"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_valid_annotated_identity_and_cli",
+        "result": "ok",
+        "result_line": 22,
+        "start_line": 22,
+        "test": "test_valid_annotated_identity_and_cli"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_version_mismatch",
+        "result": "ok",
+        "result_line": 23,
+        "start_line": 23,
+        "test": "test_version_mismatch"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_wrong_head",
+        "result": "ok",
+        "result_line": 24,
+        "start_line": 24,
+        "test": "test_wrong_head"
+      },
+      {
+        "qualified_test": "test_installer_release.SourceTests.test_wrong_or_abbreviated_sha",
+        "result": "ok",
+        "result_line": 25,
+        "start_line": 25,
+        "test": "test_wrong_or_abbreviated_sha"
+      },
+      {
+        "qualified_test": "test_pipeline_config.DaggerSetupTests.test_bad_download_fails_checksum_before_extraction_execution_or_path_write",
+        "result": "ok",
+        "result_line": 26,
+        "start_line": 26,
+        "test": "test_bad_download_fails_checksum_before_extraction_execution_or_path_write"
+      },
+      {
+        "qualified_test": "test_pipeline_config.DaggerSetupTests.test_module_and_installer_have_reviewed_version_and_digest",
+        "result": "ok",
+        "result_line": 27,
+        "start_line": 27,
+        "test": "test_module_and_installer_have_reviewed_version_and_digest"
+      },
+      {
+        "qualified_test": "test_pipeline_config.DaggerSetupTests.test_wrong_platform_refuses_before_download",
+        "result": "ok",
+        "result_line": 28,
+        "start_line": 28,
+        "test": "test_wrong_platform_refuses_before_download"
+      },
+      {
+        "qualified_test": "test_pipeline_config.MakeConfigTests.test_custom_dagger_executable_preserves_module",
+        "result": "ok",
+        "result_line": 29,
+        "start_line": 29,
+        "test": "test_custom_dagger_executable_preserves_module"
+      },
+      {
+        "qualified_test": "test_pipeline_config.MakeConfigTests.test_every_dagger_recipe_has_explicit_module",
+        "result": "ok",
+        "result_line": 30,
+        "start_line": 30,
+        "test": "test_every_dagger_recipe_has_explicit_module"
+      },
+      {
+        "qualified_test": "test_pipeline_config.WorkflowContractTests.test_both_checkouts_select_full_tag_ref_only_for_candidates",
+        "result": "ok",
+        "result_line": 31,
+        "start_line": 31,
+        "test": "test_both_checkouts_select_full_tag_ref_only_for_candidates"
+      },
+      {
+        "qualified_test": "test_pipeline_config.WorkflowContractTests.test_candidate_upload_is_gated_after_checks_build_and_archive",
+        "result": "ok",
+        "result_line": 32,
+        "start_line": 32,
+        "test": "test_candidate_upload_is_gated_after_checks_build_and_archive"
+      },
+      {
+        "qualified_test": "test_pipeline_config.WorkflowContractTests.test_main_and_pr_validate_without_candidate_default",
+        "result": "ok",
+        "result_line": 33,
+        "start_line": 33,
+        "test": "test_main_and_pr_validate_without_candidate_default"
+      },
+      {
+        "qualified_test": "test_pipeline_config.WorkflowContractTests.test_release_is_tag_only_reusable_ci_caller",
+        "result": "ok",
+        "result_line": 34,
+        "start_line": 34,
+        "test": "test_release_is_tag_only_reusable_ci_caller"
+      },
+      {
+        "qualified_test": "test_pipeline_config.WorkflowContractTests.test_ubuntu_only_read_only_credential_free_pinned_actions",
+        "result": "ok",
+        "result_line": 35,
+        "start_line": 35,
+        "test": "test_ubuntu_only_read_only_credential_free_pinned_actions"
+      }
+    ],
+    "errors": 0,
+    "failed": 0,
+    "passed": 34,
+    "ran": 34,
+    "skipped": 0
+  },
+  "recorded_at": "2026-10-17T21:43:36.117094+00:00",
+  "root_log_sha256": "68de38f0204d46ebd5079682b2f2030d56f2806a0b1023a7d0c42ac8c5f4b679",
+  "service": {
+    "cached": false,
+    "completion": {
+      "line": 10988,
+      "text": "Container.stdout DONE [1m33s]"
+    },
+    "completion_vertex": 22,
+    "suites": [
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 2,
+        "line": 5918,
+        "measured": 0,
+        "passed": 137,
+        "status": "ok",
+        "text": "test result: ok. 137 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 7.45s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 5925,
+        "measured": 0,
+        "passed": 1,
+        "status": "ok",
+        "text": "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 5997,
+        "measured": 0,
+        "passed": 35,
+        "status": "ok",
+        "text": "test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.01s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 6142,
+        "measured": 0,
+        "passed": 34,
+        "status": "ok",
+        "text": "test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.60s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 6160,
+        "measured": 0,
+        "passed": 12,
+        "status": "ok",
+        "text": "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 1,
+        "line": 10039,
+        "measured": 0,
+        "passed": 24,
+        "status": "ok",
+        "text": "test result: ok. 24 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 22.35s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 10056,
+        "measured": 0,
+        "passed": 11,
+        "status": "ok",
+        "text": "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s"
+      },
+      {
+        "failed": 0,
+        "filtered": 0,
+        "ignored": 0,
+        "line": 10976,
+        "measured": 0,
+        "passed": 41,
+        "status": "ok",
+        "text": "test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.93s"
+      }
+    ],
+    "totals": {
+      "failed": 0,
+      "filtered": 0,
+      "ignored": 3,
+      "measured": 0,
+      "passed": 295
+    },
+    "vertex": 21
+  },
+  "warning_lines": []
+}

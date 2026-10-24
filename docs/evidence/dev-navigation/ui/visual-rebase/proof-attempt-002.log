@@ -1,0 +1,21 @@
+compact-text2-360ms.png rails [[9, 136, 65, 400]] diff (12, 136, 65, 400) pixels 5285 outside 0 initial/current 0
+desktop-000ms.png rails [[9, 66, 65, 991]] diff None pixels 0 outside 0 initial/current None
+desktop-160ms.png rails [[9, 66, 65, 991]] diff (11, 66, 65, 991) pixels 7175 outside 0 initial/current 0
+mixed-grid-360ms.png rails [[9, 66, 65, 720], [1109, 66, 1165, 720], [9, 737, 65, 1391], [1109, 737, 1165, 1391]] diff (12, 66, 1165, 1391) pixels 24630 outside 0 initial/current 0
+fixture-archive-1440x900.png rails [[8, 64, 64, 892]] diff (11, 64, 64, 892) pixels 6256 outside 0 initial/current 0
+fixture-archive-400x400-text2.png rails [[8, 129, 64, 392]] diff (11, 133, 12, 201) pixels 60 outside 0 initial/current 0
+fixture-chat-1280x720.png rails [[8, 64, 64, 712]] diff (11, 64, 64, 712) pixels 6076 outside 0 initial/current 0
+fixture-chat-1440x900-ibm.png rails [[8, 64, 64, 892]] diff (11, 64, 64, 892) pixels 6256 outside 0 initial/current 0
+fixture-chat-1440x900.png rails [[8, 64, 64, 892]] diff (11, 64, 64, 892) pixels 6256 outside 0 initial/current 0
+fixture-chat-400x400-text2.png rails [[8, 129, 64, 392]] diff (11, 129, 64, 392) pixels 3986 outside 0 initial/current 0
+fixture-chat-400x400.png rails [[8, 64, 64, 392]] diff (11, 64, 64, 392) pixels 5439 outside 0 initial/current 0
+fixture-chat-4200x2400.png rails [[8, 64, 64, 2392]] diff (11, 64, 64, 2392) pixels 7756 outside 0 initial/current 0
+fixture-history-400x400-text2.png rails [[8, 129, 64, 392]] diff (11, 129, 56, 347) pixels 3682 outside 0 initial/current 0
+fixture-overflow-1440x900.png rails [[8, 64, 64, 892]] diff (11, 64, 64, 892) pixels 6256 outside 0 initial/current 0
+fixture-overflow-400x400-text2.png rails [[8, 129, 64, 392]] diff (11, 129, 56, 347) pixels 3682 outside 0 initial/current 0
+fixture-production-shell-1280x720.png rails [[8, 64, 64, 712]] diff (11, 64, 64, 712) pixels 6076 outside 0 initial/current 0
+fixture-recovery-400x400-text2.png rails [[8, 129, 64, 392]] diff (11, 129, 64, 392) pixels 3986 outside 0 initial/current 0
+fixture-recovery-details-400x400-text2.png rails [[8, 129, 64, 392]] diff (11, 129, 64, 392) pixels 2490 outside 0 initial/current 0
+fixture-settings-1440x900.png rails [[8, 64, 64, 892]] diff (11, 64, 64, 892) pixels 6090 outside 0 initial/current 0
+fixture-settings-400x400-text2.png rails [[8, 129, 64, 392]] diff (11, 129, 64, 392) pixels 5537 outside 0 initial/current 0
+Eligible: 19 / 20

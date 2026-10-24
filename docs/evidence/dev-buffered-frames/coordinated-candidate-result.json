@@ -1,0 +1,1576 @@
+{
+  "candidate_inventory": {
+    "README.txt": {
+      "mode": 420,
+      "sha256": "cb51d39e8e244c5db6c542fba46355e426bcbf76a70ae4df3ff6fffcb21f2990"
+    },
+    "payload/client/data/flutter_assets/AssetManifest.bin": {
+      "mode": 420,
+      "sha256": "25c950ac28a1dd34820d68b0577b58b7df4853a9a23737c6f8ced98de3b098ec"
+    },
+    "payload/client/data/flutter_assets/FontManifest.json": {
+      "mode": 420,
+      "sha256": "19febf4802fb9b9b90037050e004bce4cda6eb59727b89cecec94f83553d3aff"
+    },
+    "payload/client/data/flutter_assets/NOTICES.Z": {
+      "mode": 420,
+      "sha256": "112207764f940fb52106a1f90fe509f7d5c08fc14a108ce6608ec6518051af61"
+    },
+    "payload/client/data/flutter_assets/NativeAssetsManifest.json": {
+      "mode": 420,
+      "sha256": "9548a31e4a048135c1d94f919328bfb62ae2c7bb3cab96557c7941daa97776cb"
+    },
+    "payload/client/data/flutter_assets/assets/README.md": {
+      "mode": 420,
+      "sha256": "bce8709527e4a9e43147d09ed35bd822e4b42ff827debdffc24b042b09660af0"
+    },
+    "payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf": {
+      "mode": 420,
+      "sha256": "0bede3debdea8488bbb927f8f0650d915073209734a67fe8cd5a3320b572511c"
+    },
+    "payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf": {
+      "mode": 420,
+      "sha256": "fe11304a5fe956d5744e9b6a246cc83d90425245e75a62230044966ca96a7f50"
+    },
+    "payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf": {
+      "mode": 420,
+      "sha256": "c9417148ce13f8fa7d2d5c9180bbc141f72aa0d814ffeb280f6904dc2b1bbd7a"
+    },
+    "payload/client/data/flutter_assets/assets/fonts/ibm-plex-mono/OFL.txt": {
+      "mode": 420,
+      "sha256": "91c25c350d3cac39da2736d74f7ba37ef648f5237a4e330a240615bc8d8c4360"
+    },
+    "payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf": {
+      "mode": 420,
+      "sha256": "31c92d01a8a08528b718a43addf0ad3df0af2ca4b7b3290a452f70f358e14d3d"
+    },
+    "payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf": {
+      "mode": 420,
+      "sha256": "a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f"
+    },
+    "payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf": {
+      "mode": 420,
+      "sha256": "1b3bfa1ed5665a4ce3f9feb68d2d4e40e70bf8b4b7d9a3edd418f321b4e166a0"
+    },
+    "payload/client/data/flutter_assets/assets/fonts/jetbrains-mono/OFL.txt": {
+      "mode": 420,
+      "sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad"
+    },
+    "payload/client/data/flutter_assets/assets/icons/archive.svg": {
+      "mode": 420,
+      "sha256": "ce0af5c71277130bdad501ed06249213e9805b0dd445e3da97af3bc6d32909ce"
+    },
+    "payload/client/data/flutter_assets/assets/icons/check.svg": {
+      "mode": 420,
+      "sha256": "f5914af9d3a5dc1e77ebf278af6488dc17b1935d96f50f1f8dae78e625b1c5b1"
+    },
+    "payload/client/data/flutter_assets/assets/icons/chevron-down.svg": {
+      "mode": 420,
+      "sha256": "640e640066191f6b26236c4c24f487ed9ba4493ba0d33b480f930825dffecfbc"
+    },
+    "payload/client/data/flutter_assets/assets/icons/chevron-right.svg": {
+      "mode": 420,
+      "sha256": "43b39bf125cee680dd474f2f0ba9c7bfc370df2087280cacfd5d62499a7cbb0b"
+    },
+    "payload/client/data/flutter_assets/assets/icons/ellipsis-vertical.svg": {
+      "mode": 420,
+      "sha256": "af99c5d1a45eef4e3f59765b1440fe51f39169bb057473fdaf925666f57e8e5a"
+    },
+    "payload/client/data/flutter_assets/assets/icons/git-branch.svg": {
+      "mode": 420,
+      "sha256": "b7dd6ca760a47aec57e93a6f1b9bc0a8ed835490193ca317a7bfbc497fcfaae4"
+    },
+    "payload/client/data/flutter_assets/assets/icons/info.svg": {
+      "mode": 420,
+      "sha256": "62505fa5145acd57a45fd93f49df02f1e0dc86d4c43c75a2ca69fabe8fe554b3"
+    },
+    "payload/client/data/flutter_assets/assets/icons/layers.svg": {
+      "mode": 420,
+      "sha256": "00adb0125d9692f03e4a64037e07499c3df717fd0aa5f575c0783501f2904a37"
+    },
+    "payload/client/data/flutter_assets/assets/icons/menu.svg": {
+      "mode": 420,
+      "sha256": "69a8310d92c0f2a42fd3127e50c2f7bebd87398d32c5def66db31a180e88f277"
+    },
+    "payload/client/data/flutter_assets/assets/icons/message-square.svg": {
+      "mode": 420,
+      "sha256": "39ef163029f320935e3becc3e478393ce5ea4e4b917d4d8f222542eb5758f741"
+    },
+    "payload/client/data/flutter_assets/assets/icons/pencil.svg": {
+      "mode": 420,
+      "sha256": "6de88a293c49416488fb0c5c79177d7af7c855240391b99a561062498a179ab4"
+    },
+    "payload/client/data/flutter_assets/assets/icons/plus.svg": {
+      "mode": 420,
+      "sha256": "6e1a6a826663c1a4fbd4fd8f8bf9d7765fa965744d4e1d6791f163ba378b2b09"
+    },
+    "payload/client/data/flutter_assets/assets/icons/rotate-ccw.svg": {
+      "mode": 420,
+      "sha256": "837375539874ab13b51911472d13a947582ff79cb5b926388b279d03914d64bb"
+    },
+    "payload/client/data/flutter_assets/assets/icons/send.svg": {
+      "mode": 420,
+      "sha256": "789dbefe721043a8fbb92c7eac0904c59cfab83b2faaa9ee924a53d9f6045933"
+    },
+    "payload/client/data/flutter_assets/assets/icons/settings.svg": {
+      "mode": 420,
+      "sha256": "0b22e51750886c65688e044434a578191799ffcf4afea4cbf60fdf2e9ea90327"
+    },
+    "payload/client/data/flutter_assets/assets/icons/trash-2.svg": {
+      "mode": 420,
+      "sha256": "958240c9bacb4dca8f2ea66e08a817eab4ace45c9e72086472095edaa7cc3a9f"
+    },
+    "payload/client/data/flutter_assets/assets/icons/x.svg": {
+      "mode": 420,
+      "sha256": "046d06a319a47b847e1053e557f1cddf3fad2f53abad2150e563cec9ad404d92"
+    },
+    "payload/client/data/flutter_assets/fonts/MaterialIcons-Regular.otf": {
+      "mode": 420,
+      "sha256": "18599bf8d55b88517d3fd8e3ddb0537adc438a644ced6e3f8aa17f8940002f48"
+    },
+    "payload/client/data/flutter_assets/pubspec.yaml": {
+      "mode": 420,
+      "sha256": "e6747a862cba572dd1dc3888db82654fbdafd04dfbe25a5edfbdc5d1c6fe5f24"
+    },
+    "payload/client/data/flutter_assets/shaders/ink_sparkle.frag": {
+      "mode": 420,
+      "sha256": "1fe8436a743884cb65078fe8c7b38e18f5365f2a2961270916f426fd13c604af"
+    },
+    "payload/client/data/flutter_assets/shaders/stretch_effect.frag": {
+      "mode": 420,
+      "sha256": "bc7599dbbbaab310efe41520574138d21fb18a88c8fe4495ed79315309336f6f"
+    },
+    "payload/client/data/flutter_assets/version.json": {
+      "mode": 420,
+      "sha256": "0c6c30f9d459e2914d5f2ad5cc7f45910f638ba3a970b470c7758c0f95fca116"
+    },
+    "payload/client/data/icudtl.dat": {
+      "mode": 420,
+      "sha256": "325a86063d26334c2eabe1743cea073b612540fbf3d8fc2ef0b5708e3763a8c7"
+    },
+    "payload/client/lib/libapp.so": {
+      "mode": 420,
+      "sha256": "fbda56150a15d794a0e6c39bc5159baadbd5a21c7046c7faa6731bc902156e59"
+    },
+    "payload/client/lib/libflutter_linux_gtk.so": {
+      "mode": 420,
+      "sha256": "c6992ba778360217695a8193828286ae73c971e0e1f47bdb1b98c5190497cb24"
+    },
+    "payload/client/share/applications/dev.smith.smith_client.desktop": {
+      "mode": 420,
+      "sha256": "25f825eaaa693ad4cfa0480b83d2f054fc58919604150915a773b91cf6ed5621"
+    },
+    "payload/client/share/pixmaps/dev.smith.smith_client.png": {
+      "mode": 420,
+      "sha256": "79afede7f466a59eaa01759d246fc0c9d05d63ec7d361c6c27e0a93c37d85e53"
+    },
+    "payload/client/smith_backend/runtime/cpu/LICENSE.GPL-3": {
+      "mode": 420,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    "payload/client/smith_backend/runtime/cpu/LICENSE.libgomp": {
+      "mode": 420,
+      "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79"
+    },
+    "payload/client/smith_backend/runtime/cpu/LICENSE.llama.cpp": {
+      "mode": 420,
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-base.so.0": {
+      "mode": 420,
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-alderlake.so": {
+      "mode": 420,
+      "sha256": "d95ec54730283295bc7363ec842b5e1512dbae6523bf8106679a37f688ed367d"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-cannonlake.so": {
+      "mode": 420,
+      "sha256": "2bdf5f493bf9472112c4bd5e936cb0cd3f7235b1b4b3c636dea9d1a9489c1558"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-cascadelake.so": {
+      "mode": 420,
+      "sha256": "d8ecf1f83ed1a52f50f911853ac356047988d41cecf9121a8e0f3e94b6989c47"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-cooperlake.so": {
+      "mode": 420,
+      "sha256": "c43f344af8f30204e0cbecc51f4755f45eecaa56c723ee87ba35e4f887a36909"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-haswell.so": {
+      "mode": 420,
+      "sha256": "bd7740021e3cbce4b49270e8c12f6a3bc6eed8cec00e548276d84a298d5911fa"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-icelake.so": {
+      "mode": 420,
+      "sha256": "c6579106a5f0f1cfd76902218c247858ffc5098c4f2f099864df643aa1d03f62"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-ivybridge.so": {
+      "mode": 420,
+      "sha256": "02a7121ebdb06b07cc0b7cc449aa724b6270edf5314113a65f90bd3fb863df45"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-piledriver.so": {
+      "mode": 420,
+      "sha256": "8c7d57b1a5afc23f688cefd70a835ff76e9be5bdd6c73dcfc649433118ec2ec2"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-sandybridge.so": {
+      "mode": 420,
+      "sha256": "3e04318845d9a9d9c8133d79925331a36d185f19fc9153b672c5b35da5c2b614"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-sapphirerapids.so": {
+      "mode": 420,
+      "sha256": "357dea6e5099e87d547e49a1f101f3e7c2e4283e4cf9518a4c220c0dcbe07b5f"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-skylakex.so": {
+      "mode": 420,
+      "sha256": "e10d82e3c08f91397cc265e3a13199e92f994f1e6961cd1777a484175233ea7b"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-sse42.so": {
+      "mode": 420,
+      "sha256": "7012b4dcad03e5649cccda277fdeb1950872dd5bf5957680ad8d1a2d403898d0"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-x64.so": {
+      "mode": 420,
+      "sha256": "6f92125d03aa6041931e1fb576d735fe2104120dcd80785559ff7cb7440b60ea"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml-cpu-zen4.so": {
+      "mode": 420,
+      "sha256": "16adc0bc91d85382b508430667415d4fc472221c5ac1d9ef6a88eb38db4ba50e"
+    },
+    "payload/client/smith_backend/runtime/cpu/libggml.so.0": {
+      "mode": 420,
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82"
+    },
+    "payload/client/smith_backend/runtime/cpu/libgomp.so.1": {
+      "mode": 420,
+      "sha256": "135f3c8f006d2fe5e68e51281c7974cb991a03de3bfb3593d68d174dfcf854d1"
+    },
+    "payload/client/smith_backend/runtime/cpu/libllama-common.so.0": {
+      "mode": 420,
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d"
+    },
+    "payload/client/smith_backend/runtime/cpu/libllama-server-impl.so": {
+      "mode": 420,
+      "sha256": "0cb1fd100e7f018ac9ac0c5a3fc12aeef4cbe7614bb7ca8c686ec7d01c30810f"
+    },
+    "payload/client/smith_backend/runtime/cpu/libllama.so.0": {
+      "mode": 420,
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba"
+    },
+    "payload/client/smith_backend/runtime/cpu/libmtmd.so.0": {
+      "mode": 420,
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea"
+    },
+    "payload/client/smith_backend/runtime/cpu/llama-server": {
+      "mode": 493,
+      "sha256": "5faf410bbbc00a1b94b09ee01623699f255365628dfa73b1ee552d9e52a2231d"
+    },
+    "payload/client/smith_backend/runtime/vulkan/LICENSE.GPL-3": {
+      "mode": 420,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    "payload/client/smith_backend/runtime/vulkan/LICENSE.libgomp": {
+      "mode": 420,
+      "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79"
+    },
+    "payload/client/smith_backend/runtime/vulkan/LICENSE.llama.cpp": {
+      "mode": 420,
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-base.so.0": {
+      "mode": 420,
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-alderlake.so": {
+      "mode": 420,
+      "sha256": "d95ec54730283295bc7363ec842b5e1512dbae6523bf8106679a37f688ed367d"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-cannonlake.so": {
+      "mode": 420,
+      "sha256": "2bdf5f493bf9472112c4bd5e936cb0cd3f7235b1b4b3c636dea9d1a9489c1558"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-cascadelake.so": {
+      "mode": 420,
+      "sha256": "d8ecf1f83ed1a52f50f911853ac356047988d41cecf9121a8e0f3e94b6989c47"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-cooperlake.so": {
+      "mode": 420,
+      "sha256": "c43f344af8f30204e0cbecc51f4755f45eecaa56c723ee87ba35e4f887a36909"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-haswell.so": {
+      "mode": 420,
+      "sha256": "bd7740021e3cbce4b49270e8c12f6a3bc6eed8cec00e548276d84a298d5911fa"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-icelake.so": {
+      "mode": 420,
+      "sha256": "c6579106a5f0f1cfd76902218c247858ffc5098c4f2f099864df643aa1d03f62"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-ivybridge.so": {
+      "mode": 420,
+      "sha256": "02a7121ebdb06b07cc0b7cc449aa724b6270edf5314113a65f90bd3fb863df45"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-piledriver.so": {
+      "mode": 420,
+      "sha256": "8c7d57b1a5afc23f688cefd70a835ff76e9be5bdd6c73dcfc649433118ec2ec2"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-sandybridge.so": {
+      "mode": 420,
+      "sha256": "3e04318845d9a9d9c8133d79925331a36d185f19fc9153b672c5b35da5c2b614"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-sapphirerapids.so": {
+      "mode": 420,
+      "sha256": "357dea6e5099e87d547e49a1f101f3e7c2e4283e4cf9518a4c220c0dcbe07b5f"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-skylakex.so": {
+      "mode": 420,
+      "sha256": "e10d82e3c08f91397cc265e3a13199e92f994f1e6961cd1777a484175233ea7b"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-sse42.so": {
+      "mode": 420,
+      "sha256": "7012b4dcad03e5649cccda277fdeb1950872dd5bf5957680ad8d1a2d403898d0"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-x64.so": {
+      "mode": 420,
+      "sha256": "6f92125d03aa6041931e1fb576d735fe2104120dcd80785559ff7cb7440b60ea"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-cpu-zen4.so": {
+      "mode": 420,
+      "sha256": "16adc0bc91d85382b508430667415d4fc472221c5ac1d9ef6a88eb38db4ba50e"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml-vulkan.so": {
+      "mode": 420,
+      "sha256": "bc151ce7639cf16e3c89006ae697ef3db77b2be5ebf398c8e7db32b4e7b0a4d0"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libggml.so.0": {
+      "mode": 420,
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libgomp.so.1": {
+      "mode": 420,
+      "sha256": "135f3c8f006d2fe5e68e51281c7974cb991a03de3bfb3593d68d174dfcf854d1"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libllama-common.so.0": {
+      "mode": 420,
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libllama-server-impl.so": {
+      "mode": 420,
+      "sha256": "0cb1fd100e7f018ac9ac0c5a3fc12aeef4cbe7614bb7ca8c686ec7d01c30810f"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libllama.so.0": {
+      "mode": 420,
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba"
+    },
+    "payload/client/smith_backend/runtime/vulkan/libmtmd.so.0": {
+      "mode": 420,
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea"
+    },
+    "payload/client/smith_backend/runtime/vulkan/llama-server": {
+      "mode": 493,
+      "sha256": "5faf410bbbc00a1b94b09ee01623699f255365628dfa73b1ee552d9e52a2231d"
+    },
+    "payload/client/smith_backend/smith-service": {
+      "mode": 493,
+      "sha256": "9bb0228c61bf762c7899f15f7105924d666b6e534102a33c6ecea8779fee77ec"
+    },
+    "payload/client/smith_client": {
+      "mode": 493,
+      "sha256": "7b382f05aeba0d226adc32922fd0a2cdbf78e2275131c18539e39bb40fc0562c"
+    },
+    "payload/service/smith-service": {
+      "mode": 493,
+      "sha256": "9bb0228c61bf762c7899f15f7105924d666b6e534102a33c6ecea8779fee77ec"
+    },
+    "smith-installer": {
+      "mode": 493,
+      "sha256": "31bd28001946170943d2b6f25226130f110e7aa8fc9b669222c6257040bdf1b7"
+    },
+    "smith-installer-ui": {
+      "mode": 493,
+      "sha256": "00d87b2598c318b811abcc6bfab141c064c0698b620ac89d7820f80d63ead375"
+    }
+  },
+  "checksums_sha256": "4ec26d065ec733c00580c07a453aff278f94c121780c07d04b1eb78c661d9a19",
+  "client_file_provenance": {
+    "data/flutter_assets/AssetManifest.bin": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "25c950ac28a1dd34820d68b0577b58b7df4853a9a23737c6f8ced98de3b098ec"
+    },
+    "data/flutter_assets/FontManifest.json": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "19febf4802fb9b9b90037050e004bce4cda6eb59727b89cecec94f83553d3aff"
+    },
+    "data/flutter_assets/NOTICES.Z": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "112207764f940fb52106a1f90fe509f7d5c08fc14a108ce6608ec6518051af61"
+    },
+    "data/flutter_assets/NativeAssetsManifest.json": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "9548a31e4a048135c1d94f919328bfb62ae2c7bb3cab96557c7941daa97776cb"
+    },
+    "data/flutter_assets/assets/README.md": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "bce8709527e4a9e43147d09ed35bd822e4b42ff827debdffc24b042b09660af0"
+    },
+    "data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "0bede3debdea8488bbb927f8f0650d915073209734a67fe8cd5a3320b572511c"
+    },
+    "data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "fe11304a5fe956d5744e9b6a246cc83d90425245e75a62230044966ca96a7f50"
+    },
+    "data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "c9417148ce13f8fa7d2d5c9180bbc141f72aa0d814ffeb280f6904dc2b1bbd7a"
+    },
+    "data/flutter_assets/assets/fonts/ibm-plex-mono/OFL.txt": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "91c25c350d3cac39da2736d74f7ba37ef648f5237a4e330a240615bc8d8c4360"
+    },
+    "data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "31c92d01a8a08528b718a43addf0ad3df0af2ca4b7b3290a452f70f358e14d3d"
+    },
+    "data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f"
+    },
+    "data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "1b3bfa1ed5665a4ce3f9feb68d2d4e40e70bf8b4b7d9a3edd418f321b4e166a0"
+    },
+    "data/flutter_assets/assets/fonts/jetbrains-mono/OFL.txt": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad"
+    },
+    "data/flutter_assets/assets/icons/archive.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "ce0af5c71277130bdad501ed06249213e9805b0dd445e3da97af3bc6d32909ce"
+    },
+    "data/flutter_assets/assets/icons/check.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "f5914af9d3a5dc1e77ebf278af6488dc17b1935d96f50f1f8dae78e625b1c5b1"
+    },
+    "data/flutter_assets/assets/icons/chevron-down.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "640e640066191f6b26236c4c24f487ed9ba4493ba0d33b480f930825dffecfbc"
+    },
+    "data/flutter_assets/assets/icons/chevron-right.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "43b39bf125cee680dd474f2f0ba9c7bfc370df2087280cacfd5d62499a7cbb0b"
+    },
+    "data/flutter_assets/assets/icons/ellipsis-vertical.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "af99c5d1a45eef4e3f59765b1440fe51f39169bb057473fdaf925666f57e8e5a"
+    },
+    "data/flutter_assets/assets/icons/git-branch.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "b7dd6ca760a47aec57e93a6f1b9bc0a8ed835490193ca317a7bfbc497fcfaae4"
+    },
+    "data/flutter_assets/assets/icons/info.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "62505fa5145acd57a45fd93f49df02f1e0dc86d4c43c75a2ca69fabe8fe554b3"
+    },
+    "data/flutter_assets/assets/icons/layers.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "00adb0125d9692f03e4a64037e07499c3df717fd0aa5f575c0783501f2904a37"
+    },
+    "data/flutter_assets/assets/icons/menu.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "69a8310d92c0f2a42fd3127e50c2f7bebd87398d32c5def66db31a180e88f277"
+    },
+    "data/flutter_assets/assets/icons/message-square.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "39ef163029f320935e3becc3e478393ce5ea4e4b917d4d8f222542eb5758f741"
+    },
+    "data/flutter_assets/assets/icons/pencil.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "6de88a293c49416488fb0c5c79177d7af7c855240391b99a561062498a179ab4"
+    },
+    "data/flutter_assets/assets/icons/plus.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "6e1a6a826663c1a4fbd4fd8f8bf9d7765fa965744d4e1d6791f163ba378b2b09"
+    },
+    "data/flutter_assets/assets/icons/rotate-ccw.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "837375539874ab13b51911472d13a947582ff79cb5b926388b279d03914d64bb"
+    },
+    "data/flutter_assets/assets/icons/send.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "789dbefe721043a8fbb92c7eac0904c59cfab83b2faaa9ee924a53d9f6045933"
+    },
+    "data/flutter_assets/assets/icons/settings.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "0b22e51750886c65688e044434a578191799ffcf4afea4cbf60fdf2e9ea90327"
+    },
+    "data/flutter_assets/assets/icons/trash-2.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "958240c9bacb4dca8f2ea66e08a817eab4ace45c9e72086472095edaa7cc3a9f"
+    },
+    "data/flutter_assets/assets/icons/x.svg": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "046d06a319a47b847e1053e557f1cddf3fad2f53abad2150e563cec9ad404d92"
+    },
+    "data/flutter_assets/fonts/MaterialIcons-Regular.otf": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "18599bf8d55b88517d3fd8e3ddb0537adc438a644ced6e3f8aa17f8940002f48"
+    },
+    "data/flutter_assets/pubspec.yaml": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "e6747a862cba572dd1dc3888db82654fbdafd04dfbe25a5edfbdc5d1c6fe5f24"
+    },
+    "data/flutter_assets/shaders/ink_sparkle.frag": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "1fe8436a743884cb65078fe8c7b38e18f5365f2a2961270916f426fd13c604af"
+    },
+    "data/flutter_assets/shaders/stretch_effect.frag": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "bc7599dbbbaab310efe41520574138d21fb18a88c8fe4495ed79315309336f6f"
+    },
+    "data/flutter_assets/version.json": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "0c6c30f9d459e2914d5f2ad5cc7f45910f638ba3a970b470c7758c0f95fca116"
+    },
+    "data/icudtl.dat": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "325a86063d26334c2eabe1743cea073b612540fbf3d8fc2ef0b5708e3763a8c7"
+    },
+    "lib/libapp.so": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "fbda56150a15d794a0e6c39bc5159baadbd5a21c7046c7faa6731bc902156e59"
+    },
+    "lib/libflutter_linux_gtk.so": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "c6992ba778360217695a8193828286ae73c971e0e1f47bdb1b98c5190497cb24"
+    },
+    "share/applications/dev.smith.smith_client.desktop": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "25f825eaaa693ad4cfa0480b83d2f054fc58919604150915a773b91cf6ed5621"
+    },
+    "share/pixmaps/dev.smith.smith_client.png": {
+      "mode": 420,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "79afede7f466a59eaa01759d246fc0c9d05d63ec7d361c6c27e0a93c37d85e53"
+    },
+    "smith_backend/runtime/cpu/LICENSE.GPL-3": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    "smith_backend/runtime/cpu/LICENSE.libgomp": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79"
+    },
+    "smith_backend/runtime/cpu/LICENSE.llama.cpp": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d"
+    },
+    "smith_backend/runtime/cpu/libggml-base.so.0": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-alderlake.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "d95ec54730283295bc7363ec842b5e1512dbae6523bf8106679a37f688ed367d"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-cannonlake.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "2bdf5f493bf9472112c4bd5e936cb0cd3f7235b1b4b3c636dea9d1a9489c1558"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-cascadelake.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "d8ecf1f83ed1a52f50f911853ac356047988d41cecf9121a8e0f3e94b6989c47"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-cooperlake.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "c43f344af8f30204e0cbecc51f4755f45eecaa56c723ee87ba35e4f887a36909"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-haswell.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "bd7740021e3cbce4b49270e8c12f6a3bc6eed8cec00e548276d84a298d5911fa"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-icelake.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "c6579106a5f0f1cfd76902218c247858ffc5098c4f2f099864df643aa1d03f62"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-ivybridge.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "02a7121ebdb06b07cc0b7cc449aa724b6270edf5314113a65f90bd3fb863df45"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-piledriver.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "8c7d57b1a5afc23f688cefd70a835ff76e9be5bdd6c73dcfc649433118ec2ec2"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-sandybridge.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "3e04318845d9a9d9c8133d79925331a36d185f19fc9153b672c5b35da5c2b614"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-sapphirerapids.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "357dea6e5099e87d547e49a1f101f3e7c2e4283e4cf9518a4c220c0dcbe07b5f"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-skylakex.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "e10d82e3c08f91397cc265e3a13199e92f994f1e6961cd1777a484175233ea7b"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-sse42.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "7012b4dcad03e5649cccda277fdeb1950872dd5bf5957680ad8d1a2d403898d0"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-x64.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "6f92125d03aa6041931e1fb576d735fe2104120dcd80785559ff7cb7440b60ea"
+    },
+    "smith_backend/runtime/cpu/libggml-cpu-zen4.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "16adc0bc91d85382b508430667415d4fc472221c5ac1d9ef6a88eb38db4ba50e"
+    },
+    "smith_backend/runtime/cpu/libggml.so.0": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82"
+    },
+    "smith_backend/runtime/cpu/libgomp.so.1": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "135f3c8f006d2fe5e68e51281c7974cb991a03de3bfb3593d68d174dfcf854d1"
+    },
+    "smith_backend/runtime/cpu/libllama-common.so.0": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d"
+    },
+    "smith_backend/runtime/cpu/libllama-server-impl.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "0cb1fd100e7f018ac9ac0c5a3fc12aeef4cbe7614bb7ca8c686ec7d01c30810f"
+    },
+    "smith_backend/runtime/cpu/libllama.so.0": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba"
+    },
+    "smith_backend/runtime/cpu/libmtmd.so.0": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea"
+    },
+    "smith_backend/runtime/cpu/llama-server": {
+      "mode": 493,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "5faf410bbbc00a1b94b09ee01623699f255365628dfa73b1ee552d9e52a2231d"
+    },
+    "smith_backend/runtime/vulkan/LICENSE.GPL-3": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    "smith_backend/runtime/vulkan/LICENSE.libgomp": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79"
+    },
+    "smith_backend/runtime/vulkan/LICENSE.llama.cpp": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d"
+    },
+    "smith_backend/runtime/vulkan/libggml-base.so.0": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-alderlake.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "d95ec54730283295bc7363ec842b5e1512dbae6523bf8106679a37f688ed367d"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-cannonlake.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "2bdf5f493bf9472112c4bd5e936cb0cd3f7235b1b4b3c636dea9d1a9489c1558"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-cascadelake.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "d8ecf1f83ed1a52f50f911853ac356047988d41cecf9121a8e0f3e94b6989c47"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-cooperlake.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "c43f344af8f30204e0cbecc51f4755f45eecaa56c723ee87ba35e4f887a36909"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-haswell.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "bd7740021e3cbce4b49270e8c12f6a3bc6eed8cec00e548276d84a298d5911fa"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-icelake.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "c6579106a5f0f1cfd76902218c247858ffc5098c4f2f099864df643aa1d03f62"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-ivybridge.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "02a7121ebdb06b07cc0b7cc449aa724b6270edf5314113a65f90bd3fb863df45"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-piledriver.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "8c7d57b1a5afc23f688cefd70a835ff76e9be5bdd6c73dcfc649433118ec2ec2"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-sandybridge.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "3e04318845d9a9d9c8133d79925331a36d185f19fc9153b672c5b35da5c2b614"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-sapphirerapids.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "357dea6e5099e87d547e49a1f101f3e7c2e4283e4cf9518a4c220c0dcbe07b5f"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-skylakex.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "e10d82e3c08f91397cc265e3a13199e92f994f1e6961cd1777a484175233ea7b"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-sse42.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "7012b4dcad03e5649cccda277fdeb1950872dd5bf5957680ad8d1a2d403898d0"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-x64.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "6f92125d03aa6041931e1fb576d735fe2104120dcd80785559ff7cb7440b60ea"
+    },
+    "smith_backend/runtime/vulkan/libggml-cpu-zen4.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "16adc0bc91d85382b508430667415d4fc472221c5ac1d9ef6a88eb38db4ba50e"
+    },
+    "smith_backend/runtime/vulkan/libggml-vulkan.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "bc151ce7639cf16e3c89006ae697ef3db77b2be5ebf398c8e7db32b4e7b0a4d0"
+    },
+    "smith_backend/runtime/vulkan/libggml.so.0": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82"
+    },
+    "smith_backend/runtime/vulkan/libgomp.so.1": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "135f3c8f006d2fe5e68e51281c7974cb991a03de3bfb3593d68d174dfcf854d1"
+    },
+    "smith_backend/runtime/vulkan/libllama-common.so.0": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d"
+    },
+    "smith_backend/runtime/vulkan/libllama-server-impl.so": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "0cb1fd100e7f018ac9ac0c5a3fc12aeef4cbe7614bb7ca8c686ec7d01c30810f"
+    },
+    "smith_backend/runtime/vulkan/libllama.so.0": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba"
+    },
+    "smith_backend/runtime/vulkan/libmtmd.so.0": {
+      "mode": 420,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea"
+    },
+    "smith_backend/runtime/vulkan/llama-server": {
+      "mode": 493,
+      "origin": "verified_installed_runtime_or_missing_desktop",
+      "sha256": "5faf410bbbc00a1b94b09ee01623699f255365628dfa73b1ee552d9e52a2231d"
+    },
+    "smith_backend/smith-service": {
+      "mode": 493,
+      "origin": "current_tested_service",
+      "sha256": "9bb0228c61bf762c7899f15f7105924d666b6e534102a33c6ecea8779fee77ec"
+    },
+    "smith_client": {
+      "mode": 493,
+      "origin": "current_flutter_release_bundle",
+      "sha256": "7b382f05aeba0d226adc32922fd0a2cdbf78e2275131c18539e39bb40fc0562c"
+    }
+  },
+  "client_manifest_sha256": "1ab95b09a2a2096b5f31ff6d5037386446ea2b40a3fd882caeb33c707b366d4d",
+  "explicitly_omitted_build_files": {
+    "lib/native_assets.json": {
+      "reason": "Exact redundant empty manifest; packaged NativeAssetsManifest.json is byte-identical",
+      "sha256": "9548a31e4a048135c1d94f919328bfb62ae2c7bb3cab96557c7941daa97776cb"
+    }
+  },
+  "flutter_build_inventory": {
+    "data": {
+      "type": "directory"
+    },
+    "data/flutter_assets": {
+      "type": "directory"
+    },
+    "data/flutter_assets/AssetManifest.bin": {
+      "sha256": "25c950ac28a1dd34820d68b0577b58b7df4853a9a23737c6f8ced98de3b098ec",
+      "type": "file"
+    },
+    "data/flutter_assets/FontManifest.json": {
+      "sha256": "19febf4802fb9b9b90037050e004bce4cda6eb59727b89cecec94f83553d3aff",
+      "type": "file"
+    },
+    "data/flutter_assets/NOTICES.Z": {
+      "sha256": "112207764f940fb52106a1f90fe509f7d5c08fc14a108ce6608ec6518051af61",
+      "type": "file"
+    },
+    "data/flutter_assets/NativeAssetsManifest.json": {
+      "sha256": "9548a31e4a048135c1d94f919328bfb62ae2c7bb3cab96557c7941daa97776cb",
+      "type": "file"
+    },
+    "data/flutter_assets/assets": {
+      "type": "directory"
+    },
+    "data/flutter_assets/assets/README.md": {
+      "sha256": "bce8709527e4a9e43147d09ed35bd822e4b42ff827debdffc24b042b09660af0",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/fonts": {
+      "type": "directory"
+    },
+    "data/flutter_assets/assets/fonts/ibm-plex-mono": {
+      "type": "directory"
+    },
+    "data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf": {
+      "sha256": "0bede3debdea8488bbb927f8f0650d915073209734a67fe8cd5a3320b572511c",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf": {
+      "sha256": "fe11304a5fe956d5744e9b6a246cc83d90425245e75a62230044966ca96a7f50",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf": {
+      "sha256": "c9417148ce13f8fa7d2d5c9180bbc141f72aa0d814ffeb280f6904dc2b1bbd7a",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/fonts/ibm-plex-mono/OFL.txt": {
+      "sha256": "91c25c350d3cac39da2736d74f7ba37ef648f5237a4e330a240615bc8d8c4360",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/fonts/jetbrains-mono": {
+      "type": "directory"
+    },
+    "data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf": {
+      "sha256": "31c92d01a8a08528b718a43addf0ad3df0af2ca4b7b3290a452f70f358e14d3d",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf": {
+      "sha256": "a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf": {
+      "sha256": "1b3bfa1ed5665a4ce3f9feb68d2d4e40e70bf8b4b7d9a3edd418f321b4e166a0",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/fonts/jetbrains-mono/OFL.txt": {
+      "sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons": {
+      "type": "directory"
+    },
+    "data/flutter_assets/assets/icons/archive.svg": {
+      "sha256": "ce0af5c71277130bdad501ed06249213e9805b0dd445e3da97af3bc6d32909ce",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/check.svg": {
+      "sha256": "f5914af9d3a5dc1e77ebf278af6488dc17b1935d96f50f1f8dae78e625b1c5b1",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/chevron-down.svg": {
+      "sha256": "640e640066191f6b26236c4c24f487ed9ba4493ba0d33b480f930825dffecfbc",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/chevron-right.svg": {
+      "sha256": "43b39bf125cee680dd474f2f0ba9c7bfc370df2087280cacfd5d62499a7cbb0b",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/ellipsis-vertical.svg": {
+      "sha256": "af99c5d1a45eef4e3f59765b1440fe51f39169bb057473fdaf925666f57e8e5a",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/git-branch.svg": {
+      "sha256": "b7dd6ca760a47aec57e93a6f1b9bc0a8ed835490193ca317a7bfbc497fcfaae4",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/info.svg": {
+      "sha256": "62505fa5145acd57a45fd93f49df02f1e0dc86d4c43c75a2ca69fabe8fe554b3",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/layers.svg": {
+      "sha256": "00adb0125d9692f03e4a64037e07499c3df717fd0aa5f575c0783501f2904a37",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/menu.svg": {
+      "sha256": "69a8310d92c0f2a42fd3127e50c2f7bebd87398d32c5def66db31a180e88f277",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/message-square.svg": {
+      "sha256": "39ef163029f320935e3becc3e478393ce5ea4e4b917d4d8f222542eb5758f741",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/pencil.svg": {
+      "sha256": "6de88a293c49416488fb0c5c79177d7af7c855240391b99a561062498a179ab4",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/plus.svg": {
+      "sha256": "6e1a6a826663c1a4fbd4fd8f8bf9d7765fa965744d4e1d6791f163ba378b2b09",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/rotate-ccw.svg": {
+      "sha256": "837375539874ab13b51911472d13a947582ff79cb5b926388b279d03914d64bb",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/send.svg": {
+      "sha256": "789dbefe721043a8fbb92c7eac0904c59cfab83b2faaa9ee924a53d9f6045933",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/settings.svg": {
+      "sha256": "0b22e51750886c65688e044434a578191799ffcf4afea4cbf60fdf2e9ea90327",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/trash-2.svg": {
+      "sha256": "958240c9bacb4dca8f2ea66e08a817eab4ace45c9e72086472095edaa7cc3a9f",
+      "type": "file"
+    },
+    "data/flutter_assets/assets/icons/x.svg": {
+      "sha256": "046d06a319a47b847e1053e557f1cddf3fad2f53abad2150e563cec9ad404d92",
+      "type": "file"
+    },
+    "data/flutter_assets/fonts": {
+      "type": "directory"
+    },
+    "data/flutter_assets/fonts/MaterialIcons-Regular.otf": {
+      "sha256": "18599bf8d55b88517d3fd8e3ddb0537adc438a644ced6e3f8aa17f8940002f48",
+      "type": "file"
+    },
+    "data/flutter_assets/pubspec.yaml": {
+      "sha256": "e6747a862cba572dd1dc3888db82654fbdafd04dfbe25a5edfbdc5d1c6fe5f24",
+      "type": "file"
+    },
+    "data/flutter_assets/shaders": {
+      "type": "directory"
+    },
+    "data/flutter_assets/shaders/ink_sparkle.frag": {
+      "sha256": "1fe8436a743884cb65078fe8c7b38e18f5365f2a2961270916f426fd13c604af",
+      "type": "file"
+    },
+    "data/flutter_assets/shaders/stretch_effect.frag": {
+      "sha256": "bc7599dbbbaab310efe41520574138d21fb18a88c8fe4495ed79315309336f6f",
+      "type": "file"
+    },
+    "data/flutter_assets/version.json": {
+      "sha256": "0c6c30f9d459e2914d5f2ad5cc7f45910f638ba3a970b470c7758c0f95fca116",
+      "type": "file"
+    },
+    "data/icudtl.dat": {
+      "sha256": "325a86063d26334c2eabe1743cea073b612540fbf3d8fc2ef0b5708e3763a8c7",
+      "type": "file"
+    },
+    "lib": {
+      "type": "directory"
+    },
+    "lib/libapp.so": {
+      "sha256": "fbda56150a15d794a0e6c39bc5159baadbd5a21c7046c7faa6731bc902156e59",
+      "type": "file"
+    },
+    "lib/libflutter_linux_gtk.so": {
+      "sha256": "c6992ba778360217695a8193828286ae73c971e0e1f47bdb1b98c5190497cb24",
+      "type": "file"
+    },
+    "lib/native_assets.json": {
+      "sha256": "9548a31e4a048135c1d94f919328bfb62ae2c7bb3cab96557c7941daa97776cb",
+      "type": "file"
+    },
+    "share": {
+      "type": "directory"
+    },
+    "share/applications": {
+      "type": "directory"
+    },
+    "share/applications/dev.smith.smith_client.desktop": {
+      "sha256": "25f825eaaa693ad4cfa0480b83d2f054fc58919604150915a773b91cf6ed5621",
+      "type": "file"
+    },
+    "share/pixmaps": {
+      "type": "directory"
+    },
+    "share/pixmaps/dev.smith.smith_client.png": {
+      "sha256": "79afede7f466a59eaa01759d246fc0c9d05d63ec7d361c6c27e0a93c37d85e53",
+      "type": "file"
+    },
+    "smith_client": {
+      "sha256": "7b382f05aeba0d226adc32922fd0a2cdbf78e2275131c18539e39bb40fc0562c",
+      "type": "file"
+    }
+  },
+  "flutter_executable_sha256": "7b382f05aeba0d226adc32922fd0a2cdbf78e2275131c18539e39bb40fc0562c",
+  "flutter_libapp_sha256": "fbda56150a15d794a0e6c39bc5159baadbd5a21c7046c7faa6731bc902156e59",
+  "guard_sha256": "b8c512c1b80382783bec41a76204815a9ddf3c234cee6c8ad6e721295e2489f0",
+  "installation_performed": false,
+  "installed_before_after_sha256": {
+    "app_state": "fe823204974daab7302aa9533a6bd372b5e9327a11eef3a1fdf314c1a61797af",
+    "desktop": "4286a1ce375583782b06fcf4b1a66300781894fc5a33d99913c3114ac02368c8",
+    "local_dev_ledger": "1cd468a8b41cdf2bf5360b912ffe652a4e09610564f0b1657261de4e63ac2b38",
+    "receipt_dev_ledger": "83ddf6af168d98ce9c01685fc11877cb92a3444ed80d80e03e95283a824df638",
+    "shim": "334eccba17e4789fcee7be2ffb5bf1a0839a898923688a4b8e8dbfc62849aa6e",
+    "standalone": "b7790a585d568373c0c3207e34ea4bbbeec080f863ff9ecec0a08b60a25c9d10",
+    "unit": "d1deeb0d1525212edbc56bbb5a8eb72bec327612e97f7b30aba045cf95c49ab3"
+  },
+  "installed_helper_before_after_sha256": "b7790a585d568373c0c3207e34ea4bbbeec080f863ff9ecec0a08b60a25c9d10",
+  "installed_unchanged": true,
+  "log_sha256": "77ee8078469f2f7b9b64a0fad51927ef81dbc7e906342c664708a23c2b2caf16",
+  "network_used": false,
+  "package": ".smith-dev-coordinated-candidate",
+  "package_manifest_sha256": "c7db57d1ccec4f8efb55c30b7913a4139b67e640e46b19f9ac0cf4777166114a",
+  "product_executable_run": false,
+  "retained_package_manifest_sha256": "3844315097350f64946466a20b970b14603de07d5fbdcf0162229ae78ebf557d",
+  "running_service_before_after_sha256": "b7790a585d568373c0c3207e34ea4bbbeec080f863ff9ecec0a08b60a25c9d10",
+  "running_service_pid": 321258,
+  "runtime_state_modified": false,
+  "selected_installed_release_sha256": "9f670a310ffc1f883c5fdb6b93ebcebdf93b035de8928b8ba98e789b0c9343fb",
+  "service_sha256": "9bb0228c61bf762c7899f15f7105924d666b6e534102a33c6ecea8779fee77ec",
+  "source_binding": "Prior independent source snapshot plus exact Delete/minimal-UI deltas; final scoped logs and existing build hashes retained; no new compile",
+  "source_sha256": {
+    "client/assets/README.md": "bce8709527e4a9e43147d09ed35bd822e4b42ff827debdffc24b042b09660af0",
+    "client/assets/fonts/ibm-plex-mono/IBMPlexMono-Medium.ttf": "0bede3debdea8488bbb927f8f0650d915073209734a67fe8cd5a3320b572511c",
+    "client/assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.ttf": "fe11304a5fe956d5744e9b6a246cc83d90425245e75a62230044966ca96a7f50",
+    "client/assets/fonts/ibm-plex-mono/IBMPlexMono-SemiBold.ttf": "c9417148ce13f8fa7d2d5c9180bbc141f72aa0d814ffeb280f6904dc2b1bbd7a",
+    "client/assets/fonts/ibm-plex-mono/OFL.txt": "91c25c350d3cac39da2736d74f7ba37ef648f5237a4e330a240615bc8d8c4360",
+    "client/assets/fonts/jetbrains-mono/JetBrainsMono-Medium.ttf": "31c92d01a8a08528b718a43addf0ad3df0af2ca4b7b3290a452f70f358e14d3d",
+    "client/assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf": "a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f",
+    "client/assets/fonts/jetbrains-mono/JetBrainsMono-SemiBold.ttf": "1b3bfa1ed5665a4ce3f9feb68d2d4e40e70bf8b4b7d9a3edd418f321b4e166a0",
+    "client/assets/fonts/jetbrains-mono/OFL.txt": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad",
+    "client/assets/icons/archive.svg": "ce0af5c71277130bdad501ed06249213e9805b0dd445e3da97af3bc6d32909ce",
+    "client/assets/icons/check.svg": "f5914af9d3a5dc1e77ebf278af6488dc17b1935d96f50f1f8dae78e625b1c5b1",
+    "client/assets/icons/chevron-down.svg": "640e640066191f6b26236c4c24f487ed9ba4493ba0d33b480f930825dffecfbc",
+    "client/assets/icons/chevron-right.svg": "43b39bf125cee680dd474f2f0ba9c7bfc370df2087280cacfd5d62499a7cbb0b",
+    "client/assets/icons/ellipsis-vertical.svg": "af99c5d1a45eef4e3f59765b1440fe51f39169bb057473fdaf925666f57e8e5a",
+    "client/assets/icons/git-branch.svg": "b7dd6ca760a47aec57e93a6f1b9bc0a8ed835490193ca317a7bfbc497fcfaae4",
+    "client/assets/icons/info.svg": "62505fa5145acd57a45fd93f49df02f1e0dc86d4c43c75a2ca69fabe8fe554b3",
+    "client/assets/icons/layers.svg": "00adb0125d9692f03e4a64037e07499c3df717fd0aa5f575c0783501f2904a37",
+    "client/assets/icons/menu.svg": "69a8310d92c0f2a42fd3127e50c2f7bebd87398d32c5def66db31a180e88f277",
+    "client/assets/icons/message-square.svg": "39ef163029f320935e3becc3e478393ce5ea4e4b917d4d8f222542eb5758f741",
+    "client/assets/icons/pencil.svg": "6de88a293c49416488fb0c5c79177d7af7c855240391b99a561062498a179ab4",
+    "client/assets/icons/plus.svg": "6e1a6a826663c1a4fbd4fd8f8bf9d7765fa965744d4e1d6791f163ba378b2b09",
+    "client/assets/icons/rotate-ccw.svg": "837375539874ab13b51911472d13a947582ff79cb5b926388b279d03914d64bb",
+    "client/assets/icons/send.svg": "789dbefe721043a8fbb92c7eac0904c59cfab83b2faaa9ee924a53d9f6045933",
+    "client/assets/icons/settings.svg": "0b22e51750886c65688e044434a578191799ffcf4afea4cbf60fdf2e9ea90327",
+    "client/assets/icons/trash-2.svg": "958240c9bacb4dca8f2ea66e08a817eab4ace45c9e72086472095edaa7cc3a9f",
+    "client/assets/icons/x.svg": "046d06a319a47b847e1053e557f1cddf3fad2f53abad2150e563cec9ad404d92",
+    "client/lib/agents.dart": "75419e3df7f776c9c48410a40af54b7bf487790fb1b6cd8cb383dd1e0c130dff",
+    "client/lib/agents_controller.dart": "fced6f27a98766f7990e1bfc223861223a5c7f7553799416a551cd69deaa727c",
+    "client/lib/app_api.dart": "966b36173e8d92465dbe8b996897f1a88d340afb4f740730e543b1934479585e",
+    "client/lib/app_v2.dart": "5107ed0c82e2bdcceada81299308e8bb28f88ebb4c24b94074ce6378c2d13296",
+    "client/lib/boot.dart": "17562b7e6f11a4964e116fbd26d60ddc3ec695cf4a4393896219d60783da97e0",
+    "client/lib/chat_panel.dart": "8379cde798f2e67c08f39e01171537cd419b32c3865264cb3843dc878cb97221",
+    "client/lib/chat_title.dart": "48a8ed2b0fe725c2cf60b42f09e9b55a23b9518c200d4afa814977113390a632",
+    "client/lib/cloud_routing.dart": "44aaaeea35ba4a74556c737f87dbded379d381b3ec015c758bdd5de22571e930",
+    "client/lib/control_api.dart": "60e20db307d9366d7d7b55b78d7d389cf30ca9841045e983473b9cd664bd0e5a",
+    "client/lib/dev_jobs.dart": "605e8f14c2e3ab3a8d32e31e0a66d8f55b2a9041e8f270ca3a6a729c8c341ea1",
+    "client/lib/dev_jobs_controller.dart": "511b5ef3dcdd6e526a1a8e083e1b87dbdcb7cba2b2f978663ee5353b9dae2dd9",
+    "client/lib/instructions.dart": "d7d0cfc38cb2798af3a70952266187ffe06149cb5020a6e748dd5906ca05f164",
+    "client/lib/instructions_controller.dart": "93515c37bbaf3ca52499cefffebcc9c0f4aef9cd389ec5fead79a06d743f59ee",
+    "client/lib/main.dart": "a02898304d21120a55bdf5cd7f9bc09b603a635610fb974720d753ec1abccbb1",
+    "client/lib/message_queue.dart": "fbda56a1ff727b047968205737ae53ae4067a75f6c7bab4ca8c31a7afb2d5335",
+    "client/lib/message_timestamps.dart": "4fdbfd428d8c0a6f4c099a9a41c29cae61d4e00fa4532ef591800f6dea98a08d",
+    "client/lib/native_control.dart": "1d4e138a91c706547e20a8a57b2b934d686d10460b12098cd70ef612615c5a35",
+    "client/lib/projects.dart": "a3215c380b173648d29ef3d8dd14cb1b7a8905b2398d5e044fe168f1a8a25fad",
+    "client/lib/projects_controller.dart": "73420981b27d666b227eb80dd361b8fea7e35dd38ef13ee89732d160b325cac2",
+    "client/lib/queue_exit_guard.dart": "c3e7291ada63a6e674b224e7d58d13a3fda6f058d87656ca5f64412c4307f181",
+    "client/lib/text_chat.dart": "a59238126e37897fe546265f4be4868240a0760ff97e367ea591842e4f614a84",
+    "client/lib/ui/agents_view.dart": "2e1557314b70c5f763f1f6147077052685d83c2881a893ab4402cc883d3c7b03",
+    "client/lib/ui/archived_chats_dialog.dart": "844666e863badd41043823d6d057b4c3d1eb61fe81f72f354ff4ddc0a23326b2",
+    "client/lib/ui/build_info.dart": "5bc961589be93647793520054e3cc8244f056a1a630f5cf41b10461655ce7886",
+    "client/lib/ui/chat_sidebar.dart": "1b4175c786313f84caf0e259d6ba385d3dff4c0ce03fd1fe79fe3d72b14ddaf8",
+    "client/lib/ui/cloud_selector.dart": "33976a675b4401624d24a7425647db11b3d80ace5c0aac38881a26db3c39af3e",
+    "client/lib/ui/dev_jobs_view.dart": "91c269b0563f6a87d1bdbb9c08abe118af972ea98663105e327ef5971a54cc33",
+    "client/lib/ui/instructions_view.dart": "d145a9b48cdbde2b39d8b1ff83d9c561764b51f5a33ca3d817a8a67814cd7813",
+    "client/lib/ui/message_header.dart": "9f50d5f537923bbc68b26d43c8670b815837549f7ab89227e89d4b851779b909",
+    "client/lib/ui/message_queue_panel.dart": "8124702e76d97eab78a12be42e036d891cb5aca4eac2fd4498163addc84556af",
+    "client/lib/ui/projects_view.dart": "44c6f39123a951698e8bb4ad7ad09247378cf82873c8140c7747f73fdedaa63e",
+    "client/lib/ui/settings_view.dart": "42fff6eb25c8f9a3462af4140a7abd3086f9a92689cb86c25bcc849cfbb58959",
+    "client/lib/ui/smith_app_header.dart": "08fe04e4b4e9291aecf140f06c1fb2116c7225099f97984c1877dea48e11c50a",
+    "client/lib/ui/smith_icon.dart": "8a65e677f125b525bd3f40659e740a073900fc6f50b7df90696eaeb78386b402",
+    "client/lib/ui/smith_theme.dart": "6c419c17b5d6f8dae63dff42dccdaeca79d5ba56bbb8663d6bdbe0db44473b3d",
+    "client/lib/ui/smith_workspace.dart": "fef14bd33f86bd5ae89aa70ae8a1766d9bc81674443f28d3ebb20b95005a35d0",
+    "client/lib/ui/split_workspace.dart": "e9d85ff64c849469423be64c9f4aa2cf47eb9ec888d7085d974990324faa20d6",
+    "client/lib/ui/workspace_entrance.dart": "2463f18f77ee882ea7d071e0c5908c216795bebf13ba11289a412020a488672c",
+    "client/lib/window_launcher.dart": "9b2f3aaa4a47d22df959764374b0fb058cc0a8d0c03163878780acc130361ebf",
+    "client/lib/workspace_cloud.dart": "12e27d0bf7082b62511a9cbed914f117cc5df1f8c37806ba9b952c7bf9af656a",
+    "client/lib/workspace_controller.dart": "4fa61018d16b44eadb2127f2364a70e7dbc36ce6bfbe9c0508bfd212f2543a87",
+    "client/lib/workspace_preferences.dart": "2a31da5d14c38db93d418761bbb577f9d4ebe6566aa4d7be6d1aa833ba7dece4",
+    "client/lib/workspace_preferences_io.dart": "4093d7ed4d6a653370ee5659bb40c5c44451df32141a8e46c0c289cdbdcbbdda",
+    "client/pubspec.lock": "178749674ab914b84358b357706ab7119c99cd68c382862c83481b1ee1890051",
+    "client/pubspec.yaml": "e6747a862cba572dd1dc3888db82654fbdafd04dfbe25a5edfbdc5d1c6fe5f24",
+    "client/test/agents_controller_test.dart": "fbaec68c245100801eac87cf4508b855d5f06172e45b2c41bee998c4a350c9ea",
+    "client/test/agents_golden_test.dart": "ddbb0fee59271f9a4212d533d8066d87f8d51649ff771f209659cc7cb233094d",
+    "client/test/agents_navigation_test.dart": "484cf27b454f66f4a9c094788b5648dcccc84676864c63339230f31c4b8a84a0",
+    "client/test/agents_protocol_test.dart": "623eabd8df369ea3777fb3b9e86c03cb8ca29b10c9e25875731c4031a3917547",
+    "client/test/agents_view_test.dart": "a40741910ddd136d8a1f79594bbdf4cc3ad4a989153e95afc9e1e348c8a74562",
+    "client/test/app_api_test.dart": "c7f560296c7f4045c58c85da6af137f1a0b9ef8e7b9af02bd8e357b74712fec4",
+    "client/test/app_fakes.dart": "ca9badbd3bda514fe9cac17b518d30020c3ebfadaca3e58ceeef5b12fa9a35aa",
+    "client/test/app_reply_json_test.dart": "f9b60df0db89e75fe3cab8bb24084edfdc9233ee2197a3e4b12cfb1a68f3bd2c",
+    "client/test/assurance_regression_test.dart": "0a985cdd899e2b4e711bcf0091f7326c7f04c7b138dd574cab9c6c3a01723e4f",
+    "client/test/boot_test.dart": "4b9cda071681dc457f05d394e564e2ebe2a8d46c928e9a6cfeead1f09b4171a8",
+    "client/test/boot_visual_test.dart": "fc61ef001834fd1a3e9deb1c48e6ce2e12a9de03489c51279b40960c45cc3f30",
+    "client/test/chat_presentation_test.dart": "42714e08ebe5b048ba8e6d245967336ee6f5e6cf68df13cf6ab6343210aa48c3",
+    "client/test/chat_scroll_anchor_test.dart": "f46dd7bf7056d51ba2a766cbd539b0dd00826c2847153f3c5f22f17a5ee0912b",
+    "client/test/chat_scrollbar_test.dart": "207ae1173d49f951a39d9002b0aebe45e6fc6c8c549889f239cdb8bc48eeca67",
+    "client/test/chat_title_test.dart": "9e4617446644e1c546d6fbd0db13c76dee78488bd10d9a8233fb5756a51a90aa",
+    "client/test/cloud_catalog_expansion_test.dart": "24ee05090a23d717a5fe41a8c0829c6ad4bc33dd5922b0bf8243bc7711d574bb",
+    "client/test/cloud_picker_test.dart": "16acb6ba1ceb091d894da5eb24f1d5bfe38a42c0bee3c97c271b58f03ac7bf85",
+    "client/test/cloud_picker_visual_test.dart": "057cef540c8d35f403fcbf25bd509a649521f2af23b8986a41755fc72996ebc4",
+    "client/test/cloud_protocol_test.dart": "454972fa7c86e07489ea0ffffbc1df5fac77f1c4c4f715992cbd381de9956cd5",
+    "client/test/cloud_retry_test.dart": "a70cf3b72a7956a6764aa4b89364e403c4af69b3de748b7cdec6d4b9698dfdfc",
+    "client/test/cloud_routing_test.dart": "a64b5eecf77b016fad0d4f524f8a42c832c132dac5c1e7053165cb0e8b3bcee9",
+    "client/test/cloud_selector_widget_test.dart": "3018e96b4f4a44af9a1a6943c68add016834ed969f2803defcb4214d71d5fc45",
+    "client/test/compact_workspace_navigation_test.dart": "a591ab6b817a91c4d8fa0309f4458f11d245b0de8f23e4ac4c0fa3917d79dce4",
+    "client/test/connection_polling_test.dart": "1a01f5c03e2deee998cf28b094329005dfd6e71e5c88099ef48096920ed8a750",
+    "client/test/connection_review_regression_test.dart": "516dbafeabd08817bbcf54e2814c7e6935330cc007545056bd8b2ea47efd19bd",
+    "client/test/conversation_test.dart": "a45ed0df3a5512c8a0118347e8d43983414af8e2c74d7c92dfc1ee07f7166dc0",
+    "client/test/dev_jobs_controller_list_test.dart": "10daaa138dac263bb6a1f392dd59d58d289ca07e6cb5c0975988d4307be77aed",
+    "client/test/dev_jobs_list_view_test.dart": "051e886ead0d856c3112c15e05ea8a2ec070d19d251d516f337af5f400a5c6a0",
+    "client/test/dev_jobs_test.dart": "ebe4b1f3f918b26b6bb2e95a33b99105a91787dc13a7562f4de30100b4b56d06",
+    "client/test/dev_navigation_golden_test.dart": "9f16b4d9de9fce1ca49b6b926a0e744a63d07ece87e415e7b68152db93b9085e",
+    "client/test/dev_navigation_test.dart": "01759b4f860366e58ca4b37511feb0f0951970d4942614656c3a57db53c18675",
+    "client/test/failures/compact-editor-400x400-text2_isolatedDiff.png": "3a4624d082e33ca7e9858dbfc0de5a1383dbc3ae26179b216d66731e1a93d80f",
+    "client/test/failures/compact-editor-400x400-text2_maskedDiff.png": "2a56a57db5421cda6fbe53786e1656837c257d44060f8582c0f05afea8e7f14a",
+    "client/test/failures/compact-editor-400x400-text2_masterImage.png": "1303f01194de3ccd605008d3f7500f6693c47edf5cef8c3f42f5fbffb39534fd",
+    "client/test/failures/compact-editor-400x400-text2_testImage.png": "c70675d948bff396b35d6e5474acdf35fd227e4d8c090a5f45c1d459c2de623f",
+    "client/test/failures/compact-editor-400x400_isolatedDiff.png": "f505fb015d2ee60ba4b56cf9688db640eadbd0359589d585b54ec0e9b70ddb33",
+    "client/test/failures/compact-editor-400x400_maskedDiff.png": "e1d355308adb14ff71578c68d9e3ae53a8e8967d2dcb9c0ad0debfd8a15501f4",
+    "client/test/failures/compact-editor-400x400_masterImage.png": "3138e790ccd9b7b5808188e89e63a8f3f06bd2757e707b10e1dcff9858488b8c",
+    "client/test/failures/compact-editor-400x400_testImage.png": "1261a570f39d50d0a65480cbb84c1cb35f71c6dcc3ab1bce5684640058ca5da0",
+    "client/test/failures/compact-text2-360ms_isolatedDiff.png": "0a72f0e381b40cf698c569960a7d11b19287c66979a8ed089c7648e5d5a9d89a",
+    "client/test/failures/compact-text2-360ms_maskedDiff.png": "5344e37b4c5e8cb9f7dc38c7cac8612c4b2c222d5d601b6fce6b2b8af37892ae",
+    "client/test/failures/compact-text2-360ms_masterImage.png": "40ae8f88dc7c88437ab0c4604ac4951ed8123a06760808e9ab9f3bd3e34692ef",
+    "client/test/failures/compact-text2-360ms_testImage.png": "c941744996be6485e1cf485e735ebe889dc39232b957233f4fc9d60f3c437140",
+    "client/test/failures/compact-text2-620ms_isolatedDiff.png": "0a72f0e381b40cf698c569960a7d11b19287c66979a8ed089c7648e5d5a9d89a",
+    "client/test/failures/compact-text2-620ms_maskedDiff.png": "c3ccce1b779bd57d753f87808d33d4f23c564a2930637588fc8fef1d486aaff5",
+    "client/test/failures/compact-text2-620ms_masterImage.png": "feef203acf196510d695b733bd87b5624433843e714dfdd5ddd396610ed089f9",
+    "client/test/failures/compact-text2-620ms_testImage.png": "7949ec0a21aabb0a45ace6a99b214342ec116b7868e43b8516a8016cf2600c22",
+    "client/test/failures/desktop-160ms_isolatedDiff.png": "eceeb241cbcd4a596976b759f1fbac9d7520124d53aa6eb891f579c40d739b0e",
+    "client/test/failures/desktop-160ms_maskedDiff.png": "5d702c147937af54e611bb8dbc8ffe95417c64849466ffd7901a756cdf18ccf3",
+    "client/test/failures/desktop-160ms_masterImage.png": "b1ece5505127fbfdfa952beb981e2b5c5106a31dd8c011d354ea22b0469f903d",
+    "client/test/failures/desktop-160ms_testImage.png": "8f58e8b799f7cdd2df48777a6bf131e74e73e744870d97bad94fce7ab8e89cb0",
+    "client/test/failures/desktop-360ms_isolatedDiff.png": "d7c46c8c75630d5d9b0ed4f02cf0f983d344724e2b44b8b71917c0fcf59fe2a3",
+    "client/test/failures/desktop-360ms_maskedDiff.png": "88b4869c90331e8f99c3d85f60e8533726877c8c61ec868020663b3c27341443",
+    "client/test/failures/desktop-360ms_masterImage.png": "22a692f9fad58e475c3a86561b49585c59c8194bd59b56045d1a21f0c3219965",
+    "client/test/failures/desktop-360ms_testImage.png": "c68c3e84d4aabd5f30725f9a1dbd24b1da89f93ba55c9b415662b254924075e7",
+    "client/test/failures/fixture-archive-1440x900_isolatedDiff.png": "411f1ee8ac95156930250287afb8b8003ff27d2e4f631660888aefa7b2df0260",
+    "client/test/failures/fixture-archive-1440x900_maskedDiff.png": "def67cd714e9d56b56d6b1db6509d713fe31c0dfc5463460cb693446c74721f5",
+    "client/test/failures/fixture-archive-1440x900_masterImage.png": "3a90868ed7767683eccb66f6b1dffbc80b6784da8044bb6d238f78f9fedd9ffe",
+    "client/test/failures/fixture-archive-1440x900_testImage.png": "c6d49c844e0e7d5cb43e71a5f7f0ba66f0fcd91898b353e2dbdf2adf232b5a02",
+    "client/test/failures/fixture-archive-400x400-text2_isolatedDiff.png": "3828eeefd9176423a173c6fc23db83b2cc544778cec5973eecd4e6a9bf397e72",
+    "client/test/failures/fixture-archive-400x400-text2_maskedDiff.png": "22cfebedf566dd5f821daf6f23b1df5ac8fd8e8f037b868d2aa96287fa3d4bb7",
+    "client/test/failures/fixture-archive-400x400-text2_masterImage.png": "e85e8c7f99da29b8d0b09daf0e6699e7ddc3311b1e72f1dda707c02b92415a1e",
+    "client/test/failures/fixture-archive-400x400-text2_testImage.png": "add90bd89dc1c0a2166144a17e38489d2a842d646776939074b498028e1b1b37",
+    "client/test/failures/fixture-chat-1280x720_isolatedDiff.png": "c6247a533e25886e5f2f0f45049a26383462e825c5e092a0b7f67ad04f888b14",
+    "client/test/failures/fixture-chat-1280x720_maskedDiff.png": "836cea85b96a7a80bfceee229f87b38a2b604e3c377f9decb094b6f50043ace6",
+    "client/test/failures/fixture-chat-1280x720_masterImage.png": "dff84442d11e08ba32d45d9371c1fabbff552b19e266e96f2e124ec83b25202f",
+    "client/test/failures/fixture-chat-1280x720_testImage.png": "d9ab95c920072b1d4e924d7d39eac098a1e4d93c8172f84e84ec1262f59efb89",
+    "client/test/failures/fixture-chat-1440x900-ibm_isolatedDiff.png": "3beebe27143614a3eb63314c8d190992c4081c3e7f00eb9286d154fb984f6f74",
+    "client/test/failures/fixture-chat-1440x900-ibm_maskedDiff.png": "9641f3134cbab83cf100db8ffac4335ab7b928ac9af69664cf0ee14775c21c09",
+    "client/test/failures/fixture-chat-1440x900-ibm_masterImage.png": "84df00e5bd8d041e1a2bb37f058fd79082077f11bc08951ee189dcbc1396a643",
+    "client/test/failures/fixture-chat-1440x900-ibm_testImage.png": "7c8521221ba84ad0a3eaf3bbc9321aea990f7120eaf858102d87ffdcee49b9e9",
+    "client/test/failures/fixture-chat-1440x900_isolatedDiff.png": "3beebe27143614a3eb63314c8d190992c4081c3e7f00eb9286d154fb984f6f74",
+    "client/test/failures/fixture-chat-1440x900_maskedDiff.png": "7b8b3394d86d3a7522cdea263851a584465be29608cf4b49660a6fa91b9e5a48",
+    "client/test/failures/fixture-chat-1440x900_masterImage.png": "e396ce94ac2b919905c1321bcec213012ec3f41f8ea9434cb81cb6c003873d7a",
+    "client/test/failures/fixture-chat-1440x900_testImage.png": "61d4b91cd2ca322f313b9a12a32ff4c4112e95c885af835be09f492d797ca349",
+    "client/test/failures/fixture-chat-400x400-text2_isolatedDiff.png": "d22617168bae49084349b1e590e5025f881636a3f9b624ecf10731dfe3d27ec5",
+    "client/test/failures/fixture-chat-400x400-text2_maskedDiff.png": "5d3a4c9fd5569991b13e2aa6d1ce953bf17a04a9ff4247db9bc368f0c6926926",
+    "client/test/failures/fixture-chat-400x400-text2_masterImage.png": "c9ba1b5f07c2925f27ad16926ba829bea00f43b579db7f4e378c13c3f32d7e6f",
+    "client/test/failures/fixture-chat-400x400-text2_testImage.png": "401406c1a57ae7b0ddc370c34fbb8795d1a2ea21af89e299f1f538adfd40fbc4",
+    "client/test/failures/fixture-chat-400x400_isolatedDiff.png": "3d0ccddcfb60cac564f9598dc28413de96e29670a3beb34d65a621613f761d43",
+    "client/test/failures/fixture-chat-400x400_maskedDiff.png": "063323c0dca437fd95b907da4ca4eaf7af712430002c3dca5f50d58011f46593",
+    "client/test/failures/fixture-chat-400x400_masterImage.png": "e7001f9953249dba7b7c254eb0ae16dc8aa3fd450e36d5195a13374f2564b5b9",
+    "client/test/failures/fixture-chat-400x400_testImage.png": "61fa553284e6eb9a7f6560589c2010276acd57733d1291566719976fbb6333ea",
+    "client/test/failures/fixture-chat-4200x2400_isolatedDiff.png": "c25eacdfe8512b1687f9f857d6998ea9fbe84fea1f5ea28266d48ab607722d4e",
+    "client/test/failures/fixture-chat-4200x2400_maskedDiff.png": "4fdc79bb6687c75240d9485fd2356762001211aa58decb852ac895b5be50086c",
+    "client/test/failures/fixture-chat-4200x2400_masterImage.png": "41ba8b984a4c3d78559dfa2ae76ca2e6a1ee5379d3b4a32488cd521e8d9816fc",
+    "client/test/failures/fixture-chat-4200x2400_testImage.png": "b1151d8c32c2636641137f70dc680afc58c1caec2f40d0c92b88269850942655",
+    "client/test/failures/fixture-history-400x400-text2_isolatedDiff.png": "96dc1889f4705ebe9d9e6cef4a5884b3689619108da5e649394e8a0b667dc03d",
+    "client/test/failures/fixture-history-400x400-text2_maskedDiff.png": "cb0269c9518e89316c685fe8d1f81c0568ad6f8235a667196fe25a6d380d9329",
+    "client/test/failures/fixture-history-400x400-text2_masterImage.png": "e51ef4b00568411f9fa0d98be8f9e96fe510b8693601b31bf01f6f1503aadaa9",
+    "client/test/failures/fixture-history-400x400-text2_testImage.png": "f2368bd8f5e7066c0349f191606b10453cfb0fe907a50b82c14c841444dfa9c0",
+    "client/test/failures/fixture-overflow-1440x900_isolatedDiff.png": "3beebe27143614a3eb63314c8d190992c4081c3e7f00eb9286d154fb984f6f74",
+    "client/test/failures/fixture-overflow-1440x900_maskedDiff.png": "0dacfc92bc7a9db2f6a9d85f4cc5aa479ea5b34826114deea600336334f87f4c",
+    "client/test/failures/fixture-overflow-1440x900_masterImage.png": "216c5185950f358be81df6184a8a5f2cae4cacae698a62710c38b9b40c9e6b93",
+    "client/test/failures/fixture-overflow-1440x900_testImage.png": "fc26d8f508162fd848b2ca1142640012d933489e6c0b745078dd94b8ee47d5b5",
+    "client/test/failures/fixture-overflow-400x400-text2_isolatedDiff.png": "96dc1889f4705ebe9d9e6cef4a5884b3689619108da5e649394e8a0b667dc03d",
+    "client/test/failures/fixture-overflow-400x400-text2_maskedDiff.png": "09001bd7ff545c2ea7f9488a436e7b5b33aca56f35030ee1fa1bbfc0a289db0b",
+    "client/test/failures/fixture-overflow-400x400-text2_masterImage.png": "5ae78fa8154c94c588721bcd1dfab1b9aa3f56a203fa271aa402476e24c5cee2",
+    "client/test/failures/fixture-overflow-400x400-text2_testImage.png": "59b8e5bb25cfeeb0634262141634e1d2bd3c6f39e6caf784e7a51313dcff79a2",
+    "client/test/failures/fixture-production-shell-1280x720_isolatedDiff.png": "c6247a533e25886e5f2f0f45049a26383462e825c5e092a0b7f67ad04f888b14",
+    "client/test/failures/fixture-production-shell-1280x720_maskedDiff.png": "3fb067e40a6457257b804797c134bd06e8702adbd0b7918d710c6cf07cbe4b7d",
+    "client/test/failures/fixture-production-shell-1280x720_masterImage.png": "1ec95f463850e7da4c7b650ed973896c0757cfa405cb3a559d6c057a4d766bd2",
+    "client/test/failures/fixture-production-shell-1280x720_testImage.png": "f8fbc2ff756a76900a40502295ed1f7db7f61a5f6a0d0e8c906411025b6d2fc2",
+    "client/test/failures/fixture-recovery-400x400-text2_isolatedDiff.png": "d22617168bae49084349b1e590e5025f881636a3f9b624ecf10731dfe3d27ec5",
+    "client/test/failures/fixture-recovery-400x400-text2_maskedDiff.png": "898cd3703b89de0627f6c1b3e0d4f83b155f6bc298f37ea4c01d14bb72dc8081",
+    "client/test/failures/fixture-recovery-400x400-text2_masterImage.png": "7117a44d860d049948796c68c0d13736ce18bf3447a7f7970c3b2bc1dcd84665",
+    "client/test/failures/fixture-recovery-400x400-text2_testImage.png": "43753e5003b8d6e62cab5525e8fcf43979ee5665533065582305d50fae089e7b",
+    "client/test/failures/fixture-recovery-details-400x400-text2_isolatedDiff.png": "a2c17be28d06d1e0f6d1a90ca51e7786d89c2751315699d6a91e4968b26a63b4",
+    "client/test/failures/fixture-recovery-details-400x400-text2_maskedDiff.png": "d8fac2e9537f381dec25dbd4d96a0a7bb4b3935c7bc7c57facdb017c46fa444b",
+    "client/test/failures/fixture-recovery-details-400x400-text2_masterImage.png": "15138af141152b92812a0889561b9f45b124ea16b320d50f7bdeb8822a559f2f",
+    "client/test/failures/fixture-recovery-details-400x400-text2_testImage.png": "6b2f0ba419e4589de71197c3abc6968da5f0df0ab8586d71b450cbd480ca0a1f",
+    "client/test/failures/fixture-settings-1440x900_isolatedDiff.png": "d95fea076d114bcfe6b3a50d6421f0a06dd14805689ea465dfde312649ffd72c",
+    "client/test/failures/fixture-settings-1440x900_maskedDiff.png": "9dc6948cad8049fa446832e18d18dac49e541d976b5315cf0d7b545371e63ec9",
+    "client/test/failures/fixture-settings-1440x900_masterImage.png": "4e94ad1b23cb11268b3af8e7ce8fc26b80f73614f9cf3e438e832d4241e86a66",
+    "client/test/failures/fixture-settings-1440x900_testImage.png": "66983de05501e84a798453c39833b40ad1deef01237954c0c1f841b867c9c420",
+    "client/test/failures/fixture-settings-400x400-text2_isolatedDiff.png": "f5b07a6aa9c5c7a46ba5c8e88963e32076171875a95197b33a7892aeeed831e1",
+    "client/test/failures/fixture-settings-400x400-text2_maskedDiff.png": "ac6938b07faf02df3418824156fd94c7807176dba16691727926f88cdaecccd2",
+    "client/test/failures/fixture-settings-400x400-text2_masterImage.png": "2d54f54a8b46ff269b31f952f4851d8b088e5c18adc14df60ad0dd2cd860be40",
+    "client/test/failures/fixture-settings-400x400-text2_testImage.png": "47879c382a3c9e66a998e0f7411c3ce85b4fc0bea4808271b3d7cafda7d8ad18",
+    "client/test/failures/mixed-grid-360ms_isolatedDiff.png": "5a817de62d91f594df7420e97c8c5b8f6a76f983571b8da337f678451aecaad4",
+    "client/test/failures/mixed-grid-360ms_maskedDiff.png": "1f1048f65cc993b7ace3132ffef26304bb59f3b9b282b4487dad1d9ac3214918",
+    "client/test/failures/mixed-grid-360ms_masterImage.png": "ab052c87d7dc7f5f724ec077dd0fc9633c73573f8ead2c6091c7519ee0943796",
+    "client/test/failures/mixed-grid-360ms_testImage.png": "7f61ef42dfdab3c5b752327cc79312e1308693439ec7db2eb98548d4c3060605",
+    "client/test/failures/mixed-grid-620ms_isolatedDiff.png": "5a817de62d91f594df7420e97c8c5b8f6a76f983571b8da337f678451aecaad4",
+    "client/test/failures/mixed-grid-620ms_maskedDiff.png": "e4cbe54a5cad7992e2f7fed112cc293f6a3ddd850715507338448d5f6d432614",
+    "client/test/failures/mixed-grid-620ms_masterImage.png": "c6856dce76dd77f464c53f21a69ad655b3f31f7ba0aa5ec4a20e1f8674eebbd4",
+    "client/test/failures/mixed-grid-620ms_testImage.png": "18aefb64734acb7b0c0e0cbbb4354cb968535e309d80049b395bc5f9a90cc7a5",
+    "client/test/failures/ultrawide-4200x2400_isolatedDiff.png": "3cd4960c83341271fd087ca95da62a5489586fc3d0fb17ec6d0f426c325ca8fe",
+    "client/test/failures/ultrawide-4200x2400_maskedDiff.png": "ce708203da414b19f553f3d411794b8f97eb9055857279ed430758fd7b334cf8",
+    "client/test/failures/ultrawide-4200x2400_masterImage.png": "25c4b489ef20b9fbad10822b9318e8868d77e24a07f3f3351948caf54fae8e86",
+    "client/test/failures/ultrawide-4200x2400_testImage.png": "281b3bfde863d6097d34538ac17481820195b83bfd7296ddeb5e960faf540bd0",
+    "client/test/failures/wide-1536x1024_isolatedDiff.png": "a3aa442b1f08b473b82d561559d9f35547cec4583617e505a06b0c474d3cfa0b",
+    "client/test/failures/wide-1536x1024_maskedDiff.png": "1bd1c80059dc00588b8cd83a8ac43a6181cefc96af316945455d7fe6fdf5359d",
+    "client/test/failures/wide-1536x1024_masterImage.png": "0c390279858fbe9404a3f041aafae0ecc5fe97f88e6bd65c99539e35a05ad492",
+    "client/test/failures/wide-1536x1024_testImage.png": "1e9dd37423055e476704d4be418e7396d6355c9ea1c7cfb1fd4c623cf8cfa3ce",
+    "client/test/failures/wide-collapsed-1536x1024_isolatedDiff.png": "47b84e67de6a2608c878a24fe04e19169250f2db7bad69f082bb4257e104e52c",
+    "client/test/failures/wide-collapsed-1536x1024_maskedDiff.png": "d376847d069289c24f714614a711257d643e79311b6ca982870a573786039091",
+    "client/test/failures/wide-collapsed-1536x1024_masterImage.png": "9def54b05b8c3b78e5c2544154d09f704ad17724411826232a7cfa964efa4a8c",
+    "client/test/failures/wide-collapsed-1536x1024_testImage.png": "a7330f9d99d1e2d7afc11ef2c79144725b674c2e9e928c0b307accf1f796c1dc",
+    "client/test/failures/wide-read-only-1536x1024_isolatedDiff.png": "49ac82a5a4d0c006a4470810865e89fcd4286c607ad9e2220dad511fc03a354c",
+    "client/test/failures/wide-read-only-1536x1024_maskedDiff.png": "50df27f6318408db1f6bbc556bde9fc1578b3c80acde2f20a82158b84f240c0a",
+    "client/test/failures/wide-read-only-1536x1024_masterImage.png": "a4f46356c0a2b3031100a6f56483743e83fe896d786217f10ad78d9a101ee40a",
+    "client/test/failures/wide-read-only-1536x1024_testImage.png": "7cbb69152ef897fc091a0605a1902358f2b9de24270a3dffd9ebe352bb1a55d6",
+    "client/test/goldens/agents/compact-editor-dpi2.png": "bc08b480f341d415922a28aac1028417928bc95a327c5020e713d192e5bc90fc",
+    "client/test/goldens/agents/compact-editor-text2.png": "7cdbfd00caaa45802ef13df0ba1f2964ab4d8e865bfbd22b2d85388e9a01a443",
+    "client/test/goldens/agents/compact-editor.png": "bc08b480f341d415922a28aac1028417928bc95a327c5020e713d192e5bc90fc",
+    "client/test/goldens/agents/compact-list-text2.png": "a778dad60b422fe3d5302319bf62be385e868e393387f30ae7b7ff5ce0d0faa1",
+    "client/test/goldens/agents/compact-list.png": "cf398b2cfc5491bdfd0ffa4a79b1190db973428af8293156c85458418d7574b1",
+    "client/test/goldens/agents/custom-editor.png": "9219cebdbd89d89c26a0774dce0df7d5051aaaf04474769f3e359e9a73237b90",
+    "client/test/goldens/agents/large-anchor.png": "e0e9bf5d7b6e17f07d392bfae206e635c73f5ec92c22db8ec83e8d513f170c8f",
+    "client/test/goldens/agents/new-editor.png": "7525dfbc2f19544cba21fd73d07711bdaa39f594ca3b98faa6781cd4795cd2e6",
+    "client/test/goldens/agents/wide.png": "73d15ed9ec1940ca4ec9e3f0e88f8cf88082f272a375122e138082be907c696b",
+    "client/test/goldens/boot/README.md": "7b619f1a4def9637a00087a3de12d508878c643068707e79075a955d274b850e",
+    "client/test/goldens/boot/hold.png": "a2708555fd59ae23c372f1a692fd2b4989674bf475452603abcc86471633e678",
+    "client/test/goldens/boot/intro.png": "043f14aeec5f144fd4e66ac1f7bf1b4b883692056c84d240b6316f3745dcd443",
+    "client/test/goldens/boot/outro.png": "91b75becfa5e20a2e7c0d76cef9f1a97b17de4aac49e87603ecee5fbe5300224",
+    "client/test/goldens/boot/repair-400x400-text2.png": "38ef0836bb567d0beae298c8127278046298425f5b659c829a5306a24c46c421",
+    "client/test/goldens/dev-navigation/compact-chooser-text2.png": "0d0a2424a3a09d688b9bbf83c5889e0119fbc9069756c04f8db7e03155d18931",
+    "client/test/goldens/dev-navigation/compact-root-text2.png": "3968dc793a5c8f6131f3b81cbf981acda3f760ab493707e7ca773c93ac19ccd7",
+    "client/test/goldens/dev-navigation/wide-expanded.png": "d12283c46717ff671fc92b671cb426a7ae2c58382298b0b3a0b68d01155be178",
+    "client/test/goldens/projects-layout/compact-editor-400x400-text2.png": "c5b3b3ad44cf732136716f5bb69d2c6798ea8356bbef0a645703d20d6ef56a74",
+    "client/test/goldens/projects-layout/compact-editor-400x400.png": "000d2709b4011d9ea1ac802dd7689be60e7dc7a09aa4879d326a1ff4d7922867",
+    "client/test/goldens/projects-layout/compact-list-400x400-text2.png": "e6ad709055e31c5855f389e28c8495b4842d07858bf5eda991892c889b668f81",
+    "client/test/goldens/projects-layout/compact-list-400x400.png": "c906da58c4b7cd9653d642d65a142ad89400dcd4594f07cfa81dda66591810f8",
+    "client/test/goldens/projects-layout/compact-repositories-400x400-text2.png": "eb5dfdf7e61e1c48a5d106dec52fdbcf42debcf77d22f188b26e8dfefc47f939",
+    "client/test/goldens/projects-layout/compact-repositories-400x400.png": "85d8731a0087a780d2e65ec264cf1755dddcbc40ca8a2778815d11447377030f",
+    "client/test/goldens/projects-layout/ultrawide-4200x2400.png": "281b3bfde863d6097d34538ac17481820195b83bfd7296ddeb5e960faf540bd0",
+    "client/test/goldens/projects-layout/wide-1536x1024.png": "1e9dd37423055e476704d4be418e7396d6355c9ea1c7cfb1fd4c623cf8cfa3ce",
+    "client/test/goldens/projects-layout/wide-collapsed-1536x1024.png": "a7330f9d99d1e2d7afc11ef2c79144725b674c2e9e928c0b307accf1f796c1dc",
+    "client/test/goldens/projects-layout/wide-read-only-1536x1024.png": "7cbb69152ef897fc091a0605a1902358f2b9de24270a3dffd9ebe352bb1a55d6",
+    "client/test/goldens/ui-redesign/README.md": "7be685a046096e9904d2ff8e3a214e9691ea6966b6656c4ea0d755602d126d09",
+    "client/test/goldens/ui-redesign/fixture-archive-1440x900.png": "c6d49c844e0e7d5cb43e71a5f7f0ba66f0fcd91898b353e2dbdf2adf232b5a02",
+    "client/test/goldens/ui-redesign/fixture-archive-400x400-text2.png": "add90bd89dc1c0a2166144a17e38489d2a842d646776939074b498028e1b1b37",
+    "client/test/goldens/ui-redesign/fixture-chat-1280x720.png": "d9ab95c920072b1d4e924d7d39eac098a1e4d93c8172f84e84ec1262f59efb89",
+    "client/test/goldens/ui-redesign/fixture-chat-1440x900-ibm.png": "7c8521221ba84ad0a3eaf3bbc9321aea990f7120eaf858102d87ffdcee49b9e9",
+    "client/test/goldens/ui-redesign/fixture-chat-1440x900.png": "61d4b91cd2ca322f313b9a12a32ff4c4112e95c885af835be09f492d797ca349",
+    "client/test/goldens/ui-redesign/fixture-chat-400x400-text2.png": "401406c1a57ae7b0ddc370c34fbb8795d1a2ea21af89e299f1f538adfd40fbc4",
+    "client/test/goldens/ui-redesign/fixture-chat-400x400.png": "61fa553284e6eb9a7f6560589c2010276acd57733d1291566719976fbb6333ea",
+    "client/test/goldens/ui-redesign/fixture-chat-4200x2400.png": "b1151d8c32c2636641137f70dc680afc58c1caec2f40d0c92b88269850942655",
+    "client/test/goldens/ui-redesign/fixture-history-400x400-text2.png": "f2368bd8f5e7066c0349f191606b10453cfb0fe907a50b82c14c841444dfa9c0",
+    "client/test/goldens/ui-redesign/fixture-overflow-1440x900.png": "fc26d8f508162fd848b2ca1142640012d933489e6c0b745078dd94b8ee47d5b5",
+    "client/test/goldens/ui-redesign/fixture-overflow-400x400-text2.png": "59b8e5bb25cfeeb0634262141634e1d2bd3c6f39e6caf784e7a51313dcff79a2",
+    "client/test/goldens/ui-redesign/fixture-production-shell-1280x720.png": "f8fbc2ff756a76900a40502295ed1f7db7f61a5f6a0d0e8c906411025b6d2fc2",
+    "client/test/goldens/ui-redesign/fixture-recovery-400x400-text2.png": "43753e5003b8d6e62cab5525e8fcf43979ee5665533065582305d50fae089e7b",
+    "client/test/goldens/ui-redesign/fixture-recovery-details-400x400-text2.png": "6b2f0ba419e4589de71197c3abc6968da5f0df0ab8586d71b450cbd480ca0a1f",
+    "client/test/goldens/ui-redesign/fixture-settings-1440x900.png": "66983de05501e84a798453c39833b40ad1deef01237954c0c1f841b867c9c420",
+    "client/test/goldens/ui-redesign/fixture-settings-400x400-text2.png": "47879c382a3c9e66a998e0f7411c3ce85b4fc0bea4808271b3d7cafda7d8ad18",
+    "client/test/goldens/workspace-entrance/README.md": "82e16cbee93b3fef0465f43cf17f500427026dbbf4b93275f1cd46925caab6cb",
+    "client/test/goldens/workspace-entrance/compact-text2-360ms.png": "c941744996be6485e1cf485e735ebe889dc39232b957233f4fc9d60f3c437140",
+    "client/test/goldens/workspace-entrance/compact-text2-620ms.png": "7949ec0a21aabb0a45ace6a99b214342ec116b7868e43b8516a8016cf2600c22",
+    "client/test/goldens/workspace-entrance/desktop-000ms.png": "4c770c0d8a9d1df7d90d5373aa3f88bdaf5a889f157500ddaa748bfa688fbd51",
+    "client/test/goldens/workspace-entrance/desktop-160ms.png": "8f58e8b799f7cdd2df48777a6bf131e74e73e744870d97bad94fce7ab8e89cb0",
+    "client/test/goldens/workspace-entrance/desktop-360ms.png": "c68c3e84d4aabd5f30725f9a1dbd24b1da89f93ba55c9b415662b254924075e7",
+    "client/test/goldens/workspace-entrance/desktop-620ms.png": "2886896fba53be52ab77f85289d7e6c9acfa3df618e550d1f04bb639cfc5f38e",
+    "client/test/goldens/workspace-entrance/mixed-grid-360ms.png": "7f61ef42dfdab3c5b752327cc79312e1308693439ec7db2eb98548d4c3060605",
+    "client/test/goldens/workspace-entrance/mixed-grid-620ms.png": "18aefb64734acb7b0c0e0cbbb4354cb968535e309d80049b395bc5f9a90cc7a5",
+    "client/test/instructions_controller_test.dart": "825d11674404dbea0f53a95d5de3a387a2b8eade7d9a26b683671599a2845a2d",
+    "client/test/instructions_protocol_test.dart": "152971d87ab96f86f2c3d2c33c67d6d9c2cc739276fd81989d02e682fa61d6ad",
+    "client/test/instructions_queue_test.dart": "ab04c6e29d16226a5a39874119edd887f0c21de137bd4241502966c8ec43dce4",
+    "client/test/instructions_shell_test.dart": "5b827aa39710dbaea03370d846e3eb5d51474d928697340c03fa4e50aa00dad5",
+    "client/test/instructions_view_test.dart": "741625d2d3050485529a33c7688850641dbd63441c785b061368b88b27423cdf",
+    "client/test/message_queue_assurance_test.dart": "a12039d57b49240389dea71dbb3e4866d4270ddae42f99a9624ab6bfd7186546",
+    "client/test/message_queue_controller_test.dart": "7e2aa10509c8a7d0df96dfdd9a63c37e49f596fa0381251a8cb1d4639753c29c",
+    "client/test/message_queue_remote_outcome_test.dart": "f4101ba150775ddca0ea84b2c53a91d32539eeade9e389d5b5251b40a7c3c67c",
+    "client/test/message_queue_ui_assurance_test.dart": "f34175e3fcd5fc81367761bf4c0d41ce390c8dbbe1d3b48a7b94f862391ca05c",
+    "client/test/message_queue_widget_test.dart": "214b64a28d1d0df532f0de8e5ff40010a99370c371b3d7e82b9ef3a3c2c9cfca",
+    "client/test/message_timestamp_widget_test.dart": "6a9a4fb3be2987cc59edf3f66145597d42c5f302dc6b49127a7067e4bab3fee5",
+    "client/test/message_timestamps_integration_test.dart": "d82f65dbf3a828e1187c243228e518a2935e3ca00d0d070b2146feee2f67e42c",
+    "client/test/message_timestamps_test.dart": "e4106731a94e61f89328af5ad5e853c608cdff58de78dee313d23199dec7aac5",
+    "client/test/multi_chat_widget_test.dart": "dbf74998e45c7e6cdd39c3cce0ff96bbc7168a1744483f53d4afb619afdf4974",
+    "client/test/native_control_test.dart": "7787000c7d0788cbd4c5d0a91bdf3e0daeed740fca02edb45551f95a8f60180c",
+    "client/test/new_window_test.dart": "53d6ae58c7f40ebf00927eed6d2be0bfabd0dc33742f96df782b9bbff8384d2c",
+    "client/test/optimistic_send_test.dart": "0afaa3da4b1624039b8161b8a8661574c180800f8cc3b2a535ec70568f14d475",
+    "client/test/projects_controller_test.dart": "b39a3541c41363f8ad065243a68eb7f6d3db37968b2745fedffe2ddf7e03d6e2",
+    "client/test/projects_layout_golden_test.dart": "7d3e513cb9eea746bf9d62329022d366e9d55bfbda7464382a6299d28adefd9b",
+    "client/test/projects_layout_test.dart": "e3cbfc12eec21e152e06887c68d7b77723c121818be73373de3128d693bc4e6e",
+    "client/test/projects_navigation_test.dart": "80453a35f8eae2650855edf5edd54ccc13765070d50dad204b964c14b9898359",
+    "client/test/projects_protocol_test.dart": "22096eb82a55a0e28cf8dddc47a18666c5244aaa1c4741bb3e830524181f267e",
+    "client/test/projects_simplification_test.dart": "be991f3af3cd6e5f9d7e431fe8e63e3a824c3233544a40cfda2c68b74d3de040",
+    "client/test/projects_view_test.dart": "1fbe8deb5308e703ba4ece309acafea962bdbde3b481f53068641b65e5427875",
+    "client/test/queue_exit_guard_test.dart": "83996acc09ad9e7c0ca1e0fbaf7e2c6df2974b16d7336e8ab704482b5552fd81",
+    "client/test/rust_agents_integration_test.dart": "122955b4ad54db55d278389ee1578a95666b21fff086ef7a32b1f00749e3b734",
+    "client/test/rust_cloud_integration_test.dart": "3d3565f99aa01c7f6b536adf2dcef38bac47a231b97bd4f2ac4ff0f457d13deb",
+    "client/test/rust_dev_jobs_integration_test.dart": "2faff627922d25e296e8f49895fe3e9a0b2db2fbe7351408c7eec10212b60c56",
+    "client/test/rust_projects_integration_test.dart": "0b39bfe419cd7a506636a9d14155f21415b2f30bdba743d982f723415e511511",
+    "client/test/rust_socket_integration_test.dart": "0aec031d284b0f85db0275312132cd374fac26afcf0a989cb14a910a1b37307a",
+    "client/test/settings_view_test.dart": "865278a3bef5f278733895552ead02ca1518cae2cd88b691481877d97098fae5",
+    "client/test/shared_header_test.dart": "e5b6ea7ed6acfabf9786360879c5594ba047391bb6066877e855d76322ff97ef",
+    "client/test/shell_action_authority_test.dart": "c5410e2181b1d975e1b8de62aa54b0a087b6f7adf488b812782355f931182b58",
+    "client/test/shell_pure_widgets_test.dart": "2e812de41fd8650d2140be7f0599b51f4116658bd4a0b63d4e06525d2fddc364",
+    "client/test/sidebar_expansion_test.dart": "4b56b71a6d3e502e3a85d46b9d2142511ebf1ccc1e6a88d15d25199608117e10",
+    "client/test/split_workspace_controller_test.dart": "f32dc828a871b46149328e40bbcec65cc87732c97539a1745d348fcab2431409",
+    "client/test/split_workspace_widget_test.dart": "e4d72ac24147cce2ded244d4cc57454995dde35a3efd4433e6822d3112326f03",
+    "client/test/text_chat_test.dart": "44d41fbedbaf3396d385f8d4ec2b36e9ae42cd6ce3caf84363af6b26daa340db",
+    "client/test/ui_foundation_assets_test.dart": "f0ae2c2f14ba7081c3abe7b6669679ac46ff1284e97cabc6a938f51382b0a107",
+    "client/test/ui_redesign_golden_test.dart": "348bbe1571648d42442ff28e7efb3ad40ed3539725c52735f6c13a5c23ea1636",
+    "client/test/widget_test.dart": "50e101cca3cbaec468103afbead44c45082f1bb8e4c0ab293c7b6ea31a39ee16",
+    "client/test/workspace_controller_test.dart": "2992ae82ec44e1e04799ee0cab77716a06285393999fd79fe5014c4efcddcc71",
+    "client/test/workspace_entrance_test.dart": "b029baafeb6e463ecb2ea32dd904cc837dd84c3b8279c4d4494e429ae17df7da",
+    "client/test/workspace_entrance_visual_test.dart": "5a5f265ab3b610f83cc483a864b80413401ee0d9c6b16ff1e576bc3c4287d677",
+    "client/test/workspace_preferences_test.dart": "e2dd1a3160aba8aa8c3c0663b73b98e29f060bea4ebf065c2ee8a9e857ebd6f7",
+    "client/test/workspace_restore_test.dart": "9da3dd8b89ecfefeb8ebf7cf53ca22924aadf5e8f0ce814511c0d53fd3092d0b",
+    "dagger/INSTALLER.md": "0bae5fb6c3c547b5199bd2f23a530aae0a37c5bdefb0ea4099f85c8ae6b8bcbc",
+    "dagger/README.md": "6057dfd08b691508ca82024283eb1416639c8f7338b839ab8bfb5e5734c4d8ef",
+    "dagger/dagger.json": "e825f7fa5c17534cab2d6ca193b80937677c5fc6b099858258650bfbe80d20ba",
+    "dagger/package.py": "e8f8c86340c885a5b8952888abd50527d1ea470f4cf10b1d806343233ca7e86f",
+    "dagger/pipeline.md": "072f6fc7235e181cf633d43446ceef44c040ebe0097d85ac7731093fa9a7ab7d",
+    "dagger/pyproject.toml": "a47ffc01969e3f986e63ab7f0c9be8c673f6b8357312553cf4a5f1f2eede080c",
+    "dagger/runtime.py": "e546565f0529e1e7e486cb013710465ca0403ec113fd710b659d3c4dacdd68f5",
+    "dagger/src/smith_next/__init__.py": "1e185ca06c301a4f9d93ff62475ce7b833f5a84425ee41a7af0afc54faf0c03b",
+    "dagger/src/smith_next/main.py": "1fad146c2caef24a09a4fa3792b6b3154bae93ec84dc8668921dccf6ead4dc1a",
+    "dagger/tests/test_package.py": "2ea8b2e06276c67d2cb209543b9e36e2f20f03a9647db9d835b3d6ae6a431b60",
+    "docs/ARCHITECTURE_DETAILS.md": "04cffc729ac4210d8546bcd79e19dad4cf40996caa401ee4075f3c4a49a31924",
+    "docs/DESIGN_DETAILS.md": "bdd03fe0376fd34e94a17d1de2247a8fcbad1fbdec90344bcb5c7b45a311aaac",
+    "docs/PROCESS_DETAILS.md": "d49669e05e6274c1bf5440f8ffa63bb167491a8e5e754e7e0256254364385235",
+    "docs/evidence/dev-buffered-frames/coordinated-candidate-prepare.py": "f2d0c50a5a7457bb372dd22ad787eb1b991695b97c952c8270b479c58c67cf0d",
+    "docs/evidence/dev-buffered-frames/coordinated-live-preflight.json": "b0c9626927a65bc6d38746cfc58f886d38ab51f2be41dbf6c48029e0dc0fbc7b",
+    "docs/evidence/dev-buffered-frames/delete-backend-build.log": "e46b954cdde2cbe781762f83cc1c9a36fa222572a051517ca0c0fb8af923afa5",
+    "docs/evidence/dev-buffered-frames/delete-backend-clippy-initial-failure.log": "919eadd77fc2a381744ba9a16dcdf9e5943e73cadbbc5c46889f304f1c43e77b",
+    "docs/evidence/dev-buffered-frames/delete-backend-clippy.log": "d032ca31f11a0a470fb89a9b7a21ca7cddd4096cb0b8cff5e8b9ec8b1288a992",
+    "docs/evidence/dev-buffered-frames/delete-backend-dev-tests.log": "0bc5641f67babe450625753eff47d9575d798ab052374e78e8dbbf06d6990a0d",
+    "docs/evidence/dev-buffered-frames/delete-backend-fmt.log": "90ce439aa55a027c7a08acebbcc45e9e0b0af1be75d44b790a10ef75547742d6",
+    "docs/evidence/dev-buffered-frames/delete-backend-local-first.log": "6285e3aa2cbfb71b60364a2036ec2b8e0189c2386de300556bc2ae4753a29b65",
+    "docs/evidence/dev-buffered-frames/delete-backend-local-initial.log": "ab576958d8985fa5fda78a9900927d3f6ab118d57efd3bd9d513ce58c511e327",
+    "docs/evidence/dev-buffered-frames/delete-backend-local-tests.log": "d16db9e69199c702f7770f92e82574802ca658d705bd70fbe51b5a99055190cf",
+    "docs/evidence/dev-buffered-frames/delete-backend-result.log": "6f7d2f4a808961fa92297749ca12076d436db6f71d58299d5b11265094771219",
+    "docs/evidence/dev-buffered-frames/delete-compiled-analyze-final.log": "7946fddc668721b19c3bb17192f02cb716340cf49354e983e98a2b8aaa82085a",
+    "docs/evidence/dev-buffered-frames/delete-compiled-analyze.log": "aea53eb17520ed3559f638df4191fca0ef10e327b561ee6330c88844c258bf11",
+    "docs/evidence/dev-buffered-frames/delete-compiled-build.log": "9d447298af47f2c4e8de59932b22242ba05ed431aec99a53116b894a568372fa",
+    "docs/evidence/dev-buffered-frames/delete-compiled-format-check.log": "bc0869f2cb683cce3a176ffbe0706d6c93c58b623c7d4960208983330f6471d4",
+    "docs/evidence/dev-buffered-frames/delete-compiled-format-final.log": "4a7e151493bcfa8d89c041890115dc29ad4ae6f0df808160334b5cd0c7ed729a",
+    "docs/evidence/dev-buffered-frames/delete-compiled-format.log": "725c489c9a5fd553d137988cf6b896198910d49f221b6bc6e4f226d156ad14a3",
+    "docs/evidence/dev-buffered-frames/delete-compiled-identity.json": "2ba1e21f8e2fd21f99722086432d1fc1dad1836e73ac8ad08bda53a5fc481d0e",
+    "docs/evidence/dev-buffered-frames/delete-compiled-test-final.log": "9c4132990370b2cf0ba7203f72711f9f7a249701354a6184b7b4aa80c0215420",
+    "docs/evidence/dev-buffered-frames/delete-compiled-test-initial.log": "e5e9cb96cb6a79e1b1fd820c64646833c7697ef90156a1ded27b3ec4e2da8d7a",
+    "docs/evidence/dev-buffered-frames/delete-compiled-test-second.log": "1495722c8257772abf13fba70dc63d7c8ccea79166bd14649b08a0d042fbbd1e",
+    "docs/evidence/dev-buffered-frames/delete-compiled-test-verified.log": "9c4132990370b2cf0ba7203f72711f9f7a249701354a6184b7b4aa80c0215420",
+    "docs/evidence/dev-buffered-frames/delete-controller-analyze-final.log": "9d9b3be5978f015cc2dbd50f4d9ca6c3b16dcace9212a52ee831d5c5040c703a",
+    "docs/evidence/dev-buffered-frames/delete-controller-analyze.log": "6023e9dbeff7a92bd9e8b052a94eafb6e42917ead258d56ea17f5a8a7079b4ea",
+    "docs/evidence/dev-buffered-frames/delete-controller-fix-analyze.log": "831b3664c194ae6f95ec3a5f3fdf7232c0884170a4c6db6b38916494867ecd92",
+    "docs/evidence/dev-buffered-frames/delete-controller-fix-before.log": "864ba4a1da90be060c0f0b4721b3354bb43854e7c057ec2c8f7dbfc446edded7",
+    "docs/evidence/dev-buffered-frames/delete-controller-fix-format-check.log": "c0d096b6943cd9b59b0d727672d819283909401bdd7e582377619ea6e041072a",
+    "docs/evidence/dev-buffered-frames/delete-controller-fix-format-final.log": "40f77278b207e7b34e8996c0fe9c582929dad3049f45062297f6b58782fab9b8",
+    "docs/evidence/dev-buffered-frames/delete-controller-fix-format.log": "11a57d97889bc161aad83f19055424c45a757ed0654809f75c0ad99f31bb11b7",
+    "docs/evidence/dev-buffered-frames/delete-controller-fix-regressions.log": "28f66b3455e224208544e8e18c98c0034247d833f1a0ea795531c4331e97aa48",
+    "docs/evidence/dev-buffered-frames/delete-controller-fix-sha256.log": "476e501382720239cfcecc586f5f8729bc138f018193366eeae8dd07155ea459",
+    "docs/evidence/dev-buffered-frames/delete-controller-fix-tests-final.log": "3bcae230b01b0c59e038a01d3655957471148a350def330d9b1ca11e1ffea229",
+    "docs/evidence/dev-buffered-frames/delete-controller-format-2.log": "c0d096b6943cd9b59b0d727672d819283909401bdd7e582377619ea6e041072a",
+    "docs/evidence/dev-buffered-frames/delete-controller-format-check.log": "40543d7dcfc9a0948305d0ebc0095f8a5b29b54f19bcb1d007ded7bf753eeb45",
+    "docs/evidence/dev-buffered-frames/delete-controller-format-final.log": "40543d7dcfc9a0948305d0ebc0095f8a5b29b54f19bcb1d007ded7bf753eeb45",
+    "docs/evidence/dev-buffered-frames/delete-controller-format.log": "40543d7dcfc9a0948305d0ebc0095f8a5b29b54f19bcb1d007ded7bf753eeb45",
+    "docs/evidence/dev-buffered-frames/delete-controller-tests-2.log": "dae31aed54e7c95c4a04d56602c413853f0d7842211abeec23c72ff8382f5009",
+    "docs/evidence/dev-buffered-frames/delete-controller-tests-final.log": "7bd8446ef6c77750784521e29244333ca63ad09a774ea37ae61b1193af3723db",
+    "docs/evidence/dev-buffered-frames/delete-controller-tests.log": "8efe248496af270e4da399f1ed48a23f4eb29de6abc32807fb1d669fcc8389e7",
+    "docs/evidence/dev-buffered-frames/delete-final-analyze.log": "e457da2efb73a77abb2fdc640633a3f4d03f8f205a2c8b60eb0d2e741a71eb9a",
+    "docs/evidence/dev-buffered-frames/delete-final-format.log": "58dca27652e488f0ebbee6e9be715fc6eb0e5fb68ad2778b8b09aa75a838b7dc",
+    "docs/evidence/dev-buffered-frames/delete-final-linux.log": "52fe8b007b1a1b4438660b947d95255a54978a3411941d443b649e5909fcb700",
+    "docs/evidence/dev-buffered-frames/delete-final-tests.log": "74b577bcc546c0f01b9e2486d9595786944299a7dd2d278d5d2309620a58edb3",
+    "docs/evidence/dev-buffered-frames/delete-ui-attempt1.log": "4fb3b7cb0a7678cc8f87e10532f42ec44cf3331eb4738135d3a75719d0a7eaf2",
+    "docs/evidence/dev-buffered-frames/delete-ui-attempt2.log": "078836cc5cf4566e9cfd69629335ddded17716d29cbbdfda5a9ab3b06a950056",
+    "docs/evidence/dev-buffered-frames/guard-candidate.json": "b6c2a074de57eb715037b4aa4890c4cbb002ec9cb631d1adc2027ef3e4665c47",
+    "docs/evidence/dev-buffered-frames/guard-schema-after.log": "8076a4aaef48bb7b4a43d2a6b1524a326195721c287c5ec4273ca0d3a20f881a",
+    "docs/evidence/dev-buffered-frames/guard-schema-before.log": "d3b0f4bae953bcbd29bbba2ac1bdd46df106bfc6e87a0bdcd5d489a754c8da97",
+    "docs/evidence/dev-buffered-frames/guard-schema-build.log": "5a7c519d33d6adf1be0caa626d17a29ebf89142908937222e9f2b469fb39a54d",
+    "docs/evidence/dev-buffered-frames/guard-schema-clippy.log": "231767ef2f53863ce23bb04490e32524c4259aa68f5d8eb3ddb24dc944238f32",
+    "docs/evidence/dev-buffered-frames/guard-schema-dev.log": "0732226a91305caaf11db182350591473260e7d45cc3543d7f47b1c3355330fc",
+    "docs/evidence/dev-buffered-frames/guard-schema-pinned-source.json": "d21e5e9b217df26ab7935e279b990c34f525ceebfd3cd950df3a43ab4fa26cb7",
+    "docs/evidence/dev-buffered-frames/guard-schema-result.json": "53d863d20e1336ee6a75a268dcab1b285ae88bdd37368ab3a611f3b90b04d238",
+    "docs/evidence/dev-buffered-frames/prepare_guard_candidate.py": "a1bc0adbcd248ba3af882fa35cefcb9041bf920c7881924a067cccc4f8397153",
+    "docs/evidence/dev-buffered-frames/reconciled-backend-build.log": "7f3180f3f896e86838e6a3eb7b688ab8565de5de3e820c7a9f096663b6402cde",
+    "docs/evidence/dev-buffered-frames/reconciled-backend-clippy.log": "c0018340ee01d9117c11c9598924b58bd09bdf3e9325c6f82d8a351272cb2365",
+    "docs/evidence/dev-buffered-frames/reconciled-backend-dev-tests.log": "04aecd3028a495e011e2dff193835c938effa699115de1b3e230d7c0beaca8b5",
+    "docs/evidence/dev-buffered-frames/reconciled-backend-fmt.log": "ed721a8f997305bcc101cd19a2b3b3fbd23350e9d9939947506d2d69f3a602c9",
+    "docs/evidence/dev-buffered-frames/reconciled-backend-local-tests-initial-failure.log": "8ff50fd1671d527a21f850c2818d3f7b5d686518075e3ac57d7b2db35da173d2",
+    "docs/evidence/dev-buffered-frames/reconciled-backend-local-tests.log": "63e82b2deb3462be61bcea247f57b371057d2759ef800734bc3dd8ed1c5aa2da",
+    "docs/evidence/dev-buffered-frames/reconciled-backend-result.log": "dc23da006b01a492d78bb5a8ab540d7af8562fd12c1a801b76c4c8dea414fb63",
+    "docs/evidence/dev-buffered-frames/reconciled-backend-sha256.log": "077089b91ee6b9f56f545779cd9596d29755bfe52bb11612813cb7a963bec16b",
+    "docs/evidence/dev-buffered-frames/reconciled-client-analyze.log": "54845c719b57b0b437329cfc42097d252af88ef0e56f703dea4b237e7e456ecc",
+    "docs/evidence/dev-buffered-frames/reconciled-client-format-check.log": "633e561d713f87f811acb97371c29a731c378a8a13b6ec579f1b1967fd61e3dc",
+    "docs/evidence/dev-buffered-frames/reconciled-client-format.log": "4de151c49c088db514cc3fbec1a2f5b114e7d23ad1b64e65df6710e7989a4081",
+    "docs/evidence/dev-buffered-frames/reconciled-client-linux-build.log": "ccf11adb49c43f7411af6dfd76af2e2bef02693a574feeb4ded3fe1261df829c",
+    "docs/evidence/dev-buffered-frames/reconciled-client-sha256.log": "02364989912fffe701165847c0afcd3797f9bd75d41f6b357f675a248cc9b8c4",
+    "docs/evidence/dev-buffered-frames/reconciled-client-tests.log": "4231506c53852b7b76476c8b651fb93a367d3beb69b8307f11dbb8446cd4bced",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-build.log": "850e2745369bf7909ed4408817ac975b716c552db1df100a6466097b79efcf39",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-client-analyze.log": "e4a9f2a72b172405d12afd784591ccb6623d5cf0ecc6415f75d07173ceb91add",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-client-format.log": "1b65e2cc4030765f17e0ad4b13ae9f5ba4918402da2337d31d667f38fafc7eb9",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-client-linux-build.log": "ccf11adb49c43f7411af6dfd76af2e2bef02693a574feeb4ded3fe1261df829c",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-client-tests.log": "da142e98578b2a9ec2813f1ed446e79b46885184d2f65d310ce54e037e9fa82f",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-clippy.log": "d6f6f655bcb62cf2900e6a26e24de40167d432ce1a82c03321d5c428c929a346",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-dev-tests.log": "529abd33e6e7a102ebd9a68407776d61b0cf531829c8f8564fc4734b3b8000e2",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-evidence.sha256": "f7c654fea72c3c5ecd949208beb7fb0785c79fe702d24616300ccc0ed71dff2a",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-fmt.log": "2db4518e28c664586c34576046990619b32efeb3a08ba4bb38411f05d6cb1ab3",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-local-domain-tests.log": "aab811040191320ebf31643251be98f334a517e3f54d1ac3b2534d8131cec4c7",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-local-tests.log": "fe33c81d081e91b7b98ac772c7cde3ebb316b415d9ad23a2ce9ff59df9e818ba",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-source-after.sha256": "b3ce78c23cc6a3f19f56090cfbf622acda1c380bae3c4fe96f919f558cb1b6c4",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-source-before.sha256": "b3ce78c23cc6a3f19f56090cfbf622acda1c380bae3c4fe96f919f558cb1b6c4",
+    "docs/evidence/dev-buffered-frames/reconciled-independent-timestamp-retained.log": "a2caec9398ddb13046461accb35c4d0971d6603e02fe13be8ed18086c0195be7",
+    "docs/plans/LOCAL-SMITH-DEV-BUFFERED-FRAMES.md": "adcda856f94f97b038e1e3dc17b24cf9d1e36372b725902cecc88b96d7b23817",
+    "service/.dockerignore": "6cab522c6a0c3c730943c2628d18b84e4efbe83e91138bf151371c7942101000",
+    "service/Cargo.lock": "28c0a55661c6d63024e484307075fde42a600ff863c132b596816b102316692e",
+    "service/Cargo.toml": "8f423111abe8c293b6eb997085802e7810415074c66fa1b0eaebb7d310bdda9a",
+    "service/dev-worker/Dockerfile": "f57ce4cbb15a1ec67fc7ca5bc4824056b5b609e417e03c7aeaa8a1e493f87ef6",
+    "service/dev-worker/Dockerfile.local": "0009f1538f11bfd2145796ab1b2a6b893016ac7ee4614fb8dd90ba657f8f47df",
+    "service/dev-worker/README.md": "ea11638ea5760118a9812d57b206917f2f308e89f4c2eb159ad1884e1530c1f3",
+    "service/dev-worker/guard.mjs": "b8c512c1b80382783bec41a76204815a9ddf3c234cee6c8ad6e721295e2489f0",
+    "service/dev-worker/guard.test.mjs": "3bfd5d54b2d9adf3cf7aea977a5a162adbe33fa7a891ef5edd662647c6005e5c",
+    "service/dev-worker/native-fixture.rs": "f5052933957c9b436f501ca15b7c4c82ce7eb6b890048aa1b24c1d1d1c4a9ec5",
+    "service/scripts/build.sh": "e9b5231fe1595c1bdfd7a7dad7b9898a02c1d5af0c612529c5571d974f0efc8b",
+    "service/scripts/test.sh": "7f489edad5545b0e86176a042a5a5370922307f9b4be45f275681f02b71a9997",
+    "service/src/acceleration.rs": "d9ee167d6d60555f0ba16ed0fca49de0916522a62644771b30df7ec227df7abe",
+    "service/src/app.rs": "e5fe9cdb97d4a5bb9f921dc7fb718457f95d54bf72a66569af6e24b5bf006ea1",
+    "service/src/app_agents.rs": "1c5467d5f8e3ce96f575e5f6666320dab5466d9bade0718174b96a8c30847cdf",
+    "service/src/app_agents_tests.rs": "ae21b1e32884bceba987be1e0b16775949affce6a42aba16f9e11fe56623de17",
+    "service/src/app_dev_jobs.rs": "fbd27f0edb72a546e9e2f6ef09a5dd3f176b5a54b8d1e9f2f66c46b4ef859ca6",
+    "service/src/app_dev_local.rs": "6431aed05381438ebe0b07e73d050e7d0edac3a8404e439bc8c1235be8acbf26",
+    "service/src/app_dev_local_tests.rs": "f628ee46b0e046bc2e6229317e3be40c150abfc7a715b26db908c794ca8dee32",
+    "service/src/app_instructions.rs": "2700cefec3f785847898e78584c24c9a1658f7feb3734265d41afff9f83bd473",
+    "service/src/app_instructions_tests.rs": "dcbdbef88c2abc7582b887bfee37b0efa364002d989296332f081a4c2074a4c2",
+    "service/src/app_projects.rs": "70f24498d378061fde368bd3c3b62c9c72af037eafe8f76aa1d3623eb5b6a62e",
+    "service/src/app_projects_tests.rs": "08c46fe3b67726ac440f84c9935175cb72bc3efaced611e40864d03c3be46b62",
+    "service/src/app_projects_v3_tests.rs": "d06c4a3fbcaae8f603d9e76bd41268a8143de76082eff6fe121c0457f67c3ea4",
+    "service/src/app_timestamps.rs": "e4386e813887345c5aade50a264351c99d2018fdc633030027ffbd8e608ffc49",
+    "service/src/app_timestamps_tests.rs": "b3b78954baaac2845ec6af65ee293bb00171158108e595aded8b3f0c6de7801c",
+    "service/src/app_transport.rs": "797c258df171d2caada66edf859c3cf8ffcccfb0c7268e7d065497fcfd798324",
+    "service/src/app_v2.rs": "774b0281ad34814f1dd225f3fcb88e596eb6162e0195150ba7c634cd71b3705f",
+    "service/src/app_v2_tests.rs": "8e0a0f8f53a17448c2f908bb16b8fc86946f40b9482a27c875d7bda64bdf57f2",
+    "service/src/app_v3.rs": "e9a2778cbb79e91a51595d40a68cfd9805f6798651eda8d9e33ca694ebd11ee9",
+    "service/src/app_v3_tests.rs": "136f6ee273224daf90cb043a447523e0d64c3946c69d9ec29b39bb2f5e3637b9",
+    "service/src/app_v3_worker.rs": "a3e115253e94aea820106d14f73aabb86fc143025244dc2906c2a4042db60838",
+    "service/src/catalog.rs": "e25e6f724c76bc2fbf3c0db74008839145327fcb6bcb5b8df612325f9851afdd",
+    "service/src/cloud.rs": "01cc395a530eb898fac20ec0363e34a6a1e716f9b2f7cb454a060fe34ad1670c",
+    "service/src/cloud_http.rs": "d7abfee1b22c877d1e23ea1ab629df15dbcde126a81c159b74042b5c21b78abe",
+    "service/src/cloud_http_tests.rs": "4c52b289494e952eb288be4e0e1aff44cde4a9cab2af9f9f6ea0ab136b9b17db",
+    "service/src/cloud_keyring.rs": "f6ac5c6ea536992ad7bf252d92ef06b4ab8085b6393dc2e1592c53f5628c20aa",
+    "service/src/cloud_keyring_tests.rs": "bd51d10ff5bc2a6657df7b06aa5d85d8dcaf445a76ec7ac2b36fa095ae565888",
+    "service/src/control.rs": "844bdd3d4225ddce66ec6a10ab750e2c776d57a9f6cecb712ad0cf2a4a26b58f",
+    "service/src/dev_broker.rs": "62601058249b0063cc02cdc5c0d41059700670a4d2eb6b13ddb6dd50058a6199",
+    "service/src/dev_completion.rs": "f6681dd919a02f68ecbec88e0be3c1cce0519ac67fdd132334973c1a41fbda01",
+    "service/src/dev_fetch.rs": "417d583e5ec847a512e3c959d061e70283b29a974fc404aa8b3bd8b0809175d6",
+    "service/src/dev_fetch_tests.rs": "317cdc1cc58ea597ddcbf5695339377689f25c8a61c9eb5e30a83972ea00e6dd",
+    "service/src/dev_local.rs": "bf5b49144207c95c06e5659b106a7ffe39a7ae37208c3490cab000e5e64c1543",
+    "service/src/dev_read.rs": "530df51a5d6bdd35ed86f97ff25b8f6384c3cd6a59f0a7636c1acbe048467973",
+    "service/src/dev_runtime.rs": "20bc9e91e12e06225485faecdf9af89dccef1f15dca07a45cf7527b4326f1d8b",
+    "service/src/dev_runtime_local.rs": "7f30d9aed5477d9941ee34b285b4e93279ee8455103f7cef161703dae2a8f8d2",
+    "service/src/dev_worker.rs": "de75fec9530f16b1d0fbe5b69303096558b3cbb6a70f610b1d02342b0d90530f",
+    "service/src/dev_worker_local.rs": "4f5e1e2558ed1ccbbce64044b2c78d52f91d28566311a8f7de83c2dfd42dc33b",
+    "service/src/filesystem.rs": "7b29a067bab48228af44377abecb4cb3156ff39c308ba4277d79478adadbddf4",
+    "service/src/lib.rs": "609d5a162fef90166ce2c11e0d72abe54789594ce4324ea115690341000a8cd8",
+    "service/src/main.rs": "ac5d1d224365bc78dbf4f77653d9b0722782bae3fa21775587c40da5ec0972ec",
+    "service/src/maintenance.rs": "d83e185a2a57900bd5c8f0c2c40484b8a67b19b52aea9dc0042e328ed0f5a957",
+    "service/src/manager.rs": "00265b79414e5344ce4e67e2f22ce7f17a7eb9bdc04a3df1d35f657d2ad331a2",
+    "service/src/providers.rs": "0fe69d2e55a3f2d800936c92f1804824358233057c10b7937be653ffc7e187b6",
+    "service/src/runner.rs": "5a5c12c1bfb79008874bfaa33d269f9046f2b23941f3677b87d5b0f7b1e888f3",
+    "service/src/runner_lease_tests.rs": "6a504792ce009209c5ff58aecd0111b934f4b47ed0d6a27a8e9539c3f4281a19",
+    "service/src/transport.rs": "8626ad11aca4b5472389e8f89856f73e71752598e1716a4dcdef74c6f67749b5",
+    "service/target/debug/smith-service": "9bb0228c61bf762c7899f15f7105924d666b6e534102a33c6ecea8779fee77ec"
+  },
+  "status": "prepared_verified_candidate_only_not_installed_or_accepted",
+  "unknown_reconciled": false,
+  "validation_limit": "Retained timestamp fixture failure not waived; no installed, OpenCode/model or runtime acceptance",
+  "worker_image_or_tag_changed": false
+}

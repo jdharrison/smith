@@ -1,0 +1,4 @@
+00:00 +0: loading <repo>/target/dev-navigation/assurance/fixture/client/test/assurance_retention_test.dart
+00:00 +0: unknown Agents and Projects receipts remain uncertain across Dev first-open and pane hiding
+00:02 +1: four independent blank drafts and in-flight provisional chat survive Dev/hide/show without redispatch
+00:03 +2: All tests passed!

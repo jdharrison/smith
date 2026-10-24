@@ -1,0 +1,134 @@
+{
+  "code_hashes": {
+    "reason": "invalid_or_unavailable",
+    "result": "REFUSED",
+    "type": "Refuse"
+  },
+  "historical_files": {
+    "binding_sha256": "c5f660c334c8b59cb6076a5fb1ec8355050361f513299c4233b6062cc72ed584",
+    "entries": 70,
+    "result": "PASS"
+  },
+  "historical_root_digest": "c5f660c334c8b59cb6076a5fb1ec8355050361f513299c4233b6062cc72ed584",
+  "live-transport-renewed.py_ancestry": [
+    {
+      "ancestor_index": 0,
+      "mode": "0o664",
+      "owner_allowed": true,
+      "symlink": false
+    },
+    {
+      "ancestor_index": 1,
+      "mode": "0o775",
+      "owner_allowed": true,
+      "symlink": false
+    },
+    {
+      "ancestor_index": 2,
+      "mode": "0o775",
+      "owner_allowed": true,
+      "symlink": false
+    },
+    {
+      "ancestor_index": 3,
+      "mode": "0o775",
+      "owner_allowed": true,
+      "symlink": false
+    }
+  ],
+  "old_engine_config_safety": "PASS",
+  "old_module_safety": "PASS",
+  "owned_cgroup_verifier.py_ancestry": [
+    {
+      "ancestor_index": 0,
+      "mode": "0o664",
+      "owner_allowed": true,
+      "symlink": false
+    },
+    {
+      "ancestor_index": 1,
+      "mode": "0o775",
+      "owner_allowed": true,
+      "symlink": false
+    },
+    {
+      "ancestor_index": 2,
+      "mode": "0o775",
+      "owner_allowed": true,
+      "symlink": false
+    },
+    {
+      "ancestor_index": 3,
+      "mode": "0o775",
+      "owner_allowed": true,
+      "symlink": false
+    }
+  ],
+  "run02_exists": false,
+  "run02_markers": {
+    "captures": false,
+    "consumed.json": false,
+    "dispatch.json": false,
+    "pending.json": false,
+    "result.json": false,
+    "running.json": false
+  },
+  "staged_check": {
+    "reason": "invalid_or_unavailable",
+    "result": "REFUSED",
+    "type": "FileNotFoundError"
+  },
+  "staged_cli_safety": "PASS",
+  "test_live_transport_renewed.py_ancestry": [
+    {
+      "ancestor_index": 0,
+      "mode": "0o664",
+      "owner_allowed": true,
+      "symlink": false
+    },
+    {
+      "ancestor_index": 1,
+      "mode": "0o775",
+      "owner_allowed": true,
+      "symlink": false
+    },
+    {
+      "ancestor_index": 2,
+      "mode": "0o775",
+      "owner_allowed": true,
+      "symlink": false
+    },
+    {
+      "ancestor_index": 3,
+      "mode": "0o775",
+      "owner_allowed": true,
+      "symlink": false
+    }
+  ],
+  "test_owned_cgroup_verifier.py_ancestry": [
+    {
+      "ancestor_index": 0,
+      "mode": "0o664",
+      "owner_allowed": true,
+      "symlink": false
+    },
+    {
+      "ancestor_index": 1,
+      "mode": "0o775",
+      "owner_allowed": true,
+      "symlink": false
+    },
+    {
+      "ancestor_index": 2,
+      "mode": "0o775",
+      "owner_allowed": true,
+      "symlink": false
+    },
+    {
+      "ancestor_index": 3,
+      "mode": "0o775",
+      "owner_allowed": true,
+      "symlink": false
+    }
+  ]
+}

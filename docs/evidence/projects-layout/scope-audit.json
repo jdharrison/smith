@@ -1,0 +1,628 @@
+{
+  "anchor_validation": "not performed",
+  "baseline_files": 1459,
+  "baseline_sha256": "740cc41d9ba4bc8265d5ea69a34fe5bf5ac8e11596ef4223357232a6756a44c3",
+  "changed_baseline_paths": [
+    "VALIDATION.md",
+    "client/assets/README.md",
+    "client/lib/ui/projects_view.dart",
+    "client/lib/ui/smith_icon.dart",
+    "client/test/projects_navigation_test.dart",
+    "client/test/projects_view_test.dart",
+    "dagger/package.py",
+    "dagger/tests/test_package.py",
+    "docs/DESIGN.md",
+    "docs/PROCESS.md",
+    "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+    "docs/VALIDATION_DETAILS.md",
+    "docs/plans/LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT.md"
+  ],
+  "core_files_reverified": 1265,
+  "core_sha256": "f00306ef6fb418e4c3a53b12261599cc290ede874d12822e5a647e58fdf54164",
+  "local_markdown_file_links_checked": [
+    {
+      "source": "VALIDATION.md",
+      "target": "docs/VALIDATION_DETAILS.md"
+    },
+    {
+      "source": "VALIDATION.md",
+      "target": "docs/evidence/projects-layout/README.md"
+    },
+    {
+      "source": "VALIDATION.md",
+      "target": "docs/evidence/projects-layout/REVIEW-CLOSEOUT.md"
+    },
+    {
+      "source": "VALIDATION.md",
+      "target": "docs/evidence/project-repositories/README.md"
+    },
+    {
+      "source": "VALIDATION.md",
+      "target": "docs/evidence/project-repositories/REVIEW.md"
+    },
+    {
+      "source": "VALIDATION.md",
+      "target": "docs/evidence/projects/README.md"
+    },
+    {
+      "source": "VALIDATION.md",
+      "target": "docs/evidence/runner-parked-lease/README.md"
+    },
+    {
+      "source": "VALIDATION.md",
+      "target": "docs/evidence/keyring-peer-cost/README.md"
+    },
+    {
+      "source": "VALIDATION.md",
+      "target": "docs/evidence/cli-executable-fence/README.md"
+    },
+    {
+      "source": "VALIDATION.md",
+      "target": "docs/evidence/root-promotion/README.md"
+    },
+    {
+      "source": "VALIDATION.md",
+      "target": "docs/PROCESS.md"
+    },
+    {
+      "source": "docs/DESIGN.md",
+      "target": "SCOPE.md"
+    },
+    {
+      "source": "docs/DESIGN.md",
+      "target": "ARCHITECTURE.md"
+    },
+    {
+      "source": "docs/DESIGN.md",
+      "target": "PROCESS.md#approval-boundaries"
+    },
+    {
+      "source": "docs/DESIGN.md",
+      "target": "HISTORY.md"
+    },
+    {
+      "source": "docs/DESIGN.md",
+      "target": "ARCHITECTURE_DETAILS.md#projects-metadata-registry"
+    },
+    {
+      "source": "docs/DESIGN.md",
+      "target": "evidence/project-repositories/README.md"
+    },
+    {
+      "source": "docs/DESIGN.md",
+      "target": "plans/LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT.md#0-active-approved-slice"
+    },
+    {
+      "source": "docs/DESIGN.md",
+      "target": "evidence/projects-layout/README.md"
+    },
+    {
+      "source": "docs/DESIGN.md",
+      "target": "evidence/projects/README.md"
+    },
+    {
+      "source": "docs/DESIGN.md",
+      "target": "plans/LOCAL-SMITH-NEXT-CLOUD-API-CONTRACT.md"
+    },
+    {
+      "source": "docs/DESIGN.md",
+      "target": "../dagger/INSTALLER.md"
+    },
+    {
+      "source": "docs/PROCESS.md",
+      "target": "plans/LOCAL-SMITH-NEXT-CLOUD-API-CONTRACT.md"
+    },
+    {
+      "source": "docs/PROCESS.md",
+      "target": "plans/LOCAL-SMITH-PROJECT-REPOSITORIES.md"
+    },
+    {
+      "source": "docs/PROCESS.md",
+      "target": "evidence/projects/README.md"
+    },
+    {
+      "source": "docs/PROCESS.md",
+      "target": "evidence/project-repositories/README.md"
+    },
+    {
+      "source": "docs/PROCESS.md",
+      "target": "evidence/installer-pipeline/README.md"
+    },
+    {
+      "source": "docs/PROCESS.md",
+      "target": "evidence/installer-pipeline/REVIEW.md"
+    },
+    {
+      "source": "docs/PROCESS.md",
+      "target": "plans/LOCAL-SMITH-ROOT-PROMOTION.md"
+    },
+    {
+      "source": "docs/PROCESS.md",
+      "target": "HISTORY.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "SCOPE.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "ARCHITECTURE.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "PROCESS.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "DESIGN.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "HOST_PROFILE.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "plans/LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/projects/README.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "plans/LOCAL-SMITH-PROJECT-REPOSITORIES.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/project-repositories/README.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/projects-layout/README.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/projects-layout/REVIEW-CLOSEOUT.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "plans/LOCAL-SMITH-RUNNER-PARKED-LEASE.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "plans/LOCAL-SMITH-NEXT-CLOUD-API-CONTRACT.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/installer-pipeline/README.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/installer-pipeline/REVIEW.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "../VALIDATION.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/saved-key-attempts/README.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "plans/LOCAL-SMITH-NEXT-SAVED-KEY-ATTEMPTS-REVIEW.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/cloud-checkpoint/README.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "plans/LOCAL-SMITH-NEXT-CLOUD-CHECKPOINT-REVIEW.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/installer-pipeline/REVIEW.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/projects/README.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "plans/LOCAL-SMITH-PROJECT-REPOSITORIES.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/project-repositories/README.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/project-repositories/REVIEW.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "HISTORY.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "HOST_PROFILE.md"
+    },
+    {
+      "source": "docs/SMITH_LINUX_ARCHITECTURE_REPORT.md",
+      "target": "evidence/root-promotion/README.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "plans/LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT.md#0-active-approved-slice"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/projects-layout/README.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/projects-layout/validation-rebound/final-results.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/projects-layout/validation-rebound/final-artifact-binding.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/projects-layout/REVIEW-CLOSEOUT.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "plans/LOCAL-SMITH-PROJECT-REPOSITORIES.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/project-repositories/README.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/project-repositories/results.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/project-repositories/core-source-manifest.jsonl"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/project-repositories/artifacts.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/project-repositories/REVIEW.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "plans/LOCAL-SMITH-PROJECTS.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/projects/REVIEW.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/projects/README.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/projects/results.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/projects/core-source-manifest.jsonl"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/projects/artifacts.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "plans/LOCAL-SMITH-RUNNER-PARKED-LEASE.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/runner-parked-lease/README.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/runner-parked-lease/targeted-results.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/runner-parked-lease/ci-results.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/runner-parked-lease/commands.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/runner-parked-lease/REVIEW.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "plans/LOCAL-SMITH-KEYRING-PEER-COST.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/keyring-peer-cost/README.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/keyring-peer-cost/results.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/keyring-peer-cost/REVIEW.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "plans/LOCAL-SMITH-CLI-EXECUTABLE-FENCE.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/cli-executable-fence/README.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/cli-executable-fence/ci-equivalent.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "plans/LOCAL-SMITH-CLI-EXECUTABLE-FENCE-REVIEW.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "plans/LOCAL-SMITH-CLI-FIXTURE-BUDGET.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/cli-fixture-fix/README.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/cli-fixture-fix/results.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/cli-fixture-fix/source-manifest.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "plans/LOCAL-SMITH-CLI-FIXTURE-BUDGET-REVIEW.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "plans/LOCAL-SMITH-ROOT-PROMOTION.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/root-promotion/disposition.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/root-promotion/attempt-1-validation.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/root-promotion/validation.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/root-promotion/source-manifest.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/root-promotion/artifacts.json"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/root-promotion/README.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/root-promotion/REVIEW.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/installer-pipeline/README.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/saved-key-attempts/README.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "evidence/cloud-checkpoint/README.md"
+    },
+    {
+      "source": "docs/VALIDATION_DETAILS.md",
+      "target": "HISTORY.md"
+    },
+    {
+      "source": "docs/plans/LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT.md",
+      "target": "../PROCESS.md#approval-boundaries"
+    },
+    {
+      "source": "docs/plans/LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT.md",
+      "target": "../evidence/projects-layout/README.md"
+    },
+    {
+      "source": "docs/plans/LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT.md",
+      "target": "../evidence/projects-layout/REVIEW-CLOSEOUT.md"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "../../plans/LOCAL-SMITH-PROJECTS-EDITOR-LAYOUT.md#0-active-approved-slice"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "baseline-source-manifest.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "validation-rebound/core-manifest-final.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "validation-rebound/final-artifact-binding.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "REVIEW-CLOSEOUT.md"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "validation-rebound/final-results.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "validation-rebound/observed-gates.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "validation-rebound/evidence-index-final.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "REVIEW-CLOSEOUT.md"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "validation/final-results.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "REVIEW.md"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "REVIEW-FINAL.md"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "remediation/parent-checks-keyboard.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "validation-closeout/final-results.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "validation-rebound/final-results.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "validation-final/final-results.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "REVIEW-CLOSEOUT.md"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "ui-owner-validation.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "asset-owner-validation.json"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "../../../client/test/goldens/projects-layout/wide-1536x1024.png"
+    },
+    {
+      "source": "docs/evidence/projects-layout/README.md",
+      "target": "../../../client/test/projects_layout_golden_test.dart"
+    }
+  ],
+  "new_source_files": [
+    {
+      "mode": 436,
+      "path": "client/assets/icons/git-branch.svg",
+      "sha256": "b7dd6ca760a47aec57e93a6f1b9bc0a8ed835490193ca317a7bfbc497fcfaae4",
+      "size": 324
+    },
+    {
+      "mode": 436,
+      "path": "client/assets/icons/layers.svg",
+      "sha256": "00adb0125d9692f03e4a64037e07499c3df717fd0aa5f575c0783501f2904a37",
+      "size": 259
+    },
+    {
+      "mode": 436,
+      "path": "client/test/goldens/projects-layout/compact-editor-400x400-text2.png",
+      "sha256": "801b3df51633611de483d00a9a1b1a506add59a2161175ac74ef98e874ff8d5d",
+      "size": 34725
+    },
+    {
+      "mode": 436,
+      "path": "client/test/goldens/projects-layout/compact-editor-400x400.png",
+      "sha256": "023ecbdb240a8e44fd60d198cc822bb6d090e75851379c78986ab6ca30906293",
+      "size": 21484
+    },
+    {
+      "mode": 436,
+      "path": "client/test/goldens/projects-layout/compact-list-400x400-text2.png",
+      "sha256": "442b02b3ad06bb66a395f88a63e2babc50d80a84b69f8d19dac5852d9e6974ce",
+      "size": 28824
+    },
+    {
+      "mode": 436,
+      "path": "client/test/goldens/projects-layout/compact-list-400x400.png",
+      "sha256": "945a8fa620558e387f6b232d4cc92b5e8490bf4ecb3e51f923cc130e37f142e2",
+      "size": 19142
+    },
+    {
+      "mode": 436,
+      "path": "client/test/goldens/projects-layout/compact-repositories-400x400-text2.png",
+      "sha256": "9df045973461f07401e1d4ea34b2606efe5c0ca70d9fa9980867944c2f5fec4e",
+      "size": 31838
+    },
+    {
+      "mode": 436,
+      "path": "client/test/goldens/projects-layout/compact-repositories-400x400.png",
+      "sha256": "ebfe589299842484ec63ae813824bfbee8da4fe7e4e819da9bd6e0ab761c6090",
+      "size": 21640
+    },
+    {
+      "mode": 436,
+      "path": "client/test/goldens/projects-layout/ultrawide-4200x2400.png",
+      "sha256": "cc08cec883ac2550e69bcc6b6d6557cc36c00383ba87a55b423aaf3134ba5668",
+      "size": 166956
+    },
+    {
+      "mode": 436,
+      "path": "client/test/goldens/projects-layout/wide-1536x1024.png",
+      "sha256": "c951da3cfbf3e032474738363c970baab92559253d0cd692aabc3ee756b6028b",
+      "size": 114470
+    },
+    {
+      "mode": 436,
+      "path": "client/test/projects_layout_golden_test.dart",
+      "sha256": "15be6fd482209cc12d6c8b9ceeed79832005706971e1102b6e087df7ae11d3b5",
+      "size": 4574
+    },
+    {
+      "mode": 436,
+      "path": "client/test/projects_layout_test.dart",
+      "sha256": "e0860d0bddddc91e250cc1d9c1bffeca5ccfa21d6f6fa9b56b15871e049e3dd6",
+      "size": 29742
+    }
+  ],
+  "omitted_baseline_paths_verified_against_HEAD": [
+    ".gitattributes",
+    ".gitignore",
+    ".smith/project.yaml",
+    "LICENSE",
+    "SECURITY.md"
+  ],
+  "out_of_scope_changes": [],
+  "unchanged_historical_evidence_files": 127,
+  "unchanged_preexisting_golden_PNGs": 28
+}

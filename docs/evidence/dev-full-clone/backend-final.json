@@ -1,0 +1,112 @@
+{
+  "work_id": "LOCAL-SMITH-DEV-FULL-CLONE backend",
+  "timestamp_utc": "2026-10-19T18:21:12.192548+00:00",
+  "branch": "feature/autonomy",
+  "base_commit": "14d960975e76f906efb5e447ff3dece0e8e4385b",
+  "source_sha256": {
+    "service/src/dev_fetch.rs": "417d583e5ec847a512e3c959d061e70283b29a974fc404aa8b3bd8b0809175d6",
+    "service/src/dev_fetch_tests.rs": "317cdc1cc58ea597ddcbf5695339377689f25c8a61c9eb5e30a83972ea00e6dd",
+    "service/src/dev_worker_local.rs": "60e3a31709d4e3fed3ec701e915efcd9eb6398cf8d06b9aebbd42a95dcd92786"
+  },
+  "environment": {
+    "git": "git version 2.43.0",
+    "rustc": "rustc 1.98.0 (88d9e12ae 2026-08-18)",
+    "cargo": "cargo 1.98.0 (797e8a9bc 2026-08-05)"
+  },
+  "validation": [
+    {
+      "log": "docs/evidence/dev-full-clone/build-06.log",
+      "command": "cargo build --offline --locked",
+      "exit": 0,
+      "test_results": [],
+      "sha256": "eefc9f0743c9d6f2dab7eecf38a0f690f9337c17591ccfb42924b4d6fb305b1b"
+    },
+    {
+      "log": "docs/evidence/dev-full-clone/clippy-07.log",
+      "command": "cargo clippy --offline --locked --lib --bins -- -D warnings",
+      "exit": 0,
+      "test_results": [],
+      "sha256": "019a09c825c19ae1482a83766dd85fce3f8e167962bc889127224817c95398bf"
+    },
+    {
+      "log": "docs/evidence/dev-full-clone/dev-05.log",
+      "command": "cargo test --offline --locked --lib dev_ -- --nocapture",
+      "exit": 0,
+      "test_results": [
+        "test result: ok. 105 passed; 0 failed; 0 ignored; 0 measured; 212 filtered out; finished in 1.10s"
+      ],
+      "sha256": "d90700644c1d60cb788a54a5cc2c5a16aa72e48ebe07af979f4197c3ef5f5073"
+    },
+    {
+      "log": "docs/evidence/dev-full-clone/fetch-01.log",
+      "command": "cargo test --offline --locked dev_fetch -- --nocapture",
+      "exit": 101,
+      "test_results": [
+        "test result: FAILED. 43 passed; 3 failed; 0 ignored; 0 measured; 271 filtered out; finished in 0.07s"
+      ],
+      "sha256": "cc2665599ae571aab230c35b1eefe8e44ba84ab0a8cbd01d7fb9cb8b944ea860"
+    },
+    {
+      "log": "docs/evidence/dev-full-clone/fetch-03.log",
+      "command": "cargo test --offline --locked dev_fetch -- --nocapture",
+      "exit": 101,
+      "test_results": [
+        "test result: FAILED. 45 passed; 1 failed; 0 ignored; 0 measured; 271 filtered out; finished in 0.26s"
+      ],
+      "sha256": "910df0f308705f281bc7eafd5b88af129a05c785ace1150a970d459dcbc826bd"
+    },
+    {
+      "log": "docs/evidence/dev-full-clone/fetch-04.log",
+      "command": "cargo test --offline --locked dev_fetch -- --nocapture",
+      "exit": 0,
+      "test_results": [
+        "test result: ok. 46 passed; 0 failed; 0 ignored; 0 measured; 271 filtered out; finished in 1.02s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 35 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 42 filtered out; finished in 0.00s"
+      ],
+      "sha256": "bab6697490526a41631368d6a6300855a3b3f82f8389da6c70a63323b305e26c"
+    },
+    {
+      "log": "docs/evidence/dev-full-clone/format-08.log",
+      "command": "rustfmt --edition 2021 --check service/src/dev_fetch.rs service/src/dev_fetch_tests.rs service/src/dev_worker_local.rs",
+      "exit": 0,
+      "test_results": [],
+      "sha256": "4e82c4d11f456f9984d9b2b9c76527b3185120ca44e504ab045a469fdf6c7cf7"
+    },
+    {
+      "log": "docs/evidence/dev-full-clone/native-02.log",
+      "command": "cargo test --offline --locked dev_fetch::tests::executable -- --nocapture",
+      "exit": 101,
+      "test_results": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 316 filtered out; finished in 0.05s"
+      ],
+      "sha256": "235598e22acc8ed13b9e9a35039d5a189abed1e47b5b5e538bd80dc5eb9d5a66"
+    },
+    {
+      "log": "docs/evidence/dev-full-clone/worker-01.log",
+      "command": "cargo test --offline --locked dev_worker_local",
+      "exit": 0,
+      "test_results": [
+        "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 307 filtered out; finished in 0.05s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 35 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 42 filtered out; finished in 0.00s"
+      ],
+      "sha256": "a2602c6580724405b1baffdd2bfa827411845e999a71980d61b0084c0ed1486d"
+    }
+  ],
+  "limitations": [
+    "Backend source and isolated fixtures only; no external Git, Docker, model, running service, UI or canonical documentation changes.",
+    "Fresh independent assurance remains pending; self-check does not establish installed, live or release acceptance.",
+    "Source files were already untracked and unrelated dirty/untracked work was preserved."
+  ]
+}

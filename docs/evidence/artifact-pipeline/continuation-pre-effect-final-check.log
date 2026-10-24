@@ -1,0 +1,16 @@
+{
+  "all_existing_file_bytes_and_mtimes_preserved": true,
+  "canonical_check_binding_sha256": "2c4ab277226f960f643a8d535e88265026515b0323f55bb973decde3a2b8a683",
+  "latest_work_boundary_utc": "2026-10-21T01:31:45.863108+00:00",
+  "matches_author_final_check_binding": true,
+  "no_continuation_markers_or_receipts": true,
+  "original_age_seconds": 626.7343702316284,
+  "original_hard_deadline_utc": "2026-10-21T01:32:50.863108+00:00",
+  "original_receipts_valid_now": true,
+  "remaining_with_5s_margin": 268.2656297683716,
+  "safety_adjusted_completion_deadline_utc": "2026-10-21T01:32:45.863108+00:00",
+  "script_sha256": "4306dd47b486c26761eaddc7b6d9312ed132716f84ceb799e13bd7dba1912f47",
+  "tests_sha256": "0fea9b3f1ce4544fcfbab3e627d0a033dd98a18e50c37bade5d87e19edd2e15c",
+  "utc": "2026-10-21T01:28:17.597478+00:00",
+  "work_remaining_after_60s_cleanup": 208.26562976837158
+}

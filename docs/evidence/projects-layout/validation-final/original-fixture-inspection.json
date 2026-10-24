@@ -1,0 +1,29 @@
+{
+  "failure_line_in_prior_aggregate": 976,
+  "filtering": "Exactly one original test; no test-thread, assertion, deadline, or source changes.",
+  "helper_output_function_lines": [
+    18,
+    40
+  ],
+  "historical_cause": "Unestablished. A single isolated reproduction, whether passing or failing, does not identify the prior aggregate failure cause or prove a concurrency explanation.",
+  "internal_deadlines_unchanged": {
+    "attempt_seconds": 2,
+    "premature_milliseconds": 100,
+    "result_seconds": 2
+  },
+  "recorded_at": "2026-10-17T21:36:28.709431+00:00",
+  "source": {
+    "mode": 436,
+    "mode_octal": "0o664",
+    "path": "service/tests/debug_service.rs",
+    "sha256": "021803ec93a2b452bb298303df68359b17500ac3f629fd07b99d17827cc49498",
+    "size": 64547,
+    "type": "file"
+  },
+  "source_lines": [
+    950,
+    987
+  ],
+  "test": "fixture_spawn_waits_until_executable_writer_is_closed",
+  "test_effects": "Private Fixture roots, copied existing service ELF --version only; no manager/provider/product serve/GUI launch."
+}
