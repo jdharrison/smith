@@ -1,5 +1,0 @@
-COMMAND: /snap/bin/flutter --no-version-check build linux --release --no-pub
-Building Linux application...                                   
-✓ Built build/linux/x64/release/bundle/smith_client
-
-EXIT_CODE: 0

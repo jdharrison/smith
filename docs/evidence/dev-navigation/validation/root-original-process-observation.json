@@ -1,5 +1,0 @@
-{
-  "active_heavy_process_names": [],
-  "method": "Read-only /proc comm only; no command lines or secrets captured. Persistent Dagger engine is not a competing client test invocation.",
-  "recorded_at": "2026-10-18T01:29:36.329999+00:00"
-}

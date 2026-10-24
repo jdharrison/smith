@@ -1,6 +1,0 @@
-Analyzing 6 items...                                            
-
-   info • 'of' is deprecated and shouldn't be used. Use TickerMode.valuesOf to get both enabled and forceFrames. This feature was deprecated after v3.35.0-0.0.pre. Try replacing the use of the deprecated member with the replacement • lib/ui/smith_workspace.dart:102:21 • deprecated_member_use
-   info • 'of' is deprecated and shouldn't be used. Use TickerMode.valuesOf to get both enabled and forceFrames. This feature was deprecated after v3.35.0-0.0.pre. Try replacing the use of the deprecated member with the replacement • lib/ui/smith_workspace.dart:146:20 • deprecated_member_use
-
-2 issues found. (ran in 2.5s)

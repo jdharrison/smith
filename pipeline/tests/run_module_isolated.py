@@ -1,6 +1,6 @@
 """Run module/fake-SDK and unchanged fixture tests without Dagger or network."""
 
-import hashlib
+
 import io
 import os
 from pathlib import Path
@@ -25,9 +25,9 @@ def main():
     if os.environ.get("PYTHONDONTWRITEBYTECODE") != "1" or not sys.dont_write_bytecode:
         raise SystemExit("Use PYTHONDONTWRITEBYTECODE=1 python3 -B pipeline/tests/run_module_isolated.py")
     repository = Path(__file__).absolute().parents[2]
-    log_path = repository / "docs/evidence/artifact-pipeline/module-source-tests.log"
+
     original_directory, original_path = Path.cwd(), sys.path[:]
-    output, identities = io.StringIO(), []
+    output = io.StringIO()
     with tempfile.TemporaryDirectory(prefix="smith-module-") as temporary:
         isolated = Path(temporary)
         for name in FILES:
@@ -35,7 +35,7 @@ def main():
             destination = isolated / "pipeline" / name
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, destination)
-            identities.append(f"{hashlib.sha256(destination.read_bytes()).hexdigest()}  pipeline/{name}")
+
         try:
             os.chdir(isolated)
             tests = isolated / "pipeline/tests"
@@ -53,11 +53,7 @@ def main():
     command = "PYTHONDONTWRITEBYTECODE=1 python3 -B pipeline/tests/run_module_isolated.py"
     exit_code = 0 if result.wasSuccessful() else 1
     log = (f"Command: {command}\nPython: {sys.version.split()[0]}\n"
-           + "Source SHA-256 (isolated copies):\n" + "\n".join(identities) + "\n"
            + log + f"Exit: {exit_code}\n")
-    # Append so initial failures and prior invocations remain evidence.
-    with log_path.open("a", encoding="utf-8") as evidence:
-        evidence.write(log + "\n")
     excerpt = "\n".join(line[:1800] for line in log.splitlines())
     print(excerpt[:30000])
     return exit_code

@@ -1,7 +1,0 @@
-00:00 +0: loading <repo>/client/test/dev_navigation_golden_test.dart
-00:00 +0: (setUpAll)
-00:00 +0: Dev bundled-font fixture wide-expanded
-00:00 +1: Dev bundled-font fixture compact-root-text2
-00:00 +2: Dev bundled-font fixture compact-chooser-text2
-00:01 +3: (tearDownAll)
-00:01 +3: All tests passed!

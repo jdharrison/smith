@@ -70,6 +70,14 @@ Any change affecting capabilities, ports, network egress, mounts, credentials, f
 
 **Minimalistic by default: less text is better.** Use short labels and one concise status/action, not stacked explanations, disclaimers or implementation details. Put technical diagnostics behind Details and necessary consent at the action's Review step; do not repeat them across the form, footer and page. Preserve critical warnings and explicit approvals, but make them brief and specific.
 
+## Minimize generated evidence
+
+- Do not generate or commit bulk logs, repeated snapshots, per-command manifests, source/hash inventories, copied source trees, or artifact dumps. More evidence files are not better evidence.
+- Default to a short summary of exact commands, outcomes, failures and remaining gates. Reuse one task record; do not create a report or snapshot for every check. Capture a log only when necessary to diagnose a failure or satisfy a specific gate; keep it bounded, secret-safe and local.
+- `docs/evidence/` is local-only and ignored. Preserve existing local evidence without staging it. Historical links into that directory refer to local records, not files guaranteed to exist in a checkout. Keep canonical documents and useful plans under `docs/` tracked; do not ignore the entire directory.
+- Reusable test fixtures and harnesses belong in the owning component's test tree, not an evidence dump. Commit generated evidence only with explicit human approval naming the necessary files and publication purpose.
+- Before committing or pushing, inspect the diff statistics and largest additions. Stop and remove accidental generated output when it dominates the change; never publish thousands of evidence files or millions of log lines as part of routine cleanup.
+
 ## Documentation maintenance
 
 Document changed contracts, not the fact that work occurred. Update the affected canonical document only when its supported behavior, policy, operator instructions or acceptance contract changes; cosmetic edits and fixes restoring an existing contract normally need no documentation edits. The table routes necessary updates, not mandatory files for every task:

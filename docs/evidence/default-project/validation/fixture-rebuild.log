@@ -1,3 +1,0 @@
-   Compiling smith-service v0.1.0 (<repo>/target/default-project/validation/candidate/service)
-    Finished `test` profile [unoptimized] target(s) in 4.24s
-  Executable tests/debug_service.rs (<repo>/target/default-project/validation/cargo-target/debug/deps/debug_service-0a4be2ddda80d80f)

@@ -1,5 +1,0 @@
-{
-  "service/src/dev_fetch.rs": "fd1354b311b56243bd5269dd02d21f4e22118fc0dbe074716db9b0bbdc9be478",
-  "service/src/dev_fetch_tests.rs": "6e65ba9a0f63e224c60bef613523b84d73294000d1cdc894a51c99d972bef13c",
-  "service/src/dev_worker_local.rs": "71ea9337e97d107e72d3beddba94fa9e800c61797cc135f418035ed01fe3a4d3"
-}

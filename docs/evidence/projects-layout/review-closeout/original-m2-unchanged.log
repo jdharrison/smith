@@ -1,8 +1,0 @@
-00:00 +0: loading <REPO>/target/projects-layout/assurance/final/keyboard_wrap_probe_test.dart
-00:00 +0: (setUpAll)
-00:00 +0: compact long-list Tab wrap reveals focused Return at 1.0x
-KEYBOARD WRAP scale=1.0 rect=Rect.fromLTRB(16.0, 48.0, 244.0, 96.0) listOffset=16.0 primary=FocusNode#2ccee([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS)
-00:01 +1: compact long-list Tab wrap reveals focused Return at 2.0x
-KEYBOARD WRAP scale=2.0 rect=Rect.fromLTRB(16.0, 48.0, 384.0, 128.0) listOffset=72.0 primary=FocusNode#78103([PRIMARY FOCUS])(context: Focus, PRIMARY FOCUS)
-00:01 +2: (tearDownAll)
-00:01 +2: All tests passed!

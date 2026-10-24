@@ -1,7 +1,0 @@
-timestamp=2026-10-19T19:32:23.582653+00:00
-command=['cargo', 'build', '--offline', '--locked']
-cwd=service
-   Compiling smith-service v0.1.0 (<repo>/service)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.36s
-
-exit=0

@@ -1,7 +1,0 @@
-{
-  "review_sha256": "f77b98a990efe17c3aa748c5344a37eab53e12a4ddf9e158db68009fd236fdd8",
-  "approval_sha256": "efbd53fedf2ddc7b637a94ee76b8f2a0006669827103bb3d35748097f8e10440",
-  "script_sha256": "3f6f16e7aef5a0264d7d3a0d2695e4c212eb2a37214ccd1e88904970edbec6bc",
-  "request_sha256": "0b5b9300a8f7a706b98dcb677982bcf32693f7af84d655ab793ab7cb97f20e30",
-  "effects": "receipts only; live run not yet invoked"
-}

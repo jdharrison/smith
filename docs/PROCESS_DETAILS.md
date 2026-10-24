@@ -37,6 +37,8 @@ Producer defines scenarios/blocking acceptance; architect evaluates fit/trust/op
 
 ## Evidence contract
 
+**Storage/publication:** minimize generated evidence. Prefer one concise command/result/failure summary; do not produce repeated snapshots, manifests, source inventories or log bundles by default. `docs/evidence/` is ignored local storage, not a publication target; historical links there require separately retained local records and may not resolve in a fresh checkout. Keep canonical policy and useful plans tracked. Explicit approval naming the files and purpose is required to commit generated evidence. This storage rule does not waive verification, failure preservation or approval gates below.
+
 For routine local work, record the request/scope, changed files and exact checks/results in the conversation; no separate evidence package is required. For consequential work and external effects, record work ID, requirements/risk/exclusions; repo/branch/base/target/diff/interface identity; exact command/scenario, environment, timestamp, exit/result, artifacts/digests; self-check, independent review/adversarial findings/risks; compatibility/rollback; exact approval binding/outcome and external results. Store this once in the active record/artifact location and link it; do not repeat the package in every document. Missing, unverifiable, stale or narrative-only required evidence is failure, not PASS. Preserve intermediate failures, controlled fixture ignores and skips; counts alone do not bind a candidate. Independently retain consequential artifact/evidence digests outside owner-writable checksum packages. Never retain secrets/raw private transcripts or sensitive paths.
 
 ## Required gates

@@ -1,5 +1,0 @@
-COMMAND: flutter analyze --no-pub
-Analyzing client...                                             
-No issues found! (ran in 2.0s)
-
-EXIT: 0

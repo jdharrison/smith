@@ -1,8 +1,0 @@
-00:00 +0: loading <repo>/target/projects-assurance/client/test/assurance_recovery_test.dart
-00:00 +0: <repo>/target/projects-assurance/client/test/assurance_recovery_test.dart: a pre-restart dirty editor must not dispatch into a refreshed instance without review
-00:00 +1: <repo>/target/projects-assurance/client/test/assurance_recovery_test.dart: an old delete confirmation must not dispatch into a refreshed instance
-00:00 +2: <repo>/target/projects-assurance/client/test/assurance_recovery_test.dart: unknown original receipt must not disable all authoritative list observation
-00:00 +3: loading <repo>/target/projects-assurance/client/test/assurance_delete_restart_test.dart
-00:01 +3: <repo>/target/projects-assurance/client/test/assurance_delete_restart_test.dart: confirmed delete after restart clears the clean original selection without replay
-00:01 +4: <repo>/target/projects-assurance/client/test/assurance_delete_restart_test.dart: confirmed delete after restart clears the dirty original selection without replay
-00:02 +5: All tests passed!

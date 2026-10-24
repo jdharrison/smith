@@ -1,6 +1,0 @@
-Native recipient package verified: 97 files; reviewed text-only payload paths
-Native recipient package verified: 97 files; reviewed text-only payload paths
-PASS: fresh installed standalone/helper/running pair b7790a58; selected release verified read-only.
-tests: exit 1; coordinated-candidate-v2-tests.log
-Precondition: Current client gate failed: tests
-FAIL: preparation stopped; partial outputs retained; no installation or runtime action attempted.

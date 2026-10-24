@@ -1,8 +1,0 @@
-Command: PYTHONDONTWRITEBYTECODE=1 python3 -B -c independent response-boundary/fallback probes; disposable allowlisted copies, fake SDK only, socket/process denied.
-Exact complete response 65536 bytes accepted and round-trips (body 15401 bytes).
-Complete response 65537 bytes rejected with Invalid(response_size).
-All non-NUL ASCII controls tested at 16384 body bytes: bounded response or typed rejection.
-Typed fallback bounded and bound to original request hash.
-Pure Setup wrapper: injected oversized encoded body reaches real response-size check, caught as prerequisite with no body.
-Async fake-SDK Setup wrapper: same injected overflow yields typed prerequisite without raw output.
-Exit: 0

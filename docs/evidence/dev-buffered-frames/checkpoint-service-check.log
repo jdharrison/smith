@@ -1,9 +1,0 @@
-cwd: service
-command: cargo check --locked --offline
-timeout_seconds: 120
-exit: 0
-timed_out: False
-elapsed_seconds: 3.87
-
-    Checking smith-service v0.1.0 (<HOME>/develop/personal/projects/smith/service)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.83s

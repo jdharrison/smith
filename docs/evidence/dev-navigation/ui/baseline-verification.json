@@ -1,8 +1,0 @@
-{
-  "canonical_definition": "SHA256 compact sorted-key JSON of manifest.files",
-  "canonical_files_sha256": "8d5e063fc8ec672d40b3218995fe3fdf98b170652c2dbb44d2ab561d2ade993f",
-  "expected_canonical_files_sha256": "8d5e063fc8ec672d40b3218995fe3fdf98b170652c2dbb44d2ab561d2ade993f",
-  "canonical_matches": true,
-  "archive_sha256": "968e688390737472076ac7ccef129bb8469e7a9ccc9b0627d0c74f837bc4802d",
-  "archive_matches": true
-}

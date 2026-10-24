@@ -1,5 +1,9 @@
 /target/
 
+# Local evidence, snapshots, logs and generated QA candidates are not source
+/docs/evidence/
+/.smith-*/
+
 # Flutter generated state and outputs
 /client/.dart_tool/
 /client/.flutter-plugins-dependencies

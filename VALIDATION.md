@@ -1,6 +1,6 @@
 # Smith validation
 
-This page summarizes recorded results, not a guarantee that every later worktree, installation, or release has passed. [Detailed validation history](docs/VALIDATION_DETAILS.md) preserves exact outcomes, failures, corrections, evidence links, and limits.
+This page summarizes recorded results, not a guarantee that every later worktree, installation, or release has passed. [Detailed validation history](docs/VALIDATION_DETAILS.md) preserves outcomes, failures, corrections and limits. Historical `docs/evidence/` links refer to local-only records, not files included in a checkout.
 
 ## Hosted integration
 
@@ -10,7 +10,7 @@ This validates that revision, not the later feature checkpoint. Merge is not rel
 
 ## Local feature checkpoint
 
-**Implemented source, broader acceptance pending:** Projects and Agents configuration, Dev local runners/jobs and the retained read/write foundation have separate source-bound checks and historical failures. Configuration finalization remains deferred. See the [Dev follow-up record](docs/plans/LOCAL-SMITH-DEV-BUFFERED-FRAMES.md), [retained-runtime contract](docs/ARCHITECTURE_DETAILS.md#retained-readwrite-job-foundation--source-only), and [checkpoint Rust checks](docs/evidence/dev-buffered-frames/checkpoint-summary.md).
+**Implemented source, broader acceptance pending:** Projects and Agents configuration, Dev local runners/jobs and the retained read/write foundation have separate source-bound checks and historical failures. Configuration finalization remains deferred. See the [Dev follow-up record](docs/plans/LOCAL-SMITH-DEV-BUFFERED-FRAMES.md), [retained-runtime contract](docs/ARCHITECTURE_DETAILS.md#retained-readwrite-job-foundation--source-only).
 
 Focused checkpoint checks are not full component, installed, or release acceptance. The documented broader timestamp-fixture failure remains unresolved and unwaived. Earlier navigation, migration and combined-gate failures retain their original snapshot-specific outcomes in the detailed history and linked plans.
 

@@ -1,7 +1,0 @@
-{
-  "command": [
-    "python3",
-    "target/dev-navigation/ui/visual-rebase/apply_proven_pngs.py"
-  ],
-  "exit": 0
-}

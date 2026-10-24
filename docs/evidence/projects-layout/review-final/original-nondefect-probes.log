@@ -1,5 +1,0 @@
-00:00 +0: loading <REPO>/target/projects-layout/assurance/independent_layout_probe_test.dart
-00:00 +0: independent compact actual Tab traversal and 48px targets at 1.0x
-00:01 +1: independent compact actual Tab traversal and 48px targets at 2.0x
-00:01 +2: independent list bookmark through filter clamp and wide compact reflow
-00:02 +3: All tests passed!

@@ -13,7 +13,7 @@ def main():
     if os.environ.get("PYTHONDONTWRITEBYTECODE") != "1" or not sys.dont_write_bytecode:
         raise SystemExit("Use PYTHONDONTWRITEBYTECODE=1 python3 -B pipeline/tests/run_isolated.py")
     repository = Path(__file__).absolute().parents[2]
-    log_path = repository / "docs/evidence/artifact-pipeline/fixture-tests.log"
+
     original_directory = Path.cwd()
     original_path = sys.path[:]
     output = io.StringIO()
@@ -40,9 +40,7 @@ def main():
     exit_code = 0 if result.wasSuccessful() else 1
     log = f"Command: {command}\nPython: {sys.version.split()[0]}\n" + log
     log += f"Exit: {exit_code}\n"
-    # Retain the full secret-safe log, but bound every terminal response and line.
-    with log_path.open("a", encoding="utf-8") as evidence:
-            evidence.write(log + "\n")
+
     excerpt = "\n".join(line[:1800] for line in log.splitlines())
     print(excerpt[:30000])
     return exit_code

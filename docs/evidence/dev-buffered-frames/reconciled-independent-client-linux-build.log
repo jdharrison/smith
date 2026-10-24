@@ -1,5 +1,0 @@
-COMMAND: flutter build linux --release --no-pub
-Building Linux application...                                   
-✓ Built build/linux/x64/release/bundle/smith_client
-
-EXIT: 0

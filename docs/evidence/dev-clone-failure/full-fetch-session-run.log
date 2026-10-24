@@ -1,2 +1,0 @@
-result=ok content_type=application/x-git-upload-pack-advertisement advertisement_bytes=1694 pin_count=1 selected_ref=refs/heads/main elapsed_ms=253
-retained_capabilities=multi_ack thin-pack side-band side-band-64k ofs-delta no-progress multi_ack_detailed symref=HEAD:refs/heads/main object-format=sha1 agent=git/github-41cc7379a75f-Linux

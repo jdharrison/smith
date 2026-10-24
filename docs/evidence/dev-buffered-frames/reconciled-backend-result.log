@@ -1,4 +1,0 @@
-SOURCE_STABLE=True
-[('local-tests', 0), ('dev-tests', 0), ('build', 0), ('clippy', 0), ('fmt', 0)]
-9510f942993db8ca8c5ff95df3425fb2c5719617a20be047ed57bdbd281ab714  service/src/app_dev_local.rs
-8cd9236eb10ac4927bfd574dc74242c603a7c87a54ee83f2e94b9dcc5ec2a4e6  service/src/app_dev_local_tests.rs

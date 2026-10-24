@@ -1,8 +1,0 @@
-    Finished `test` profile [unoptimized] target(s) in 0.05s
-     Running tests/debug_service.rs (<repo>/target/default-project/validation/cargo-target/debug/deps/debug_service-0a4be2ddda80d80f)
-
-running 1 test
-test dart_cloud::disk5_projects_control_seeds_real_legacy_bytes_and_reopens_without_effects ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 24 filtered out; finished in 0.04s
-

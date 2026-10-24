@@ -1,5 +1,0 @@
-command: dart format --output=none --set-exit-if-changed test/rust_dev_jobs_integration_test.dart
-SMITH_TEST_CLOUD_SERVICE=service/target/debug/deps/debug_service-0a4be2ddda80d80f (absolute at execution)
-SMITH_TEST_SERVICE=required
-Formatted 1 file (0 changed) in 0.01 seconds.
-exit: 0

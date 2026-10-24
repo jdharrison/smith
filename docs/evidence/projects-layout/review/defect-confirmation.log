@@ -1,8 +1,0 @@
-00:00 +0: loading <REPO>/target/projects-layout/assurance/defect_confirmation_test.dart
-00:00 +0: M1 observed trapped new editor at 1.0x
-00:00 +1: M1 observed trapped missing editor at 1.0x
-00:00 +2: M1 observed trapped uncertain-new editor at 1.0x
-00:01 +3: M1 observed trapped new editor at 2.0x
-00:01 +4: M1 observed trapped missing editor at 2.0x
-00:01 +5: M1 observed trapped uncertain-new editor at 2.0x
-00:01 +6: All tests passed!

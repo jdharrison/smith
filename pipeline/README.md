@@ -107,8 +107,8 @@ private temporary directory, changes into it, then discovers/runs the tests
 in-process. Path tests create disposable children under the temporary test
 root. No candidate is executed as a subprocess. No installs, Docker, Dagger,
 OpenCode, models or network are used. Bytecode writing is disabled. The runner
-removes the temporary tree and writes the secret-safe test log only to
-`docs/evidence/artifact-pipeline/fixture-tests.log`; terminal excerpts are bounded.
+removes the temporary tree and prints bounded, secret-safe results without
+writing logs or snapshots into the repository.
 
 These are developer self-checks only. Fresh independent assurance and the other
 parent-owned milestone checks remain separate; no full pipeline, provider,
@@ -289,7 +289,6 @@ and baseline failures, SDK failures and bounded output rejection, while requirin
 Execute/Submit to construct no containers. Simulated Setup observations are not
 live runtime evidence. The runner denies
 socket connections and subprocess launches, installs nothing and never imports
-the real Dagger SDK. It appends isolated source hashes and all results to
-`docs/evidence/artifact-pipeline/module-source-tests.log`, preserving initial
-failures and earlier evidence. This is self-check evidence only; fresh independent
+the real Dagger SDK. It prints bounded, secret-safe results without generating
+source inventories or persistent logs. This is self-check evidence only; fresh independent
 assurance and parent-owned Rust/module-manifest checks remain separate.

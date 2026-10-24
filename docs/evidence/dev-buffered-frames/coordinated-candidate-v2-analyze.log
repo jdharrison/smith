@@ -1,5 +1,0 @@
-COMMAND: /snap/bin/flutter --no-version-check analyze --no-pub
-Analyzing client...                                             
-No issues found! (ran in 1.9s)
-
-EXIT_CODE: 0

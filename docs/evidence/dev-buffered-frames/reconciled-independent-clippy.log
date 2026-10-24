@@ -1,4 +1,0 @@
-COMMAND: cargo clippy --offline --locked --lib --bins -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s
-
-EXIT: 0

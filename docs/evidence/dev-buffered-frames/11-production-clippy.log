@@ -1,7 +1,0 @@
-timestamp=2026-10-19T19:32:25.973748+00:00
-command=['cargo', 'clippy', '--offline', '--locked', '--lib', '--bins', '--', '-D', 'warnings']
-cwd=service
-    Checking smith-service v0.1.0 (<repo>/service)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.20s
-
-exit=0

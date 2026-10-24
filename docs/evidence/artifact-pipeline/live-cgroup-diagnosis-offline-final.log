@@ -1,8 +1,0 @@
-test_original_accepts_limits_at_container_root (test_live_cgroup_diagnosis.HistoricalCgroupDiagnosis.test_original_accepts_limits_at_container_root) ... ok
-test_original_leaf_cleanup_does_not_inspect_populated_sibling (test_live_cgroup_diagnosis.HistoricalCgroupDiagnosis.test_original_leaf_cleanup_does_not_inspect_populated_sibling) ... ok
-test_original_rejects_unlimited_leaf_despite_bounded_parent (test_live_cgroup_diagnosis.HistoricalCgroupDiagnosis.test_original_rejects_unlimited_leaf_despite_bounded_parent) ... ok
-
-----------------------------------------------------------------------
-Ran 3 tests in 0.002s
-
-OK

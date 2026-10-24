@@ -1,9 +1,0 @@
-Analyzing 4 items...                                            
-
-   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/dev_jobs_controller.dart:183:9 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/dev_jobs_controller.dart:185:9 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/dev_jobs_controller.dart:200:7 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/dev_jobs_controller.dart:206:9 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block. Try wrapping the statement in a block • lib/dev_jobs_controller.dart:208:9 • curly_braces_in_flow_control_structures
-
-5 issues found. (ran in 2.4s)

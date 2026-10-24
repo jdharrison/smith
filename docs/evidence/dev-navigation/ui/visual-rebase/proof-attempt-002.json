@@ -1,7 +1,0 @@
-{
-  "command": [
-    "python3",
-    "target/dev-navigation/ui/visual-rebase/prove_rails.py"
-  ],
-  "exit": 0
-}

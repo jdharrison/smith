@@ -1,7 +1,0 @@
-{
-  "command": ["python3", "target/dev-navigation/ui/visual-rebase/prove_rails.py"],
-  "exit": 1,
-  "error_summary": "KeyError: filename 'desktop-000ms_testImage.png' not found in the initial failure archive. The capture instrumentation also records the unchanged passing desktop-000ms image before the first failing entrance capture.",
-  "first_completed_comparison": {"golden": "compact-text2-360ms.png", "rails": [[9,136,65,400]], "bbox": [12,136,65,400], "changed_pixels": 5285, "outside_rail_changed_pixels": 0, "initial_failure_actual_vs_current_changed_pixels": 0},
-  "effects": "No golden or proof record was written. Original failed script retained as prove_rails_attempt001.py."
-}

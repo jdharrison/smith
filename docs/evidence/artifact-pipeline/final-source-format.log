@@ -1,3 +1,0 @@
-Command: rustfmt --edition 2021 --check --config skip_children=true src/lib.rs src/artifact_pipeline.rs src/artifact_dagger.rs
-
-Exit: 0

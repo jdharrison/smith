@@ -1,9 +1,0 @@
-{
-  "baseline_vs_current_shell_bbox": [
-    11,
-    284,
-    64,
-    492
-  ],
-  "note": "Both baseline and current fail the existing shell golden. This comparison isolates UI navigation delta using the same current frozen dependencies; no old golden is regenerated."
-}

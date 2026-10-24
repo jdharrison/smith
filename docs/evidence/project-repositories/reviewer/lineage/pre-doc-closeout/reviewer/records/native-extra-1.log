@@ -1,9 +1,0 @@
-   Compiling smith-service v0.1.0 (<repo>/target/project-repositories/assurance/native/service)
-    Finished `test` profile [unoptimized] target(s) in 3.67s
-     Running tests/debug_service.rs (target/debug/deps/debug_service-0a4be2ddda80d80f)
-
-running 1 test
-test dart_cloud::disk5_projects_control_seeds_real_legacy_bytes_and_reopens_without_effects ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 24 filtered out; finished in 0.07s
-
