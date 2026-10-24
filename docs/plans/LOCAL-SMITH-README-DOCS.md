@@ -35,4 +35,3 @@ Each selected guide has at most500 whitespace-separated words. Links resolve; ex
 Completed. Word counts: Scope386, Architecture440, Host439, Validation374; prior README173 and installer guide415 remain within limits. Independent review verified preservation against the recorded Projects supporting-input hashes, local links, inbound anchors, explicit detailed-policy delegation and implemented/target distinctions. It independently corroborated the hosted CI/PR merge statement through read-only GitHub queries. No blocking documentation finding remains.
 
 The two pre-existing missing Projects results/review files remain absent and explicitly disclosed, not newly accepted evidence. Detailed validation content is preserved except relative-link rebasing. No application builds/tests, source edits, commits, push, installation or release occurred in this cleanup.
-
