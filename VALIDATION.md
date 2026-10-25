@@ -10,9 +10,13 @@ This validates that revision, not the later feature checkpoint. Merge is not rel
 
 ## Local feature checkpoint
 
-**Implemented source, broader acceptance pending:** Projects and Agents configuration, Dev local runners/jobs and the retained read/write foundation have separate source-bound checks and historical failures. Configuration finalization remains deferred. See the [Dev follow-up record](docs/plans/LOCAL-SMITH-DEV-BUFFERED-FRAMES.md), [retained-runtime contract](docs/ARCHITECTURE_DETAILS.md#retained-readwrite-job-foundation--source-only).
+**Implemented source; checkpoint checks green locally, hosted CI is the final gate for this head:** Projects and Agents configuration, Dev local runners/jobs and the retained read/write foundation now reconcile the schema-10 instructions/agents migration, simplified Projects presentation and 104px inline Dev navigation. The timestamp/v2 migration and compiled socket/Projects integration fixtures were updated to the current state/revision contract; the previously documented timestamp-fixture failure is resolved in this snapshot.
 
-Focused checkpoint checks are not full component, installed, or release acceptance. The documented broader timestamp-fixture failure remains unresolved and unwaived. Earlier navigation, migration and combined-gate failures retain their original snapshot-specific outcomes in the detailed history and linked plans.
+Local `make test` passed the service, client (1254 passed; 34 skipped fixture-dependent cases), native installer and builder-only package checks. `make installer/build` produced and reverified the 97-file recipient package. The service gate now runs on Ubuntu 24.04 so the supported-host Git 2.43 clone fixture is exercised. Hosted CI remains the final check for the pushed head.
+
+These are source/Dagger checks, not installed, graphical, live runtime/model/provider, release or deployment acceptance. Configuration finalization and broader acceptance remain pending. See the [Dev follow-up record](docs/plans/LOCAL-SMITH-DEV-BUFFERED-FRAMES.md), [retained-runtime contract](docs/ARCHITECTURE_DETAILS.md#retained-readwrite-job-foundation--source-only).
+
+Earlier navigation, migration and combined-gate failures retain their original snapshot-specific outcomes in the detailed history and linked plans.
 
 ## Earlier repairs
 

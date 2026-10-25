@@ -40,3 +40,7 @@ From `client/`, against the actual dirty worktree with existing caches and no de
 The initial same-command run passed analyzer but failed tests: navigation's compact glyph overflowed by1px because the56px width also included a1px border, and the new semantics test disposed its handle too late. Fixed the content padding to reserve the border while preserving48px targets, and disposed the test handle before verification. The final invocation above passed. No baseline failures were erased or unrelated tests edited.
 
 A fresh independent reviewer inspected the scoped source/tests and current contracts without commands, found no introduced blocker, and passed this bounded source review. This is not independent execution of the parent checks or approval of graphical/installed/release behavior. Full navigation/golden/component/build gates were not run or rebaselined for this minimal iteration; native graphical acceptance remains pending. No app launch, installation, service/container/model action or Git mutation occurred.
+
+## Subsequent checkpoint supersession
+
+The later Dev-runner checkpoint supersedes SIDE03's compact 56px chooser with the implemented 104px icon-only sidebar and inline indented children documented in `DESIGN_DETAILS.md`. Wide SIDE01/SIDE02 behavior, separate 48px Dev/disclosure targets, focus return, session-local disclosure and preference compatibility remain in force. The evidence above records the earlier slice only.
