@@ -1,5 +1,8 @@
 import 'app_v2.dart' as v2;
 import 'message_timestamps.dart';
+import 'projects.dart';
+import 'instructions.dart';
+import 'agents.dart';
 
 const cloudModels = {
   'openai': [
@@ -263,7 +266,7 @@ class RoutePreparation {
         v['context_messages'] > 33 ||
         v['context_messages'].isEven ||
         !v2.wireRevision(v['context_bytes']) ||
-        v['context_bytes'] > 81920 ||
+        v['context_bytes'] > 83968 ||
         v['requires_consent'] is! bool) {
       v2.invalid();
     }
@@ -296,7 +299,7 @@ class RoutePreparation {
   }
 
   String get disclosure =>
-      'Send to ${route.label}?\n\nThe proposed message and retained conversation context (${value['context_messages']} messages, ${value['context_bytes']} UTF-8 bytes) will be transferred to ${route.provider}. This destination is credential generation ${route.generation}, not a verified account identity. Provider processing and retention apply; charges may occur. Local deletion cannot delete provider records.\n\nApproval is retained for later explicit Sends in this chat to this provider/generation, including then-retained context and intervening turns. Changing models at the same approved destination will not ask again. No other destination is approved.';
+      'Send to ${route.label}?\n\nSmith core identity/safety, product knowledge, global instructions/personality/guardrails, vessel context, retained conversation history and the current message (${value['context_messages']} messages, ${value['context_bytes']} UTF-8 bytes including the instruction preamble) will be transferred to ${route.provider}. This destination is credential generation ${route.generation}, not a verified account identity. Provider processing and retention apply; charges may occur. Local deletion cannot delete provider records.\n\nApproval is retained for later explicit Sends in this chat to this provider/generation, including then-retained context and intervening turns. A changed global context bundle requires renewed consent. Changing models at the same approved destination will not ask again. No other destination is approved.';
 }
 
 enum TransferDecision { send, cancel, newChat }
@@ -479,6 +482,21 @@ void operationV3(dynamic value, {bool terminal = false}) {
 
 void validateV3(String op, Map<String, dynamic> r) {
   switch (op) {
+    case 'agents_list_v2':
+    case 'agent_create_v1':
+    case 'agent_update_v2':
+    case 'agent_receipt':
+      validateAgentResult(op, r);
+    case 'instructions_get':
+    case 'instructions_update':
+    case 'instructions_receipt':
+      validateInstructionResult(op, r);
+    case 'projects_list_v3':
+    case 'project_create_v3':
+    case 'project_update_v3':
+    case 'project_delete_v3':
+    case 'project_receipt':
+      validateProjectResult(op, r);
     case 'conversation_timestamps':
       ConversationTimestamps(r);
     case 'route_catalog':
@@ -529,6 +547,33 @@ void validateV3(String op, Map<String, dynamic> r) {
 }
 
 void validateV3Arguments(String op, Map<String, dynamic> a) {
+  if (const {
+    'agents_list_v2',
+    'agent_create_v1',
+    'agent_update_v2',
+    'agent_receipt',
+  }.contains(op)) {
+    validateAgentArguments(op, a);
+    return;
+  }
+  if (const {
+    'instructions_get',
+    'instructions_update',
+    'instructions_receipt',
+  }.contains(op)) {
+    validateInstructionArguments(op, a);
+    return;
+  }
+  if (const {
+    'projects_list_v3',
+    'project_create_v3',
+    'project_update_v3',
+    'project_delete_v3',
+    'project_receipt',
+  }.contains(op)) {
+    validateProjectArguments(op, a);
+    return;
+  }
   if (op == 'route_catalog') {
     v2.exact(a, []);
     return;

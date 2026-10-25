@@ -103,6 +103,16 @@ void main() {
         );
       }
       final theme = SmithTheme.dark();
+      expect(theme.focusColor, SmithColors.surfaceSelected);
+      expect(
+        theme.textSelectionTheme.selectionColor,
+        SmithColors.surfaceSelected,
+      );
+      expect(
+        theme.focusColor.computeLuminance(),
+        greaterThan(SmithColors.surfaceRaised.computeLuminance()),
+      );
+      expect(theme.textSelectionTheme.cursorColor, SmithColors.accent);
       expect(theme.extension<SmithTokens>()?.hitTarget, 48);
       final style = theme.iconButtonTheme.style!;
       expect(style.minimumSize!.resolve({}), const Size(48, 48));

@@ -1144,7 +1144,7 @@ fn multi_chat_title_derived_once_preserves_full_prompt_and_restart() {
     let detail = get2(&app, target);
     assert_eq!(detail["conversation"]["title"], expected);
     assert_eq!(detail["history"][0]["content"], prompt);
-    assert_eq!(provider.calls.lock().unwrap()[0][0].content, prompt);
+    assert_eq!(provider.calls.lock().unwrap()[0][1].content, prompt);
     let disk: Value = serde_json::from_slice(&fs::read(f.state_path()).unwrap()).unwrap();
     let job = disk["jobs"]
         .as_array()
@@ -1223,8 +1223,8 @@ fn multi_chat_atomic_admission_fifo_capacity_and_isolated_context() {
         .iter()
         .enumerate()
     {
-        assert_eq!(calls[i].len(), 1);
-        assert_eq!(calls[i][0].content, *s);
+        assert_eq!(calls[i].len(), 2);
+        assert_eq!(calls[i][1].content, *s);
     }
     drop(calls);
     let target = &a["conversation_id"];
@@ -1235,8 +1235,8 @@ fn multi_chat_atomic_admission_fifo_capacity_and_isolated_context() {
     );
     done2(&app, 107);
     let calls = provider.calls.lock().unwrap();
-    assert_eq!(calls[4].len(), 3);
-    assert_eq!(calls[4][0].content, "private A");
+    assert_eq!(calls[4].len(), 4);
+    assert_eq!(calls[4][1].content, "private A");
     assert_eq!(get2(&app, target)["conversation"]["history_revision"], 2);
 }
 #[test]
@@ -1368,6 +1368,7 @@ fn multi_chat_strict_corruption_preserved_and_first_submit_rejection_atomic() {
     let f = Fixture::new();
     let p = Arc::new(Fake::default());
     let app = Application::open(&f.roots, p.clone()).unwrap();
+    let before = fs::read(f.state_path()).unwrap();
     assert_eq!(
         app.call(request2(
             "submit_new",
@@ -1381,7 +1382,7 @@ fn multi_chat_strict_corruption_preserved_and_first_submit_rejection_atomic() {
         .as_array()
         .unwrap()
         .is_empty());
-    assert!(!f.state_path().exists());
+    assert_eq!(fs::read(f.state_path()).unwrap(), before);
     setup(&app);
     let a = new2(&app, 101, "A");
     done2(&app, 101);
@@ -1505,11 +1506,13 @@ fn legacy_state() -> Value {
 fn voice_v1_migration_preserves_preferences_history_results_ids_and_no_replay() {
     let f = Fixture::new();
     let baseline = legacy_state();
+    let mut expected_config = baseline["config"].clone();
+    expected_config["revision"] = json!(baseline["config"]["revision"].as_u64().unwrap() + 1);
     f.write(&serde_json::to_vec(&baseline).unwrap());
     let fake = Arc::new(Fake::default());
     let app = Application::open(&f.roots, fake.clone()).unwrap();
     let state = call(&app, "state", json!({}));
-    assert_eq!(state["config"], baseline["config"]);
+    assert_eq!(state["config"], expected_config);
     assert_eq!(state["history"], baseline["history"]);
     assert!(state["active"].is_null());
     for n in 1..=5 {
@@ -1556,7 +1559,7 @@ fn voice_v1_migration_preserves_preferences_history_results_ids_and_no_replay() 
         finished(&app, 7)["result"],
         json!({"assistant_text":"Assistant answer","audio":null,"speech_error":null})
     );
-    assert_eq!(call(&app, "state", json!({}))["config"], baseline["config"]);
+    assert_eq!(call(&app, "state", json!({}))["config"], expected_config);
     drop(app);
     let restored = Application::open(&f.roots, fake.clone()).unwrap();
     assert_eq!(poll(&restored, 6)["status"], "interrupted");
@@ -1569,7 +1572,7 @@ fn voice_v1_migration_preserves_preferences_history_results_ids_and_no_replay() 
         "configure",
         json!({"model":"local:exact","voice":null}),
     );
-    assert_eq!(config["revision"], 8);
+    assert_eq!(config["revision"], 9);
     assert!(config["voice"].is_null());
     assert_eq!(poll(&restored, 1), baseline["jobs"][0]["operation"]);
     assert_eq!(poll(&restored, 2), baseline["jobs"][1]["operation"]);

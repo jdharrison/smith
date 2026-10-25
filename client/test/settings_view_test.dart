@@ -107,7 +107,7 @@ void main() {
   }
 
   testWidgets(
-    'gear below Chat opens settings without calls or chat state loss',
+    'gear below Chat reads instructions without writes or chat state loss',
     (tester) async {
       final api = FakeAppApi();
       final control = FakeControlApi(profile());
@@ -141,7 +141,14 @@ void main() {
       await tester.tap(settingsButton);
       await tester.pumpAndSettle();
       expect(find.byType(SettingsView), findsOneWidget);
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(TextField), findsNWidgets(3));
+      expect(
+        tester
+            .widgetList<TextField>(find.byType(TextField))
+            .every((field) => field.enabled == false),
+        true,
+      );
+      appCalls.add('instructions_get');
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
       expect(api.calls, appCalls);

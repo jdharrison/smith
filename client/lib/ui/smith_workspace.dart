@@ -42,12 +42,20 @@ class SmithWorkspace extends StatefulWidget {
     this.showAppHeader = true,
     this.page,
     this.onPageChanged,
+    this.projects,
+    this.agents,
+    this.devJobs,
+    this.instructions,
   });
 
   final bool showAppHeader;
   final String? page;
   final ValueChanged<String>? onPageChanged;
   final Widget child;
+  final Widget? projects;
+  final Widget? agents;
+  final Widget? devJobs;
+  final Widget? instructions;
   final List<ChatSummary> chats;
   final String title;
   final String version;
@@ -74,13 +82,36 @@ class SmithWorkspace extends StatefulWidget {
 }
 
 class _SmithWorkspaceState extends State<SmithWorkspace> {
-  bool _localSettings = false;
-  bool get _settings =>
-      widget.page == null ? _localSettings : widget.page == 'settings';
+  // Temporarily hide entry points without removing the retained Agents page.
+  static const _showAgentsNavigation = false;
+
+  String _localPage = 'chat';
+  String get _page => widget.page ?? _localPage;
+  bool get _chat => _page == 'chat';
+  bool get _settings => _page == 'settings';
+  bool get _projects => _page == 'projects';
+  bool _projectsOpened = false;
+  bool get _agents => _page == 'agents';
+  bool _agentsOpened = false;
+  bool get _dev => _page == 'dev';
+  bool _devOpened = false;
+  bool _devExpanded = false;
+
+  final _devFocus = FocusNode(debugLabel: 'Dev navigation root');
+  final _devDisclosureFocus = FocusNode(debugLabel: 'Dev disclosure');
+  final _projectsFocus = FocusNode(debugLabel: 'Projects navigation');
+  final _agentsFocus = FocusNode(debugLabel: 'Agents navigation');
+
+  void _discloseDev() {
+    if (_devExpanded && (_projectsFocus.hasFocus || _agentsFocus.hasFocus)) {
+      _devDisclosureFocus.requestFocus();
+    }
+    setState(() => _devExpanded = !_devExpanded);
+  }
 
   void _setPage(String page) {
     if (widget.page == null) {
-      setState(() => _localSettings = page == 'settings');
+      setState(() => _localPage = page);
     }
     widget.onPageChanged?.call(page);
   }
@@ -97,6 +128,7 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
   @override
   void didUpdateWidget(covariant SmithWorkspace oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     // Modal routes are siblings, not descendants of this build scope.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _presentation.value = widget;
@@ -106,6 +138,10 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
   @override
   void dispose() {
     _presentation.dispose();
+    _devFocus.dispose();
+    _devDisclosureFocus.dispose();
+    _projectsFocus.dispose();
+    _agentsFocus.dispose();
     super.dispose();
   }
 
@@ -276,6 +312,33 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
     if (mounted) setState(() => _historyOpen = false);
   }
 
+  Widget _navigationHighlight({
+    required String identity,
+    required bool selected,
+    required Widget child,
+  }) => Container(
+    key: ValueKey('navigation-highlight-$identity'),
+    decoration: BoxDecoration(
+      color: selected ? SmithColors.surfaceSelected : Colors.transparent,
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Stack(
+      children: [
+        child,
+        if (selected)
+          Positioned(
+            left: 0,
+            top: 6,
+            bottom: 6,
+            width: 2,
+            child: const IgnorePointer(
+              child: ColoredBox(color: SmithColors.accent),
+            ),
+          ),
+      ],
+    ),
+  );
+
   Widget _railButton({
     required String label,
     required String semanticLabel,
@@ -283,9 +346,18 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
     required bool selected,
     required VoidCallback onPressed,
     bool? expanded,
-  }) => Padding(
-    padding: const EdgeInsets.only(bottom: 4),
-    child: MergeSemantics(
+    FocusNode? focusNode,
+    Widget? glyph,
+    bool showLabel = false,
+    bool integrated = false,
+    double bottomSpacing = 4,
+    String? text,
+    Color? foregroundColor,
+  }) {
+    final tint =
+        foregroundColor ??
+        (selected ? SmithColors.accent : SmithColors.textPrimary);
+    final button = MergeSemantics(
       child: Semantics(
         label: semanticLabel,
         hint: label,
@@ -296,12 +368,16 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
           excludeFromSemantics: true,
           child: IconButton(
             isSelected: selected,
+            focusNode: focusNode,
             onPressed: onPressed,
-            constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+            constraints: BoxConstraints.tightFor(
+              width: showLabel ? null : 48,
+              height: 48,
+            ),
             style: ButtonStyle(
-              backgroundColor: WidgetStatePropertyAll(
-                selected ? SmithColors.surfaceSelected : Colors.transparent,
-              ),
+              foregroundColor: WidgetStatePropertyAll(tint),
+              backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
+              alignment: Alignment.centerLeft,
               shape: WidgetStatePropertyAll(
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
               ),
@@ -309,22 +385,45 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
                 (states) => BorderSide(
                   color: states.contains(WidgetState.focused)
                       ? SmithColors.accentBright
-                      : selected
-                      ? SmithColors.stroke
                       : Colors.transparent,
                   width: states.contains(WidgetState.focused) ? 2 : 1,
                 ),
               ),
             ),
-            icon: SmithIcon(
-              icon,
-              color: selected ? SmithColors.accent : SmithColors.textSecondary,
-            ),
+            icon: showLabel
+                ? Row(
+                    children: [
+                      glyph ?? SmithIcon(icon, color: tint),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ExcludeSemantics(
+                          child: Text(
+                            text ?? semanticLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: SmithColors.textPrimary),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : glyph ?? SmithIcon(icon, color: tint),
           ),
         ),
       ),
-    ),
-  );
+    );
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomSpacing),
+      child: !integrated
+          ? _navigationHighlight(
+              identity: semanticLabel,
+              selected: selected,
+              child: button,
+            )
+          : button,
+    );
+  }
 
   Widget _panel(Widget child) => Container(
     padding: const EdgeInsets.all(1),
@@ -339,8 +438,24 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, bounds) {
+      if (_projects) _projectsOpened = true;
+      if (_agents) _agentsOpened = true;
+      if (_dev) _devOpened = true;
       final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
       final compact = bounds.maxWidth < 960 + (scale - 1).clamp(0, 2) * 320;
+      final labelPainter = TextPainter(
+        text: TextSpan(
+          text: 'Projects',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        textScaler: MediaQuery.textScalerOf(context),
+        textDirection: Directionality.of(context),
+        maxLines: 1,
+      )..layout();
+      final navigationWidth = compact
+          ? 104.0
+          : math.max(184.0, labelPainter.width + 96);
+      labelPainter.dispose();
       return Material(
         color: SmithColors.background,
         child: Column(
@@ -358,49 +473,153 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
                     WorkspaceReveal(
                       region: WorkspaceRegion.navigation,
                       child: Container(
-                        width: 56,
+                        key: const ValueKey('workspace-navigation'),
+                        width: navigationWidth,
+                        height: double.infinity,
+                        alignment: Alignment.topLeft,
+                        padding: const EdgeInsets.only(left: 4, right: 3),
                         decoration: const BoxDecoration(
                           border: Border(
                             right: BorderSide(color: SmithColors.strokeSubtle),
                           ),
                         ),
-                        child: Column(
-                          children: [
-                            _railButton(
-                              semanticLabel: 'Chat',
-                              label: _settings
-                                  ? 'Return to Chat'
-                                  : compact
-                                  ? 'Open chat history'
-                                  : 'Chat',
-                              icon: 'message-square',
-                              selected: !_settings,
-                              expanded: compact && !_settings
-                                  ? _historyOpen
-                                  : null,
-                              onPressed: () {
-                                if (_settings) {
-                                  _setPage('chat');
-                                } else if (compact && !_historyOpen) {
-                                  _history();
-                                }
-                              },
-                            ),
-                            _railButton(
-                              semanticLabel: 'Settings',
-                              label: 'Settings',
-                              icon: 'settings',
-                              selected: _settings,
-                              onPressed: () => _setPage('settings'),
-                            ),
-                          ],
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _railButton(
+                                semanticLabel: 'Chat',
+                                text: 'Chats',
+                                showLabel: !compact,
+                                label: !_chat
+                                    ? 'Return to Chat'
+                                    : compact
+                                    ? 'Open chat history'
+                                    : 'Chat',
+                                icon: 'message-square',
+                                selected: _chat,
+                                expanded: compact && _chat
+                                    ? _historyOpen
+                                    : null,
+                                onPressed: () {
+                                  if (!_chat) {
+                                    _setPage('chat');
+                                  } else if (compact && !_historyOpen) {
+                                    _history();
+                                  }
+                                },
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: _navigationHighlight(
+                                  identity: 'Dev',
+                                  selected: _dev,
+                                  child: Row(
+                                    key: const ValueKey('dev-navigation-row'),
+                                    children: [
+                                      Expanded(
+                                        child: _railButton(
+                                          semanticLabel: 'Dev',
+                                          label: 'Dev',
+                                          icon: 'archive',
+                                          glyph: const Icon(Icons.code),
+                                          showLabel: !compact,
+                                          integrated: true,
+                                          bottomSpacing: 0,
+                                          selected: _dev,
+                                          focusNode: _devFocus,
+                                          onPressed: () => _setPage('dev'),
+                                        ),
+                                      ),
+                                      _railButton(
+                                        semanticLabel: 'Dev navigation',
+                                        label: 'Dev navigation',
+                                        icon: 'archive',
+                                        glyph: Icon(
+                                          _devExpanded
+                                              ? Icons.expand_more
+                                              : Icons.chevron_right,
+                                          size: 18,
+                                        ),
+                                        integrated: true,
+                                        bottomSpacing: 0,
+                                        foregroundColor: _dev
+                                            ? SmithColors.accent
+                                            : SmithColors.textPrimary,
+                                        focusNode: _devDisclosureFocus,
+                                        selected: false,
+                                        expanded: _devExpanded,
+                                        onPressed: _discloseDev,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              if (_devExpanded)
+                                Container(
+                                  key: const ValueKey(
+                                    'dev-navigation-children',
+                                  ),
+                                  margin: const EdgeInsets.only(left: 12),
+                                  padding: const EdgeInsets.only(left: 4),
+                                  decoration: const BoxDecoration(
+                                    border: Border(
+                                      left: BorderSide(
+                                        color: SmithColors.strokeSubtle,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      _railButton(
+                                        semanticLabel: 'Projects',
+                                        label: 'Projects',
+                                        icon: 'archive',
+                                        glyph: const Icon(
+                                          Icons.view_in_ar_outlined,
+                                        ),
+                                        showLabel: !compact,
+                                        selected: _projects,
+                                        focusNode: _projectsFocus,
+                                        onPressed: () => _setPage('projects'),
+                                      ),
+                                      if (_showAgentsNavigation)
+                                        _railButton(
+                                          semanticLabel: 'Agents',
+                                          label: 'Agents',
+                                          icon: 'archive',
+                                          glyph: const Icon(
+                                            Icons.smart_toy_outlined,
+                                          ),
+                                          showLabel: !compact,
+                                          selected: _agents,
+                                          focusNode: _agentsFocus,
+                                          onPressed: () => _setPage('agents'),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              const SizedBox(height: 8),
+                              _railButton(
+                                semanticLabel: 'Settings',
+                                showLabel: !compact,
+                                label: 'Settings',
+                                icon: 'settings',
+                                selected: _settings,
+                                onPressed: () => _setPage('settings'),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                     // Keep these slots stable through breakpoint changes; never move child.
                     SizedBox(
-                      width: compact || _settings ? 0 : 288,
-                      child: compact || _settings
+                      width: compact || !_chat ? 0 : 288,
+                      child: compact || !_chat
                           ? null
                           : Padding(
                               padding: const EdgeInsets.only(right: 8),
@@ -414,115 +633,141 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
                       child: _panel(
                         Column(
                           children: [
-                            WorkspaceReveal(
-                              region: WorkspaceRegion.title,
-                              child: Container(
-                                width: double.infinity,
-                                constraints: const BoxConstraints(
-                                  minHeight: 48,
-                                ),
-                                padding: EdgeInsets.all(
-                                  bounds.maxHeight < 500 ? 8 : 12,
-                                ),
-                                decoration: const BoxDecoration(
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: SmithColors.strokeSubtle,
+                            if (!_projects && !_agents)
+                              WorkspaceReveal(
+                                region: WorkspaceRegion.title,
+                                child: Container(
+                                  width: double.infinity,
+                                  constraints: const BoxConstraints(
+                                    minHeight: 48,
+                                  ),
+                                  padding: EdgeInsets.all(
+                                    bounds.maxHeight < 500 ? 8 : 12,
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: SmithColors.strokeSubtle,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                child: compact && !_settings
-                                    ? Row(
-                                        children: [
-                                          Expanded(
-                                            child: Builder(
-                                              builder: (anchor) => Tooltip(
-                                                message:
-                                                    'Choose chat: ${displayChatTitle(widget.title)}',
-                                                child: Semantics(
-                                                  expanded: _historyOpen,
-                                                  child: TextButton(
-                                                    key: const ValueKey(
-                                                      'compact-chat-title',
-                                                    ),
-                                                    onPressed: () =>
-                                                        _chooser(anchor),
-                                                    child: Row(
-                                                      children: [
-                                                        Expanded(
-                                                          child: Text(
-                                                            displayChatTitle(
-                                                              widget.title,
+                                  child: compact && _chat
+                                      ? Row(
+                                          children: [
+                                            Expanded(
+                                              child: Builder(
+                                                builder: (anchor) => Tooltip(
+                                                  message:
+                                                      'Choose chat: ${displayChatTitle(widget.title)}',
+                                                  child: Semantics(
+                                                    expanded: _historyOpen,
+                                                    child: TextButton(
+                                                      key: const ValueKey(
+                                                        'compact-chat-title',
+                                                      ),
+                                                      onPressed: () =>
+                                                          _chooser(anchor),
+                                                      child: Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: Text(
+                                                              displayChatTitle(
+                                                                widget.title,
+                                                              ),
+                                                              maxLines: 1,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
                                                             ),
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
                                                           ),
-                                                        ),
-                                                        const Icon(
-                                                          Icons.expand_more,
-                                                        ),
-                                                      ],
+                                                          const Icon(
+                                                            Icons.expand_more,
+                                                          ),
+                                                        ],
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                          if (widget.onNewChat != null)
-                                            IconButton(
-                                              tooltip: 'New chat',
-                                              onPressed: widget.busy
-                                                  ? null
-                                                  : widget.onNewChat,
-                                              icon: const SmithIcon('plus'),
-                                            ),
-                                          if (_hasArchives(widget))
-                                            IconButton(
-                                              tooltip: 'Archived chats',
-                                              onPressed: _archives,
-                                              icon: const SmithIcon('archive'),
-                                            ),
-                                        ],
-                                      )
-                                    : Tooltip(
-                                        message: _settings
-                                            ? 'Settings'
-                                            : 'Chat / ${displayChatTitle(widget.title)}',
-                                        child: Text.rich(
-                                          TextSpan(
-                                            children: _settings
-                                                ? const [
-                                                    TextSpan(text: 'Settings'),
-                                                  ]
-                                                : [
-                                                    const TextSpan(
-                                                      text: 'Chat',
-                                                      style: TextStyle(
-                                                        color:
-                                                            SmithColors.accent,
-                                                      ),
-                                                    ),
-                                                    TextSpan(
-                                                      text:
-                                                          ' / ${displayChatTitle(widget.title)}',
-                                                    ),
-                                                  ],
-                                          ),
-                                          maxLines: bounds.maxHeight < 500
-                                              ? 1
-                                              : 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          semanticsLabel: _settings
-                                              ? 'Settings'
+                                            if (widget.onNewChat != null)
+                                              IconButton(
+                                                tooltip: 'New chat',
+                                                onPressed: widget.busy
+                                                    ? null
+                                                    : widget.onNewChat,
+                                                icon: const SmithIcon('plus'),
+                                              ),
+                                            if (_hasArchives(widget))
+                                              IconButton(
+                                                tooltip: 'Archived chats',
+                                                onPressed: _archives,
+                                                icon: const SmithIcon(
+                                                  'archive',
+                                                ),
+                                              ),
+                                          ],
+                                        )
+                                      : Tooltip(
+                                          message: !_chat
+                                              ? _settings
+                                                    ? 'Settings'
+                                                    : _agents
+                                                    ? 'Agents'
+                                                    : _dev
+                                                    ? 'Dev'
+                                                    : 'Projects'
                                               : 'Chat / ${displayChatTitle(widget.title)}',
+                                          child: Text.rich(
+                                            TextSpan(
+                                              children: !_chat
+                                                  ? [
+                                                      TextSpan(
+                                                        text: _settings
+                                                            ? 'Settings'
+                                                            : _agents
+                                                            ? 'Agents'
+                                                            : _dev
+                                                            ? 'Dev'
+                                                            : 'Projects',
+                                                      ),
+                                                    ]
+                                                  : [
+                                                      const TextSpan(
+                                                        text: 'Chat',
+                                                        style: TextStyle(
+                                                          color: SmithColors
+                                                              .accent,
+                                                        ),
+                                                      ),
+                                                      TextSpan(
+                                                        text:
+                                                            ' / ${displayChatTitle(widget.title)}',
+                                                      ),
+                                                    ],
+                                            ),
+                                            maxLines: bounds.maxHeight < 500
+                                                ? 1
+                                                : 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            semanticsLabel: !_chat
+                                                ? _settings
+                                                      ? 'Settings'
+                                                      : _agents
+                                                      ? 'Agents'
+                                                      : _dev
+                                                      ? 'Dev'
+                                                      : 'Projects'
+                                                : 'Chat / ${displayChatTitle(widget.title)}',
+                                          ),
                                         ),
-                                      ),
+                                ),
                               ),
-                            ),
-                            if (widget.error != null ||
-                                widget.recoveryGuidance != null)
+                            if (!_dev &&
+                                !_projects &&
+                                !_agents &&
+                                (widget.error != null ||
+                                    widget.recoveryGuidance != null))
                               ConstrainedBox(
                                 constraints: BoxConstraints(
                                   maxHeight: bounds.maxHeight * .22,
@@ -564,23 +809,84 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
                                 fit: StackFit.expand,
                                 children: [
                                   Offstage(
-                                    offstage: _settings,
+                                    key: const ValueKey('destination-chat'),
+                                    offstage: !_chat,
                                     child: TickerMode(
-                                      enabled: !_settings,
+                                      enabled: _chat,
                                       child: ExcludeFocus(
-                                        excluding: _settings,
+                                        excluding: !_chat,
                                         child: widget.child,
                                       ),
                                     ),
                                   ),
+                                  if (_projectsOpened)
+                                    Offstage(
+                                      key: const ValueKey(
+                                        'destination-projects',
+                                      ),
+                                      offstage: !_projects,
+                                      child: TickerMode(
+                                        enabled: _projects,
+                                        child: ExcludeFocus(
+                                          excluding: !_projects,
+                                          child:
+                                              widget.projects ??
+                                              const Center(
+                                                child: Text(
+                                                  'Projects unavailable in this view.',
+                                                ),
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                                  if (_agentsOpened)
+                                    Offstage(
+                                      key: const ValueKey('destination-agents'),
+                                      offstage: !_agents,
+                                      child: TickerMode(
+                                        enabled: _agents,
+                                        child: ExcludeFocus(
+                                          excluding: !_agents,
+                                          child:
+                                              widget.agents ??
+                                              const Center(
+                                                child: Text(
+                                                  'Agents unavailable in this view.',
+                                                ),
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                                  if (_devOpened)
+                                    Offstage(
+                                      key: const ValueKey('destination-dev'),
+                                      offstage: !_dev,
+                                      child: TickerMode(
+                                        enabled: _dev,
+                                        child: ExcludeFocus(
+                                          excluding: !_dev,
+                                          child:
+                                              widget.devJobs ??
+                                              const Center(
+                                                child: Text(
+                                                  'Dev jobs unavailable in this view.',
+                                                ),
+                                              ),
+                                        ),
+                                      ),
+                                    ),
                                   if (_settings)
                                     WorkspaceReveal(
+                                      key: const ValueKey(
+                                        'destination-settings',
+                                      ),
                                       region: WorkspaceRegion.settings,
                                       child: SettingsView(
                                         connectionStatus:
                                             widget.connectionStatus,
                                         modelStatus: widget.modelStatus,
                                         version: widget.version,
+                                        instructions: widget.instructions,
                                       ),
                                     ),
                                 ],

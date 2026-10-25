@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smith_client/app_api.dart';
 import 'package:smith_client/main.dart';
+import 'package:smith_client/ui/settings_view.dart';
 import 'package:smith_client/workspace_controller.dart';
 
 import 'app_fakes.dart';
@@ -331,6 +332,16 @@ void main() {
       await tester.enterText(find.byType(TextField).first, 'retain me');
       await tester.tap(find.byTooltip('Settings').first);
       await flush(tester);
+      await tester.scrollUntilVisible(
+        find.textContaining('Automatic read-only checks'),
+        300,
+        scrollable: find
+            .descendant(
+              of: find.byType(SettingsView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
       expect(find.textContaining('Automatic read-only checks'), findsOneWidget);
       api.stateFailure = true;
       await tester.pump(const Duration(seconds: 30));

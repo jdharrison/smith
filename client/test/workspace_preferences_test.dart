@@ -45,7 +45,12 @@ void main() {
 
     test('rejects unknown fields, versions, types and bounds', () {
       for (final change in <Map<String, Object?>>[
-        {'version': 2},
+        {'version': 5},
+        {'version': 0},
+        {'version': '4'},
+        {'version': 4.0},
+        {'version': true},
+        {'version': 2.0},
         {'version': 1.0},
         {'layout': '3x3'},
         {'activeTile': -1},
@@ -89,6 +94,145 @@ void main() {
         throwsFormatException,
       );
     });
+  });
+
+  test('v1 migrates strictly; v2 adds Projects presentation slots', () {
+    final old = {...preferences().toJson(), 'version': 1};
+    final migrated = WorkspacePreferences.fromJson(old);
+    expect(migrated, preferences());
+    expect(migrated.toJson()['version'], 4);
+    final slots = List.of(migrated.slots);
+    slots[2] = WorkspaceSlotPreferences(conversationId: null, page: 'projects');
+    final current = WorkspacePreferences(
+      layout: '2x2',
+      activeTile: 2,
+      slots: slots,
+    );
+    expect(WorkspacePreferences.fromJson(current.toJson()), current);
+    expect(
+      () => WorkspacePreferences.fromJson({...current.toJson(), 'version': 1}),
+      throwsFormatException,
+    );
+    for (final key in [
+      'projectId',
+      'project',
+      'name',
+      'repositories',
+      'editor',
+      'selection',
+    ]) {
+      final json = current.toJson();
+      final entries = (json['slots'] as List).cast<Map<String, Object?>>();
+      entries[2][key] = 'not presentation';
+      expect(() => WorkspacePreferences.fromJson(json), throwsFormatException);
+    }
+    expect(jsonEncode(current.toJson()), isNot(contains('projectId')));
+  });
+
+  for (final version in [1, 2, 3, 4]) {
+    for (final page in ['chat', 'settings', 'projects', 'agents', 'dev']) {
+      test('v$version strictly validates $page in all four slots', () {
+        final value = WorkspacePreferences(
+          layout: '1x1',
+          activeTile: 0,
+          slots: List.generate(
+            4,
+            (_) => WorkspaceSlotPreferences(conversationId: null, page: page),
+          ),
+        );
+        final json = {...value.toJson(), 'version': version};
+        final introduced = const {
+          'chat': 1,
+          'settings': 1,
+          'projects': 2,
+          'agents': 3,
+          'dev': 4,
+        };
+        final allowed = version >= introduced[page]!;
+        final cases = [json];
+        for (var index = 0; index < 4; index++) {
+          final single = {
+            ...preferences(layout: '1x1', active: 0).toJson(),
+            'version': version,
+          };
+          (single['slots'] as List)[index] = value.slots[index].toJson();
+          cases.add(single);
+        }
+        for (final sample in cases) {
+          if (allowed) {
+            expect(WorkspacePreferences.fromJson(sample).toJson(), {
+              ...sample,
+              'version': 4,
+            });
+          } else {
+            expect(
+              () => WorkspacePreferences.fromJson(sample),
+              throwsFormatException,
+            );
+          }
+        }
+      });
+    }
+  }
+
+  test('exact shape excludes disclosure, records, editor and prompt state', () {
+    final value = preferences().toJson();
+    expect(
+      value.keys,
+      unorderedEquals(['version', 'layout', 'activeTile', 'slots']),
+    );
+    expect(value['version'], 4);
+    for (final slot in value['slots'] as List) {
+      expect((slot as Map).keys, unorderedEquals(['conversationId', 'page']));
+    }
+    for (final key in value.keys) {
+      final missing = Map.of(value)..remove(key);
+      expect(
+        () => WorkspacePreferences.fromJson(missing),
+        throwsFormatException,
+      );
+    }
+    for (var index = 0; index < 4; index++) {
+      for (final key in ['conversationId', 'page']) {
+        final missing = jsonDecode(jsonEncode(value)) as Map<String, dynamic>;
+        (missing['slots'] as List)[index].remove(key);
+        expect(
+          () => WorkspacePreferences.fromJson(missing),
+          throwsFormatException,
+        );
+      }
+    }
+    for (final field in [
+      'devExpanded',
+      'disclosure',
+      'childSelection',
+      'editor',
+      'projectId',
+      'agentId',
+      'prompt',
+      'description',
+      'draft',
+      'selection',
+    ]) {
+      for (final version in [1, 2, 3, 4]) {
+        final json = {...preferences().toJson(), 'version': version};
+        expect(
+          () => WorkspacePreferences.fromJson({
+            ...json,
+            field: 'never persisted',
+          }),
+          throwsFormatException,
+        );
+        for (var index = 0; index < 4; index++) {
+          final nested = jsonDecode(jsonEncode(json)) as Map<String, dynamic>;
+          (nested['slots'] as List)[index][field] = 'never persisted';
+          expect(
+            () => WorkspacePreferences.fromJson(nested),
+            throwsFormatException,
+          );
+        }
+      }
+    }
   });
 
   group('isolated Linux store', () {
@@ -145,6 +289,74 @@ void main() {
       store = LinuxWorkspacePreferencesStore(root: fixture.path);
       expect(await store.load(), latest);
     });
+
+    for (final version in [1, 2, 3]) {
+      test(
+        'v$version bytes remain untouched until an explicit v4 save',
+        () async {
+          final bytes = utf8.encode(
+            jsonEncode({...preferences().toJson(), 'version': version}),
+          );
+          await seed(bytes);
+          final value = await store.load();
+          expect(value, preferences());
+          expect(await File(path).readAsBytes(), bytes);
+          await store.save(value!);
+          expect(jsonDecode(await File(path).readAsString())['version'], 4);
+        },
+      );
+    }
+
+    test(
+      'mixed v3 legacy bytes and IDs survive load and explicit v4 save',
+      () async {
+        final legacy = {
+          'version': 3,
+          'layout': '1x1',
+          'activeTile': 0,
+          'slots': [
+            {
+              'conversationId': '0123456789abcdef0123456789abcdef',
+              'page': 'chat',
+            },
+            {'conversationId': null, 'page': 'projects'},
+            {
+              'conversationId': 'fedcba9876543210fedcba9876543210',
+              'page': 'agents',
+            },
+            {'conversationId': null, 'page': 'settings'},
+          ],
+        };
+        final bytes = utf8.encode('  ${jsonEncode(legacy)}\n');
+        await seed(bytes);
+        final loaded = await store.load();
+        expect(loaded, WorkspacePreferences.fromJson(legacy));
+        expect(await File(path).readAsBytes(), bytes);
+        await store.close();
+        store = LinuxWorkspacePreferencesStore(root: fixture.path);
+        expect(await store.load(), loaded);
+        expect(await File(path).readAsBytes(), bytes);
+        final slots = List.of(loaded!.slots);
+        slots[0] = WorkspaceSlotPreferences(
+          conversationId: slots[0].conversationId,
+          page: 'dev',
+        );
+        final changed = WorkspacePreferences(
+          layout: loaded.layout,
+          activeTile: loaded.activeTile,
+          slots: slots,
+        );
+        await store.save(changed);
+        final saved =
+            jsonDecode(await File(path).readAsString()) as Map<String, dynamic>;
+        expect(saved['version'], 4);
+        expect(WorkspacePreferences.fromJson(saved), changed);
+        expect(saved['slots'], [
+          {'conversationId': '0123456789abcdef0123456789abcdef', 'page': 'dev'},
+          ...((legacy['slots'] as List).skip(1)),
+        ]);
+      },
+    );
 
     test(
       'same-process competing open descriptions cannot take lifetime lock',
@@ -215,21 +427,43 @@ void main() {
 
     for (final sample in <String, List<int>>{
       'corrupt': utf8.encode('{'),
+      for (final version in [1, 2, 3])
+        'v$version Dev destination': utf8.encode(
+          jsonEncode({
+            ...preferences().toJson(),
+            'version': version,
+            'slots': [
+              for (var index = 0; index < 4; index++)
+                WorkspaceSlotPreferences(
+                  conversationId: null,
+                  page: index == 3 ? 'dev' : 'chat',
+                ).toJson(),
+            ],
+          }),
+        ),
       'future': utf8.encode(
-        jsonEncode({...preferences().toJson(), 'version': 2}),
+        jsonEncode({...preferences().toJson(), 'version': 5}),
       ),
       'unknown member': utf8.encode(
         jsonEncode({...preferences().toJson(), 'draft': 'private'}),
       ),
       'oversize': List.filled(4097, 32),
       'invalid utf8': [0xff],
+      'legacy duplicate member': utf8.encode(
+        jsonEncode({...preferences().toJson(), 'version': 3})
+            .replaceFirst('"version":3', '"version":1,"version":3'),
+      ),
+      'legacy escaped duplicate': utf8.encode(
+        jsonEncode({...preferences().toJson(), 'version': 3})
+            .replaceFirst('"version":3', r'"\u0076ersion":1,"version":3'),
+      ),
       'duplicate member': utf8.encode(
         jsonEncode(preferences().toJson())
-            .replaceFirst('"version":1', '"version":2,"version":1'),
+            .replaceFirst('"version":4', '"version":1,"version":4'),
       ),
       'escaped duplicate': utf8.encode(
         jsonEncode(preferences().toJson())
-            .replaceFirst('"version":1', r'"\u0076ersion":2,"version":1'),
+            .replaceFirst('"version":4', r'"\u0076ersion":1,"version":4'),
       ),
     }.entries) {
       test(

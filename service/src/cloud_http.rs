@@ -355,7 +355,13 @@ impl<T: AsyncWrite + Unpin> AsyncWrite for HeaderBounded<T> {
 }
 
 pub fn build_body(vendor: Vendor, id: &str, messages: &[Message]) -> AppResult<Vec<u8>> {
-    if model(vendor, id).is_none()
+    let (instructions, messages) = if messages.first().is_some_and(|m| m.role == "system") {
+        (Some(messages[0].content.as_str()), &messages[1..])
+    } else {
+        (None, messages)
+    };
+    if instructions.is_some_and(|s| s.is_empty() || s.len() > 2048)
+        || model(vendor, id).is_none()
         || messages.is_empty()
         || messages.len() > 33
         || messages.len() % 2 != 1
@@ -363,14 +369,16 @@ pub fn build_body(vendor: Vendor, id: &str, messages: &[Message]) -> AppResult<V
             .iter()
             .enumerate()
             .any(|(i, m)| m.role != if i % 2 == 0 { "user" } else { "assistant" })
-        || messages.iter().map(|m| m.content.len()).sum::<usize>() > crate::app::MAX_CONTEXT
+        || messages.iter().map(|m| m.content.len()).sum::<usize>()
+            + instructions.map_or(0, str::len)
+            > crate::app::MAX_CONTEXT
         || messages
             .last()
             .is_none_or(|m| m.content.trim().is_empty() || m.content.len() > crate::app::MAX_TEXT)
     {
         return Err(error("CONTEXT_LIMIT"));
     }
-    let body = match vendor {
+    let mut body = match vendor {
         Vendor::Openai => {
             let input: Vec<Value> = messages
                 .iter()
@@ -392,6 +400,12 @@ pub fn build_body(vendor: Vendor, id: &str, messages: &[Message]) -> AppResult<V
             json!({"model":id,"max_tokens":OUTPUT_TOKENS,"messages":messages,"stream":false})
         }
     };
+    if let Some(text) = instructions {
+        body[match vendor {
+            Vendor::Openai => "instructions",
+            Vendor::Anthropic => "system",
+        }] = json!(text);
+    }
     let bytes = serde_json::to_vec(&body).map_err(|_| error("CONTEXT_LIMIT"))?;
     if bytes.len() > BODY_LIMIT {
         return Err(error("CONTEXT_LIMIT"));

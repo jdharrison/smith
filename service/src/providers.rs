@@ -1,7 +1,8 @@
-//! Tool-free local text provider backed by the private native runner.
+//! Local Chat and separate read-tool Dev completions share one private native runner.
 //! No network endpoint, environment override or cloud fallback exists.
 use crate::acceleration::Backend;
-use crate::app::{AppError, AppResult, Message};
+use crate::app::Message;
+pub use crate::app::{AppError, AppResult};
 use crate::catalog::{CatalogEntry, CATALOG};
 use crate::runner::{self, Runner, RunnerConfig};
 use crate::{Result, Roots};
@@ -154,6 +155,18 @@ fn valid_digest(digest: &str) -> bool {
 pub trait Provider: Send + Sync + 'static {
     fn inventory(&self) -> AppResult<Inventory>;
     fn chat(&self, model: &str, messages: &[Message]) -> AppResult<String>;
+    /// Runs only on the long-lived app worker, under the caller's original deadline.
+    fn inspection_completion(
+        &self,
+        _model: &crate::dev_local::FrozenModel,
+        _request: &serde_json::Value,
+        _deadline: Instant,
+    ) -> AppResult<serde_json::Value> {
+        Err(error(
+            "UNSUPPORTED",
+            "Provider does not support local inspection",
+        ))
+    }
     /// Fixtures must opt in explicitly; never pretend unsupported removal succeeded.
     fn remove_model(&self, _model: &str, _sha256: &str) -> AppResult<()> {
         Err(error(
@@ -196,6 +209,7 @@ impl Default for ProviderOptions {
 
 struct Active {
     runner: Option<(String, Runner)>,
+    inspection: bool,
     used: Instant,
     last_startup_fallback_reason: Option<AppError>,
 }
@@ -222,6 +236,7 @@ impl Providers {
             options,
             active: Mutex::new(Active {
                 runner: None,
+                inspection: false,
                 used: Instant::now(),
                 last_startup_fallback_reason: None,
             }),
@@ -250,6 +265,107 @@ impl Providers {
         self.active
             .lock()
             .map_err(|_| error("LLM_UNAVAILABLE", "Local runner state unavailable"))
+    }
+    fn prepare(
+        &self,
+        active: &mut Active,
+        model: &str,
+        digest: Option<&str>,
+        inspection: bool,
+        deadline: Instant,
+    ) -> AppResult<()> {
+        remaining(deadline)?;
+        let launch = if inspection {
+            Runner::launch_verified_inspection
+        } else {
+            Runner::launch_verified
+        };
+        // Ollama-era or removed names are never migrated: reselect explicitly.
+        let record = self
+            .records()?
+            .into_iter()
+            .find(|r| r.name == model && digest.is_none_or(|sha| sha == r.sha256))
+            .ok_or_else(|| {
+                error(
+                    "MODEL_UNAVAILABLE",
+                    "Exact curated local model is not installed; select an installed model",
+                )
+            })?;
+        let reusable = active.runner.as_ref().is_some_and(|(sha, r)| {
+            *sha == record.sha256 && active.inspection == inspection && r.is_running()
+        });
+        if !reusable {
+            active.last_startup_fallback_reason = None;
+            // Model switch or crash: stop first so the single-runner lock is free.
+            if let Some((_, old)) = active.runner.take() {
+                old.stop().map_err(|_| {
+                    error(
+                        "RUNNER_UNSAFE",
+                        "Previous runner shutdown could not be verified",
+                    )
+                })?;
+            }
+            let cancellation = self.cancelled.clone();
+            let cancelled: runner::Cancellation =
+                Arc::new(move || cancellation.load(Ordering::Acquire));
+            let file =
+                runner::verify_model_leased(&self.roots, &record, deadline, cancelled.as_ref())
+                    .map_err(|message| {
+                        for code in ["RUNNER_BUSY", "RUNNER_CANCELLED", "PROVIDER_TIMEOUT"] {
+                            if message.starts_with(&format!("{code}:")) {
+                                return error(code, "Model verification could not acquire or retain its bounded runner lease");
+                            }
+                        }
+                        error(
+                            "MODEL_UNAVAILABLE",
+                            "Selected model failed integrity or safety verification; reinstall it",
+                        )
+                    })?;
+            remaining(deadline)?;
+            let gpu = match runner::verify_runtime_backend_bounded(
+                &self.roots,
+                Backend::Vulkan,
+                deadline,
+                cancelled.as_ref(),
+            ) {
+                Ok(executable) => {
+                    let mut config = RunnerConfig::production(&self.roots, executable);
+                    config.threads = self.options.threads;
+                    config.backend = Backend::Vulkan;
+                    match launch(&config, &file, deadline, cancelled.clone()) {
+                        Ok(started) => Some(started),
+                        Err(e) if e.code == "GPU_PREPARATION" => {
+                            // This code is returned only after confirmed runner cleanup.
+                            active.last_startup_fallback_reason = Some(e);
+                            None
+                        }
+                        Err(e) => return Err(e),
+                    }
+                }
+                Err(e) if e.code == "RUNTIME_MISSING" => {
+                    active.last_startup_fallback_reason = Some(e);
+                    None
+                }
+                Err(e) => return Err(e),
+            };
+            let started = if let Some(started) = gpu {
+                started
+            } else {
+                remaining(deadline)?;
+                let executable = runner::verify_runtime_backend_bounded(
+                    &self.roots,
+                    Backend::Cpu,
+                    deadline,
+                    cancelled.as_ref(),
+                )?;
+                let mut config = RunnerConfig::production(&self.roots, executable);
+                config.threads = self.options.threads;
+                launch(&config, &file, deadline, cancelled)?
+            };
+            active.runner = Some((record.sha256, started));
+            active.inspection = inspection;
+        }
+        Ok(())
     }
     fn stop(active: &mut Active) {
         if let Some((_, runner)) = active.runner.take() {
@@ -286,89 +402,46 @@ impl Provider for Providers {
     fn chat(&self, model: &str, messages: &[Message]) -> AppResult<String> {
         let deadline = Instant::now() + self.options.budget;
         let mut active = self.lock()?;
-        // Ollama-era or removed names are never migrated: reselect explicitly.
-        let record = self
-            .records()?
-            .into_iter()
-            .find(|r| r.name == model)
-            .ok_or_else(|| {
-                error(
-                    "MODEL_UNAVAILABLE",
-                    "Exact curated local model is not installed; select an installed model",
-                )
-            })?;
-        let reusable = active
-            .runner
-            .as_ref()
-            .is_some_and(|(sha, r)| *sha == record.sha256 && r.is_running());
-        if !reusable {
-            active.last_startup_fallback_reason = None;
-            // Model switch or crash: stop first so the single-runner lock is free.
-            Self::stop(&mut active);
-            let cancellation = self.cancelled.clone();
-            let cancelled: runner::Cancellation =
-                Arc::new(move || cancellation.load(Ordering::Acquire));
-            let file =
-                runner::verify_model_leased(&self.roots, &record, deadline, cancelled.as_ref())
-                    .map_err(|message| {
-                        for code in ["RUNNER_BUSY", "RUNNER_CANCELLED", "PROVIDER_TIMEOUT"] {
-                            if message.starts_with(&format!("{code}:")) {
-                                return error(code, "Model verification could not acquire or retain its bounded runner lease");
-                            }
-                        }
-                        error(
-                            "MODEL_UNAVAILABLE",
-                            "Selected model failed integrity or safety verification; reinstall it",
-                        )
-                    })?;
-            remaining(deadline)?;
-            let gpu = match runner::verify_runtime_backend_bounded(
-                &self.roots,
-                Backend::Vulkan,
-                deadline,
-                cancelled.as_ref(),
-            ) {
-                Ok(executable) => {
-                    let mut config = RunnerConfig::production(&self.roots, executable);
-                    config.threads = self.options.threads;
-                    config.backend = Backend::Vulkan;
-                    match Runner::launch_verified(&config, &file, deadline, cancelled.clone()) {
-                        Ok(started) => Some(started),
-                        Err(e) if e.code == "GPU_PREPARATION" => {
-                            // This code is returned only after confirmed runner cleanup.
-                            active.last_startup_fallback_reason = Some(e);
-                            None
-                        }
-                        Err(e) => return Err(e),
-                    }
-                }
-                Err(e) if e.code == "RUNTIME_MISSING" => {
-                    active.last_startup_fallback_reason = Some(e);
-                    None
-                }
-                Err(e) => return Err(e),
-            };
-            let started = if let Some(started) = gpu {
-                started
-            } else {
-                remaining(deadline)?;
-                let executable = runner::verify_runtime_backend_bounded(
-                    &self.roots,
-                    Backend::Cpu,
-                    deadline,
-                    cancelled.as_ref(),
-                )?;
-                let mut config = RunnerConfig::production(&self.roots, executable);
-                config.threads = self.options.threads;
-                Runner::launch_verified(&config, &file, deadline, cancelled)?
-            };
-            active.runner = Some((record.sha256, started));
-        }
+        self.prepare(&mut active, model, None, false, deadline)?;
         let (_, runner) = active
             .runner
             .as_mut()
             .ok_or_else(|| error("LLM_UNAVAILABLE", "Local runner unavailable"))?;
         let result = runner.chat(messages, runner::MAX_TOKENS, deadline);
+        let alive = runner.is_running();
+        active.used = Instant::now();
+        if !alive {
+            Self::stop(&mut active);
+        }
+        result
+    }
+    fn inspection_completion(
+        &self,
+        model: &crate::dev_local::FrozenModel,
+        request: &serde_json::Value,
+        deadline: Instant,
+    ) -> AppResult<serde_json::Value> {
+        use crate::inspection_diagnostics::{app as observe, Phase};
+        let deadline = inspection_deadline(deadline, Instant::now(), self.options.budget);
+        let request = observe(Phase::ProviderValidateRequest, || {
+            remaining(deadline)?;
+            crate::dev_completion::validate_request(request)
+        })?;
+        let mut active = observe(Phase::ProviderFrozenPreflight, || self.lock())?;
+        observe(Phase::ProviderFrozenPreflight, || {
+            self.prepare(
+                &mut active,
+                &model.name,
+                Some(&model.sha256),
+                true,
+                deadline,
+            )
+        })?;
+        let (_, runner) = active
+            .runner
+            .as_mut()
+            .ok_or_else(|| error("LLM_UNAVAILABLE", "Local runner unavailable"))?;
+        let result = runner.inspection_completion(&request, deadline);
         let alive = runner.is_running();
         active.used = Instant::now();
         if !alive {
@@ -414,9 +487,45 @@ impl Provider for Providers {
     }
 }
 
+fn inspection_deadline(caller: Instant, now: Instant, budget: Duration) -> Instant {
+    caller.min(now + budget.min(runner::BUDGET))
+}
+
 fn remaining(deadline: Instant) -> AppResult<Duration> {
     deadline
         .checked_duration_since(Instant::now())
         .filter(|d| !d.is_zero())
         .ok_or_else(|| error("PROVIDER_TIMEOUT", "Operation budget exhausted; no retry"))
+}
+
+#[cfg(test)]
+mod inspection_tests {
+    use super::*;
+    #[test]
+    fn original_deadline_is_not_reset_between_rounds() {
+        let start = Instant::now();
+        let original = start + Duration::from_secs(100);
+        for elapsed in [0, 50, 99, 101] {
+            assert_eq!(
+                inspection_deadline(
+                    original,
+                    start + Duration::from_secs(elapsed),
+                    runner::BUDGET
+                ),
+                original
+            );
+        }
+        assert_eq!(
+            inspection_deadline(
+                start + Duration::from_secs(1000),
+                start,
+                Duration::from_secs(1000)
+            ),
+            start + runner::BUDGET
+        );
+        assert_eq!(
+            inspection_deadline(original, start, Duration::from_secs(10)),
+            start + Duration::from_secs(10)
+        );
+    }
 }

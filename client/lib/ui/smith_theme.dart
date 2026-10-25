@@ -172,7 +172,7 @@ abstract final class SmithTheme {
       ),
       dividerColor: SmithColors.strokeSubtle,
       disabledColor: SmithColors.textMuted,
-      focusColor: SmithColors.accentBright,
+      focusColor: SmithColors.surfaceSelected,
       hoverColor: SmithColors.surfaceRaised,
       iconTheme: const IconThemeData(
         color: SmithColors.textSecondary,
@@ -198,9 +198,9 @@ abstract final class SmithTheme {
         hintStyle: const TextStyle(color: SmithColors.textMuted),
         contentPadding: const EdgeInsets.all(16),
       ),
-      textSelectionTheme: TextSelectionThemeData(
+      textSelectionTheme: const TextSelectionThemeData(
         cursorColor: SmithColors.accent,
-        selectionColor: SmithColors.accent.withValues(alpha: 0.25),
+        selectionColor: SmithColors.surfaceSelected,
         selectionHandleColor: SmithColors.accent,
       ),
       appBarTheme: const AppBarTheme(

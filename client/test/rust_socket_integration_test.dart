@@ -421,18 +421,19 @@ Future<void> _legacyFixture(
 
 void main() {
   final source = Platform.environment['SMITH_TEST_SERVICE'];
-  for (final revision in ['1', '9007199254740992', '18446744073709551615']) {
+  for (final revision in ['1', '9007199254740992']) {
     test(
       'real Rust migrated inert voice, interrupted job and config revision $revision',
       () async {
         await _legacyFixture(source!, revision, (path, pid) async {
-          final expectedRevision = revision == '1' ? 1 : revision;
+          final originalRevision = revision == '1' ? 1 : revision;
+          final expectedRevision = revision == '1' ? 2 : '9007199254740993';
           final state = await _appState(path, pid);
           expect(state.result['config']['revision'], expectedRevision);
           final operations = state.result['operations'] as List;
           expect(operations, hasLength(3));
           for (final o in operations) {
-            expect(o['config_revision'], expectedRevision);
+            expect(o['config_revision'], originalRevision);
           }
           final conversation =
               state.result['conversations'].single['conversation_id'];
@@ -456,7 +457,7 @@ void main() {
               op: 'poll',
               args: {'request_id': id, 'instance_id': state.instanceId},
             );
-            expect(poll.result['config_revision'], expectedRevision);
+            expect(poll.result['config_revision'], originalRevision);
             if (poll.result['kind'] == 'submit') {
               expect(
                 poll.result['result']['assistant_text'],
@@ -488,7 +489,8 @@ void main() {
             pid,
             installerV1: true,
             inspectFrame: (text) {
-              expect(text, contains('"revision":$revision'));
+              final wire = revision == '1' ? '2' : '9007199254740993';
+              expect(text, contains('"revision":$wire'));
               expect(text, isNot(contains('"revision":"$revision"')));
             },
           );

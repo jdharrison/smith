@@ -6,16 +6,19 @@ class SettingsView extends StatelessWidget {
     required this.connectionStatus,
     required this.modelStatus,
     required this.version,
+    this.instructions,
   });
 
   final String connectionStatus;
   final String modelStatus;
   final String version;
+  final Widget? instructions;
 
   @override
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.all(16),
     children: [
+      if (instructions != null) ...[instructions!, const Divider(height: 48)],
       Semantics(
         header: true,
         child: Text(

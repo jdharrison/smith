@@ -335,7 +335,6 @@ class _ChatPanelState extends State<ChatPanel> {
     int? timestampMs,
     String? note,
     Key? key,
-    bool progress = false,
   }) {
     return LayoutBuilder(
       key: key,
@@ -372,13 +371,7 @@ class _ChatPanelState extends State<ChatPanel> {
                       Text(note, style: Theme.of(context).textTheme.labelSmall),
                       const SizedBox(height: 8),
                     ],
-                    if (progress)
-                      const ExcludeSemantics(
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: 8),
-                          child: Icon(Icons.hourglass_top, size: 16),
-                        ),
-                      ),
+
                     SelectableText(
                       content,
                       style: Theme.of(context).textTheme.bodyMedium,
@@ -399,6 +392,15 @@ class _ChatPanelState extends State<ChatPanel> {
     final routed = c is ConversationController && c.owner.routingEnabled;
     final queue = c.messageQueue;
     final queueMode = queue != null && queue.usesQueue;
+    final activeLocalRequest = c.localSends[c.pendingId];
+    final routinePending =
+        activeLocalRequest?.active == true &&
+        !c.provisionalAnswers.containsKey(c.pendingId) &&
+        c.connected &&
+        !c.stale &&
+        c.error == null &&
+        !c.canAbandonExpiredRequest &&
+        (!routed || (c.routeReady && !c.uncertain));
     final showQueue =
         queue != null &&
         (queue.entries.isNotEmpty || (queue.paused && queue.usesQueue));
@@ -536,16 +538,36 @@ class _ChatPanelState extends State<ChatPanel> {
                                     ))
                                       Semantics(
                                         liveRegion: true,
-                                        child: bubble(
-                                          send.value.status,
-                                          progress: send.value.active,
-                                          key: ValueKey(
-                                            'local-status-${send.key}',
-                                          ),
-                                          note: send.value.active
-                                              ? 'Request in progress'
-                                              : 'Request status',
-                                        ),
+                                        child: send.value.active
+                                            ? Padding(
+                                                key: ValueKey(
+                                                  'local-status-${send.key}',
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 8,
+                                                    ),
+                                                child: Text(
+                                                  send.value.status,
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
+                                                        color: SmithColors
+                                                            .textSecondary,
+                                                      ),
+                                                ),
+                                              )
+                                            : bubble(
+                                                send.value.status,
+                                                key: ValueKey(
+                                                  'local-status-${send.key}',
+                                                ),
+                                                note: 'Request status',
+                                              ),
                                       ),
                                     if (c.provisionalAnswers.containsKey(
                                       send.key,
@@ -597,7 +619,7 @@ class _ChatPanelState extends State<ChatPanel> {
                     children: [
                       if (c.error != null ||
                           c.stale ||
-                          c.pendingId != null ||
+                          (c.pendingId != null && !routinePending) ||
                           (routed && !c.routeReady))
                         if (compactRecovery)
                           SizedBox(

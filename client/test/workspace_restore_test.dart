@@ -90,18 +90,175 @@ WorkspacePresentation presentation(WidgetTester tester) => tester
     .widget<ConversationScreen>(find.byType(ConversationScreen))
     .presentation!;
 
-void noMutations(FakeAppApi api) {
+void noMutations(FakeAppApi api, {List<String> registryReads = const []}) {
   // Boot's existing explicit inventory observation is not restoration work.
   expect(api.calls.where((op) => op == 'models'), hasLength(1));
   expect(
     api.calls.where(
-      (op) => !['state', 'conversation_get', 'poll', 'models'].contains(op),
+      (op) => ![
+        'state',
+        'conversation_get',
+        'poll',
+        'models',
+        'instructions_get',
+        // Dev observes saved projects and job state; none admits work.
+        'projects_list_v3',
+        'dev_jobs_state_v4',
+        'dev_sessions_state_v1',
+        ...registryReads,
+      ].contains(op),
     ),
     isEmpty,
   );
 }
 
 void main() {
+  for (final version in [1, 2, 3]) {
+    testWidgets('v$version hydration normalizes without a presentation save', (
+      tester,
+    ) async {
+      final legacy = {
+        ...preferences(preset: '1x1').toJson(),
+        'version': version,
+      };
+      final store = MemoryStore(WorkspacePreferences.fromJson(legacy));
+      final api = FakeAppApi();
+      await mountApp(tester, store, api);
+      expect(store.loads, 1);
+      expect(store.writes, isEmpty);
+      final p = presentation(tester);
+      p.setPage(0, 'chat');
+      owner(tester).selected.edit('session-only legacy draft');
+      await tester.pumpAndSettle();
+      expect(store.writes, isEmpty);
+      p.setPage(0, 'dev');
+      await tester.pumpAndSettle();
+      expect(p.pages[0], 'dev');
+      expect(store.writes, hasLength(1));
+      expect(store.value!.toJson()['version'], 4);
+      expect(store.value!.slots[0].page, 'dev');
+      expect(store.value!.slots[0].conversationId, isNull);
+      for (var i = 1; i < 4; i++) {
+        expect(
+          store.value!.slots[i],
+          WorkspacePreferences.fromJson(legacy).slots[i],
+        );
+      }
+      expect(
+        jsonEncode(store.value!.toJson()),
+        isNot(contains('legacy draft')),
+      );
+      noMutations(api);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpAndSettle();
+      expect(store.closes, 1);
+      expect(store.writes, hasLength(1));
+    });
+  }
+
+  testWidgets(
+    'v4 mixed four-pane restore retains hidden Dev with only the visible projects read',
+    (tester) async {
+      tester.view.physicalSize = const Size(1800, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final saved = WorkspacePreferences(
+        layout: '1x1',
+        activeTile: 0,
+        slots: [
+          WorkspaceSlotPreferences(conversationId: null, page: 'dev'),
+          WorkspaceSlotPreferences(
+            conversationId: testConversation,
+            page: 'chat',
+          ),
+          WorkspaceSlotPreferences(
+            conversationId: testConversation,
+            page: 'settings',
+          ),
+          WorkspaceSlotPreferences(conversationId: null, page: 'dev'),
+        ],
+      );
+      for (var restart = 0; restart < 2; restart++) {
+        final store = MemoryStore(saved);
+        final api = FakeAppApi();
+        await mountApp(tester, store, api);
+        expect(presentation(tester).pages, ['dev', 'chat', 'settings', 'dev']);
+        expect(
+          owner(tester).panes[1].selected,
+          same(owner(tester).panes[2].selected),
+        );
+        expect(store.writes, isEmpty);
+        expect(api.calls.where((op) => op == 'conversation_get'), hasLength(1));
+        await layout(tester, 2, 2);
+        for (var i = 0; i < 4; i++) {
+          expect(
+            tester
+                .widget<SmithWorkspace>(inside(i, find.byType(SmithWorkspace)))
+                .page,
+            saved.slots[i].page,
+          );
+        }
+        expect(api.calls.where((op) => op == 'conversation_get'), hasLength(1));
+        expect(
+          api.calls.where(
+            (op) => op.startsWith('projects_') || op.startsWith('agents_'),
+          ),
+          orderedEquals(['projects_list_v3']),
+        );
+        noMutations(api);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpAndSettle();
+        expect(store.closes, 1);
+      }
+    },
+  );
+
+  for (final hiddenChildren in [false, true]) {
+    testWidgets(
+      'Dev restore has ${hiddenChildren ? 'only existing hidden child reads, no duplicate' : 'only the visible projects read'}',
+      (tester) async {
+        final pages = hiddenChildren
+            ? ['dev', 'projects', 'agents', 'settings']
+            : List.filled(4, 'dev');
+        final registryReads = hiddenChildren
+            ? ['projects_list_v3', 'agents_list_v2']
+            : ['projects_list_v3'];
+        final saved = WorkspacePreferences(
+          layout: '1x1',
+          activeTile: 0,
+          slots: [
+            for (final page in pages)
+              WorkspaceSlotPreferences(conversationId: null, page: page),
+          ],
+        );
+        final store = MemoryStore(saved);
+        final api = FakeAppApi();
+        await mountApp(tester, store, api);
+        expect(presentation(tester).pages, pages);
+        final initialCalls = List.of(api.calls);
+        expect(store.value, saved);
+        expect(store.writes, isEmpty);
+        presentation(tester).setPage(0, 'dev');
+        await tester.pumpAndSettle();
+        expect(store.writes, isEmpty);
+        expect(
+          api.calls.where(
+            (op) => op.startsWith('projects_') || op.startsWith('agents_'),
+          ),
+          unorderedEquals(registryReads),
+        );
+        expect(api.calls, initialCalls);
+        noMutations(api, registryReads: registryReads);
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpAndSettle();
+        expect(store.writes, isEmpty);
+        expect(store.closes, 1);
+      },
+    );
+  }
+
   testWidgets(
     'explicit first send persists promoted ID; restart never resubmits',
     (tester) async {

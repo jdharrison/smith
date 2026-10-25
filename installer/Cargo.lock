@@ -1761,6 +1761,7 @@ dependencies = [
  "rand 0.8.8",
  "serde",
  "serde_json",
+ "sha1",
  "sha2",
  "tokio",
  "tokio-rustls",

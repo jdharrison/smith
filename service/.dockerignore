@@ -1,0 +1,9 @@
+*
+!dist
+dist/*
+!dist/smith-service
+!dev-worker
+dev-worker/*
+!dev-worker/Dockerfile
+!dev-worker/Dockerfile.local
+!dev-worker/guard.mjs

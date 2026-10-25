@@ -171,8 +171,14 @@ Finder _inTile(int index, Finder matching) => find.descendant(
   matching: matching,
   skipOffstage: false,
 );
-Finder _editor(int index) =>
-    _inTile(index, find.byType(TextField, skipOffstage: false));
+Finder _editor(int index) => _inTile(
+  index,
+  find.descendant(
+    of: find.byType(ChatPanel, skipOffstage: false),
+    matching: find.byType(TextField, skipOffstage: false),
+    skipOffstage: false,
+  ),
+);
 
 void _appSize(WidgetTester tester) {
   tester.view.devicePixelRatio = 1;
@@ -336,6 +342,7 @@ void _expectCloudReadOnly(
         'route_catalog',
         'conversation_get',
         'conversation_routing',
+        'instructions_get',
       }.contains(op),
     ),
     isEmpty,

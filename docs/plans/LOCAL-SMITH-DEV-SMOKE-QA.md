@@ -1,0 +1,33 @@
+# LOCAL-SMITH-DEV-SMOKE-QA
+
+## Exact approval and goal
+
+The operator requested “continue until it is ready for me to qa please” after the explicit proposal to reconcile only the logging-failed never-started request, restart the same paired service and submit one new public-Smith/local-model smoke job. This is **explicit bounded local-host QA/reconciliation approval**, not release, broad accepted risk, arbitrary ledger repair, unbounded retry or privilege expansion. It supersedes the source-only exclusions of earlier records only for the effects below. Approval expires on completion, one live smoke submission or material drift requiring a different capability/model/destination.
+
+- Repository Smith; existing `feature/autonomy`, HEAD `14d960975e76f906efb5e447ff3dece0e8e4385b`; preserve dirty/untracked work.
+- Existing local rootful Docker `unix:///run/docker.sock`; worker image `sha256:8f22784f23d66441888b41a154e6c768d35975bbfe5d54e4443e9b1c0eb0a4bc` (`smith-dev-worker-local:1.19.3`). No image/daemon configuration or other container changes.
+- Existing paired running service/helper SHA256 `493616d4172236d160e2789697d53b3f72c30eac2bba804a42f5625e47d61288`; logging compression fix observed in installed bytes. No binary replacement, package selection or unit/enablement change.
+- Reconcile ONLY request `9a8d5ecb22fa4b85629e69f7a1e624b1`, container `0ca7c8870d282ec2100ba2ad8a0d8f0573c8500094a4fe9ec5a95f8ae79df05b`. Require exact name/request/kind/owner/image, created/not-running/PID0/never-started state and the immutable one-file/compression startup rejection. Ledger must have may_have_sent=false, no session/repositories/reply and failed_stage=cloning. Preserve private original-state snapshot and all error/request/context evidence. Change only cleanup_required, summary.cleanup_verified and summary.status to truthfully record failed with verified cleanup. No deletion, re-execution, prompt replay or reset of other records.
+- Named Stop/Start of `smith-next.service` solely to snapshot/publish/reload that maintenance resolution. Hold publisher -> Core data-directory -> runner-after-Stop locks; verify captured cgroup subtree and both sockets, all inactive work, unchanged helper/selector/unit/state other than the exact resolution. Leave Dagger and legacy service untouched.
+- One NEW service-owned job, fresh generated request ID, saved project `smith`, only public URL `https://github.com/jdharrison/smith`, Base `main`; current local model `smollm2-1.7b-instruct:q4_k_m`, SHA256 `decd2598bc2c8ed08c19adc3c8fdd461ee19ed5708679d1c54ef54a5a30d4f33`. Freeze authoritative revisions/context; no model substitution/download/cloud/private auth. Explicit task: `What language is this project in? Cite repository-relative files and line numbers from your inspection.`
+- Existing runtime budgets remain300s overall,90s preparation,180s inference,2CPU/2GiB/128PIDs,16 reads/32KiB and8 model rounds. Retain job/container/evidence; no automatic retry. Poll/get/Resolve only the admitted identity if acknowledgment is lost.
+
+## Continuation after the first diagnosed preparation failure
+
+The first fresh attempt `f8f90d19e68643dea6bce5083659d93d` reached a real started worker and ended `failed` with verified cleanup; no replay/reconciliation is required to start a new ID. Its only emitted frame was generic failure, before a repository request. A network-free, non-root metadata diagnostic using the exact image/restrictions proved `/usr/local/bin/opencode` was owned by archive UID1001 rather than root, violating the native immutable-executable guard before Git. The diagnostic container is retained; it ran only `stat`, not a job/model/Git/network operation.
+
+The operator's standing “continue until ready” task includes fixing this directly diagnosed image-preparation defect without weakening the guard. Both image recipes now discard archive ownership with `tar --no-same-owner`; retain the same OpenCode pin/checksum, root-owned immutable payload policy and worker UID. Stage the exact existing paired493 service binary as the worker payload, retain the old payload/image, build only the local image and verify actual root ownership before further execution. No installed binary/unit/selector is changed. Permit one subsequent explicitly recorded fresh smoke identity with the same repository/model/task/budgets only after that verified correction; do not resend either failed request or auto-retry ambiguity. This is bounded continuation of preparation QA, not an unbounded task/model retry policy, new model/destination, or release approval.
+
+## Safety reconciliation
+
+Ordinary `failed` with verified cleanup already permits a fresh explicit job. Do not blanket-relax `unknown`: independent architecture inspection found that worker shutdown alone does not establish host-native inference quiescence after every provider error. That broader lifecycle change needs checked native cleanup/fencing and separate source validation; it is not smuggled into this one-off never-started, never-dispatched reconciliation.
+
+Existing source evidence: logging fix95 Dev/25 lifecycle tests, scoped build/Clippy/format; list/modal80 focused tests, full analysis/Linux build. The13 selected navigation/restore fixture failures remain recorded and block general acceptance. This bounded diagnostic run does not waive those failures or establish release/installed/native acceptance. Obtain fresh read-only review of the exact maintenance script before effects. Stop on unexpected identities, pending work, state/schema drift or unavailable safety evidence; never use live resources to replace a missing fake gate.
+
+## Evidence
+
+Read-only discovery confirms matching service/helper, installed compression-off argument, no pending Chat jobs, and only the named cleanup-unknown blocker. The old container remains created/not running with no start timestamp and the exact logging initialization error. Maintenance and live results were not closed out in this record; no successful job is claimed here. Subsequent canonical notes record the archive-ownership correction and a later Git-protocol failure, not successful OpenCode/model acceptance.
+
+## Full-clone source successor
+
+The operator subsequently requested ordinary full clone/fetch for code references rather than custom shallow negotiation. [LOCAL-SMITH-DEV-FULL-CLONE](LOCAL-SMITH-DEV-FULL-CLONE.md) owns that source-only change and isolated native-Git evidence. It supersedes the shallow protocol correction, not this record's retained failures or exact host-effect boundaries. Do not infer permission for another live submission, image rebuild, installed replacement or restart from the new source work.

@@ -143,7 +143,11 @@ void main() {
         WidgetState.selected,
         WidgetState.focused,
       })!;
-      expect(selectedBorder.color, SmithColors.stroke);
+      expect(selectedBorder.color, Colors.transparent);
+      expect(
+        button.style!.foregroundColor!.resolve({WidgetState.selected}),
+        SmithColors.accent,
+      );
       expect(focusedBorder.color, SmithColors.accentBright);
       expect(focusedBorder.width, greaterThan(selectedBorder.width));
       semantics.dispose();
@@ -205,8 +209,9 @@ void main() {
         await tester.pump();
       }
       expect(selected, isEmpty);
-      final icon = find.byWidgetPredicate(
-        (widget) => widget is SmithIcon && widget.name == 'archive',
+      final icon = find.descendant(
+        of: find.byTooltip('Archived chats'),
+        matching: find.byType(SmithIcon),
       );
       // Focus the actual button's descendant, not its enclosing navigation scope.
       final focus = Focus.of(tester.element(icon.first));

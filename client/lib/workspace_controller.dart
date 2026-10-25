@@ -1247,7 +1247,13 @@ class WorkspaceController extends ChatController {
       await _pollChat(c);
     } on Object catch (e) {
       _observeFailure(e);
-      c.error = '$e';
+      c.error =
+          !admissionObserved &&
+              e is AppFailure &&
+              !e.unknown &&
+              e.code == 'INSTRUCTIONS_LOCAL_ONLY'
+          ? 'Cloud send blocked: global personal instructions are local-only. Enable cloud sharing in Instructions and review transfer consent, or select a local model. Nothing was sent.'
+          : '$e';
       c.uncertain = true;
       if (admissionObserved) stale = true;
       // Only a definitive failure of the admission exchange can release this
@@ -1267,6 +1273,7 @@ class WorkspaceController extends ChatController {
             'PROVIDER_NOT_CONFIGURED',
             'PROVIDER_NOT_VALIDATED',
             'CREDENTIAL_CHANGED',
+            'INSTRUCTIONS_LOCAL_ONLY',
             'CONSENT_REQUIRED',
             'CONSENT_EXPIRED',
             'CONSENT_MISMATCH',
@@ -1747,7 +1754,7 @@ class _ConversationQueue extends MessageQueue {
     if (!retained) return;
     if (_instance != w.instanceId || _config != w.config['revision']) {
       latch(
-        'Service or model configuration changed. Review and Resume explicitly.',
+        'Service, model or global instructions configuration changed. Review and Resume explicitly.',
       );
     }
     final head = _entries.firstOrNull;
@@ -1993,7 +2000,10 @@ class _ConversationQueue extends MessageQueue {
       );
       final prepared = await w._prepareIntent(c, intent, confirm, queued: true);
       if (prepared == null) {
-        latch('Cloud send not approved. Review queued cloud send explicitly.');
+        latch(
+          _reason ??
+              'Cloud send not approved. Review queued cloud send explicitly.',
+        );
         return;
       }
       if (!readyToPump ||
@@ -2014,7 +2024,14 @@ class _ConversationQueue extends MessageQueue {
       await w._submit(c, intent);
     } on Object catch (error) {
       w._observeFailure(error);
-      latch('Saved chat unavailable. Local messages remain unsent.');
+      if (error is AppFailure &&
+          error.code == 'INSTRUCTIONS_LOCAL_ONLY' &&
+          !error.unknown) {
+        c.error = 'Cloud send blocked: global personal instructions are local-only. Enable cloud sharing in Instructions and review transfer consent, or select a local model. Nothing was sent.';
+        latch(c.error!);
+      } else {
+        latch('Saved chat unavailable. Local messages remain unsent.');
+      }
     } finally {
       dispatching = false;
       w.changed();

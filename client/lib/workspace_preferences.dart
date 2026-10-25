@@ -4,7 +4,13 @@ final class WorkspaceSlotPreferences {
     if ((conversationId != null &&
             (conversationId!.length != 32 ||
                 !RegExp(r'^[0-9a-f]{32}$').hasMatch(conversationId!))) ||
-        !const {'chat', 'settings'}.contains(page)) {
+        !const {
+          'chat',
+          'dev',
+          'projects',
+          'agents',
+          'settings',
+        }.contains(page)) {
       throw const FormatException('Invalid workspace slot.');
     }
   }
@@ -59,7 +65,7 @@ final class WorkspacePreferences {
   final List<WorkspaceSlotPreferences> slots;
 
   Map<String, Object?> toJson() => {
-    'version': 1,
+    'version': 4,
     'layout': layout,
     'activeTile': activeTile,
     'slots': slots.map((slot) => slot.toJson()).toList(),
@@ -68,7 +74,7 @@ final class WorkspacePreferences {
   factory WorkspacePreferences.fromJson(Object? json) {
     if (!_keys(json, const {'version', 'layout', 'activeTile', 'slots'}) ||
         (json as Map)['version'] is! int ||
-        json['version'] != 1 ||
+        !const {1, 2, 3, 4}.contains(json['version']) ||
         json['layout'] is! String ||
         json['activeTile'] is! int ||
         json['slots'] is! List ||
@@ -77,12 +83,25 @@ final class WorkspacePreferences {
         'Invalid or unsupported workspace preferences.',
       );
     }
+    final slots = (json['slots'] as List)
+        .map(WorkspaceSlotPreferences.fromJson)
+        .toList();
+    final destinations = switch (json['version']) {
+      1 => const {'chat', 'settings'},
+      2 => const {'chat', 'projects', 'settings'},
+      3 => const {'chat', 'projects', 'agents', 'settings'},
+      4 => const {'chat', 'dev', 'projects', 'agents', 'settings'},
+      _ => const <String>{},
+    };
+    if (slots.any((slot) => !destinations.contains(slot.page))) {
+      throw const FormatException(
+        'Destination unavailable in workspace version.',
+      );
+    }
     return WorkspacePreferences(
       layout: json['layout'] as String,
       activeTile: json['activeTile'] as int,
-      slots: (json['slots'] as List)
-          .map(WorkspaceSlotPreferences.fromJson)
-          .toList(),
+      slots: slots,
     );
   }
 

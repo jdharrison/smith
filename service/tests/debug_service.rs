@@ -325,6 +325,8 @@ fn app_v3_cached_catalog_and_preparation_use_the_actual_socket_without_cloud_eff
     apply(&c, Action::InstallUnit);
     apply(&c, Action::Enable);
     apply(&c, Action::Start);
+    let state_path = fixture.roots.data.join("smith-next/app-state.json");
+    let before = std::fs::read(&state_path).unwrap();
     let mut request = app_state_request();
     request.schema_version = 3;
     request.op = "route_catalog".into();
@@ -348,11 +350,7 @@ fn app_v3_cached_catalog_and_preparation_use_the_actual_socket_without_cloud_eff
     let reply = c.app(request).unwrap();
     assert!(reply.ok);
     assert!(reply.result.unwrap()["endpoint"].is_null());
-    assert!(!fixture
-        .roots
-        .data
-        .join("smith-next/app-state.json")
-        .exists());
+    assert_eq!(std::fs::read(&state_path).unwrap(), before);
 }
 #[test]
 fn v2_trailing_frames_execute_neither_request_and_keep_correlation() {
@@ -1223,6 +1221,252 @@ mod dart_cloud {
         )
         .unwrap()
     }
+    #[derive(Default)]
+    struct RetainedFixtureState {
+        commands: Vec<Value>,
+        live: std::collections::HashSet<String>,
+        peak: usize,
+    }
+    #[derive(Default)]
+    struct RetainedFixtureRuntime {
+        state: Mutex<RetainedFixtureState>,
+        cancelled: AtomicBool,
+    }
+    impl smith_service::app::retained_jobs::Runtime for RetainedFixtureRuntime {
+        fn execute(
+            &self,
+            command: &smith_service::app::retained_jobs::Command,
+        ) -> smith_service::app::retained_jobs::Acknowledgement {
+            use smith_service::app::retained_jobs::{Acknowledgement, Action, Outcome};
+            let mut state = self.state.lock().unwrap();
+            assert!(
+                state.commands.len() < 256,
+                "bounded synthetic retained fixture"
+            );
+            let outcome = if self.cancelled.load(Ordering::SeqCst) {
+                Outcome::Unknown
+            } else {
+                match command.action {
+                    Action::Create => {
+                        assert!(state.live.insert(command.session_id.clone()));
+                        state.peak = state.peak.max(state.live.len());
+                        assert!(state.peak <= 3, "retained slot limit exceeded");
+                        Outcome::Ready
+                    }
+                    Action::Prompt => {
+                        assert!(state.live.contains(&command.session_id));
+                        let previous = state.commands.iter().any(|c| {
+                            c["session_id"] == command.session_id && c["action"] == "prompt"
+                        });
+                        if previous {
+                            Outcome::Reply("Synthetic retained follow-up\nUnicode ✓".into())
+                        } else {
+                            Outcome::Failed
+                        }
+                    }
+                    Action::Finish => {
+                        assert!(state.live.remove(&command.session_id));
+                        Outcome::Finished
+                    }
+                }
+            };
+            state.commands.push(json!({"session_id":command.session_id,"operation_id":command.operation_id,"action":command.action}));
+            Acknowledgement {
+                session_id: command.session_id.clone(),
+                operation_id: command.operation_id.clone(),
+                action: command.action,
+                outcome,
+            }
+        }
+        fn cancel(&self) {
+            self.cancelled.store(true, Ordering::SeqCst);
+        }
+    }
+    struct NoRetainedFixtureProvider;
+    impl Provider for NoRetainedFixtureProvider {
+        fn inventory(&self) -> AppResult<Inventory> {
+            panic!("retained fixture must not observe a provider")
+        }
+        fn chat(&self, _: &str, _: &[Message]) -> AppResult<String> {
+            panic!("retained fixture must not infer through a provider")
+        }
+    }
+    /// Separate test-binary entry point, NOT a production environment selector.
+    /// No inspection/provider request reaches Application; no fake failure can
+    /// fall through to a Docker, Dagger, source resolver or provider implementation.
+    #[test]
+    #[ignore = "launched explicitly by the isolated Dart retained-jobs protocol test"]
+    fn dart_retained_fixture() {
+        let base = PathBuf::from(
+            std::env::var_os("SMITH_DART_CLOUD_ROOT").expect("explicit private fixture root"),
+        );
+        assert!(base.is_absolute());
+        let metadata = fs::symlink_metadata(&base).unwrap();
+        assert!(
+            metadata.is_dir()
+                && metadata.uid() == unsafe { libc::geteuid() }
+                && metadata.mode() & 0o7777 == 0o700
+        );
+        let roots = Roots {
+            data: base.join("data"),
+            config: base.join("config"),
+            runtime: base.join("runtime"),
+        };
+        for path in [&roots.data, &roots.config, &roots.runtime] {
+            directory(path);
+        }
+        directory(&roots.data.join("smith-next"));
+        let runtime = Arc::new(RetainedFixtureRuntime::default());
+        let app = Application::open_with_retained_runtime(
+            &roots,
+            Arc::new(NoRetainedFixtureProvider),
+            Dependencies::disabled(),
+            runtime.clone(),
+        )
+        .unwrap();
+        let socket = base.join("app.sock");
+        let listener = UnixListener::bind(&socket).unwrap();
+        fs::set_permissions(&socket, fs::Permissions::from_mode(0o600)).unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let deadline = Instant::now() + Duration::from_secs(90);
+        let mut exchanges = 0;
+        loop {
+            assert!(
+                Instant::now() < deadline,
+                "retained Dart fixture exceeded 90 seconds"
+            );
+            let (mut stream, _) = match listener.accept() {
+                Ok(peer) => peer,
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                    std::thread::sleep(Duration::from_millis(2));
+                    continue;
+                }
+                Err(_) => panic!("retained fixture socket failed"),
+            };
+            exchanges += 1;
+            assert!(exchanges <= 2048);
+            stream
+                .set_read_timeout(Some(Duration::from_secs(2)))
+                .unwrap();
+            stream
+                .set_write_timeout(Some(Duration::from_secs(2)))
+                .unwrap();
+            let mut frame = String::new();
+            BufReader::new((&stream).take(4 * 1024 * 1024 + 1))
+                .read_line(&mut frame)
+                .unwrap();
+            assert!(frame.len() <= 4 * 1024 * 1024 && frame.ends_with('\n'));
+            let value: Value = serde_json::from_str(&frame).unwrap();
+            let stop = value == json!({"fixture":"shutdown"});
+            let response = if value.get("fixture").is_some() {
+                assert!(stop || value == json!({"fixture":"stats"}));
+                let state = runtime.state.lock().unwrap();
+                json!({"local_calls":0,"http_calls":0,"key_reads":0,"messages":[],"retained_commands":state.commands,"retained_peak":state.peak,"retained_live":state.live.len()})
+            } else {
+                let call_id = value["call_id"]
+                    .as_str()
+                    .unwrap_or("00000000000000000000000000000000")
+                    .to_owned();
+                let result = match serde_json::from_value::<AppRequest>(value) {
+                    Ok(req)
+                        if matches!(
+                            req.op.as_str(),
+                            "projects_list_v3"
+                                | "project_create_v3"
+                                | "dev_sessions_state_v1"
+                                | "dev_session_get_v1"
+                                | "dev_session_start_v1"
+                                | "dev_session_prompt_v1"
+                                | "dev_session_receipt_v1"
+                                | "dev_session_finish_v1"
+                                | "dev_session_delete_v1"
+                        ) =>
+                    {
+                        app.call(req)
+                    }
+                    _ => Err(smith_service::app::AppError::new(
+                        "FIXTURE_OPERATION_DENIED",
+                        "Operation excluded from isolated retained fixture",
+                    )),
+                };
+                serde_json::to_value(AppReply::from_versioned_result(
+                    3,
+                    &app.instance_id,
+                    &call_id,
+                    result,
+                ))
+                .unwrap()
+            };
+            serde_json::to_writer(&mut stream, &response).unwrap();
+            stream.write_all(b"\n").unwrap();
+            if stop {
+                break;
+            }
+        }
+        drop(app);
+        for name in ["dev-local-jobs.json", "dev-jobs.json"] {
+            assert!(
+                !roots.data.join("smith-next").join(name).exists(),
+                "isolated fixture dispatched an inspection mutation"
+            );
+        }
+    }
+
+    // Called only after dropping the fixture app. No production constructor or
+    // environment override can seed application state this way.
+    fn seed_disk5_projects(roots: &Roots, instance_id: &str) -> Value {
+        let path = roots.data.join("smith-next/app-state.json");
+        let bytes = fs::read(&path).unwrap();
+        assert!(bytes.len() < 16 * 1024 * 1024);
+        let mut disk: Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(disk["schema_version"], 10);
+        assert_eq!(
+            disk["projects"],
+            json!({"revision":0,"projects":[],"receipts":[],"expired_ids":[]})
+        );
+        assert!(disk["jobs"].as_array().unwrap().iter().all(|j| !matches!(
+            j["operation"]["status"].as_str(),
+            Some("queued" | "running")
+        )));
+        let project_id = "d5000000000000000000000000000001";
+        let request_id = "d5000000000000000000000000000002";
+        let expired_id = "d5000000000000000000000000000003";
+        let url = "git@example.invalid:fixture/legacy.git";
+        let args = json!({"request_id":request_id,"instance_id":instance_id,"expected_revision":0,
+            "name":"Legacy fixture","repositories":[url],"agent":"opencode"});
+        use sha2::Digest;
+        let fingerprint = format!(
+            "{:x}",
+            sha2::Sha256::digest(
+                serde_json::to_vec(&json!({"kind":"v3:projects:project_create","args":args}))
+                    .unwrap(),
+            )
+        );
+        let receipt =
+            json!({"request_id":request_id,"project_id":project_id,"revision":1,"deleted":false});
+        // Frozen disk5 has no instruction sidecar. Only downgrade this
+        // synthetic, unused default; never carry disk7-only fields into disk5.
+        let instructions = disk
+            .as_object_mut()
+            .unwrap()
+            .remove("instructions")
+            .unwrap();
+        assert_eq!(instructions["snapshots"], json!({}));
+        assert_eq!(instructions["grants"], json!([]));
+        assert_eq!(instructions["receipts"], json!([]));
+        assert_eq!(instructions["expired_ids"], json!([]));
+        disk.as_object_mut().unwrap().remove("agents");
+        disk["schema_version"] = json!(5);
+        disk["projects"] = json!({"revision":1,"projects":[{"project_id":project_id,
+            "name":"Legacy fixture","repositories":[url],"agent":"opencode"}],
+            "receipts":[{"receipt":receipt,"fingerprint":fingerprint}],"expired_ids":[expired_id]});
+        fs::write(&path, serde_json::to_vec(&disk).unwrap()).unwrap();
+        json!({"legacy_project_id":project_id,"legacy_request_id":request_id,
+            "expired_request_id":expired_id,"registry_revision":1,"url":url,
+            "legacy_op":"project_create","legacy_args":args,"legacy_receipt":receipt,
+            "disk_schema_seeded":5})
+    }
+
     fn bootstrap(app: &Application, saved_only: bool) {
         let request = smith_service::app::new_id().unwrap();
         call(app, "models", json!({"request_id":request}));
@@ -1310,6 +1554,109 @@ mod dart_cloud {
         }
     }
     #[test]
+    fn disk5_projects_control_seeds_real_legacy_bytes_and_reopens_without_effects() {
+        let fixture = Fixture::new();
+        directory(&fixture.roots.data.join("smith-next"));
+        let controls = Arc::new(Controls::default());
+        let keys = Arc::new(Keys {
+            controls: controls.clone(),
+            items: Mutex::new(HashMap::new()),
+        });
+        let app = open(&fixture.roots, &keys, &controls);
+        bootstrap(&app, true);
+        let instance = app.instance_id.clone();
+        drop(app);
+        // This migration-control test needs an existing empty registry, not a
+        // fresh-profile starter. Preserve all unrelated current durable state.
+        let path = fixture.roots.data.join("smith-next/app-state.json");
+        let mut existing: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        existing["projects"] = json!({"revision":0,"projects":[],"receipts":[],"expired_ids":[]});
+        fs::write(&path, serde_json::to_vec(&existing).unwrap()).unwrap();
+        let metadata = seed_disk5_projects(&fixture.roots, &instance);
+        let old: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        assert_eq!(old["schema_version"], 5);
+        assert_eq!(
+            old["projects"]["projects"][0]["repositories"],
+            json!([metadata["url"]])
+        );
+        let counters = (
+            controls.local_calls.load(Ordering::SeqCst),
+            controls.http_calls.load(Ordering::SeqCst),
+            controls.key_reads.load(Ordering::SeqCst),
+        );
+        let app = open(&fixture.roots, &keys, &controls);
+        let list = call(&app, "projects_list_v3", json!({}));
+        assert_eq!(list["revision"], metadata["registry_revision"]);
+        let row = &list["projects"][0]["repositories"][0];
+        assert_eq!(
+            row,
+            &json!({"name":null,"url":metadata["url"],"read_only":true,"branch":{"base":null,"work":null,
+            "types":{"feature":null,"fix":null,"release":null,"hotfix":null}}})
+        );
+        assert_eq!(
+            call(
+                &app,
+                "project_receipt",
+                json!({"request_id":metadata["legacy_request_id"]})
+            ),
+            metadata["legacy_receipt"]
+        );
+        for (op, args, code) in [
+            (
+                "project_create",
+                metadata["legacy_args"].clone(),
+                "UPGRADE_REQUIRED",
+            ),
+            (
+                "project_create_v2",
+                metadata["legacy_args"].clone(),
+                "UPGRADE_REQUIRED",
+            ),
+            (
+                "project_receipt",
+                json!({"request_id":metadata["expired_request_id"]}),
+                "REQUEST_EXPIRED",
+            ),
+        ] {
+            let req = AppRequest {
+                schema_version: 3,
+                service: "smith-next".into(),
+                protocol: "app".into(),
+                call_id: smith_service::app::new_id().unwrap(),
+                op: op.into(),
+                args,
+            };
+            assert_eq!(app.call(req).unwrap_err().code, code);
+        }
+        let migrated: Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+        assert_eq!(migrated["schema_version"], 10);
+        assert_eq!(
+            migrated["projects"]["receipts"],
+            old["projects"]["receipts"]
+        );
+        assert_eq!(
+            migrated["projects"]["expired_ids"],
+            old["projects"]["expired_ids"]
+        );
+        for key in ["cloud", "timestamps", "conversations", "jobs"] {
+            assert_eq!(migrated[key], old[key]);
+        }
+        // Disk7 migration deliberately advances configuration revision once.
+        let mut expected_config = old["config"].clone();
+        expected_config["revision"] = json!(old["config"]["revision"].as_u64().unwrap() + 1);
+        assert_eq!(migrated["config"], expected_config);
+        assert_eq!(migrated["instructions"], existing["instructions"]);
+        assert_eq!(
+            (
+                controls.local_calls.load(Ordering::SeqCst),
+                controls.http_calls.load(Ordering::SeqCst),
+                controls.key_reads.load(Ordering::SeqCst)
+            ),
+            counters
+        );
+    }
+
+    #[test]
     #[ignore = "launched explicitly by the Dart schema3 fixture gate"]
     fn dart_cloud_fixture() {
         let base = PathBuf::from(
@@ -1332,7 +1679,10 @@ mod dart_cloud {
         });
         let mut app = open(&roots, &keys, &controls);
         let saved_only = std::env::var("SMITH_DART_CLOUD_SAVED_ONLY").is_ok_and(|v| v == "1");
-        bootstrap(&app, saved_only);
+        let agents_only = std::env::var("SMITH_DART_AGENTS_ONLY").is_ok_and(|v| v == "1");
+        if !agents_only {
+            bootstrap(&app, saved_only);
+        }
         controls.local_calls.store(0, Ordering::SeqCst);
         controls.http_calls.store(0, Ordering::SeqCst);
         controls.key_reads.store(0, Ordering::SeqCst);
@@ -1371,6 +1721,7 @@ mod dart_cloud {
             let value: Value = serde_json::from_str(&frame).unwrap();
             let mut stop = false;
             let response = if let Some(control) = value["fixture"].as_str() {
+                let mut seeded = None;
                 match control {
                     "hold" => controls
                         .hold
@@ -1386,13 +1737,47 @@ mod dart_cloud {
                         drop(app);
                         app = open(&roots, &keys, &controls);
                     }
+                    "seed_disk7_agents" => {
+                        assert!(agents_only);
+                        assert_eq!(value, json!({"fixture":"seed_disk7_agents"}));
+                        drop(app);
+                        let path = roots.data.join("smith-next/app-state.json");
+                        let mut disk: Value =
+                            serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+                        assert_eq!(disk["agents"]["revision"], 1);
+                        assert_eq!(disk["agents"]["receipts"], json!([]));
+                        disk.as_object_mut().unwrap().remove("agents");
+                        disk["schema_version"] = json!(7);
+                        fs::write(&path, serde_json::to_vec(&disk).unwrap()).unwrap();
+                        app = open(&roots, &keys, &controls);
+                        seeded = Some(json!({"disk_schema_seeded":7}));
+                    }
+                    "seed_disk5_projects" => {
+                        assert_eq!(value, json!({"fixture":"seed_disk5_projects"}));
+                        assert!(
+                            !controls.hold.load(Ordering::SeqCst),
+                            "release held fixture work before seeding"
+                        );
+                        let instance = app.instance_id.clone();
+                        drop(app);
+                        seeded = Some(seed_disk5_projects(&roots, &instance));
+                        app = open(&roots, &keys, &controls);
+                    }
                     "shutdown" => {
                         controls.hold.store(false, Ordering::SeqCst);
                         stop = true;
                     }
                     _ => panic!("unknown test control"),
                 }
-                json!({"local_calls":controls.local_calls.load(Ordering::SeqCst),"http_calls":controls.http_calls.load(Ordering::SeqCst),"key_reads":controls.key_reads.load(Ordering::SeqCst),"messages":*controls.messages.lock().unwrap()})
+                let mut response = json!({"local_calls":controls.local_calls.load(Ordering::SeqCst),"http_calls":controls.http_calls.load(Ordering::SeqCst),"key_reads":controls.key_reads.load(Ordering::SeqCst),"messages":*controls.messages.lock().unwrap()});
+                if let Some(metadata) = seeded {
+                    response
+                        .as_object_mut()
+                        .unwrap()
+                        .extend(metadata.as_object().unwrap().clone());
+                    response["instance_id"] = json!(app.instance_id);
+                }
+                response
             } else {
                 let req: AppRequest = serde_json::from_value(value).unwrap();
                 assert_eq!(
@@ -1433,7 +1818,7 @@ mod dart_cloud {
             }
         }
         assert!(
-            catalog_exchanges > 0,
+            agents_only || catalog_exchanges > 0,
             "Dart must request the actual full Rust catalog"
         );
         drop(app);

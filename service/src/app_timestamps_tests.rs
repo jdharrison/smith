@@ -115,6 +115,12 @@ impl Fixture {
                 cloud: v3::Volatile::default(),
             })),
             owner: None,
+            dev_jobs: Arc::new(dev_jobs::Owner::open(
+                roots.data.join("smith-next/dev-jobs.json"),
+                Arc::new(crate::dev_runtime::DockerRuntime::new(
+                    roots.runtime.clone(),
+                )),
+            )),
             path,
             instance_id: new_id().unwrap(),
             cloud: Arc::new(Dependencies::disabled().with_clock(clock.clone())),
@@ -147,6 +153,7 @@ impl Fixture {
             task: Some(Task::Submit { text: "new".into() }),
             accepted_ms: accepted,
         });
+        d.instructions.capture(&id(1));
         (Self::new(d), args)
     }
     fn target(&self) -> String {
@@ -170,7 +177,11 @@ impl Fixture {
         Application::open_with_cloud(
             &self.roots,
             Arc::new(Reply::new(Err(invalid()))),
-            Dependencies::disabled().with_clock(self.clock.clone()),
+            // Restarted scheduler clock reads are not timestamp publication samples.
+            Dependencies::disabled().with_clock(Arc::new(TestClock {
+                wall: AtomicU64::new(self.clock.wall.load(Ordering::SeqCst)),
+                samples: AtomicUsize::new(0),
+            })),
         )
     }
 }
@@ -235,12 +246,16 @@ fn timestamps_leave_all_existing_projections_and_provider_messages_unchanged() {
     let (f, _) = Fixture::pending(1, 1000);
     let p = Reply::new(Ok("answer".into()));
     f.run(&p);
+    let snapshot = f.app.inner.lock().unwrap().durable.instructions.preview();
     let mut context = history(1);
     context.push(Message {
         role: "user".into(),
         content: "new".into(),
     });
-    assert_eq!(p.contexts.lock().unwrap()[0], json!(context));
+    assert_eq!(
+        p.contexts.lock().unwrap()[0],
+        json!(snapshot.messages(&context))
+    );
     let mut without = f.app.inner.lock().unwrap().durable.clone();
     without.timestamps.clear();
     let untimed = Fixture::new(without);
@@ -280,7 +295,7 @@ fn timestamps_old_disk_versions_migrate_to_unknown_without_rewriting_history_or_
     let legacy: Value =
         serde_json::from_slice(include_bytes!("../tests/fixtures/voice-v1.json")).unwrap();
     let mut d = durable(2);
-    d.config.revision = u64::MAX;
+    d.config.revision = u64::MAX - 1;
     for version in 1..=3 {
         let f = Fixture::new(Durable::default());
         let mut old = if version == 1 {
@@ -291,6 +306,9 @@ fn timestamps_old_disk_versions_migrate_to_unknown_without_rewriting_history_or_
         if version != 1 {
             old["schema_version"] = json!(version);
             old.as_object_mut().unwrap().remove("timestamps");
+            old.as_object_mut().unwrap().remove("projects");
+            old.as_object_mut().unwrap().remove("instructions");
+            old.as_object_mut().unwrap().remove("agents");
             if version == 2 {
                 old.as_object_mut().unwrap().remove("cloud");
             }
@@ -300,12 +318,23 @@ fn timestamps_old_disk_versions_migrate_to_unknown_without_rewriting_history_or_
                 old["cloud"]["providers"][0]["revision"] = json!(7);
             }
         }
+        if version != 1 {
+            let mut exhausted = old.clone();
+            exhausted["config"]["revision"] = json!(u64::MAX);
+            let bytes = f.write(&exhausted);
+            assert!(f.reopen().is_err());
+            assert_eq!(fs::read(&f.app.path).unwrap(), bytes);
+        }
         f.write(&old);
         let app = f.reopen().unwrap();
         let saved: Value = serde_json::from_slice(&fs::read(&f.app.path).unwrap()).unwrap();
-        assert_eq!(saved["schema_version"], 4);
+        assert_eq!(saved["schema_version"], 10);
         assert_eq!(saved["timestamps"], json!({}));
-        assert_eq!(saved["config"], old["config"]);
+        let mut config = old["config"].clone();
+        config["revision"] = json!(config["revision"].as_u64().unwrap() + 1);
+        assert_eq!(saved["config"], config);
+        assert_eq!(saved["instructions"], json!(instructions::State::default()));
+        assert_eq!(saved["agents"], json!(agents::Registry::default()));
         assert_eq!(saved["expired_ids"], old["expired_ids"]);
         if version == 3 {
             assert_eq!(saved["cloud"], old["cloud"]);
@@ -326,13 +355,13 @@ fn timestamps_old_disk_versions_migrate_to_unknown_without_rewriting_history_or_
 }
 
 #[test]
-fn timestamps_strict_disk4_and_frozen_disk3_preserve_malformed_bytes() {
+fn timestamps_strict_current_disk_and_frozen_disk3_preserve_malformed_bytes() {
     let (f, _) = Fixture::pending(1, 1000);
     f.run(&Reply::new(Ok("answer".into())));
     let good = json!(f.app.inner.lock().unwrap().durable);
     let target = f.target();
     let mut bad = vec![];
-    for version in [1, 2, 3, 5] {
+    for version in [1, 2, 3, 4, 7] {
         let mut v = good.clone();
         v["schema_version"] = json!(version);
         bad.push(v);
@@ -381,7 +410,9 @@ fn timestamps_strict_disk4_and_frozen_disk3_preserve_malformed_bytes() {
     let mut v = good.clone();
     v["schema_version"] = json!(3);
     v.as_object_mut().unwrap().remove("timestamps");
-    v.as_object_mut().unwrap().remove("cloud");
+    for key in ["cloud", "projects", "instructions", "agents"] {
+        v.as_object_mut().unwrap().remove(key);
+    }
     bad.push(v);
     for v in bad {
         let bytes = f.write(&v);

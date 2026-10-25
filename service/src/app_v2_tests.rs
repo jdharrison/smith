@@ -20,6 +20,10 @@ impl Fixture {
                 cloud: v3::Volatile::default(),
             })),
             owner: None,
+            dev_jobs: Arc::new(dev_jobs::Owner::open(
+                dir.join("dev-jobs.json"),
+                Arc::new(crate::dev_runtime::DockerRuntime::new(dir.clone())),
+            )),
             path: dir.join("state.json"),
             instance_id: new_id().unwrap(),
             cloud: Arc::new(crate::cloud::Dependencies::disabled()),
@@ -37,6 +41,7 @@ fn id(n: usize) -> String {
 }
 fn queued(d: &mut Durable, n: usize, time: u64) -> String {
     let target = d.allocate(Some(id(n)), "New chat".into()).unwrap();
+    d.instructions.capture(&id(n));
     d.jobs.push(Job {
         operation: Operation {
             request_id: id(n),
@@ -206,7 +211,9 @@ fn migration_preserves_legacy_ids_without_inventing_submitted_text() {
     assert_eq!(c.title, "Current chat");
     assert!(c.origin_request_id.is_none());
     assert_eq!(json!(c.history), json!(old.history));
-    assert_eq!(json!(d.config), json!(old.config));
+    let mut expected_config = old.config.clone();
+    expected_config.revision += 1;
+    assert_eq!(json!(d.config), json!(expected_config));
     assert_eq!(d.expired_ids, old.expired_ids);
     for (new, old) in d.jobs.iter().zip(old.jobs) {
         assert_eq!(new.operation.request_id, old.operation.request_id);
@@ -433,6 +440,7 @@ fn completion_is_fenced_by_running_request_target_and_revision() {
             history: vec![],
             conversation_id: Some(target),
             history_revision: Some(0),
+            instructions: Some(d.instructions.preview()),
         };
         match mismatch {
             "status" => d.jobs[0].operation.status = "interrupted".into(),
@@ -511,6 +519,7 @@ fn assurance_exact_byte_reservation_must_allow_dispatch() {
         task: Some(Task::Submit { text: "new".into() }),
         accepted_ms: 0,
     });
+    d.instructions.capture(&id(100));
     let reserve = d.reserved_bytes().unwrap() - serde_json::to_vec(&d).unwrap().len();
     let gap = STATE_LIMIT as usize - reserve - serde_json::to_vec(&d).unwrap().len();
     let encoded = gap + 1;
@@ -561,6 +570,7 @@ fn four_jobs_at_exact_byte_and_revision_capacity_all_complete() {
         }
     }
     for n in 0..4 {
+        d.instructions.capture(&id(100 + n));
         d.jobs.push(Job {
             operation: Operation {
                 request_id: id(100 + n),
@@ -710,6 +720,7 @@ fn retained_origin_must_be_v2_submit_new_not_another_kind_or_version() {
 fn expired_submit_new_origin_remains_valid_without_retained_job() {
     let mut d = completed_origin_fixture();
     let origin = d.jobs.remove(0).operation.request_id;
+    d.instructions.prune(&d.jobs, &d.conversations);
     d.expired_ids.push(origin.clone());
     d.validate().unwrap();
     let f = Fixture::new(Durable::default());
@@ -763,6 +774,7 @@ fn assurance_legacy_maximum_escaped_results_migrate() {
     assert!(bytes.len() <= STATE_LIMIT as usize);
     let (d, _) = Durable::load(&bytes).unwrap();
     d.validate().unwrap();
+    old.config.revision += 1;
     assert_eq!(json!(d.legacy()), json!(old));
 }
 
@@ -811,7 +823,13 @@ fn finish(app: &Application, n: usize) -> Value {
 }
 #[test]
 fn full_u64_config_revision_migration_wire_echo_and_exhaustion() {
-    for revision in [MAX_REVISION, MAX_REVISION + 1, u64::MAX - 1, u64::MAX] {
+    for revision in [
+        MAX_REVISION - 1,
+        MAX_REVISION,
+        MAX_REVISION + 1,
+        u64::MAX - 1,
+        u64::MAX,
+    ] {
         let f = Fixture::new(Durable::default());
         let dir = f.dir.join("smith-next");
         std::fs::create_dir(&dir).unwrap();
@@ -833,7 +851,17 @@ fn full_u64_config_revision_migration_wire_echo_and_exhaustion() {
             config: f.dir.clone(),
             runtime: f.dir.clone(),
         };
+        if revision == u64::MAX {
+            let before = std::fs::read(&path).unwrap();
+            let error = Application::open(&roots, Arc::new(RevisionProvider))
+                .err()
+                .expect("legacy migration must refuse configuration revision overflow");
+            assert!(error.contains("Configuration revision exhausted"));
+            assert_eq!(std::fs::read(&path).unwrap(), before);
+            continue;
+        }
         let app = Application::open(&roots, Arc::new(RevisionProvider)).unwrap();
+        let revision = revision + 1; // The disk1–6 instructions migration bumps once.
         let wire = wire_config_revision(revision);
         assert_eq!(
             app.call(req(1, "state", json!({}))).unwrap()["config"]["revision"],
@@ -972,6 +1000,7 @@ fn assurance_last_sequence_and_late_completion_after_dispose() {
         history: vec![],
         conversation_id: Some(target),
         history_revision: Some(0),
+        instructions: Some(d.instructions.preview()),
     };
     let f = Fixture::new(d);
     f.app.inner.lock().unwrap().owned = false;

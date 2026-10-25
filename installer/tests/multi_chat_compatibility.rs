@@ -276,24 +276,24 @@ fn finished(app: &Application, version: u32, id: &str) -> Value {
         std::thread::yield_now();
     }
 }
-fn submit_new(app: &Application, id: &str) -> Value {
+fn submit_new(app: &Application, id: &str, expected_config_revision: u64) -> Value {
     call(
         app,
         2,
         "submit_new",
-        json!({"request_id":id,"text":"Other conversation","output":"chat","expected_config_revision":1}),
+        json!({"request_id":id,"text":"Other conversation","output":"chat","expected_config_revision":expected_config_revision}),
     )
 }
-fn initialize(native: &mut Native) {
-    assert_eq!(native.configuration().unwrap().revision, 0);
+fn initialize(native: &mut Native, expected_revision: u64) {
+    assert_eq!(native.configuration().unwrap().revision, expected_revision);
     let names = native.models().unwrap();
     assert_eq!(names.len(), 2);
     assert!(names.contains(runner::CATALOG[0].name));
     assert_eq!(
         native
-            .configure_checked(runner::CATALOG[0].name, 0)
+            .configure_checked(runner::CATALOG[0].name, expected_revision)
             .unwrap(),
-        1
+        expected_revision + 1
     );
 }
 fn busy<T: std::fmt::Debug>(result: Result<T>) {
@@ -309,16 +309,16 @@ fn native_v1_management_is_exclusive_with_durable_v2_chat_and_reopens() {
     let provider = Arc::new(FakeProvider::default());
     let app = Arc::new(Application::open(&fixture.roots, provider.clone()).unwrap());
     let (mut installer, trace) = native(&app);
-    initialize(&mut installer);
+    initialize(&mut installer, 0);
     let entered = provider.block();
     let running_id = "a".repeat(32);
     let queued_id = "b".repeat(32);
-    submit_new(&app, &running_id);
+    submit_new(&app, &running_id, 1);
     provider.wait_entered(entered);
-    let queued = submit_new(&app, &queued_id);
+    let queued = submit_new(&app, &queued_id, 1);
     assert_eq!(queued["status"], "queued");
     let before = fixture.disk();
-    assert_eq!(before["schema_version"], 4);
+    assert_eq!(before["schema_version"], 10);
     for (id, status) in [(&running_id, "running"), (&queued_id, "queued")] {
         let job = before["jobs"]
             .as_array()
@@ -425,13 +425,14 @@ fn deleting_migrated_legacy_chat_never_remaps_installer_v1_history() {
     let provider = Arc::new(FakeProvider::default());
     let app = Arc::new(Application::open(&fixture.roots, provider.clone()).unwrap());
     let (mut installer, _) = native(&app);
-    initialize(&mut installer);
+    // Disk1–6 migration advances the configuration revision before installer setup.
+    initialize(&mut installer, 1);
     let original = installer.app("state", json!({})).unwrap()["history"].clone();
     assert_eq!(original[0]["content"], "Legacy question");
-    assert_eq!(fixture.disk()["schema_version"], 4);
+    assert_eq!(fixture.disk()["schema_version"], 10);
     let legacy = call(&app, 2, "state", json!({}))["conversations"][0].clone();
     let other_id = "c".repeat(32);
-    let other = submit_new(&app, &other_id);
+    let other = submit_new(&app, &other_id, 2);
     finished(&app, 2, &other_id);
     assert_eq!(
         installer.app("state", json!({})).unwrap()["history"],
@@ -460,7 +461,7 @@ fn deleting_migrated_legacy_chat_never_remaps_installer_v1_history() {
     drop(app);
     let reopened = Arc::new(Application::open(&fixture.roots, provider.clone()).unwrap());
     let (mut installer, _) = native(&reopened);
-    assert_eq!(installer.configuration().unwrap().revision, 1);
+    assert_eq!(installer.configuration().unwrap().revision, 2);
     assert_eq!(
         installer.app("state", json!({})).unwrap()["history"],
         json!([])

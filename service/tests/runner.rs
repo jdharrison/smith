@@ -964,6 +964,7 @@ impl Fixture {
             context: 4096,
             threads: 2,
             backend: Backend::Cpu,
+            verified_runtime: None,
         }
     }
     fn start(&self, scenario: &str) -> (Runner, ModelRecord) {
@@ -1499,6 +1500,63 @@ fn context_trims_oldest_pairs_in_request_only_or_reports_limit() {
     runner.chat(&messages, 1024, deadline(10)).unwrap();
     let sent = f.request(pid, 1)["messages"].as_array().unwrap().len();
     assert!(sent < messages.len() && sent % 2 == 1, "{sent}");
+}
+
+#[test]
+fn smith_preamble_survives_token_trimming_and_counts_toward_limit() {
+    let f = Fixture::new();
+    for scenario in ["ok", "no-template"] {
+        let (mut runner, _) = f.start(scenario);
+        let pid = runner.pid();
+        let preamble = Message {
+            role: "system".into(),
+            content: "Smith instructions ".repeat(50),
+        };
+        let messages = vec![
+            preamble.clone(),
+            user(&"old".repeat(500)),
+            assistant(&"old".repeat(500)),
+            user("new user"),
+            assistant("new assistant"),
+            user("final"),
+        ];
+        let original = serde_json::to_value(&messages).unwrap();
+        runner.chat(&messages, 1024, deadline(10)).unwrap();
+        assert_eq!(serde_json::to_value(&messages).unwrap(), original);
+        assert_eq!(
+            f.request(pid, 1)["messages"],
+            serde_json::to_value(vec![
+                preamble.clone(),
+                user("new user"),
+                assistant("new assistant"),
+                user("final"),
+            ])
+            .unwrap()
+        );
+        assert_eq!(
+            runner
+                .chat(
+                    &[preamble.clone(), user(&"x".repeat(2200))],
+                    1024,
+                    deadline(10)
+                )
+                .unwrap_err()
+                .code,
+            "CONTEXT_LIMIT"
+        );
+        assert_eq!(
+            runner
+                .chat(
+                    &[preamble.clone(), preamble, user("final")],
+                    1024,
+                    deadline(10)
+                )
+                .unwrap_err()
+                .code,
+            "CONTEXT_LIMIT"
+        );
+        runner.stop().unwrap();
+    }
 }
 
 #[test]

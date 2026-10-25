@@ -161,7 +161,13 @@ pub(super) struct Durable {
     schema_version: u32,
     pub cloud: v3::CloudDurable,
     pub timestamps: timestamps::Timestamps,
+    #[serde(deserialize_with = "projects::object")]
+    pub projects: projects::Registry,
     pub config: Config,
+    #[serde(deserialize_with = "projects::object")]
+    pub instructions: instructions::State,
+    #[serde(deserialize_with = "projects::object")]
+    pub agents: agents::Registry,
     pub conversations: Vec<Conversation>,
     pub jobs: Vec<Job>,
     pub expired_ids: Vec<String>,
@@ -173,10 +179,13 @@ pub(super) struct Durable {
 impl Default for Durable {
     fn default() -> Self {
         Self {
-            schema_version: 4,
+            schema_version: 10,
             cloud: v3::CloudDurable::default(),
             timestamps: timestamps::Timestamps::default(),
+            projects: projects::Registry::default(),
             config: Config::default(),
+            instructions: instructions::State::default(),
+            agents: agents::Registry::default(),
             conversations: vec![],
             jobs: vec![],
             expired_ids: vec![],
@@ -189,6 +198,172 @@ impl Default for Durable {
 impl Durable {
     pub fn load(bytes: &[u8]) -> Result<(Self, bool)> {
         let v = crate::cloud::unique_json(bytes).map_err(|_| "Corrupt state; preserved")?;
+        if v.get("schema_version").and_then(Value::as_u64) == Some(10) {
+            return serde_json::from_slice(bytes)
+                .map(|d| (d, false))
+                .map_err(|_| "Corrupt v10 state; preserved".into());
+        }
+        if v.get("schema_version").and_then(Value::as_u64) == Some(9) {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct FrozenV9 {
+                schema_version: u32,
+                cloud: v3::CloudDurable,
+                timestamps: timestamps::Timestamps,
+                #[serde(deserialize_with = "projects::object")]
+                projects: projects::Registry,
+                config: Config,
+                #[serde(deserialize_with = "projects::object")]
+                instructions: instructions::State,
+                #[serde(deserialize_with = "projects::object")]
+                agents: agents::FrozenRegistry,
+                conversations: Vec<Conversation>,
+                jobs: Vec<Job>,
+                expired_ids: Vec<String>,
+                #[serde(deserialize_with = "required_nullable")]
+                legacy_conversation_id: Option<String>,
+                revision: u64,
+                next_sequence: u64,
+            }
+            let old: FrozenV9 =
+                serde_json::from_slice(bytes).map_err(|_| "Corrupt v9 state; preserved")?;
+            let mut next = Self {
+                schema_version: old.schema_version,
+                cloud: old.cloud,
+                timestamps: old.timestamps,
+                projects: old.projects,
+                config: old.config,
+                instructions: old.instructions,
+                agents: old.agents.migrate()?,
+                conversations: old.conversations,
+                jobs: old.jobs,
+                expired_ids: old.expired_ids,
+                legacy_conversation_id: old.legacy_conversation_id,
+                revision: old.revision,
+                next_sequence: old.next_sequence,
+            };
+            next.validate_version(9)?;
+            next.agents.validate()?;
+            next.instructions.validate(&next)?;
+            next.schema_version = 10;
+            next.validate()?;
+            return Ok((next, true));
+        }
+        if v.get("schema_version").and_then(Value::as_u64) == Some(8) {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct FrozenV8 {
+                schema_version: u32,
+                cloud: v3::CloudDurable,
+                timestamps: timestamps::Timestamps,
+                #[serde(deserialize_with = "projects::object")]
+                projects: projects::FrozenRegistryV6,
+                config: Config,
+                #[serde(deserialize_with = "projects::object")]
+                instructions: instructions::State,
+                #[serde(deserialize_with = "projects::object")]
+                agents: agents::FrozenRegistry,
+                conversations: Vec<Conversation>,
+                jobs: Vec<Job>,
+                expired_ids: Vec<String>,
+                #[serde(deserialize_with = "required_nullable")]
+                legacy_conversation_id: Option<String>,
+                revision: u64,
+                next_sequence: u64,
+            }
+            let old: FrozenV8 =
+                serde_json::from_slice(bytes).map_err(|_| "Corrupt v8 state; preserved")?;
+            let mut next = Self {
+                schema_version: old.schema_version,
+                cloud: old.cloud,
+                timestamps: old.timestamps,
+                projects: old.projects.migrate()?,
+                config: old.config,
+                instructions: old.instructions,
+                agents: old.agents.migrate()?,
+                conversations: old.conversations,
+                jobs: old.jobs,
+                expired_ids: old.expired_ids,
+                legacy_conversation_id: old.legacy_conversation_id,
+                revision: old.revision,
+                next_sequence: old.next_sequence,
+            };
+            next.validate_version(8)?;
+            next.agents.validate()?;
+            next.instructions.validate(&next)?;
+            next.schema_version = 10;
+            next.validate()?;
+            return Ok((next, true));
+        }
+        if v.get("schema_version").and_then(Value::as_u64) == Some(7) {
+            // Freeze disk7 separately: unlike disk1–6, it already owns global
+            // instructions and accepted snapshots. Never run the reset migration.
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct FrozenV7 {
+                schema_version: u32,
+                cloud: v3::CloudDurable,
+                timestamps: timestamps::Timestamps,
+                #[serde(deserialize_with = "projects::object")]
+                projects: projects::FrozenRegistryV6,
+                config: Config,
+                #[serde(deserialize_with = "projects::object")]
+                instructions: instructions::State,
+                conversations: Vec<Conversation>,
+                jobs: Vec<Job>,
+                expired_ids: Vec<String>,
+                #[serde(deserialize_with = "required_nullable")]
+                legacy_conversation_id: Option<String>,
+                revision: u64,
+                next_sequence: u64,
+            }
+            let old: FrozenV7 =
+                serde_json::from_slice(bytes).map_err(|_| "Corrupt v7 state; preserved")?;
+            let mut next = Self {
+                schema_version: old.schema_version,
+                cloud: old.cloud,
+                timestamps: old.timestamps,
+                projects: old.projects.migrate()?,
+                config: old.config,
+                instructions: old.instructions,
+                conversations: old.conversations,
+                jobs: old.jobs,
+                expired_ids: old.expired_ids,
+                legacy_conversation_id: old.legacy_conversation_id,
+                revision: old.revision,
+                next_sequence: old.next_sequence,
+                agents: agents::Registry::default(),
+            };
+            next.validate_version(7)?;
+            next.instructions.validate(&next)?;
+            next.schema_version = 10;
+            next.validate()?;
+            return Ok((next, true));
+        }
+        let (mut next, _) = Self::load_legacy(bytes)?;
+        next.validate_legacy()?;
+        // Old admitted work never acquires a prompt it did not originally use.
+        for job in &mut next.jobs {
+            if pending(&job.operation) {
+                job.operation.status = "interrupted".into();
+                job.operation.phase = "complete".into();
+                job.operation.result = None;
+                job.operation.error = Some(v3::restart_error(job));
+                v3::reconcile_validation(&mut next.cloud, job, now_ms());
+            }
+        }
+        next.schema_version = 10;
+        next.config.revision = next
+            .config
+            .revision
+            .checked_add(1)
+            .ok_or("Configuration revision exhausted; state preserved")?;
+        next.instructions = instructions::State::default();
+        next.validate()?;
+        Ok((next, true))
+    }
+    fn load_legacy(bytes: &[u8]) -> Result<(Self, bool)> {
+        let v = crate::cloud::unique_json(bytes).map_err(|_| "Corrupt state; preserved")?;
         match v.get("schema_version").and_then(Value::as_u64) {
             Some(1) => {
                 let old: LegacyDurable =
@@ -196,6 +371,7 @@ impl Durable {
                 old.validate()?;
                 let id = new_id()?;
                 let mut next = Self {
+                    schema_version: 6,
                     config: old.config,
                     expired_ids: old.expired_ids,
                     legacy_conversation_id: Some(id.clone()),
@@ -255,9 +431,12 @@ impl Durable {
                     return Err("Corrupt v2 state; preserved".into());
                 }
                 let next = Self {
-                    schema_version: 4,
+                    schema_version: 6,
                     cloud: v3::CloudDurable::default(),
                     timestamps: timestamps::Timestamps::default(),
+                    projects: projects::Registry::default(),
+                    instructions: instructions::State::default(),
+                    agents: agents::Registry::default(),
                     config: old.config,
                     conversations: old.conversations,
                     jobs: old.jobs,
@@ -266,7 +445,7 @@ impl Durable {
                     revision: old.revision,
                     next_sequence: old.next_sequence,
                 };
-                next.validate()?;
+                next.validate_legacy()?;
                 Ok((next, true))
             }
             Some(3) => {
@@ -290,9 +469,12 @@ impl Durable {
                     return Err("Corrupt v3 state; preserved".into());
                 }
                 let next = Self {
-                    schema_version: 4,
+                    schema_version: 6,
                     cloud: old.cloud,
                     timestamps: timestamps::Timestamps::default(),
+                    projects: projects::Registry::default(),
+                    instructions: instructions::State::default(),
+                    agents: agents::Registry::default(),
                     config: old.config,
                     conversations: old.conversations,
                     jobs: old.jobs,
@@ -301,12 +483,127 @@ impl Durable {
                     revision: old.revision,
                     next_sequence: old.next_sequence,
                 };
-                next.validate()?;
+                next.validate_legacy()?;
                 Ok((next, true))
             }
-            Some(4) => serde_json::from_slice(bytes)
-                .map(|d| (d, false))
-                .map_err(|_| "Corrupt v4 state; preserved".into()),
+            Some(4) => {
+                #[derive(Deserialize)]
+                #[serde(deny_unknown_fields)]
+                struct FrozenV4 {
+                    schema_version: u32,
+                    cloud: v3::CloudDurable,
+                    timestamps: timestamps::Timestamps,
+                    config: Config,
+                    conversations: Vec<Conversation>,
+                    jobs: Vec<Job>,
+                    expired_ids: Vec<String>,
+                    #[serde(deserialize_with = "required_nullable")]
+                    legacy_conversation_id: Option<String>,
+                    revision: u64,
+                    next_sequence: u64,
+                }
+                let old: FrozenV4 =
+                    serde_json::from_slice(bytes).map_err(|_| "Corrupt v4 state; preserved")?;
+                if old.schema_version != 4 {
+                    return Err("Corrupt v4 state; preserved".into());
+                }
+                let next = Self {
+                    schema_version: 6,
+                    cloud: old.cloud,
+                    timestamps: old.timestamps,
+                    projects: projects::Registry::default(),
+                    instructions: instructions::State::default(),
+                    agents: agents::Registry::default(),
+                    config: old.config,
+                    conversations: old.conversations,
+                    jobs: old.jobs,
+                    expired_ids: old.expired_ids,
+                    legacy_conversation_id: old.legacy_conversation_id,
+                    revision: old.revision,
+                    next_sequence: old.next_sequence,
+                };
+                next.validate_legacy()?;
+                Ok((next, true))
+            }
+            Some(5) => {
+                #[derive(Deserialize)]
+                #[serde(deny_unknown_fields)]
+                struct FrozenV5 {
+                    schema_version: u32,
+                    cloud: v3::CloudDurable,
+                    timestamps: timestamps::Timestamps,
+                    #[serde(deserialize_with = "projects::object")]
+                    projects: projects::FrozenRegistryV5,
+                    config: Config,
+                    conversations: Vec<Conversation>,
+                    jobs: Vec<Job>,
+                    expired_ids: Vec<String>,
+                    #[serde(deserialize_with = "required_nullable")]
+                    legacy_conversation_id: Option<String>,
+                    revision: u64,
+                    next_sequence: u64,
+                }
+                let old: FrozenV5 =
+                    serde_json::from_slice(bytes).map_err(|_| "Corrupt v5 state; preserved")?;
+                if old.schema_version != 5 {
+                    return Err("Corrupt v5 state; preserved".into());
+                }
+                let next = Self {
+                    schema_version: 6,
+                    cloud: old.cloud,
+                    timestamps: old.timestamps,
+                    projects: old.projects.migrate()?,
+                    instructions: instructions::State::default(),
+                    agents: agents::Registry::default(),
+                    config: old.config,
+                    conversations: old.conversations,
+                    jobs: old.jobs,
+                    expired_ids: old.expired_ids,
+                    legacy_conversation_id: old.legacy_conversation_id,
+                    revision: old.revision,
+                    next_sequence: old.next_sequence,
+                };
+                next.validate_legacy()?;
+                Ok((next, true))
+            }
+            Some(6) => {
+                #[derive(Deserialize)]
+                #[serde(deny_unknown_fields)]
+                struct FrozenV6 {
+                    schema_version: u32,
+                    cloud: v3::CloudDurable,
+                    timestamps: timestamps::Timestamps,
+                    #[serde(deserialize_with = "projects::object")]
+                    projects: projects::FrozenRegistryV6,
+                    config: Config,
+                    conversations: Vec<Conversation>,
+                    jobs: Vec<Job>,
+                    expired_ids: Vec<String>,
+                    #[serde(deserialize_with = "required_nullable")]
+                    legacy_conversation_id: Option<String>,
+                    revision: u64,
+                    next_sequence: u64,
+                }
+                let old: FrozenV6 =
+                    serde_json::from_slice(bytes).map_err(|_| "Corrupt v6 state; preserved")?;
+                let next = Self {
+                    schema_version: old.schema_version,
+                    cloud: old.cloud,
+                    timestamps: old.timestamps,
+                    projects: old.projects.migrate()?,
+                    config: old.config,
+                    conversations: old.conversations,
+                    jobs: old.jobs,
+                    expired_ids: old.expired_ids,
+                    legacy_conversation_id: old.legacy_conversation_id,
+                    revision: old.revision,
+                    next_sequence: old.next_sequence,
+                    instructions: instructions::State::default(),
+                    agents: agents::Registry::default(),
+                };
+                next.validate_legacy()?;
+                Ok((next, true))
+            }
             _ => Err("Unsupported state; preserved".into()),
         }
     }
@@ -449,8 +746,16 @@ impl Durable {
         Ok(())
     }
     pub fn validate(&self) -> Result<()> {
-        let fail = || "Invalid v2 application state; preserved".to_owned();
-        if self.schema_version != 4
+        self.validate_version(10)?;
+        self.agents.validate()?;
+        self.instructions.validate(self)
+    }
+    fn validate_legacy(&self) -> Result<()> {
+        self.validate_version(6)
+    }
+    fn validate_version(&self, expected_version: u32) -> Result<()> {
+        let fail = || "Invalid application state; preserved".to_owned();
+        if self.schema_version != expected_version
             || self.conversations.len() > MAX_CONVERSATIONS
             || self.jobs.len() > MAX_JOBS
             || self.expired_ids.len() > MAX_EXPIRED_IDS
@@ -693,6 +998,7 @@ impl Durable {
         }
         self.cloud.validate(self)?;
         timestamps::validate(&self.timestamps, &self.conversations)?;
+        self.projects.validate()?;
         self.preflight().map_err(|e| e.message)?;
         Ok(())
     }
@@ -1018,6 +1324,7 @@ impl Application {
                 accepted_ms: now_ms(),
             };
             let receipt = job.summary();
+            next.instructions.capture(&job.operation.request_id);
             next.jobs.push(job);
             self.commit(&mut inner, next)?;
             self.wake()?;
@@ -1160,6 +1467,15 @@ impl Application {
             };
             let mut next = inner.durable.clone();
             let job = &mut next.jobs[index];
+            if self.dev_integrity_blocked() {
+                job.operation.status = "failed".into();
+                job.operation.phase = "complete".into();
+                job.operation.error = Some(storage());
+                let id = job.operation.request_id.clone();
+                self.commit_worker(&mut inner, next)?;
+                inner.cloud.complete(&id);
+                continue;
+            }
             if job.operation.status == "queued" && now.saturating_sub(job.accepted_ms) > QUEUE_MS {
                 job.operation.status = "failed".into();
                 job.operation.phase = "complete".into();
@@ -1193,6 +1509,10 @@ impl Application {
                     .unwrap_or_default(),
                 conversation_id: job.conversation_id.clone(),
                 history_revision: job.history_revision,
+                instructions: next
+                    .instructions
+                    .snapshot(&job.operation.request_id)
+                    .cloned(),
             };
             if transition {
                 self.commit_worker(&mut inner, next)?;

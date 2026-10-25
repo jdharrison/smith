@@ -65,11 +65,32 @@ class SmithNext:
             .with_exec(["flutter", "pub", "get", "--enforce-lockfile"])
         )
 
+    def _service_tests(self, source: dagger.Directory) -> dagger.Container:
+        # The supported host is Ubuntu 24.04; its Git 2.43 fixture behavior is
+        # part of the service contract. Bookworm's older Git cannot exercise it.
+        toolchain = dag.container().from_("rust:1.98.0-bookworm").with_exec(["rustup", "component", "add", "rustfmt", "clippy"])
+        return (
+            dag.container().from_("ubuntu:24.04")
+            .with_exec(["apt-get", "update"])
+            .with_exec(["apt-get", "install", "--yes", "--no-install-recommends", "build-essential", "ca-certificates", "git"])
+            .with_directory("/usr/local/cargo", toolchain.directory("/usr/local/cargo"))
+            .with_directory("/usr/local/rustup", toolchain.directory("/usr/local/rustup"))
+            .with_directory("/src", source, exclude=["target", "build", "dist", ".git"])
+            .with_exec(["install", "-d", "-m", "0755", "/home/smith"])
+            .with_exec(["chown", "-R", "1000:1000", "/src", "/home/smith", "/usr/local/rustup"])
+            .with_env_variable("HOME", "/home/smith")
+            .with_env_variable("CARGO_HOME", "/home/smith/.cargo")
+            .with_env_variable("RUSTUP_HOME", "/usr/local/rustup")
+            .with_env_variable("PATH", "/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
+            .with_user("1000:1000")
+            .with_workdir("/src")
+        )
+
     @function
     async def test_service(self, source: dagger.Directory) -> str:
         """Check and test an explicit service source directory."""
         return await (
-            self._service(source)
+            self._service_tests(source)
             .with_exec(["sh", "scripts/test.sh"])
             .stdout()
         )
