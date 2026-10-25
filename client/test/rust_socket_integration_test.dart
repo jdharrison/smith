@@ -489,7 +489,7 @@ void main() {
             pid,
             installerV1: true,
             inspectFrame: (text) {
-              final wire = revision == '1' ? '2' : '"9007199254740993"';
+              final wire = revision == '1' ? '2' : '9007199254740993';
               expect(text, contains('"revision":$wire'));
               expect(text, isNot(contains('"revision":"$revision"')));
             },
