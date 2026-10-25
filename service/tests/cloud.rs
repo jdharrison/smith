@@ -712,7 +712,7 @@ fn save_is_local_validation_is_exact_synthetic_and_no_secret_is_durable() {
     }
     assert_eq!(
         serde_json::from_str::<Value>(&disk).unwrap()["schema_version"],
-        6
+        10
     );
 }
 #[test]
@@ -971,8 +971,8 @@ fn mixed_local_cloud_same_chat_and_model_switch_preserve_context_provenance() {
     send(&app, args(&app, 14, Some(target), "local five", local));
     assert_eq!(done(&app, 14)["status"], "succeeded");
     let calls = f.local.calls.lock().unwrap();
-    assert_eq!(calls[1].1.len(), 9);
-    assert_eq!(calls[1].1[3].content, "Cloud final answer");
+    assert_eq!(calls[1].1.len(), 10);
+    assert_eq!(calls[1].1[4].content, "Cloud final answer");
     drop(calls);
     let r = call(
         &app,
@@ -1060,6 +1060,7 @@ fn provider_prepare_expiry_is_monotonic_never_renewed() {
 fn preparation_capacity_and_no_empty_chats() {
     let f = F::new();
     let app = f.open();
+    let before = fs::read(f.disk()).unwrap();
     for n in 1..=32 {
         call(
             &app,
@@ -1069,7 +1070,7 @@ fn preparation_capacity_and_no_empty_chats() {
     }
     assert_eq!(app.call(req("provider_prepare",json!({"request_id":id(33),"instance_id":app.instance_id,"provider":"openai","action":"save","model":null,"expected_provider_revision":0}))).unwrap_err().code,"CAPACITY");
     assert_eq!(call(&app, "state", json!({}))["conversations"], json!([]));
-    assert!(!f.disk().exists());
+    assert_eq!(fs::read(f.disk()).unwrap(), before);
 }
 #[test]
 fn save_duplicate_public_binding_never_reads_or_changes_replacement_key() {
@@ -1529,7 +1530,7 @@ fn logical_delete_removes_all_routing_context_and_replay_content() {
 #[test]
 fn v2_disk_migration_preserves_unknown_models_u64_and_rejects_missing_v3_extension() {
     let f = F::new();
-    let old = json!({"schema_version":2,"config":{"model":"historical:unavailable","voice":null,"revision":u64::MAX},"conversations":[],"jobs":[],"expired_ids":[],"legacy_conversation_id":null,"revision":0,"next_sequence":0});
+    let old = json!({"schema_version":2,"config":{"model":"historical:unavailable","voice":null,"revision":u64::MAX - 1},"conversations":[],"jobs":[],"expired_ids":[],"legacy_conversation_id":null,"revision":0,"next_sequence":0});
     fs::write(f.disk(), serde_json::to_vec(&old).unwrap()).unwrap();
     fs::set_permissions(f.disk(), fs::Permissions::from_mode(0o600)).unwrap();
     let app = f.open();
@@ -1539,7 +1540,7 @@ fn v2_disk_migration_preserves_unknown_models_u64_and_rejects_missing_v3_extensi
     );
     drop(app);
     let mut disk: Value = serde_json::from_slice(&fs::read(f.disk()).unwrap()).unwrap();
-    assert_eq!(disk["schema_version"], 6);
+    assert_eq!(disk["schema_version"], 10);
     disk.as_object_mut().unwrap().remove("cloud");
     let bytes = serde_json::to_vec(&disk).unwrap();
     fs::write(f.disk(), &bytes).unwrap();
@@ -1720,14 +1721,10 @@ fn timestamps_routed_local_cloud_clocks_context_and_observation_are_independent(
         json!([{"user_at_ms":local_admission,"assistant_at_ms":local_completion}])
     );
 
-    let mut a = args(
-        &app,
-        11,
-        Some(target),
-        "cloud second",
-        route(Vendor::Openai, &g, "gpt-6-astra"),
-    );
+    let route = route(Vendor::Openai, &g, "gpt-6-astra");
+    let mut a = args(&app, 11, Some(target), "cloud second", route.clone());
     let prepared = call(&app, "route_prepare", a.clone());
+    let instructions = call(&app, "instructions_get", json!({"route": route}));
     let mut context: Vec<Message> = serde_json::from_value(
         call(&app, "conversation_get", json!({"conversation_id":target}))["history"].clone(),
     )
@@ -1736,9 +1733,22 @@ fn timestamps_routed_local_cloud_clocks_context_and_observation_are_independent(
         role: "user".into(),
         content: "cloud second".into(),
     });
+    let snapshot = json!({
+        "renderer_version": instructions["renderer_version"],
+        "core_version": instructions["core"]["version"],
+        "product_version": instructions["product"]["version"],
+        "text": instructions["local"]["text"],
+        "sha256": instructions["local"]["sha256"],
+        "bundle_sha256": instructions["cloud"]["bundle_sha256"],
+    });
     let hash = format!(
         "{:x}",
-        sha2::Sha256::digest(serde_json::to_vec(&context).unwrap())
+        sha2::Sha256::digest(
+            serde_json::to_vec(
+                &json!({"domain":"smith-chat-context-1","instructions":snapshot,"messages":context.clone()})
+            )
+            .unwrap()
+        )
     );
     assert_eq!(prepared["context_sha256"], hash);
     a["approval_token"] = prepared["approval_token"].clone();
@@ -1757,10 +1767,20 @@ fn timestamps_routed_local_cloud_clocks_context_and_observation_are_independent(
         {"user_at_ms":cloud_admission,"assistant_at_ms":f.clock.wall_ms()}
     ]});
     assert_eq!(query(), expected);
-    let expected_body: Value = serde_json::from_slice(
-        &cloud::build_body(Vendor::Openai, "gpt-6-astra", &context).unwrap(),
-    )
-    .unwrap();
+    let expected_body: Value = {
+        let mut body_context = context.clone();
+        body_context.insert(
+            0,
+            Message {
+                role: "system".into(),
+                content: instructions["local"]["text"].as_str().unwrap().to_owned(),
+            },
+        );
+        serde_json::from_slice(
+            &cloud::build_body(Vendor::Openai, "gpt-6-astra", &body_context).unwrap(),
+        )
+        .unwrap()
+    };
     assert_eq!(
         f.http.calls.lock().unwrap().last().unwrap().1,
         expected_body
@@ -1800,6 +1820,7 @@ fn timestamps_routed_local_cloud_clocks_context_and_observation_are_independent(
 
 #[test]
 fn timestamps_disk3_migration_preserves_routed_receipts_and_never_dates_old_pairs() {
+    use sha2::Digest;
     let f = F::new();
     let app = f.open();
     let g = f.configured(&app, Vendor::Openai, 1);
@@ -1827,6 +1848,18 @@ fn timestamps_disk3_migration_preserves_routed_receipts_and_never_dates_old_pair
     old["schema_version"] = json!(3);
     old.as_object_mut().unwrap().remove("timestamps");
     old.as_object_mut().unwrap().remove("projects");
+    old.as_object_mut().unwrap().remove("instructions");
+    old.as_object_mut().unwrap().remove("agents");
+    for job in old["jobs"].as_array_mut().unwrap() {
+        if let Some(task) = job.get_mut("task").and_then(|t| t.get_mut("Routed")) {
+            let messages: Vec<Message> = serde_json::from_value(task["messages"].clone()).unwrap();
+            let hash = format!(
+                "{:x}",
+                sha2::Sha256::digest(serde_json::to_vec(&messages).unwrap())
+            );
+            task["context_sha256"] = json!(hash);
+        }
+    }
     fs::write(f.disk(), serde_json::to_vec(&old).unwrap()).unwrap();
     let calls = f.http.calls.lock().unwrap().len();
     f.clock.advance(100);
@@ -1854,7 +1887,7 @@ fn timestamps_disk3_migration_preserves_routed_receipts_and_never_dates_old_pair
     );
     assert_eq!(f.http.calls.lock().unwrap().len(), calls);
     let saved: Value = serde_json::from_slice(&fs::read(f.disk()).unwrap()).unwrap();
-    assert_eq!(saved["schema_version"], 6);
+    assert_eq!(saved["schema_version"], 10);
     assert_eq!(saved["cloud"], old["cloud"]);
     assert_eq!(saved["jobs"], old["jobs"]);
 }

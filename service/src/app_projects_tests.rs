@@ -2020,6 +2020,8 @@ fn projects_actual_disk5_migration_preserves_opaque_state_and_legacy_requests_ne
     );
     let mut edit = update(&app, 600, 4, &json!(id(503)));
     edit["repositories"] = converted["projects"]["projects"][1]["repositories"].clone();
+    edit["repositories"][0]["name"] = json!("legacy-a");
+    edit["repositories"][1]["name"] = json!("legacy-b");
     edit["repositories"][0]["branch"]["base"] = json!("main");
     call(&app, "project_update_v3", edit).unwrap();
     call(

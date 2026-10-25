@@ -325,6 +325,8 @@ fn app_v3_cached_catalog_and_preparation_use_the_actual_socket_without_cloud_eff
     apply(&c, Action::InstallUnit);
     apply(&c, Action::Enable);
     apply(&c, Action::Start);
+    let state_path = fixture.roots.data.join("smith-next/app-state.json");
+    let before = std::fs::read(&state_path).unwrap();
     let mut request = app_state_request();
     request.schema_version = 3;
     request.op = "route_catalog".into();
@@ -348,11 +350,7 @@ fn app_v3_cached_catalog_and_preparation_use_the_actual_socket_without_cloud_eff
     let reply = c.app(request).unwrap();
     assert!(reply.ok);
     assert!(reply.result.unwrap()["endpoint"].is_null());
-    assert!(!fixture
-        .roots
-        .data
-        .join("smith-next/app-state.json")
-        .exists());
+    assert_eq!(std::fs::read(&state_path).unwrap(), before);
 }
 #[test]
 fn v2_trailing_frames_execute_neither_request_and_keep_correlation() {
