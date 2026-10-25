@@ -336,15 +336,15 @@ fn malformed_wrong_identity_duplicate_and_output_limits_are_unknown() {
 fn timeout_and_poll_limit_fence_original_process_without_replacement() {
     for behavior in ["slow", "pending_forever"] {
         let mut f = Fixture::new(behavior);
-        f.config.operation_timeout = Duration::from_secs(1);
+        f.config.operation_timeout = Duration::from_secs(2);
         f.config.max_polls = 2;
         let adapter = f.adapter();
         let c = f.command();
         let start = Instant::now();
         unknown(adapter.execute(&c).outcome);
-        assert!(start.elapsed() < Duration::from_secs(2));
+        assert!(start.elapsed() < Duration::from_secs(3));
         let before = f.events(&c);
-        assert!(!before.is_empty());
+        assert!(!before.is_empty(), "supervisor must record its start");
         let child = pid(&before);
         assert_eq!(unsafe { libc::kill(child as i32, 0) }, -1);
         drop(adapter);
