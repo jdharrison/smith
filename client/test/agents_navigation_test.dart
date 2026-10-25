@@ -232,6 +232,7 @@ void main() {
         for (var i = 0; i < 4; i++) ...[
           'projects_list_v3',
           'dev_jobs_state_v4',
+          'dev_sessions_state_v1',
         ],
       ]);
       expect(api.writes, isEmpty);

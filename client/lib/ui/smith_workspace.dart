@@ -97,6 +97,7 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
   bool _devOpened = false;
   bool _devExpanded = false;
 
+  final _devFocus = FocusNode(debugLabel: 'Dev navigation root');
   final _devDisclosureFocus = FocusNode(debugLabel: 'Dev disclosure');
   final _projectsFocus = FocusNode(debugLabel: 'Projects navigation');
   final _agentsFocus = FocusNode(debugLabel: 'Agents navigation');
@@ -137,6 +138,7 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
   @override
   void dispose() {
     _presentation.dispose();
+    _devFocus.dispose();
     _devDisclosureFocus.dispose();
     _projectsFocus.dispose();
     _agentsFocus.dispose();
@@ -526,6 +528,7 @@ class _SmithWorkspaceState extends State<SmithWorkspace> {
                                           integrated: true,
                                           bottomSpacing: 0,
                                           selected: _dev,
+                                          focusNode: _devFocus,
                                           onPressed: () => _setPage('dev'),
                                         ),
                                       ),

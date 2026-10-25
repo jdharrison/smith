@@ -143,7 +143,11 @@ void main() {
         WidgetState.selected,
         WidgetState.focused,
       })!;
-      expect(selectedBorder.color, SmithColors.stroke);
+      expect(selectedBorder.color, Colors.transparent);
+      expect(
+        button.style!.foregroundColor!.resolve({WidgetState.selected}),
+        SmithColors.accent,
+      );
       expect(focusedBorder.color, SmithColors.accentBright);
       expect(focusedBorder.width, greaterThan(selectedBorder.width));
       semantics.dispose();

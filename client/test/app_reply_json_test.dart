@@ -324,7 +324,9 @@ void main() {
         'key': 'another-p',
         'description': '',
         'prompt': '',
-        'repositories': [_repository()],
+        'repositories': [
+          {..._repository(), 'name': 'repo'},
+        ],
         'agent': 'opencode',
       });
       expect(ProjectReceipt.parse(created.result).revision, 1);

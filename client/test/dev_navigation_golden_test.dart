@@ -20,7 +20,7 @@ void main() {
   for (final (name, size, scale, chooser) in [
     ('wide-expanded', const Size(1200, 700), 1.0, false),
     ('compact-root-text2', const Size(400, 400), 2.0, false),
-    ('compact-chooser-text2', const Size(400, 400), 2.0, true),
+    ('compact-expanded-text2', const Size(400, 400), 2.0, true),
   ]) {
     testWidgets('Dev bundled-font fixture $name', (tester) async {
       tester.view.physicalSize = size;

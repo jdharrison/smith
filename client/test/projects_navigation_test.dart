@@ -81,28 +81,6 @@ Future<void> paneTap(WidgetTester tester, int pane, String key) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> configurePaneRepository(
-  WidgetTester tester,
-  int pane,
-  int index,
-) async {
-  final expand = 'expand-project-repository-$index';
-  if (tester
-      .widget<IconButton>(paneKey(pane, expand))
-      .tooltip!
-      .startsWith('Configure')) {
-    await paneTap(tester, pane, expand);
-  }
-  final readOnly = 'project-repository-$index-read-only';
-  if (tester.widget<SwitchListTile>(paneKey(pane, readOnly)).value) {
-    await paneTap(tester, pane, readOnly);
-  }
-  final feature = 'project-repository-$index-feature-selected';
-  if (!tester.widget<CheckboxListTile>(paneKey(pane, feature)).value!) {
-    await paneTap(tester, pane, feature);
-  }
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(loadProjectTestFonts);
@@ -175,45 +153,60 @@ void main() {
     },
   );
 
-  testWidgets(
-    'keyboard Dev disclosure exposes Projects and Agents before Settings',
-    (tester) async {
-      final api = ProjectsUiApi();
-      await mountProjectWorkspace(tester, api);
-      await tester.tap(inside(0, find.byTooltip('Dev navigation')));
-      await tester.pumpAndSettle();
-      final icon = inside(
+  testWidgets('keyboard Dev disclosure exposes Projects before Settings', (
+    tester,
+  ) async {
+    final api = ProjectsUiApi();
+    await mountProjectWorkspace(tester, api);
+    await tester.tap(inside(0, find.byTooltip('Dev navigation')));
+    await tester.pumpAndSettle();
+    final projects = tester.widget<IconButton>(
+      inside(
         0,
         find.descendant(
           of: find.byTooltip('Projects'),
-          matching: find.byType(SmithIcon),
+          matching: find.byType(IconButton),
         ),
-      );
-      Focus.of(tester.element(icon)).requestFocus();
-      await tester.pump();
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
-      expect(projectPresentation(tester).pages[0], 'projects');
-      expect(find.byType(ProjectsView), findsOneWidget);
-      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
-      expect(projectPresentation(tester).pages[0], 'settings');
-      expect(find.byType(SettingsView), findsOneWidget);
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
-      expect(projectPresentation(tester).pages[0], 'projects');
-      expect(api.projectCalls, ['projects_list_v3']);
-      expect(api.writes, isEmpty);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox());
-    },
-  );
+      ),
+    );
+    projects.focusNode!.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(projectPresentation(tester).pages[0], 'projects');
+    expect(find.byType(ProjectsView), findsOneWidget);
+    final settingsIcon = inside(
+      0,
+      find.descendant(
+        of: find.byTooltip('Settings'),
+        matching: find.byType(SmithIcon),
+      ),
+    );
+    Focus.of(tester.element(settingsIcon)).requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(projectPresentation(tester).pages[0], 'settings');
+    expect(find.byType(SettingsView), findsOneWidget);
+    final projectsButton = tester.widget<IconButton>(
+      inside(
+        0,
+        find.descendant(
+          of: find.byTooltip('Projects'),
+          matching: find.byType(IconButton),
+        ),
+      ),
+    );
+    projectsButton.focusNode!.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(projectPresentation(tester).pages[0], 'projects');
+    expect(api.projectCalls, ['projects_list_v3']);
+    expect(api.writes, isEmpty);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets(
     'Projects is lazy and explicit; tab switches retain mounted chat, draft, reading and project edits',
     (tester) async {
@@ -246,15 +239,20 @@ void main() {
       await projectPage(tester, 0, 'Dev navigation');
       await projectPage(tester, 0, 'Dev navigation');
       await projectPage(tester, 0, 'Dev');
-      expect(api.calls, callsBeforeDev);
+      expect(api.calls.skip(callsBeforeDev.length), [
+        'projects_list_v3',
+        'dev_jobs_state_v4',
+        'dev_sessions_state_v1',
+      ]);
       expect(
         editor.selection,
         const TextSelection(baseOffset: 2, extentOffset: 8),
       );
+      final projectCallsBeforeSettings = List.of(api.projectCalls);
       await projectPage(tester, 0, 'Settings');
-      expect(api.projectCalls, isEmpty);
+      expect(api.projectCalls, projectCallsBeforeSettings);
       await projectPage(tester, 0, 'Projects');
-      expect(api.projectCalls, ['projects_list_v3']);
+      expect(api.projectCalls, projectCallsBeforeSettings);
       expect(find.byType(SettingsView), findsNothing);
       expect(inside(0, find.byTooltip('New chat')), findsNothing);
       expect(
@@ -271,14 +269,12 @@ void main() {
       await tester.enterText(paneKey(0, 'project-key'), 'unsent-project-draft');
       await paneTap(tester, 0, 'add-project-repository');
       await tester.enterText(
+        paneKey(0, 'project-repository-0-name'),
+        'backend',
+      );
+      await tester.enterText(
         paneKey(0, 'project-repository-0'),
         'git@example.invalid:team/backend.git',
-      );
-      await configurePaneRepository(tester, 0, 0);
-      await tester.enterText(paneKey(0, 'project-repository-0-base'), 'main');
-      await tester.enterText(
-        paneKey(0, 'project-repository-0-feature'),
-        'feature/*',
       );
       await projectPage(tester, 0, 'Settings');
       expect(find.byType(ProjectsView), findsNothing);
@@ -295,24 +291,17 @@ void main() {
       );
       expect(
         tester
+            .widget<TextField>(paneKey(0, 'project-repository-0-name'))
+            .controller!
+            .text,
+        'backend',
+      );
+      expect(
+        tester
             .widget<TextField>(paneKey(0, 'project-repository-0'))
             .controller!
             .text,
         'git@example.invalid:team/backend.git',
-      );
-      expect(
-        tester
-            .widget<TextField>(paneKey(0, 'project-repository-0-base'))
-            .controller!
-            .text,
-        'main',
-      );
-      expect(
-        tester
-            .widget<TextField>(paneKey(0, 'project-repository-0-feature'))
-            .controller!
-            .text,
-        'feature/*',
       );
       await projectPage(tester, 0, 'Return to Chat');
       expect(tester.state(inside(0, find.byType(ChatPanel))), same(chatState));
@@ -466,10 +455,6 @@ void main() {
         paneKey(0, 'project-description'),
         'Private project description',
       );
-      await tester.enterText(
-        paneKey(0, 'project-prompt'),
-        'Private\nproject context',
-      );
       await paneTap(tester, 0, 'add-project-repository');
       await tester.enterText(
         paneKey(0, 'project-repository-0'),
@@ -537,10 +522,8 @@ void main() {
       await layout(tester, 2, 2);
       final states = <State>[];
       final names = <TextEditingController>[];
-      final patterns = <TextEditingController>[];
       final descriptions = <TextEditingController>[];
-      final prompts = <TextEditingController>[];
-      final searches = <TextEditingController>[];
+      final repoIds = <TextEditingController>[];
       final focuses = <FocusNode>[];
       final lists = <ScrollController>[];
       final editors = <ScrollController>[];
@@ -555,48 +538,29 @@ void main() {
           paneKey(i, 'project-description'),
           'Pane $i description',
         );
+        await paneTap(tester, i, 'expand-project-repository-0');
         await tester.enterText(
-          paneKey(i, 'project-prompt'),
-          'Pane $i\ncontext',
-        );
-        await tester.enterText(
-          paneKey(i, 'search-projects'),
-          i.isEven ? ' ALPHA ' : 'alpha',
+          paneKey(i, 'project-repository-0-name'),
+          'pane-$i',
         );
         descriptions.add(
           tester
               .widget<TextField>(paneKey(i, 'project-description'))
               .controller!,
         );
-        prompts.add(
-          tester.widget<TextField>(paneKey(i, 'project-prompt')).controller!,
-        );
-        searches.add(
-          tester.widget<TextField>(paneKey(i, 'search-projects')).controller!,
-        );
-        await configurePaneRepository(tester, i, 0);
-        await tester.enterText(
-          paneKey(i, 'project-repository-0-feature'),
-          'pane-$i/*',
+        repoIds.add(
+          tester
+              .widget<TextField>(paneKey(i, 'project-repository-0-name'))
+              .controller!,
         );
         states.add(tester.state(inside(i, find.byType(ProjectsView))));
         names.add(
           tester.widget<TextField>(paneKey(i, 'project-key')).controller!,
         );
-        patterns.add(
-          tester
-              .widget<TextField>(paneKey(i, 'project-repository-0-feature'))
-              .controller!,
-        );
         focuses.add(
           tester
-              .widget<EditableText>(
-                find.descendant(
-                  of: paneKey(i, 'project-repository-0-feature'),
-                  matching: find.byType(EditableText),
-                ),
-              )
-              .focusNode,
+              .widget<TextField>(paneKey(i, 'project-repository-0-name'))
+              .focusNode!,
         );
         lists.add(
           tester
@@ -623,7 +587,7 @@ void main() {
           baseOffset: 1,
           extentOffset: 5,
         );
-        patterns[i].selection = const TextSelection(
+        repoIds[i].selection = const TextSelection(
           baseOffset: 1,
           extentOffset: 4,
         );
@@ -631,15 +595,11 @@ void main() {
           baseOffset: 1,
           extentOffset: 5,
         );
-        prompts[i].selection = const TextSelection(
-          baseOffset: 1,
-          extentOffset: 4,
-        );
       }
       await tester.pumpAndSettle();
       for (var i = 0; i < 4; i++) {
         lists[i].jumpTo(200);
-        editors[i].jumpTo(300);
+        editors[i].jumpTo(150);
       }
       await tester.pumpAndSettle();
       await projectPage(tester, 0, 'Settings');
@@ -652,7 +612,7 @@ void main() {
       await tester.pumpAndSettle();
       // Focus visibility can scroll the focused field; establish its bookmark
       // afterwards, independently of the layout's focus repair.
-      editors[3].jumpTo(300);
+      editors[3].jumpTo(150);
       await tester.pumpAndSettle();
       for (final (columns, rows) in [(1, 1), (1, 2), (2, 1), (2, 2)]) {
         await layout(tester, columns, rows);
@@ -670,19 +630,13 @@ void main() {
             const TextSelection(baseOffset: 1, extentOffset: 5),
           );
           expect(descriptions[i].text, 'Pane $i description');
-          expect(prompts[i].text, 'Pane $i\ncontext');
-          expect(searches[i].text, i.isEven ? ' ALPHA ' : 'alpha');
+          expect(repoIds[i].text, 'pane-$i');
           expect(
             descriptions[i].selection,
             const TextSelection(baseOffset: 1, extentOffset: 5),
           );
           expect(
-            prompts[i].selection,
-            const TextSelection(baseOffset: 1, extentOffset: 4),
-          );
-          expect(patterns[i].text, 'pane-$i/*');
-          expect(
-            patterns[i].selection,
+            repoIds[i].selection,
             const TextSelection(baseOffset: 1, extentOffset: 4),
           );
           expect(lists[i].hasClients, isTrue);
@@ -705,22 +659,14 @@ void main() {
           same(descriptions[i]),
         );
         expect(
-          tester.widget<TextField>(paneKey(i, 'project-prompt')).controller,
-          same(prompts[i]),
-        );
-        expect(
           tester
-              .widget<TextField>(
-                find
-                    .byKey(ValueKey('search-projects'), skipOffstage: false)
-                    .at(i),
-              )
+              .widget<TextField>(paneKey(i, 'project-repository-0-name'))
               .controller,
-          same(searches[i]),
+          same(repoIds[i]),
         );
-        expect(paneKey(i, 'project-repository-0-feature'), findsOneWidget);
+        expect(paneKey(i, 'project-repository-0-name'), findsOneWidget);
         expect(lists[i].offset, 200);
-        expect(editors[i].offset, 300);
+        expect(editors[i].offset, 150);
       }
       final back = tester
           .widget<TextButton>(paneKey(3, 'back-to-projects'))
@@ -735,8 +681,8 @@ void main() {
         tester.widget<TextField>(paneKey(3, 'project-key')).controller,
         same(names[3]),
       );
-      expect(paneKey(3, 'project-repository-0-feature'), findsOneWidget);
-      expect(editors[3].offset, 300);
+      expect(paneKey(3, 'project-repository-0-name'), findsOneWidget);
+      expect(editors[3].offset, 150);
       expect(api.projectCalls, ['projects_list_v3']);
       expect(api.writes, isEmpty);
       expect(api.calls.where((op) => op.startsWith('submit')), isEmpty);

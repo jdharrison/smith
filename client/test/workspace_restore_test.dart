@@ -101,6 +101,10 @@ void noMutations(FakeAppApi api, {List<String> registryReads = const []}) {
         'poll',
         'models',
         'instructions_get',
+        // Dev observes saved projects and job state; none admits work.
+        'projects_list_v3',
+        'dev_jobs_state_v4',
+        'dev_sessions_state_v1',
         ...registryReads,
       ].contains(op),
     ),
@@ -153,7 +157,7 @@ void main() {
   }
 
   testWidgets(
-    'v4 mixed four-pane restore retains hidden Dev without eager registry loads',
+    'v4 mixed four-pane restore retains hidden Dev with only the visible projects read',
     (tester) async {
       tester.view.physicalSize = const Size(1800, 1200);
       tester.view.devicePixelRatio = 1;
@@ -200,7 +204,7 @@ void main() {
           api.calls.where(
             (op) => op.startsWith('projects_') || op.startsWith('agents_'),
           ),
-          isEmpty,
+          orderedEquals(['projects_list_v3']),
         );
         noMutations(api);
         expect(tester.takeException(), isNull);
@@ -213,14 +217,14 @@ void main() {
 
   for (final hiddenChildren in [false, true]) {
     testWidgets(
-      'Dev restore has ${hiddenChildren ? 'only existing hidden child reads, no duplicate' : 'no eager registry reads'}',
+      'Dev restore has ${hiddenChildren ? 'only existing hidden child reads, no duplicate' : 'only the visible projects read'}',
       (tester) async {
         final pages = hiddenChildren
             ? ['dev', 'projects', 'agents', 'settings']
             : List.filled(4, 'dev');
         final registryReads = hiddenChildren
-            ? ['projects_list_v2', 'agents_list_v2']
-            : <String>[];
+            ? ['projects_list_v3', 'agents_list_v2']
+            : ['projects_list_v3'];
         final saved = WorkspacePreferences(
           layout: '1x1',
           activeTile: 0,

@@ -127,38 +127,43 @@ void main() {
   );
 
   testWidgets(
-    'compact Dev has one keyboard control and a bounded labelled chooser',
+    'compact Dev keeps separate keyboard controls and inline child links',
     (tester) async {
       await mount(tester, size: const Size(400, 400), scale: 2);
-      expect(tester.getSize(navigation).width, 56);
+      expect(tester.getSize(navigation).width, 104);
       expect(
         find.descendant(of: navigation, matching: find.byType(IconButton)),
-        findsNWidgets(3),
+        findsNWidgets(4),
       );
       final dev = tester.widget<IconButton>(button('Dev navigation'));
       dev.focusNode!.requestFocus();
       await tester.pump();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
-      final chooser = find.byKey(const ValueKey('dev-chooser'));
-      expect(chooser, findsOneWidget);
-      expect(find.widgetWithText(SimpleDialogOption, 'Agents'), findsNothing);
-      final rect = tester.getRect(chooser);
-      expect(rect.left, greaterThanOrEqualTo(0));
-      expect(rect.right, lessThanOrEqualTo(400));
-      expect(rect.bottom, lessThanOrEqualTo(400));
-      await tester.ensureVisible(
-        find.widgetWithText(SimpleDialogOption, 'Dev'),
-      );
-      await tester.tap(find.widgetWithText(SimpleDialogOption, 'Dev'));
+      expect(find.byKey(const ValueKey('dev-chooser')), findsNothing);
+      expect(find.text('Chat page'), findsOneWidget);
+      expect(button('Agents'), findsNothing);
+      final root = tester.getRect(button('Dev'));
+      final disclosure = tester.getRect(button('Dev navigation'));
+      expect(root.size, const Size(48, 48));
+      expect(disclosure.size, const Size(48, 48));
+      expect(root.top, disclosure.top);
+      expect(root.right, lessThanOrEqualTo(disclosure.left));
+      final child = tester.getRect(button('Projects'));
+      expect(child.left, greaterThan(root.left));
+      expect(child.right, lessThanOrEqualTo(tester.getRect(navigation).right));
+      expect(child.bottom, lessThanOrEqualTo(400));
+      final devRoot = tester.widget<IconButton>(button('Dev'));
+      devRoot.focusNode!.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
       expect(find.text('Dev page'), findsOneWidget);
-      await tester.tap(button('Dev navigation'));
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(
-        find.widgetWithText(SimpleDialogOption, 'Projects'),
-      );
-      await tester.tap(find.widgetWithText(SimpleDialogOption, 'Projects'));
+      expect(button('Projects'), findsOneWidget);
+      final projects = tester.widget<IconButton>(button('Projects'));
+      projects.focusNode!.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
       expect(find.text('Projects page'), findsOneWidget);
       expect(tester.takeException(), isNull);
