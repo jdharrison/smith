@@ -104,7 +104,7 @@ void main() {
       final file = diskFile(exchange);
       final disk =
           jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-      expect(disk['schema_version'], 9);
+      expect(disk['schema_version'], 10);
       expect(
         (disk['jobs'] as List).any(
           (job) =>
@@ -207,7 +207,7 @@ void main() {
       final initial = jsonDecode(
         await diskFile(exchange).readAsString(),
       ) as Map<String, dynamic>;
-      expect(initial['schema_version'], 9);
+      expect(initial['schema_version'], 10);
       final registry = initial['projects'] as Map<String, dynamic>;
       expect(registry['revision'], 1);
       expect(registry['projects'], [record]);
@@ -398,7 +398,7 @@ void main() {
       final disk = jsonDecode(
         await diskFile(exchange).readAsString(),
       ) as Map<String, dynamic>;
-      expect(disk['schema_version'], 9);
+      expect(disk['schema_version'], 10);
       final independent = ProjectsController(api);
       addTearDown(independent.dispose);
       await independent.refresh();
@@ -563,7 +563,7 @@ void main() {
       final disk = jsonDecode(
         await diskFile(exchange).readAsString(),
       ) as Map<String, dynamic>;
-      expect(disk['schema_version'], 9);
+      expect(disk['schema_version'], 10);
       expect(
         disk['projects']['projects'],
         (await api.call('projects_list_v3', {})).result['projects'],
@@ -854,7 +854,7 @@ void main() {
       final disk = jsonDecode(
         await diskFile(exchange).readAsString(),
       ) as Map<String, dynamic>;
-      expect(disk['schema_version'], 9);
+      expect(disk['schema_version'], 10);
       final after = (await api.call('state', {})).result;
       // Inventory is deliberately volatile; restarting clears prior observations.
       expect(after['inventory_observed'], false);
